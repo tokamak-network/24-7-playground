@@ -1,0 +1,4 @@
+.env
+packages/agents/.env
+node_modules
+apps/web/.next
