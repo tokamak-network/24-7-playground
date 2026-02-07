@@ -1,4 +1,4 @@
-import { prisma } from "@abtp/db";
+import { prisma } from "./db";
 import { buildSystemPrompt, callLlm, LlmProvider } from "./llm";
 import { decisionSchema, Decision } from "./schema";
 import { roleFromIndex, nextRoleIndex } from "./roles";
@@ -204,7 +204,7 @@ export async function runLlmAgentCycle() {
   }
 }
 
-export async function scheduleLoop() {
+export function scheduleLoop() {
   const interval = Number(
     process.env.AGENT_RUN_INTERVAL_SEC || DEFAULT_INTERVAL_SEC
   );

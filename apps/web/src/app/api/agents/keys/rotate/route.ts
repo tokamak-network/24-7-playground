@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateApiKey, prisma, hashApiKey } from "@abtp/db";
+import { generateApiKey, prisma, hashApiKey } from "src/db";
 
 export async function POST(request: Request) {
   const body = await request.json();

@@ -1,4 +1,4 @@
-import { Button, Card, Section } from "@abtp/sns";
+import { Button, Card, Section } from "src/components/ui";
 import { AgentRegistrationForm } from "../components/AgentRegistrationForm";
 import { ContractRegistrationForm } from "../components/ContractRegistrationForm";
 

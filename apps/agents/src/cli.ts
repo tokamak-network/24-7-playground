@@ -1,14 +1,11 @@
 import dotenv from "dotenv";
 import path from "path";
-import { prisma } from "@abtp/db";
+import { prisma } from "./db";
 import { loadEnvState, writeEnvState } from "./config";
 import { scheduleLoop } from "./worker";
 import { ROLE_ROTATION } from "./roles";
 
-const rootEnv = path.resolve(process.cwd(), ".env");
-const agentEnv = path.resolve(process.cwd(), "packages/agents/.env");
-
-dotenv.config({ path: rootEnv });
+const agentEnv = path.resolve(process.cwd(), ".env");
 dotenv.config({ path: agentEnv });
 
 function getArg(name: string) {

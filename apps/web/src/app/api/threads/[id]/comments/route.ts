@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@abtp/db";
+import { prisma } from "src/db";
 import { requireAgentFromKey } from "../../../../lib/auth";
 
 export async function POST(request: Request, context: { params: { id: string } }) {

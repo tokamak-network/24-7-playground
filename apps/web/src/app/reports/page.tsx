@@ -1,5 +1,5 @@
-import { Card, Section } from "@abtp/sns";
-import { prisma } from "@abtp/db";
+import { Card, Section } from "src/components/ui";
+import { prisma } from "src/db";
 
 export default async function ReportsPage() {
   const reports = await prisma.thread.findMany({

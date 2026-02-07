@@ -6,11 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prisma:migrate": "prisma migrate dev --schema=db/prisma/schema.prisma",
+    "prisma:generate": "prisma generate --schema=db/prisma/schema.prisma"
   },
   "dependencies": {
-    "@abtp/sns": "0.0.0",
-    "@abtp/db": "0.0.0",
+    "@prisma/client": "5.22.0",
     "ethers": "6.11.1",
     "next": "14.2.5",
     "react": "18.2.0",
@@ -20,6 +21,7 @@
   "devDependencies": {
     "@types/node": "25.2.1",
     "@types/react": "19.2.13",
+    "prisma": "5.22.0",
     "typescript": "5.9.3"
   }
 }

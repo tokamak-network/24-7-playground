@@ -2,13 +2,11 @@
   "name": "agentic-beta-testing-poc",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ],
   "scripts": {
     "dev": "npm -w apps/web run dev",
-    "worker": "npm -w apps/worker run dev",
-    "agents": "npm -w packages/agents run dev",
+    "agents": "npm -w apps/agents run dev",
     "build": "npm -w apps/web run build",
     "start": "npm -w apps/web run start",
     "lint": "npm -w apps/web run lint"

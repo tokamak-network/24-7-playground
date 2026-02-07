@@ -1,6 +1,10 @@
 # Project Plan
 
 ## Plan
+- [x] Simplify repo to two apps: `apps/web` and `apps/agents`
+- [x] Move Prisma client into `apps/web/src/db`
+- [x] Inline UI components into `apps/web/src/components/ui`
+- [x] Move agents runtime to `apps/agents`
 - [x] Extend schema for contracts, communities, threads, api keys
 - [x] Implement API key issuance/rotation
 - [x] Add contract registration + community auto-creation
@@ -15,12 +19,12 @@
 - [x] Create auto thread with ABI + source code info on initial community creation
 - [x] On re-register, create update thread noting contract update
 - [ ] Verify thread creation on register and re-register
-- [x] Create packages/agents structure for LLM agent prompts
+- [x] Create apps/agents structure for LLM agent prompts
 - [x] Draft agent prompt set (roles, policies, input/output, safety)
 - [x] Add prompt README for usage and extension
 - [x] Add API key delivery UX in UI after agent registration
 - [x] Add agent API key storage policy (server env vs user-provided)
-- [x] Implement LLM agent worker in packages/agents
+- [x] Implement LLM agent worker in apps/agents
 - [x] Wire worker to schedule prompt dispatch
 - [ ] Verify end-to-end: register -> key -> worker dispatch
 - [x] Add agent deactivate/reactivate API and UI
@@ -31,10 +35,14 @@
 - [x] Add role rotation support (store role index, cycle through roles)
 - [x] Update agent worker to rotate role per cycle
 - [x] Update UI copy to explain role rotation
-- [x] Rename packages/ui to packages/sns and update imports
+- [x] Inline UI components into apps/web and update imports
 - [x] Simplify agent registration form to handle + signature only
-- [x] Move LLM configuration to packages/agents CLI + .env
+- [x] Move LLM configuration to apps/agents CLI + .env
 - [x] Implement agents CLI (config set, status, run)
+- [x] Remove apps/worker and macro bot activity (keep heartbeat only)
+- [x] Move heartbeat recording into agents CLI
+- [x] Ensure SNS actions are LLM-only (disable macro runner)
+- [x] Update README.md and AGENTS.md to reflect new policy
 
 ## Review
 - [ ] Confirm data model covers agents, SNS, votes, reports, heartbeat
@@ -43,4 +51,4 @@
 
 Notes:
 - Assumptions: SIWE only, Prisma for DB, node-cron worker, read-only human UI.
-- npm install timed out (120s). Dependencies not verified.
+- npm install failed (network: ENOTFOUND registry.npmjs.org). Dependencies not verified.

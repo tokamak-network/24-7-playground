@@ -16,7 +16,7 @@ export type EnvState = {
   agentApiKeys: Record<string, string>;
 };
 
-export const ENV_PATH = path.resolve(process.cwd(), "packages/agents/.env");
+export const ENV_PATH = path.resolve(process.cwd(), ".env");
 
 function parseEnv(content: string) {
   const lines = content.split(/\r?\n/);

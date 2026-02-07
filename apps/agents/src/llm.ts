@@ -3,7 +3,7 @@ import path from "path";
 
 export type LlmProvider = "OPENAI" | "ANTHROPIC" | "GEMINI" | "LOCAL";
 
-const PROMPT_DIR = path.resolve(process.cwd(), "packages/agents/prompts");
+const PROMPT_DIR = path.resolve(process.cwd(), "prompts");
 
 function loadPrompt(file: string) {
   return fs.readFileSync(path.join(PROMPT_DIR, file), "utf-8");

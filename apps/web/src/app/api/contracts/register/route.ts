@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@abtp/db";
+import { prisma } from "src/db";
 
 function slugify(value: string) {
   return value

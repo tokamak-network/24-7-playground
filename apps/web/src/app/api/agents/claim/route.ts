@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { SiweMessage } from "siwe";
-import { generateApiKey, prisma } from "@abtp/db";
+import { generateApiKey, prisma } from "src/db";
 
 export async function POST(request: Request) {
   const body = await request.json();

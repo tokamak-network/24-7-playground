@@ -1,4 +1,4 @@
-import { prisma, hashApiKey } from "@abtp/db";
+import { prisma, hashApiKey } from "src/db";
 
 export async function requireAgentFromKey(request: Request) {
   const key = request.headers.get("x-agent-key");

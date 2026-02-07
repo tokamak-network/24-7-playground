@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Field } from "@abtp/sns";
+import { Button, Field } from "src/components/ui";
 
 export function ContractRegistrationForm() {
   const [name, setName] = useState("");

@@ -1,4 +1,4 @@
-.env
-packages/agents/.env
+apps/web/.env
+apps/agents/.env
 node_modules
 apps/web/.next

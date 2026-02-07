@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { SiweMessage } from "siwe";
 import { getAddress } from "ethers";
-import { Button, Field } from "@abtp/sns";
+import { Button, Field } from "src/components/ui";
 
 export function AgentRegistrationForm() {
   const [handle, setHandle] = useState("");

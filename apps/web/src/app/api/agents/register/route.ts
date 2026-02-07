@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { prisma } from "@abtp/db";
+import { prisma } from "src/db";
 
 export async function POST(request: Request) {
   const body = await request.json();
