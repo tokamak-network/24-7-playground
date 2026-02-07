@@ -1,4 +1,5 @@
-apps/web/.env
-apps/agents/.env
+apps/sns/.env
+apps/agent_manager/.env
 node_modules
-apps/web/.next
+apps/sns/.next
+apps/agent_manager/.next

@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AgentStatus {
+  PENDING
+  VERIFIED
+  SUSPENDED
+}
+
+enum ThreadType {
+  NORMAL
+  REPORT
+}
+
+enum ApiKeyType {
+  SNS
+}
+
+enum RunnerStatus {
+  STOPPED
+  RUNNING
+}
+
+model Agent {
+  id            String        @id @default(cuid())
+  handle        String        @unique
+  walletAddress String
+  ownerWallet   String?       @unique
+  encryptionSalt String?
+  encryptedSecrets Json?
+  runnerStatus  RunnerStatus  @default(STOPPED)
+  runnerIntervalSec Int       @default(60)
+  status        AgentStatus   @default(PENDING)
+  isActive      Boolean       @default(true)
+  lastRunAt     DateTime?
+  createdAt     DateTime      @default(now())
+  claims        AgentClaim[]
+  comments      Comment[]
+  votes         Vote[]
+  heartbeats    Heartbeat[]
+  threads       Thread[]
+  apiKeys       ApiKey[]
+  nonces        AgentNonce[]
+}
+
+model AgentClaim {
+  id            String   @id @default(cuid())
+  agentId       String
+  agent         Agent    @relation(fields: [agentId], references: [id])
+  walletAddress String
+  nonce         String   @unique
+  message       String
+  signature     String?
+  createdAt     DateTime @default(now())
+  verifiedAt    DateTime?
+}
+
+model ServiceContract {
+  id        String     @id @default(cuid())
+  name      String
+  address   String
+  chain     String
+  abiJson   Json
+  faucetFunction String?
+  runIntervalSec Int      @default(60)
+  lastRunAt DateTime?
+  createdAt DateTime   @default(now())
+  community Community?
+}
+
+model Community {
+  id          String  @id @default(cuid())
+  serviceContractId String @unique
+  serviceContract ServiceContract @relation(fields: [serviceContractId], references: [id])
+  slug        String  @unique
+  name        String
+  description String?
+  threads     Thread[]
+}
+
+model Thread {
+  id          String    @id @default(cuid())
+  agentId     String?
+  agent       Agent?    @relation(fields: [agentId], references: [id])
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id])
+  title       String
+  body        String
+  type        ThreadType @default(NORMAL)
+  createdAt   DateTime  @default(now())
+  comments    Comment[]
+  votes       Vote[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    Thread   @relation(fields: [threadId], references: [id])
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    Thread   @relation(fields: [threadId], references: [id])
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  value     Int
+  createdAt DateTime @default(now())
+
+  @@unique([threadId, agentId])
+}
+
+model Heartbeat {
+  id         String   @id @default(cuid())
+  agentId    String
+  agent      Agent    @relation(fields: [agentId], references: [id])
+  status     String
+  payload    Json?
+  lastSeenAt DateTime @default(now())
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  type      ApiKeyType @default(SNS)
+  keyHash   String
+  keyPrefix String
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@unique([agentId])
+}
+
+model AgentNonce {
+  id        String   @id @default(cuid())
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  nonce     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model AuthNonce {
+  id            String   @id @default(cuid())
+  walletAddress String
+  nonce         String   @unique
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime @default(now())
+}
+
+model Session {
+  id            String   @id @default(cuid())
+  walletAddress String
+  token         String   @unique
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+}

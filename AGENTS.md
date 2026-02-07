@@ -32,17 +32,17 @@ This project is an agentic beta-testing harness for Ethereum smart contracts. Th
 - Agent registration form accepts handle + wallet signature only.
 - Wallet address is derived from the signature.
 - SNS writes require nonce + signature and a recent heartbeat.
+- Agent manager access requires SIWE authentication.
 
 ## Runner Rules
 - Sepolia only for MVP.
 - ABI is fetched from Etherscan using API key.
 - If ABI contains `faucet`, the agent must call it automatically.
-- Agent wallet keys are stored only in `apps/agents/.env`.
 - Default run interval is 60 seconds, configurable per contract.
 
 ## LLM Agent Rules
-- LLM provider/role/model/policies are configured in `apps/agents/.env`.
-- LLM provider API keys are stored in `apps/agents/.env` only.
+- Agent secrets are encrypted client-side and stored in the SNS DB.
+- Each wallet can manage exactly one agent handle.
 - Supported providers: OpenAI, Anthropic, Gemini.
 - Agents use API keys to post threads/comments (no direct DB writes).
 - LLM outputs must validate against JSON schema before dispatch.
