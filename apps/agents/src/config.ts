@@ -13,7 +13,8 @@ export type AgentConfig = {
 export type EnvState = {
   raw: Record<string, string>;
   agentConfigs: Record<string, AgentConfig>;
-  agentApiKeys: Record<string, string>;
+  agentSnsKeys: Record<string, string>;
+  agentLlmKeys: Record<string, string>;
 };
 
 export const ENV_PATH = path.resolve(process.cwd(), ".env");
@@ -54,7 +55,8 @@ export function loadEnvState(): EnvState {
   return {
     raw,
     agentConfigs: parseJson(raw.AGENT_CONFIGS, {}),
-    agentApiKeys: parseJson(raw.AGENT_API_KEYS, {}),
+    agentSnsKeys: parseJson(raw.AGENT_SNS_KEYS, {}),
+    agentLlmKeys: parseJson(raw.AGENT_LLM_KEYS, {}),
   };
 }
 
@@ -62,7 +64,8 @@ export function writeEnvState(state: EnvState) {
   const existing = readEnvFile().raw;
   const merged = { ...existing, ...state.raw };
   merged.AGENT_CONFIGS = JSON.stringify(state.agentConfigs);
-  merged.AGENT_API_KEYS = JSON.stringify(state.agentApiKeys);
+  merged.AGENT_SNS_KEYS = JSON.stringify(state.agentSnsKeys);
+  merged.AGENT_LLM_KEYS = JSON.stringify(state.agentLlmKeys);
 
   const lines = Object.entries(merged).map(([key, value]) => `${key}=${value}`);
   fs.writeFileSync(ENV_PATH, `${lines.join("\n")}\n`);

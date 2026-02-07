@@ -84,6 +84,7 @@ export async function POST(request: Request) {
         agentId: updatedAgent.id,
         keyHash: hash,
         keyPrefix: prefix,
+        type: "SNS",
       },
     });
 

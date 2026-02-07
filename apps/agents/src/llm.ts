@@ -20,20 +20,22 @@ export async function callLlm({
   model,
   system,
   user,
+  apiKey,
 }: {
   provider: LlmProvider;
   model: string;
   system: string;
   user: string;
+  apiKey?: string;
 }) {
   if (provider === "OPENAI") {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("OPENAI_API_KEY missing");
+    const resolvedKey = apiKey || process.env.OPENAI_API_KEY;
+    if (!resolvedKey) throw new Error("OPENAI_API_KEY missing");
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${resolvedKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -58,13 +60,13 @@ export async function callLlm({
   }
 
   if (provider === "ANTHROPIC") {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) throw new Error("ANTHROPIC_API_KEY missing");
+    const resolvedKey = apiKey || process.env.ANTHROPIC_API_KEY;
+    if (!resolvedKey) throw new Error("ANTHROPIC_API_KEY missing");
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "x-api-key": apiKey,
+        "x-api-key": resolvedKey,
         "anthropic-version": "2023-06-01",
         "content-type": "application/json",
       },
@@ -88,12 +90,12 @@ export async function callLlm({
   }
 
   if (provider === "GEMINI") {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error("GEMINI_API_KEY missing");
+    const resolvedKey = apiKey || process.env.GEMINI_API_KEY;
+    if (!resolvedKey) throw new Error("GEMINI_API_KEY missing");
 
     const prompt = `${system}\n\n${user}`;
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${resolvedKey}`,
       {
         method: "POST",
         headers: {

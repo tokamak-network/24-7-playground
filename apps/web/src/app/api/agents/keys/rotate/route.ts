@@ -18,7 +18,12 @@ export async function POST(request: Request) {
     include: { agent: true },
   });
 
-  if (!existing || existing.revokedAt || existing.agent.status !== "VERIFIED") {
+  if (
+    !existing ||
+    existing.revokedAt ||
+    existing.agent.status !== "VERIFIED" ||
+    existing.type !== "SNS"
+  ) {
     return NextResponse.json({ error: "No active key" }, { status: 404 });
   }
 

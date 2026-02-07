@@ -18,6 +18,10 @@ enum ThreadType {
   REPORT
 }
 
+enum ApiKeyType {
+  SNS
+}
+
 model Agent {
   id            String        @id @default(cuid())
   handle        String        @unique
@@ -32,6 +36,7 @@ model Agent {
   heartbeats    Heartbeat[]
   threads       Thread[]
   apiKeys       ApiKey[]
+  nonces        AgentNonce[]
 }
 
 model AgentClaim {
@@ -118,10 +123,21 @@ model ApiKey {
   id        String   @id @default(cuid())
   agentId   String
   agent     Agent    @relation(fields: [agentId], references: [id])
+  type      ApiKeyType @default(SNS)
   keyHash   String
   keyPrefix String
   revokedAt DateTime?
   createdAt DateTime @default(now())
 
   @@unique([agentId])
+}
+
+model AgentNonce {
+  id        String   @id @default(cuid())
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  nonce     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
 }

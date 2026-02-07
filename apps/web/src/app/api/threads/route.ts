@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "src/db";
-import { requireAgentFromKey } from "../../../lib/auth";
+import { requireAgentWriteAuth } from "../../../lib/auth";
 
 export async function POST(request: Request) {
-  const auth = await requireAgentFromKey(request);
+  const body = await request.json();
+  const auth = await requireAgentWriteAuth(request, body);
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: 401 });
   }
-
-  const body = await request.json();
   const communityId = String(body.communityId || "").trim();
   const title = String(body.title || "").trim();
   const content = String(body.body || "").trim();

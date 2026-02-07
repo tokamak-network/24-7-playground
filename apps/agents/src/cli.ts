@@ -3,8 +3,7 @@ import path from "path";
 import readline from "node:readline";
 import { prisma } from "./db";
 import { loadEnvState, writeEnvState } from "./config";
-import { scheduleLoop } from "./worker";
-import { ROLE_ROTATION, roleFromIndex } from "./roles";
+import { ROLE_ROTATION } from "./roles";
 
 const agentEnv = path.resolve(process.cwd(), ".env");
 dotenv.config({ path: agentEnv });
@@ -17,9 +16,11 @@ function getArg(name: string) {
 
 function printUsage() {
   console.log("Usage:");
-  console.log("  agents config set --handle <handle> [--provider OPENAI|ANTHROPIC|GEMINI|LOCAL] [--model <model>] [--role <role>] [--run-interval <sec>] [--max-actions <n>] [--api-key <key>]");
+  console.log("  agents config set --handle <handle> [--provider OPENAI|ANTHROPIC|GEMINI|LOCAL] [--model <model>] [--role <role>] [--run-interval <sec>] [--max-actions <n>] [--sns-key <key>]");
+  console.log("  agents agent add --handle <handle> --llm-key <key> --sns-key <key>");
+  console.log("  agents agent update --handle <handle> [--llm-key <key>] [--sns-key <key>]");
+  console.log("  agents agent list");
   console.log("  agents status");
-  console.log("  agents run");
 }
 
 function createPromptInterface() {
@@ -51,11 +52,12 @@ async function configSet() {
   const role = getArg("--role");
   const runIntervalSec = getArg("--run-interval");
   const maxActions = getArg("--max-actions");
-  const apiKey = getArg("--api-key");
+  const snsKeyArg = getArg("--sns-key") || getArg("--api-key");
 
   const state = loadEnvState();
   const configs = state.agentConfigs || {};
-  const keys = state.agentApiKeys || {};
+  const snsKeys = state.agentSnsKeys || {};
+  const llmKeys = state.agentLlmKeys || {};
 
   const nextConfig = {
     ...configs[handle],
@@ -73,15 +75,46 @@ async function configSet() {
 
   configs[handle] = nextConfig;
 
-  if (apiKey) {
-    keys[handle] = apiKey;
+  if (snsKeyArg) {
+    snsKeys[handle] = snsKeyArg;
   }
 
-  writeEnvState({ ...state, agentConfigs: configs, agentApiKeys: keys });
+  writeEnvState({
+    ...state,
+    agentConfigs: configs,
+    agentSnsKeys: snsKeys,
+    agentLlmKeys: llmKeys,
+  });
   console.log(`Updated config for ${handle}`);
 }
 
-async function interactiveConfig() {
+async function interactiveAgentAdd() {
+  const handle = await ask("Agent handle: ");
+  if (!handle) {
+    console.log("Handle is required.");
+    return;
+  }
+
+  const llmKey = await ask("LLM API key: ");
+  const snsKey = await ask("SNS API key: ");
+
+  if (!llmKey || !snsKey) {
+    console.log("Both LLM API key and SNS API key are required.");
+    return;
+  }
+
+  const state = loadEnvState();
+  const snsKeys = state.agentSnsKeys || {};
+  const llmKeys = state.agentLlmKeys || {};
+
+  llmKeys[handle] = llmKey;
+  snsKeys[handle] = snsKey;
+
+  writeEnvState({ ...state, agentSnsKeys: snsKeys, agentLlmKeys: llmKeys });
+  console.log(`Added agent keys for ${handle}`);
+}
+
+async function interactiveAgentUpdate() {
   const handle = await ask("Agent handle: ");
   if (!handle) {
     console.log("Handle is required.");
@@ -89,51 +122,96 @@ async function interactiveConfig() {
   }
 
   const state = loadEnvState();
-  const configs = state.agentConfigs || {};
-  const keys = state.agentApiKeys || {};
-  const existing = configs[handle] || {};
+  const snsKeys = state.agentSnsKeys || {};
+  const llmKeys = state.agentLlmKeys || {};
 
-  const provider = await ask(
-    `Provider (OPENAI|ANTHROPIC|GEMINI|LOCAL) [${existing.provider || ""}]: `
+  const llmKey = await ask(
+    `LLM API key [${llmKeys[handle] ? "configured" : ""}]: `
   );
-  const model = await ask(`Model [${existing.model || ""}]: `);
-  const roleLabel = roleFromIndex(existing.roleIndex ?? 0);
-  const role = await ask(`Role (${ROLE_ROTATION.join("/")}) [${roleLabel}]: `);
-  const runInterval = await ask(
-    `Run interval sec [${existing.runIntervalSec ?? ""}]: `
+  const snsKey = await ask(
+    `SNS API key [${snsKeys[handle] ? "configured" : ""}]: `
   );
-  const maxActions = await ask(
-    `Max actions per cycle [${existing.maxActionsPerCycle ?? ""}]: `
-  );
-  const apiKey = await ask(`Agent API key [${keys[handle] ? "configured" : ""}]: `);
 
-  const nextConfig = {
-    ...existing,
-    ...(provider ? { provider } : {}),
-    ...(model ? { model } : {}),
-    ...(role
-      ? {
-          role,
-          roleIndex: Math.max(0, ROLE_ROTATION.indexOf(role as any)),
-        }
-      : {}),
-    ...(runInterval ? { runIntervalSec: Number(runInterval) } : {}),
-    ...(maxActions ? { maxActionsPerCycle: Number(maxActions) } : {}),
-  };
+  if (llmKey) llmKeys[handle] = llmKey;
+  if (snsKey) snsKeys[handle] = snsKey;
 
-  configs[handle] = nextConfig;
-  if (apiKey) {
-    keys[handle] = apiKey;
+  writeEnvState({ ...state, agentSnsKeys: snsKeys, agentLlmKeys: llmKeys });
+  console.log(`Updated agent keys for ${handle}`);
+}
+
+async function agentAdd() {
+  const handle = getArg("--handle");
+  const llmKey = getArg("--llm-key");
+  const snsKey = getArg("--sns-key");
+  if (!handle || !llmKey || !snsKey) {
+    console.error("--handle, --llm-key, --sns-key are required");
+    return;
   }
 
-  writeEnvState({ ...state, agentConfigs: configs, agentApiKeys: keys });
-  console.log(`Updated config for ${handle}`);
+  const state = loadEnvState();
+  const snsKeys = state.agentSnsKeys || {};
+  const llmKeys = state.agentLlmKeys || {};
+  llmKeys[handle] = llmKey;
+  snsKeys[handle] = snsKey;
+
+  writeEnvState({
+    ...state,
+    agentSnsKeys: snsKeys,
+    agentLlmKeys: llmKeys,
+  });
+  console.log(`Added agent keys for ${handle}`);
+}
+
+async function agentUpdate() {
+  const handle = getArg("--handle");
+  const llmKey = getArg("--llm-key");
+  const snsKey = getArg("--sns-key");
+  if (!handle) {
+    console.error("--handle is required");
+    return;
+  }
+
+  const state = loadEnvState();
+  const snsKeys = state.agentSnsKeys || {};
+  const llmKeys = state.agentLlmKeys || {};
+
+  if (llmKey) llmKeys[handle] = llmKey;
+  if (snsKey) snsKeys[handle] = snsKey;
+
+  writeEnvState({
+    ...state,
+    agentSnsKeys: snsKeys,
+    agentLlmKeys: llmKeys,
+  });
+  console.log(`Updated keys for ${handle}`);
+}
+
+async function agentList() {
+  const state = loadEnvState();
+  const snsKeys = state.agentSnsKeys || {};
+  const llmKeys = state.agentLlmKeys || {};
+  const handles = Array.from(
+    new Set([...Object.keys(snsKeys), ...Object.keys(llmKeys)])
+  ).sort();
+
+  if (!handles.length) {
+    console.log("No agents registered.");
+    return;
+  }
+
+  console.log("Registered agents:");
+  for (const handle of handles) {
+    console.log(
+      `- ${handle} (llmKey: ${llmKeys[handle] ? "configured" : "missing"}, snsKey: ${snsKeys[handle] ? "configured" : "missing"})`
+    );
+  }
 }
 
 async function status() {
   const state = loadEnvState();
   const configs = state.agentConfigs || {};
-  const keys = state.agentApiKeys || {};
+  const snsKeys = state.agentSnsKeys || {};
+  const llmKeys = state.agentLlmKeys || {};
   const agents = await prisma.agent.findMany();
 
   console.log("Agents:\n");
@@ -149,34 +227,31 @@ async function status() {
     console.log(`  roleIndex: ${cfg.roleIndex ?? ""}`);
     console.log(`  runIntervalSec: ${cfg.runIntervalSec ?? ""}`);
     console.log(`  maxActionsPerCycle: ${cfg.maxActionsPerCycle ?? ""}`);
-    console.log(`  apiKey: ${keys[agent.handle] ? "configured" : "missing"}`);
+    console.log(`  llmKey: ${llmKeys[agent.handle] ? "configured" : "missing"}`);
+    console.log(`  snsKey: ${snsKeys[agent.handle] ? "configured" : "missing"}`);
   }
-}
-
-async function run() {
-  await scheduleLoop();
 }
 
 async function interactiveMenu() {
   while (true) {
     console.log("\nAgent CLI");
-    console.log("1. Configure agent");
-    console.log("2. Show status");
-    console.log("3. Run scheduler");
+    console.log("1. Add agent keys");
+    console.log("2. List agent handles");
+    console.log("3. Edit agent keys");
     console.log("4. Exit");
 
     const choice = await ask("Select an option: ");
     if (choice === "1") {
-      await interactiveConfig();
+      await interactiveAgentAdd();
       continue;
     }
     if (choice === "2") {
-      await status();
+      await agentList();
       continue;
     }
     if (choice === "3") {
-      await run();
-      return;
+      await interactiveAgentUpdate();
+      continue;
     }
     return;
   }
@@ -194,13 +269,23 @@ async function main() {
     return;
   }
 
-  if (cmd === "status") {
-    await status();
+  if (cmd === "agent" && process.argv[3] === "add") {
+    await agentAdd();
     return;
   }
 
-  if (cmd === "run") {
-    await run();
+  if (cmd === "agent" && process.argv[3] === "update") {
+    await agentUpdate();
+    return;
+  }
+
+  if (cmd === "agent" && process.argv[3] === "list") {
+    await agentList();
+    return;
+  }
+
+  if (cmd === "status") {
+    await status();
     return;
   }
 

@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import crypto from "node:crypto";
 import { buildSystemPrompt, callLlm, LlmProvider } from "./llm";
 import { decisionSchema, Decision } from "./schema";
 import { roleFromIndex, nextRoleIndex } from "./roles";
@@ -18,12 +19,10 @@ type AgentConfig = {
 };
 
 async function postThread(baseUrl: string, apiKey: string, payload: any) {
+  const headers = await buildSignedHeaders(baseUrl, apiKey, payload);
   const res = await fetch(`${baseUrl}/api/threads`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-agent-key": apiKey,
-    },
+    headers,
     body: JSON.stringify(payload),
   });
 
@@ -40,12 +39,10 @@ async function postComment(
   threadId: string,
   body: string
 ) {
+  const headers = await buildSignedHeaders(baseUrl, apiKey, { body });
   const res = await fetch(`${baseUrl}/api/threads/${threadId}/comments`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-agent-key": apiKey,
-    },
+    headers,
     body: JSON.stringify({ body }),
   });
 
@@ -56,19 +53,83 @@ async function postComment(
   return res.json();
 }
 
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  }
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj).sort();
+  return `{${keys
+    .map((key) => `${JSON.stringify(key)}:${stableStringify(obj[key])}`)
+    .join(",")}}`;
+}
+
+function hashBody(body: unknown) {
+  return crypto.createHash("sha256").update(stableStringify(body)).digest("hex");
+}
+
+function signNonce(key: string, nonce: string, timestamp: string, bodyHash: string) {
+  return crypto
+    .createHmac("sha256", key)
+    .update(`${nonce}.${timestamp}.${bodyHash}`)
+    .digest("hex");
+}
+
+async function fetchNonce(baseUrl: string, apiKey: string) {
+  const res = await fetch(`${baseUrl}/api/agents/nonce`, {
+    method: "POST",
+    headers: {
+      "x-agent-key": apiKey,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Nonce request failed: ${await res.text()}`);
+  }
+
+  const data = (await res.json()) as { nonce?: string };
+  if (!data.nonce) {
+    throw new Error("Nonce missing in response");
+  }
+  return data.nonce;
+}
+
+async function buildSignedHeaders(
+  baseUrl: string,
+  apiKey: string,
+  body: unknown
+) {
+  const nonce = await fetchNonce(baseUrl, apiKey);
+  const timestamp = Date.now().toString();
+  const bodyHash = hashBody(body);
+  const signature = signNonce(apiKey, nonce, timestamp, bodyHash);
+  return {
+    "Content-Type": "application/json",
+    "x-agent-key": apiKey,
+    "x-agent-nonce": nonce,
+    "x-agent-timestamp": timestamp,
+    "x-agent-signature": signature,
+  };
+}
+
 async function decideAction({
   provider,
   model,
   system,
   user,
+  apiKey,
 }: {
   provider: LlmProvider;
   model: string;
   system: string;
   user: string;
+  apiKey?: string;
 }): Promise<Decision | null> {
   try {
-    const output = await callLlm({ provider, model, system, user });
+    const output = await callLlm({ provider, model, system, user, apiKey });
     const parsed = decisionSchema.parse(JSON.parse(output));
     return parsed;
   } catch (error) {
@@ -84,7 +145,8 @@ function getAgentConfig(handle: string, configs: Record<string, AgentConfig>) {
 export async function runLlmAgentCycle() {
   const baseUrl = process.env.AGENT_API_BASE_URL || "http://localhost:3000";
   const envState = loadEnvState();
-  const keys: AgentKeyMap = envState.agentApiKeys || {};
+  const snsKeys: AgentKeyMap = envState.agentSnsKeys || {};
+  const llmKeys: AgentKeyMap = envState.agentLlmKeys || {};
   const configs = envState.agentConfigs || {};
 
   const agents = await prisma.agent.findMany({
@@ -124,8 +186,8 @@ export async function runLlmAgentCycle() {
   let configUpdated = false;
 
   for (const agent of agents) {
-    const apiKey = keys[agent.handle];
-    if (!apiKey) {
+    const snsKey = snsKeys[agent.handle];
+    if (!snsKey) {
       continue;
     }
 
@@ -161,8 +223,16 @@ export async function runLlmAgentCycle() {
 
     const maxActions = Math.max(1, Math.min(cfg.maxActionsPerCycle || 1, 3));
 
+    const llmKey = llmKeys[agent.handle];
+
     for (let i = 0; i < maxActions; i += 1) {
-      const decision = await decideAction({ provider, model, system, user });
+      const decision = await decideAction({
+        provider,
+        model,
+        system,
+        user,
+        apiKey: llmKey,
+      });
       if (!decision) break;
 
       const community = communities.find(
@@ -172,14 +242,14 @@ export async function runLlmAgentCycle() {
 
       try {
         if (decision.action === "create_thread") {
-          await postThread(baseUrl, apiKey, {
+          await postThread(baseUrl, snsKey, {
             communityId: community.id,
             title: decision.title || "Agent update",
             body: decision.body,
             type: "NORMAL",
           });
         } else if (decision.action === "comment" && decision.threadId) {
-          await postComment(baseUrl, apiKey, decision.threadId, decision.body);
+          await postComment(baseUrl, snsKey, decision.threadId, decision.body);
         }
       } catch (error) {
         console.warn("Agent action failed", error);
