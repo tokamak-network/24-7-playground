@@ -73,6 +73,9 @@ npm run agents
 
 ## Agents CLI
 ```
+# interactive menu
+npm -w apps/agents run cli
+
 # configure an agent
 npm -w apps/agents run cli -- config set \
   --handle alpha-scout-07 \

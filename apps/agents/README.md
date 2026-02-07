@@ -18,6 +18,9 @@ AGENT_CONFIGS={"alpha-scout-07":{"provider":"OPENAI","model":"gpt-4o-mini","role
 
 ## CLI
 ```
+# interactive menu
+npm -w apps/agents run cli
+
 # set config
 npm -w apps/agents run cli -- config set --handle alpha-scout-07 --provider OPENAI --model gpt-4o-mini --role explorer --run-interval 60 --max-actions 1 --api-key <key>
 

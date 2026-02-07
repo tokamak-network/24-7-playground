@@ -1,9 +1,10 @@
 import dotenv from "dotenv";
 import path from "path";
+import readline from "node:readline";
 import { prisma } from "./db";
 import { loadEnvState, writeEnvState } from "./config";
 import { scheduleLoop } from "./worker";
-import { ROLE_ROTATION } from "./roles";
+import { ROLE_ROTATION, roleFromIndex } from "./roles";
 
 const agentEnv = path.resolve(process.cwd(), ".env");
 dotenv.config({ path: agentEnv });
@@ -19,6 +20,23 @@ function printUsage() {
   console.log("  agents config set --handle <handle> [--provider OPENAI|ANTHROPIC|GEMINI|LOCAL] [--model <model>] [--role <role>] [--run-interval <sec>] [--max-actions <n>] [--api-key <key>]");
   console.log("  agents status");
   console.log("  agents run");
+}
+
+function createPromptInterface() {
+  return readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+}
+
+function ask(question: string) {
+  const rl = createPromptInterface();
+  return new Promise<string>((resolve) => {
+    rl.question(question, (answer: string) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
 }
 
 async function configSet() {
@@ -63,6 +81,55 @@ async function configSet() {
   console.log(`Updated config for ${handle}`);
 }
 
+async function interactiveConfig() {
+  const handle = await ask("Agent handle: ");
+  if (!handle) {
+    console.log("Handle is required.");
+    return;
+  }
+
+  const state = loadEnvState();
+  const configs = state.agentConfigs || {};
+  const keys = state.agentApiKeys || {};
+  const existing = configs[handle] || {};
+
+  const provider = await ask(
+    `Provider (OPENAI|ANTHROPIC|GEMINI|LOCAL) [${existing.provider || ""}]: `
+  );
+  const model = await ask(`Model [${existing.model || ""}]: `);
+  const roleLabel = roleFromIndex(existing.roleIndex ?? 0);
+  const role = await ask(`Role (${ROLE_ROTATION.join("/")}) [${roleLabel}]: `);
+  const runInterval = await ask(
+    `Run interval sec [${existing.runIntervalSec ?? ""}]: `
+  );
+  const maxActions = await ask(
+    `Max actions per cycle [${existing.maxActionsPerCycle ?? ""}]: `
+  );
+  const apiKey = await ask(`Agent API key [${keys[handle] ? "configured" : ""}]: `);
+
+  const nextConfig = {
+    ...existing,
+    ...(provider ? { provider } : {}),
+    ...(model ? { model } : {}),
+    ...(role
+      ? {
+          role,
+          roleIndex: Math.max(0, ROLE_ROTATION.indexOf(role as any)),
+        }
+      : {}),
+    ...(runInterval ? { runIntervalSec: Number(runInterval) } : {}),
+    ...(maxActions ? { maxActionsPerCycle: Number(maxActions) } : {}),
+  };
+
+  configs[handle] = nextConfig;
+  if (apiKey) {
+    keys[handle] = apiKey;
+  }
+
+  writeEnvState({ ...state, agentConfigs: configs, agentApiKeys: keys });
+  console.log(`Updated config for ${handle}`);
+}
+
 async function status() {
   const state = loadEnvState();
   const configs = state.agentConfigs || {};
@@ -90,10 +157,35 @@ async function run() {
   await scheduleLoop();
 }
 
+async function interactiveMenu() {
+  while (true) {
+    console.log("\nAgent CLI");
+    console.log("1. Configure agent");
+    console.log("2. Show status");
+    console.log("3. Run scheduler");
+    console.log("4. Exit");
+
+    const choice = await ask("Select an option: ");
+    if (choice === "1") {
+      await interactiveConfig();
+      continue;
+    }
+    if (choice === "2") {
+      await status();
+      continue;
+    }
+    if (choice === "3") {
+      await run();
+      return;
+    }
+    return;
+  }
+}
+
 async function main() {
   const cmd = process.argv[2];
   if (!cmd) {
-    printUsage();
+    await interactiveMenu();
     return;
   }
 
