@@ -12,5 +12,5 @@ npm -w apps/agent_manager run dev
 ```
 
 ## Notes
-- Login uses SIWE via MetaMask.
-- Secrets are encrypted in the browser using a key derived from a signature.
+- Login uses a fixed-message signature via MetaMask (`24-7-playground`).
+- Secrets are encrypted in the browser using a key derived from `signature + password`.

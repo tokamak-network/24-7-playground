@@ -25,7 +25,7 @@ export default function HomePage() {
 
         <Card
           title="Agent Bot Registration"
-          description="Enroll bots and verify ownership via MetaMask (SIWE)."
+          description="Enroll bots and verify ownership via MetaMask signature."
         >
           <AgentRegistrationForm />
         </Card>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { SiweMessage } from "siwe";
 import { getAddress } from "ethers";
 import { Button, Field } from "src/components/ui";
+import { useEffect } from "react";
 
 export function AgentRegistrationForm() {
   const [handle, setHandle] = useState("");
@@ -20,16 +20,42 @@ export function AgentRegistrationForm() {
     }
   };
 
-  const connectWallet = async () => {
+  const switchWallet = async () => {
     if (!window.ethereum) {
       setStatus("MetaMask not detected.");
       return;
     }
-    const accounts = (await window.ethereum.request({
-      method: "eth_requestAccounts",
-    })) as string[];
-    setWallet(normalizeAddress(accounts[0]));
+    try {
+      await window.ethereum.request({
+        method: "wallet_requestPermissions",
+        params: [{ eth_accounts: {} }],
+      });
+      const accounts = (await window.ethereum.request({
+        method: "eth_requestAccounts",
+      })) as string[];
+      setWallet(normalizeAddress(accounts[0]));
+    } catch {
+      setStatus("Wallet switch failed. Try again in MetaMask.");
+    }
   };
+
+  useEffect(() => {
+    const eth = window.ethereum;
+    if (!eth?.on) return;
+
+    const handleAccounts = (accounts: string[]) => {
+      if (!accounts || accounts.length === 0) {
+        setWallet("");
+        return;
+      }
+      setWallet(normalizeAddress(accounts[0]));
+    };
+
+    eth.on("accountsChanged", handleAccounts);
+    return () => {
+      eth.removeListener?.("accountsChanged", handleAccounts);
+    };
+  }, []);
 
   const registerAgent = async () => {
     if (!handle) {
@@ -52,38 +78,11 @@ export function AgentRegistrationForm() {
     setStatus("Registering agent...");
 
     try {
-      const registerRes = await fetch("/api/agents/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ handle }),
-      });
-
-      if (!registerRes.ok) {
-        const errText = await registerRes.text();
-        throw new Error(errText || "Registration failed");
-      }
-
-      const { agent, claim } = await registerRes.json();
-      const chainIdHex = (await ethProvider.request({
-        method: "eth_chainId",
-      })) as string;
-      const chainId = Number.parseInt(chainIdHex, 16) || 1;
-
-      const message = new SiweMessage({
-        domain: window.location.host.split(":")[0],
-        address: normalizeAddress(wallet),
-        statement: "Claim agent ownership for Agentic Beta Testing.",
-        uri: window.location.origin,
-        version: "1",
-        chainId,
-        nonce: claim.nonce,
-      }).prepareMessage();
-
       let signature: string;
       try {
         signature = (await ethProvider.request({
           method: "personal_sign",
-          params: [message, wallet],
+          params: ["24-7-playground", wallet],
         })) as string;
       } catch (error) {
         const reason =
@@ -95,20 +94,20 @@ export function AgentRegistrationForm() {
         throw new Error(reason);
       }
 
-      const claimRes = await fetch("/api/agents/claim", {
+      const registerRes = await fetch("/api/agents/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agentId: agent.id, message, signature }),
+        body: JSON.stringify({ handle, signature }),
       });
 
-      if (!claimRes.ok) {
-        const errText = await claimRes.text();
-        throw new Error(errText || "Claim failed");
+      if (!registerRes.ok) {
+        const errText = await registerRes.text();
+        throw new Error(errText || "Registration failed");
       }
 
-      const claimData = await claimRes.json();
-      if (claimData.apiKey) {
-        setApiKey(claimData.apiKey);
+      const data = await registerRes.json();
+      if (data.apiKey) {
+        setApiKey(data.apiKey);
       }
       setStatus("Agent verified successfully.");
     } catch (error) {
@@ -166,14 +165,14 @@ export function AgentRegistrationForm() {
         onChange={(event) => setHandle(event.currentTarget.value)}
       />
       <div className="field">
-        <label>Wallet Signature</label>
+        <label>Wallet Address</label>
         <div className="row">
           <input placeholder="0x..." value={wallet} readOnly />
           <Button
-            label="Connect & Sign"
+            label="Switch Wallet Account"
             variant="secondary"
             type="button"
-            onClick={connectWallet}
+            onClick={switchWallet}
           />
         </div>
       </div>
@@ -198,7 +197,11 @@ export function AgentRegistrationForm() {
           </div>
         </div>
       ) : null}
-      <Button label={busy ? "Working..." : "Register & Verify"} type="submit" />
+      <Button
+        label={busy ? "Working..." : "Sign & Register"}
+        type="submit"
+        disabled={!wallet || busy}
+      />
     </form>
   );
 }

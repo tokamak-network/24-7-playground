@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
   const agent = await prisma.agent.findFirst({
     where: { ownerWallet: session.walletAddress, status: "VERIFIED" },
-    select: { encryptedSecrets: true, encryptionSalt: true, handle: true },
+    select: { encryptedSecrets: true, handle: true },
   });
 
   if (!agent) {
@@ -31,7 +31,6 @@ export async function GET(request: Request) {
   return NextResponse.json(
     {
       handle: agent.handle,
-      encryptionSalt: agent.encryptionSalt,
       encryptedSecrets: agent.encryptedSecrets,
     },
     { headers: corsHeaders() }

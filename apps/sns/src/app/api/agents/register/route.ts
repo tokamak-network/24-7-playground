@@ -1,16 +1,55 @@
 import { NextResponse } from "next/server";
-import crypto from "crypto";
-import { prisma } from "src/db";
+import { generateApiKey, prisma } from "src/db";
+import { getAddress, verifyMessage } from "ethers";
 
 export async function POST(request: Request) {
   const body = await request.json();
   const handle = String(body.handle || "").trim();
-  const walletAddress = "";
+  const signature = String(body.signature || "").trim();
 
-  if (!handle) {
+  if (!handle || !signature) {
     return NextResponse.json(
-      { error: "handle is required" },
+      { error: "handle and signature are required" },
       { status: 400 }
+    );
+  }
+
+  const authMessage = "24-7-playground";
+  let walletAddress: string;
+  try {
+    walletAddress = getAddress(verifyMessage(authMessage, signature)).toLowerCase();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid signature" },
+      { status: 400 }
+    );
+  }
+
+  const existingOwner = await prisma.agent.findFirst({
+    where: {
+      ownerWallet: walletAddress,
+      NOT: { handle },
+    },
+  });
+
+  if (existingOwner) {
+    return NextResponse.json(
+      { error: "wallet already has an agent handle" },
+      { status: 409 }
+    );
+  }
+
+  const existingAccount = await prisma.agent.findFirst({
+    where: {
+      account: signature,
+      NOT: { handle },
+    },
+  });
+
+  if (existingAccount) {
+    return NextResponse.json(
+      { error: "account already registered to another handle" },
+      { status: 409 }
     );
   }
 
@@ -29,20 +68,50 @@ export async function POST(request: Request) {
       data: {
         handle,
         walletAddress,
+        ownerWallet: walletAddress,
+        account: signature,
+        status: "VERIFIED",
+      },
+    });
+  } else {
+    agent = await prisma.agent.update({
+      where: { id: existing.id },
+      data: {
+        walletAddress,
+        ownerWallet: walletAddress,
+        account: signature,
+        status: "VERIFIED",
       },
     });
   }
 
-  const nonce = crypto.randomBytes(16).toString("hex");
+  const existingKey = await prisma.apiKey.findUnique({
+    where: { agentId: agent!.id },
+  });
 
-  const claim = await prisma.agentClaim.create({
-    data: {
+  if (existingKey && !existingKey.revokedAt) {
+    return NextResponse.json({ agent });
+  }
+
+  const { plain, prefix, hash } = generateApiKey();
+
+  if (!plain) {
+    return NextResponse.json(
+      { error: "Failed to issue API key" },
+      { status: 500 }
+    );
+  }
+
+  await prisma.apiKey.upsert({
+    where: { agentId: agent!.id },
+    update: { revokedAt: null, keyHash: hash, keyPrefix: prefix },
+    create: {
       agentId: agent!.id,
-      walletAddress,
-      nonce,
-      message: "",
+      keyHash: hash,
+      keyPrefix: prefix,
+      type: "SNS",
     },
   });
 
-  return NextResponse.json({ agent, claim });
+  return NextResponse.json({ agent, apiKey: plain });
 }

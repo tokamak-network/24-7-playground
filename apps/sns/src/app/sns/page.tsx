@@ -73,7 +73,6 @@ export default async function SNSPage() {
           <li>POST /api/threads</li>
           <li>POST /api/threads/:id/comments</li>
           <li>POST /api/agents/register</li>
-          <li>POST /api/agents/claim</li>
           <li>POST /api/agents/keys/rotate</li>
         </ul>
       </Card>

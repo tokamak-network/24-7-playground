@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BrowserProvider } from "ethers";
-import { SiweMessage } from "siwe";
+import { BrowserProvider, getAddress } from "ethers";
 import { decryptSecrets, encryptSecrets } from "../lib/crypto";
 import { snsUrl } from "../lib/api";
 
@@ -10,7 +9,6 @@ type AgentRecord = {
   id: string;
   handle: string;
   ownerWallet?: string | null;
-  encryptionSalt?: string | null;
   encryptedSecrets?: any;
   runnerIntervalSec?: number;
   runnerStatus?: string;
@@ -22,9 +20,7 @@ type DecryptedSecrets = {
   config: {
     provider?: string;
     model?: string;
-    roleIndex?: number;
     runIntervalSec?: number;
-    maxActionsPerCycle?: number;
   };
 };
 
@@ -82,6 +78,17 @@ async function callLlm({
   system: string;
   user: string;
 }) {
+  const readErrorMessage = async (response: Response) => {
+    try {
+      const data = await response.json();
+      if (data?.error?.message) return data.error.message as string;
+      if (data?.message) return data.message as string;
+      return JSON.stringify(data);
+    } catch {
+      return response.statusText || "Unknown error";
+    }
+  };
+
   if (provider === "OPENAI") {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -98,6 +105,11 @@ async function callLlm({
         temperature: 0.4,
       }),
     });
+
+    if (!response.ok) {
+      const message = await readErrorMessage(response);
+      throw new Error(`OpenAI error ${response.status}: ${message}`);
+    }
 
     const data = await response.json();
     return data?.choices?.[0]?.message?.content || "";
@@ -119,27 +131,53 @@ async function callLlm({
       }),
     });
 
+    if (!response.ok) {
+      const message = await readErrorMessage(response);
+      throw new Error(`Anthropic error ${response.status}: ${message}`);
+    }
+
     const data = await response.json();
     return data?.content?.[0]?.text || "";
   }
 
   if (provider === "GEMINI") {
     const prompt = `${system}\n\n${user}`;
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-        }),
-      }
-    );
+    const callGemini = async (modelName: string) => {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+          }),
+        }
+      );
 
-    const data = await response.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      if (!response.ok) {
+        const message = await readErrorMessage(response);
+        throw new Error(`Gemini error ${response.status}: ${message}`);
+      }
+
+      const data = await response.json();
+      return data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    };
+
+    try {
+      return await callGemini(model);
+    } catch (error: any) {
+      const text = String(error?.message || "");
+      if (
+        text.includes("404") &&
+        (model.endsWith("-002") || model.endsWith("-001"))
+      ) {
+        const fallback = model.replace(/-(002|001)$/, "");
+        return await callGemini(fallback);
+      }
+      throw error;
+    }
   }
 
   return "";
@@ -148,12 +186,22 @@ async function callLlm({
 export default function AgentManagerPage() {
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [token, setToken] = useState<string>("");
+  const [accountSignature, setAccountSignature] = useState<string>("");
+  const [cachedEncryptedSecrets, setCachedEncryptedSecrets] = useState<any | null>(null);
   const [agent, setAgent] = useState<AgentRecord | null>(null);
   const [status, setStatus] = useState<string>("");
   const [llmKey, setLlmKey] = useState<string>("");
   const [snsKey, setSnsKey] = useState<string>("");
+  const [provider, setProvider] = useState<string>("GEMINI");
+  const [model, setModel] = useState<string>("gemini-1.5-flash-002");
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [modelStatus, setModelStatus] = useState<string>("");
+  const [runIntervalSec, setRunIntervalSec] = useState<number>(60);
   const [configJson, setConfigJson] = useState<string>("{}");
   const [runnerOn, setRunnerOn] = useState<boolean>(false);
+  const [debugClicks, setDebugClicks] = useState<number>(0);
+  const [llmTestStatus, setLlmTestStatus] = useState<string>("");
+  const [snsTestStatus, setSnsTestStatus] = useState<string>("");
   const intervalRef = useRef<number | null>(null);
   const heartbeatRef = useRef<number | null>(null);
 
@@ -163,6 +211,24 @@ export default function AgentManagerPage() {
       localStorage.setItem("sns_session_token", value);
     } else {
       localStorage.removeItem("sns_session_token");
+    }
+  };
+
+  const saveAccount = (value: string) => {
+    setAccountSignature(value);
+    if (value) {
+      localStorage.setItem("agent_account_signature", value);
+    } else {
+      localStorage.removeItem("agent_account_signature");
+    }
+  };
+
+  const saveEncryptedCache = (value: any | null) => {
+    setCachedEncryptedSecrets(value);
+    if (value) {
+      localStorage.setItem("agent_encrypted_secrets", JSON.stringify(value));
+    } else {
+      localStorage.removeItem("agent_encrypted_secrets");
     }
   };
 
@@ -179,117 +245,289 @@ export default function AgentManagerPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("sns_session_token");
-    if (stored) {
-      setToken(stored);
+    const storedAccount = localStorage.getItem("agent_account_signature");
+    const storedSecrets = localStorage.getItem("agent_encrypted_secrets");
+    if (storedAccount) {
+      setAccountSignature(storedAccount);
     }
+    if (storedSecrets) {
+      try {
+        setCachedEncryptedSecrets(JSON.parse(storedSecrets));
+      } catch {
+        setCachedEncryptedSecrets(null);
+      }
+    }
+    if (!stored) return;
+
+    setToken(stored);
+    fetch(snsUrl("/api/agents/me"), {
+      headers: { Authorization: `Bearer ${stored}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.agent) {
+          setAgent(data.agent);
+          setStatus("Session restored.");
+        } else {
+          saveToken("");
+          setAgent(null);
+        }
+      })
+      .catch(() => {
+        saveToken("");
+        setAgent(null);
+      });
+  }, []);
+
+  useEffect(() => {
+    const eth = (window as any).ethereum;
+    if (!eth?.on) return;
+
+    const handleAccounts = (accounts: string[]) => {
+      if (!accounts || accounts.length === 0) {
+        setWalletAddress("");
+        return;
+      }
+      setWalletAddress(getAddress(accounts[0]));
+    };
+
+    eth.on("accountsChanged", handleAccounts);
+    return () => {
+      eth.removeListener?.("accountsChanged", handleAccounts);
+    };
+  }, []);
+
+  useEffect(() => {
+    const eth = (window as any).ethereum;
+    if (!eth?.request) return;
+    eth
+      .request({ method: "eth_accounts" })
+      .then((accounts: string[]) => {
+        if (!accounts || accounts.length === 0) return;
+        setWalletAddress(getAddress(accounts[0]));
+      })
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
     fetchAgent().catch(() => undefined);
   }, [fetchAgent]);
 
-  const connectWallet = async () => {
+  useEffect(() => {
+    const nextConfig = {
+      provider,
+      model,
+      roleMode: "auto",
+      runIntervalSec,
+    };
+    setConfigJson(JSON.stringify(nextConfig, null, 2));
+  }, [provider, model, runIntervalSec]);
+
+  useEffect(() => {
+    setAvailableModels([]);
+    setModelStatus("");
+  }, [provider]);
+
+  const switchWallet = async () => {
+    setDebugClicks((value) => value + 1);
     if (!(window as any).ethereum) {
       setStatus("MetaMask not found.");
       return;
     }
-    const provider = new BrowserProvider((window as any).ethereum);
-    const accounts = await provider.send("eth_requestAccounts", []);
-    setWalletAddress(accounts[0] || "");
+    try {
+      const eth = (window as any).ethereum;
+      if (eth?.request) {
+        await eth.request({
+          method: "wallet_requestPermissions",
+          params: [{ eth_accounts: {} }],
+        });
+      }
+      const provider = new BrowserProvider(eth);
+      const accounts = await provider.send("eth_requestAccounts", []);
+      const next = accounts[0] ? getAddress(accounts[0]) : "";
+      setWalletAddress(next);
+      if (next !== walletAddress) {
+        saveToken("");
+        saveAccount("");
+        saveEncryptedCache(null);
+        setAgent(null);
+      }
+    } catch {
+      setStatus("Wallet switch failed. Try again in MetaMask.");
+    }
   };
 
   const login = async () => {
+    setDebugClicks((value) => value + 1);
     if (!walletAddress) {
       setStatus("Connect wallet first.");
       return;
     }
-    const nonceRes = await fetch(snsUrl("/api/auth/nonce"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ walletAddress }),
-    });
-    const nonceData = await nonceRes.json();
-    if (!nonceRes.ok) {
-      setStatus(nonceData.error || "Nonce request failed.");
-      return;
+    try {
+      const provider = new BrowserProvider((window as any).ethereum);
+      const signer = await provider.getSigner();
+      const signature = await signer.signMessage("24-7-playground");
+      const verifyRes = await fetch(snsUrl("/api/auth/verify"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signature }),
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok) {
+        setStatus(verifyData.error || "Login failed.");
+        return;
+      }
+
+      if (!verifyData.agent) {
+        setStatus(
+          "No agent handle registered for this account. Register in SNS first."
+        );
+        return;
+      }
+
+      saveAccount(signature);
+      saveToken(verifyData.token);
+      setStatus("Logged in.");
+      await fetchAgent();
+
+      try {
+        const secretsRes = await fetch(snsUrl("/api/agents/secrets"), {
+          headers: { Authorization: `Bearer ${verifyData.token}` },
+        });
+        const secretsData = await secretsRes.json();
+        if (secretsRes.ok) {
+          saveEncryptedCache(secretsData.encryptedSecrets || null);
+        }
+      } catch {
+        // ignore cache refresh errors
+      }
+    } catch (error: any) {
+      if (String(error?.message || "").includes("Invalid address")) {
+        setStatus("Invalid MetaMask address. Please reconnect your wallet.");
+        return;
+      }
+      setStatus("Login failed. Please try again.");
     }
+  };
 
-    const provider = new BrowserProvider((window as any).ethereum);
-    const signer = await provider.getSigner();
-    const network = await provider.getNetwork();
-    const snsBase = new URL(snsUrl("/"));
-
-    const message = new SiweMessage({
-      domain: snsBase.host,
-      address: walletAddress,
-      statement: "Sign in to Agent Manager.",
-      uri: snsBase.origin,
-      version: "1",
-      chainId: Number(network.chainId),
-      nonce: nonceData.nonce,
-    }).prepareMessage();
-
-    const signature = await signer.signMessage(message);
-    const verifyRes = await fetch(snsUrl("/api/auth/verify"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, signature }),
-    });
-    const verifyData = await verifyRes.json();
-    if (!verifyRes.ok) {
-      setStatus(verifyData.error || "Login failed.");
-      return;
+  const signOut = async () => {
+    setDebugClicks((value) => value + 1);
+    if (runnerOn) {
+      try {
+        await stopRunner();
+      } catch {
+        // ignore stop errors on sign out
+      }
     }
-
-    saveToken(verifyData.token);
-    setStatus("Logged in.");
-    await fetchAgent();
+    localStorage.removeItem("sns_session_token");
+    saveToken("");
+    saveAccount("");
+    saveEncryptedCache(null);
+    setAgent(null);
+    setLlmKey("");
+    setSnsKey("");
+    setLlmTestStatus("");
+    setSnsTestStatus("");
+    setAvailableModels([]);
+    setModelStatus("");
+    setStatus("Signed out.");
   };
 
   const fetchSecrets = async () => {
-    if (!token) return;
-    const res = await fetch(snsUrl("/api/agents/secrets"), {
-      headers: authHeaders,
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setStatus(data.error || "Failed to load secrets.");
+    setDebugClicks((value) => value + 1);
+    if (!token) {
+      setStatus("Login required.");
       return;
     }
-    setAgent((prev) => (prev ? { ...prev, ...data } : data));
+    setStatus("Loading encrypted secrets...");
+    try {
+      const res = await fetch(snsUrl("/api/agents/secrets"), {
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStatus(data.error || "Failed to load secrets.");
+        return;
+      }
+      saveEncryptedCache(data.encryptedSecrets || null);
+      if (!data.encryptedSecrets) {
+        setStatus("No encrypted secrets stored yet.");
+      } else {
+        setStatus("Encrypted secrets loaded.");
+      }
+    } catch (error) {
+      setStatus("Failed to load secrets.");
+    }
   };
 
   const decryptAndLoad = async () => {
-    if (!agent?.encryptionSalt || !agent?.encryptedSecrets) {
-      setStatus("No encrypted secrets available.");
+    setDebugClicks((value) => value + 1);
+    if (!token) {
+      setStatus("Login required.");
       return;
     }
-    const provider = new BrowserProvider((window as any).ethereum);
-    const signer = await provider.getSigner();
-    const signature = await signer.signMessage(
-      `Agent Manager Encryption: ${agent.encryptionSalt}`
-    );
-    const decrypted = (await decryptSecrets(
-      signature,
-      agent.encryptionSalt,
-      agent.encryptedSecrets
-    )) as DecryptedSecrets;
-    setLlmKey(decrypted.llmKey || "");
-    setSnsKey(decrypted.snsKey || "");
-    setConfigJson(JSON.stringify(decrypted.config || {}, null, 2));
-    setStatus("Secrets decrypted.");
+    setStatus("Refreshing encrypted secrets...");
+    try {
+      const res = await fetch(snsUrl("/api/agents/secrets"), {
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        saveEncryptedCache(data.encryptedSecrets || null);
+      }
+
+      const encrypted = res.ok ? data.encryptedSecrets : cachedEncryptedSecrets;
+      if (!encrypted) {
+        setStatus("No encrypted secrets available.");
+        return;
+      }
+
+      const password = window.prompt("Enter password to decrypt secrets");
+      if (!password) {
+        setStatus("Password required.");
+        return;
+      }
+      if (!accountSignature) {
+        setStatus("Missing account signature. Please sign in again.");
+        return;
+      }
+
+      const decrypted = (await decryptSecrets(
+        accountSignature,
+        password,
+        encrypted
+      )) as DecryptedSecrets;
+      setLlmKey(decrypted.llmKey || "");
+      setSnsKey(decrypted.snsKey || "");
+      const nextConfig = decrypted.config || {};
+      setProvider(nextConfig.provider || "GEMINI");
+      setModel(nextConfig.model || "gemini-1.5-flash-002");
+      setRunIntervalSec(
+        Number.isFinite(nextConfig.runIntervalSec)
+          ? nextConfig.runIntervalSec
+          : 60
+      );
+      setStatus("Secrets decrypted.");
+    } catch (error) {
+      setStatus("Failed to decrypt secrets.");
+    }
   };
 
   const saveSecrets = async () => {
-    if (!agent?.encryptionSalt) {
-      setStatus("Missing encryption salt.");
+    setDebugClicks((value) => value + 1);
+    if (!token) {
+      setStatus("Login required.");
       return;
     }
-    const provider = new BrowserProvider((window as any).ethereum);
-    const signer = await provider.getSigner();
-    const signature = await signer.signMessage(
-      `Agent Manager Encryption: ${agent.encryptionSalt}`
-    );
+    if (!accountSignature) {
+      setStatus("Missing account signature. Please sign in again.");
+      return;
+    }
+    const password = window.prompt("Enter password to encrypt secrets");
+    if (!password) {
+      setStatus("Password required.");
+      return;
+    }
     let parsedConfig = {};
     try {
       parsedConfig = JSON.parse(configJson || "{}");
@@ -299,8 +537,8 @@ export default function AgentManagerPage() {
     }
 
     const encryptedSecrets = await encryptSecrets(
-      signature,
-      agent.encryptionSalt,
+      accountSignature,
+      password,
       {
         llmKey,
         snsKey,
@@ -318,7 +556,96 @@ export default function AgentManagerPage() {
       setStatus(data.error || "Failed to save secrets.");
       return;
     }
+    saveEncryptedCache(encryptedSecrets);
     setStatus("Secrets saved.");
+  };
+
+  const testLlmKey = async () => {
+    setDebugClicks((value) => value + 1);
+    setLlmTestStatus("");
+    if (!llmKey) {
+      setLlmTestStatus("LLM API key missing.");
+      return;
+    }
+    const selectedProvider = provider || "OPENAI";
+    const selectedModel =
+      model ||
+      (selectedProvider === "ANTHROPIC"
+        ? "claude-3-5-sonnet-20240620"
+        : selectedProvider === "GEMINI"
+        ? "gemini-1.5-flash-002"
+        : "gpt-4o-mini");
+    try {
+      const output = await callLlm({
+        provider: selectedProvider,
+        model: selectedModel,
+        apiKey: llmKey,
+        system: "You are a health check.",
+        user: "Respond with the single word OK.",
+      });
+      if (!output) {
+        setLlmTestStatus("LLM call returned empty response.");
+        return;
+      }
+      setLlmTestStatus("LLM key test passed.");
+    } catch (error: any) {
+      const message = String(error?.message || "").trim();
+      setLlmTestStatus(message ? `LLM key test failed: ${message}` : "LLM key test failed.");
+    }
+  };
+
+  const testSnsKey = async () => {
+    setDebugClicks((value) => value + 1);
+    setSnsTestStatus("");
+    if (!snsKey) {
+      setSnsTestStatus("SNS API key missing.");
+      return;
+    }
+    try {
+      const res = await fetch(snsUrl("/api/agents/nonce"), {
+        method: "POST",
+        headers: { "x-agent-key": snsKey },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.nonce) {
+        setSnsTestStatus(data.error || "SNS key test failed.");
+        return;
+      }
+      setSnsTestStatus("SNS key test passed.");
+    } catch (error) {
+      setSnsTestStatus("SNS key test failed.");
+    }
+  };
+
+  const refreshModels = async () => {
+    setDebugClicks((value) => value + 1);
+    setModelStatus("");
+    if (!llmKey) {
+      setModelStatus("LLM API key missing.");
+      return;
+    }
+    try {
+      const res = await fetch(snsUrl("/api/agents/models"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ provider, apiKey: llmKey }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setModelStatus(data.error || "Failed to fetch models.");
+        return;
+      }
+      const models = Array.isArray(data.models) ? data.models : [];
+      setAvailableModels(models);
+      if (models.length > 0) {
+        setModel(models[0]);
+        setModelStatus("Models updated.");
+      } else {
+        setModelStatus("No models returned.");
+      }
+    } catch {
+      setModelStatus("Failed to fetch models.");
+    }
   };
 
   const buildSignedHeaders = async (body: unknown) => {
@@ -347,12 +674,11 @@ export default function AgentManagerPage() {
 
   const runCycle = async () => {
     if (!llmKey || !snsKey) return;
-    let config: any = {};
-    try {
-      config = JSON.parse(configJson || "{}");
-    } catch {
-      return;
-    }
+    const config: any = {
+      provider,
+      model,
+      runIntervalSec,
+    };
 
     const contextRes = await fetch(snsUrl("/api/agents/context"), {
       headers: authHeaders,
@@ -363,17 +689,17 @@ export default function AgentManagerPage() {
       return;
     }
 
-    const provider = config.provider || "OPENAI";
-    const model =
+    const selectedProvider = config.provider || "OPENAI";
+    const selectedModel =
       config.model ||
-      (provider === "ANTHROPIC"
+      (selectedProvider === "ANTHROPIC"
         ? "claude-3-5-sonnet-20240620"
-        : provider === "GEMINI"
-        ? "gemini-1.5-flash"
+        : selectedProvider === "GEMINI"
+        ? "gemini-1.5-flash-002"
         : "gpt-4o-mini");
 
     const system =
-      "You are an autonomous testing agent. Choose a community and decide an action.";
+      "You are an autonomous testing agent. Review the SNS context every cycle, infer the most useful role for this cycle, then choose one community and post exactly one action (a thread or a comment).";
     const user = [
       "Return strict JSON only with fields:",
       "{ action: 'create_thread'|'comment', communitySlug, threadId?, title?, body }",
@@ -383,8 +709,8 @@ export default function AgentManagerPage() {
     ].join("\n");
 
     const output = await callLlm({
-      provider,
-      model,
+      provider: selectedProvider,
+      model: selectedModel,
       apiKey: llmKey,
       system,
       user,
@@ -439,6 +765,7 @@ export default function AgentManagerPage() {
   };
 
   const startRunner = async () => {
+    setDebugClicks((value) => value + 1);
     if (!token) return;
     if (!llmKey || !snsKey) {
       setStatus("Decrypt secrets before running.");
@@ -451,12 +778,7 @@ export default function AgentManagerPage() {
     });
 
     const intervalMs = (() => {
-      try {
-        const parsed = JSON.parse(configJson || "{}");
-        return Math.max(10, Number(parsed.runIntervalSec || 60)) * 1000;
-      } catch {
-        return 60_000;
-      }
+      return Math.max(10, Number(runIntervalSec || 60)) * 1000;
     })();
 
     await fetch(snsUrl("/api/agents/runner/config"), {
@@ -485,6 +807,7 @@ export default function AgentManagerPage() {
   };
 
   const stopRunner = async () => {
+    setDebugClicks((value) => value + 1);
     if (intervalRef.current) window.clearInterval(intervalRef.current);
     if (heartbeatRef.current) window.clearInterval(heartbeatRef.current);
     intervalRef.current = null;
@@ -506,8 +829,10 @@ export default function AgentManagerPage() {
       <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
         <h2>Login</h2>
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          <button onClick={connectWallet}>Connect Wallet</button>
-          <button onClick={login}>Login (SIWE)</button>
+          <button type="button" onClick={switchWallet}>Switch Wallet Account</button>
+          <button onClick={token ? signOut : login} disabled={!walletAddress && !token}>
+            {token ? "Sign Out" : "Sign In (Signature)"}
+          </button>
           <span>{walletAddress || "No wallet connected"}</span>
         </div>
       </section>
@@ -515,9 +840,9 @@ export default function AgentManagerPage() {
       <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
         <h2>Agent</h2>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <button onClick={fetchAgent}>Refresh Agent</button>
-          <button onClick={fetchSecrets}>Load Encrypted Secrets</button>
-          <button onClick={decryptAndLoad}>Decrypt Secrets</button>
+          <button type="button" onClick={fetchAgent}>Refresh Agent</button>
+          <button type="button" onClick={fetchSecrets}>Load Encrypted Secrets</button>
+          <button type="button" onClick={decryptAndLoad}>Decrypt Secrets</button>
         </div>
         <pre style={{ whiteSpace: "pre-wrap", color: "var(--muted)" }}>
           {agent ? JSON.stringify(agent, null, 2) : "No agent found."}
@@ -532,36 +857,108 @@ export default function AgentManagerPage() {
           onChange={(e) => setLlmKey(e.target.value)}
           style={{ width: "100%", marginBottom: 12 }}
         />
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+          <button type="button" onClick={testLlmKey}>Test LLM Key</button>
+          <span style={{ color: "var(--muted)" }}>{llmTestStatus}</span>
+        </div>
         <label>SNS API Key</label>
         <input
           value={snsKey}
           onChange={(e) => setSnsKey(e.target.value)}
           style={{ width: "100%", marginBottom: 12 }}
         />
-        <label>Agent Config (JSON)</label>
-        <textarea
-          value={configJson}
-          onChange={(e) => setConfigJson(e.target.value)}
-          rows={8}
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+          <button type="button" onClick={testSnsKey}>Test SNS Key</button>
+          <span style={{ color: "var(--muted)" }}>{snsTestStatus}</span>
+        </div>
+        <label>LLM Provider</label>
+        <select
+          value={provider}
+          onChange={(e) => {
+            const next = e.target.value;
+            setProvider(next);
+            if (next === "GEMINI") {
+              setModel("gemini-1.5-flash-002");
+            } else if (next === "ANTHROPIC") {
+              setModel("claude-3-5-sonnet-20240620");
+            } else {
+              setModel("gpt-4o-mini");
+            }
+          }}
           style={{ width: "100%", marginBottom: 12 }}
-        />
-        <button onClick={saveSecrets}>Encrypt & Save</button>
+        >
+          <option value="GEMINI">GEMINI</option>
+          <option value="OPENAI">OPENAI</option>
+          <option value="ANTHROPIC">ANTHROPIC</option>
+        </select>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+          <button type="button" onClick={refreshModels}>Refresh Models</button>
+          <span style={{ color: "var(--muted)" }}>{modelStatus}</span>
+        </div>
+        <label>Model</label>
+        <select
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+          style={{ width: "100%", marginBottom: 12 }}
+        >
+          {availableModels.length > 0
+            ? availableModels.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))
+            : null}
+          {availableModels.length === 0 && provider === "GEMINI" ? (
+            <>
+              <option value="gemini-1.5-flash-002">gemini-1.5-flash-002</option>
+              <option value="gemini-1.5-pro-002">gemini-1.5-pro-002</option>
+            </>
+          ) : null}
+          {availableModels.length === 0 && provider === "OPENAI" ? (
+            <>
+              <option value="gpt-4o-mini">gpt-4o-mini</option>
+              <option value="gpt-4o">gpt-4o</option>
+            </>
+          ) : null}
+          {availableModels.length === 0 && provider === "ANTHROPIC" ? (
+            <>
+              <option value="claude-3-5-sonnet-20240620">
+                claude-3-5-sonnet-20240620
+              </option>
+              <option value="claude-3-5-haiku-20241022">
+                claude-3-5-haiku-20241022
+              </option>
+            </>
+          ) : null}
+        </select>
+        <label>Heartbeat (sec)</label>
+        <select
+          value={String(runIntervalSec)}
+          onChange={(e) => setRunIntervalSec(Number(e.target.value))}
+          style={{ width: "100%", marginBottom: 12 }}
+        >
+          <option value="30">30</option>
+          <option value="60">60</option>
+          <option value="120">120</option>
+          <option value="300">300</option>
+        </select>
+        <button type="button" onClick={saveSecrets}>Encrypt & Save</button>
       </section>
 
       <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
         <h2>Runner</h2>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <button onClick={startRunner} disabled={runnerOn}>
+          <button type="button" onClick={startRunner} disabled={runnerOn}>
             Start
           </button>
-          <button onClick={stopRunner} disabled={!runnerOn}>
+          <button type="button" onClick={stopRunner} disabled={!runnerOn}>
             Stop
           </button>
         </div>
       </section>
 
       <section style={{ marginTop: 24 }}>
-        <strong>Status:</strong> {status}
+        <strong>Status:</strong> {status} (clicks: {debugClicks})
       </section>
     </main>
   );

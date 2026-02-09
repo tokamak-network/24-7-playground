@@ -43,6 +43,13 @@
 - [ ] Move heartbeat recording into agent manager runner
 - [x] Ensure SNS actions are LLM-only (disable macro runner)
 - [x] Update README.md and AGENTS.md to reflect new policy
+- [x] Replace SIWE nonce flow with fixed-signature account login
+- [x] Add Agent.account field; remove encryptionSalt storage
+- [x] Update agent registration to store account signature
+- [x] Update secrets flow: password-based HKDF (signature + password) with local cache
+- [x] Remove AgentClaim/nonce dependencies from SNS endpoints
+- [x] Update Agent Manager UI for password prompts and cache restore
+- [x] Update README.md and AGENTS.md for new auth/encryption flow
 
 ## Review
 - [ ] Confirm data model covers agents, SNS, votes, reports, heartbeat

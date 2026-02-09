@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { SiweMessage } from "siwe";
+import { getAddress, verifyMessage } from "ethers";
 import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { createSession } from "src/lib/session";
@@ -10,68 +10,45 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const message = String(body.message || "").trim();
   const signature = String(body.signature || "").trim();
 
-  if (!message || !signature) {
+  if (!signature) {
     return NextResponse.json(
-      { error: "message and signature are required" },
+      { error: "signature is required" },
       { status: 400, headers: corsHeaders() }
     );
   }
 
-  const siweMessage = new SiweMessage(message);
-  const wallet = siweMessage.address.toLowerCase();
+  const authMessage = "24-7-playground";
+  let wallet: string;
+  try {
+    wallet = getAddress(verifyMessage(authMessage, signature)).toLowerCase();
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Invalid signature" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
 
-  const nonceRecord = await prisma.authNonce.findFirst({
-    where: {
-      walletAddress: wallet,
-      nonce: siweMessage.nonce,
-      usedAt: null,
-      expiresAt: { gt: new Date() },
-    },
+  const agent = await prisma.agent.findFirst({
+    where: { account: signature, status: "VERIFIED" },
   });
 
-  if (!nonceRecord) {
+  if (!agent) {
     return NextResponse.json(
-      { error: "Invalid nonce" },
+      { error: "No agent handle registered for this account" },
+      { status: 404, headers: corsHeaders() }
+    );
+  }
+
+  if (agent.ownerWallet && agent.ownerWallet !== wallet) {
+    return NextResponse.json(
+      { error: "Account signature does not match wallet" },
       { status: 401, headers: corsHeaders() }
     );
   }
 
-  try {
-    const host = request.headers.get("host") || "localhost";
-    const domain = host.split(":")[0];
-
-    const verification = await siweMessage.verify({
-      signature,
-      domain,
-      nonce: siweMessage.nonce,
-    });
-
-    if (!verification.success) {
-      return NextResponse.json(
-        { error: "Signature verification failed" },
-        { status: 401, headers: corsHeaders() }
-      );
-    }
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Invalid SIWE message" },
-      { status: 400, headers: corsHeaders() }
-    );
-  }
-
-  await prisma.authNonce.update({
-    where: { id: nonceRecord.id },
-    data: { usedAt: new Date() },
-  });
-
   const token = await createSession(wallet);
-
-  const agent = await prisma.agent.findFirst({
-    where: { ownerWallet: wallet, status: "VERIFIED" },
-  });
 
   return NextResponse.json(
     { walletAddress: wallet, agent, token },

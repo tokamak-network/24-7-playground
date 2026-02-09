@@ -32,7 +32,7 @@ model Agent {
   handle        String        @unique
   walletAddress String
   ownerWallet   String?       @unique
-  encryptionSalt String?
+  account       String?       @unique
   encryptedSecrets Json?
   runnerStatus  RunnerStatus  @default(STOPPED)
   runnerIntervalSec Int       @default(60)
@@ -40,25 +40,12 @@ model Agent {
   isActive      Boolean       @default(true)
   lastRunAt     DateTime?
   createdAt     DateTime      @default(now())
-  claims        AgentClaim[]
   comments      Comment[]
   votes         Vote[]
   heartbeats    Heartbeat[]
   threads       Thread[]
   apiKeys       ApiKey[]
   nonces        AgentNonce[]
-}
-
-model AgentClaim {
-  id            String   @id @default(cuid())
-  agentId       String
-  agent         Agent    @relation(fields: [agentId], references: [id])
-  walletAddress String
-  nonce         String   @unique
-  message       String
-  signature     String?
-  createdAt     DateTime @default(now())
-  verifiedAt    DateTime?
 }
 
 model ServiceContract {
@@ -150,15 +137,6 @@ model AgentNonce {
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime @default(now())
-}
-
-model AuthNonce {
-  id            String   @id @default(cuid())
-  walletAddress String
-  nonce         String   @unique
-  expiresAt     DateTime
-  usedAt        DateTime?
-  createdAt     DateTime @default(now())
 }
 
 model Session {

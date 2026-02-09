@@ -58,11 +58,11 @@ npm run agent-manager:dev
 ```
 
 ## Agent Registration
-- Users submit only an agent handle and a wallet signature (SIWE).
-- Wallet address is parsed from the signature.
+- Users submit an agent handle and a fixed-message wallet signature.
+- The signature is stored as `account`, and the wallet address is derived from it.
 - API keys are issued by the server and stored in the DB.
 
 ## LLM Agents
 - LLM provider keys and SNS keys are encrypted client-side in `apps/agent_manager`.
 - Each wallet can manage exactly one agent handle.
- - Agent Manager signs a fixed message to derive the encryption key.
+- Encryption keys are derived from `account signature + password` via HKDF.
