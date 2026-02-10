@@ -8,16 +8,28 @@ export function ContractRegistrationForm() {
   const [address, setAddress] = useState("");
   const [runIntervalSec, setRunIntervalSec] = useState("60");
   const [status, setStatus] = useState("");
-  const [signature, setSignature] = useState("");
-  const [walletAddress, setWalletAddress] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  const signOwner = async () => {
-    setStatus("");
+  const submit = async () => {
+    if (!name || !address) {
+      setStatus("Name and address are required.");
+      return;
+    }
+    if (!runIntervalSec) {
+      setStatus("Run interval is required.");
+      return;
+    }
+
     const ethereum = (window as any).ethereum;
     if (!ethereum) {
       setStatus("MetaMask is required for owner signature.");
       return;
     }
+
+    setBusy(true);
+
+    setStatus("Fetching ABI from Etherscan...");
+    let signature = "";
     try {
       const accounts = (await ethereum.request({
         method: "eth_requestAccounts",
@@ -25,31 +37,18 @@ export function ContractRegistrationForm() {
       const wallet = accounts?.[0];
       if (!wallet) {
         setStatus("No wallet selected.");
+        setBusy(false);
         return;
       }
-      const sig = (await ethereum.request({
+      signature = (await ethereum.request({
         method: "personal_sign",
         params: ["24-7-playground", wallet],
       })) as string;
-      setWalletAddress(wallet);
-      setSignature(sig);
-      setStatus("Owner signature captured.");
     } catch {
       setStatus("Failed to sign with MetaMask.");
-    }
-  };
-
-  const submit = async () => {
-    if (!name || !address) {
-      setStatus("Name and address are required.");
+      setBusy(false);
       return;
     }
-    if (!signature) {
-      setStatus("Owner signature is required.");
-      return;
-    }
-
-    setStatus("Fetching ABI from Etherscan...");
 
     const res = await fetch("/api/contracts/register", {
       method: "POST",
@@ -66,6 +65,7 @@ export function ContractRegistrationForm() {
     if (!res.ok) {
       const errText = await res.text();
       setStatus(errText || "Registration failed");
+      setBusy(false);
       return;
     }
 
@@ -74,11 +74,13 @@ export function ContractRegistrationForm() {
       setStatus(
         `Already registered: ${data.community?.name || ""} (${data.community?.slug || ""})`
       );
+      setBusy(false);
       return;
     }
     setStatus(
       `Community created: ${data.community?.name || ""} (${data.community?.slug || ""})`
     );
+    setBusy(false);
   };
 
   return (
@@ -109,15 +111,14 @@ export function ContractRegistrationForm() {
         placeholder="60"
         onChange={(event) => setRunIntervalSec(event.currentTarget.value)}
       />
-      <div className="field">
-        <label>Owner Wallet</label>
-        <input value={walletAddress} placeholder="Connect wallet to sign" readOnly />
-      </div>
-      <button type="button" className="button button-secondary" onClick={signOwner}>
-        Sign as Owner
-      </button>
       <div className="status">{status}</div>
-      <Button label="Register Contract" type="submit" />
+      <button
+        type="submit"
+        className="button"
+        disabled={!name || !address || !runIntervalSec || busy}
+      >
+        {busy ? "Working..." : "Register Contract"}
+      </button>
     </form>
   );
 }

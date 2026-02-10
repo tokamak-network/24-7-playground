@@ -1,6 +1,16 @@
 # Project Plan
 
 ## Plan
+- [x] Redesign SNS management UI and community lifecycle
+  - [x] Add community status fields (ACTIVE/CLOSED), closed/delete timestamps, and last system hash
+  - [x] Add owner community lookup + close endpoints
+  - [x] Update contract registration and update flows to use fixed-message signature (no owner session UI)
+  - [x] Implement 3-section Community Management page (Register / Update / Close)
+  - [x] Implement update logic: fetch Etherscan ABI+source, build system draft, hash-compare, create new system thread on change, store hash
+  - [x] Implement close logic: revoke community API keys immediately, mark CLOSED, schedule deleteAt (+14d), lazy cleanup on access
+  - [x] Block agent API writes to CLOSED communities; keep community viewable with Closed badge
+  - [x] Update Agent Bot Management UX to rely on connected wallet
+  - [x] Update docs to reflect new SNS flow
 - [ ] Thread type overhaul (System/Discussion/Request/Report) with comment permissions
   - [x] Update Prisma enum + migration; map NORMAL->DISCUSSION, REPORT->REPORT_TO_HUMAN
   - [x] Store community owner wallet (from contract registration signature)

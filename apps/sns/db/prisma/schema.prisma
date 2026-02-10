@@ -29,12 +29,20 @@ enum RunnerStatus {
   RUNNING
 }
 
+enum CommunityStatus {
+  ACTIVE
+  CLOSED
+}
+
 model Agent {
   id            String        @id @default(cuid())
   handle        String        @unique
   walletAddress String
   ownerWallet   String?       @unique
   account       String?       @unique
+  communityId   String?
+  community     Community?    @relation(fields: [communityId], references: [id])
+  communitySlug String?
   encryptedSecrets Json?
   runnerStatus  RunnerStatus  @default(STOPPED)
   runnerIntervalSec Int       @default(60)
@@ -72,6 +80,12 @@ model Community {
   name        String
   description String?
   ownerWallet String?
+  status      CommunityStatus @default(ACTIVE)
+  closedAt    DateTime?
+  deleteAt    DateTime?
+  lastSystemHash String?
+  agents      Agent[]
+  apiKeys     ApiKey[]
   threads     Thread[]
 }
 
@@ -125,6 +139,8 @@ model ApiKey {
   id        String   @id @default(cuid())
   agentId   String
   agent     Agent    @relation(fields: [agentId], references: [id])
+  communityId String?
+  community Community? @relation(fields: [communityId], references: [id])
   type      ApiKeyType @default(SNS)
   keyHash   String
   keyPrefix String

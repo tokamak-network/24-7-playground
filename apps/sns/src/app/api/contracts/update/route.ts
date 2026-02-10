@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
-import { requireSession } from "src/lib/session";
 import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
+import { getAddress, verifyMessage } from "ethers";
+import { buildSystemBody, hashSystemBody } from "src/lib/systemThread";
+import { cleanupExpiredCommunities } from "src/lib/community";
 
 function detectFaucet(abi: unknown) {
   if (!Array.isArray(abi)) {
@@ -22,53 +24,25 @@ function detectFaucet(abi: unknown) {
   return entry?.name || null;
 }
 
-function buildSystemBody(input: {
-  name: string;
-  address: string;
-  chain: string;
-  sourceInfo: any;
-  abiJson: unknown;
-}) {
-  const { name, address, chain, sourceInfo, abiJson } = input;
-  return [
-    `Contract: ${name}`,
-    `Address: ${address}`,
-    `Chain: ${chain}`,
-    `ContractName: ${sourceInfo?.ContractName || "unknown"}`,
-    `Compiler: ${sourceInfo?.CompilerVersion || "unknown"}`,
-    `Optimization: ${sourceInfo?.OptimizationUsed || "unknown"}`,
-    `Runs: ${sourceInfo?.Runs || "unknown"}`,
-    `EVM: ${sourceInfo?.EVMVersion || "unknown"}`,
-    `License: ${sourceInfo?.LicenseType || "unknown"}`,
-    `Proxy: ${sourceInfo?.Proxy || "unknown"}`,
-    `Implementation: ${sourceInfo?.Implementation || "unknown"}`,
-    ``,
-    `SourceCode:`,
-    sourceInfo?.SourceCode || "unavailable",
-    ``,
-    `ABI:`,
-    JSON.stringify(abiJson, null, 2),
-  ].join("\n");
-}
-
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
 }
 
 export async function POST(request: Request) {
-  const session = await requireSession(request);
-  if ("error" in session) {
-    return NextResponse.json(
-      { error: session.error },
-      { status: 401, headers: corsHeaders() }
-    );
-  }
+  await cleanupExpiredCommunities();
 
   const body = await request.json();
   const communityId = String(body.communityId || "").trim();
+  const signature = String(body.signature || "").trim();
   if (!communityId) {
     return NextResponse.json(
       { error: "communityId is required" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
+  if (!signature) {
+    return NextResponse.json(
+      { error: "signature is required" },
       { status: 400, headers: corsHeaders() }
     );
   }
@@ -84,9 +58,26 @@ export async function POST(request: Request) {
       { status: 404, headers: corsHeaders() }
     );
   }
+  if (community.status === "CLOSED") {
+    return NextResponse.json(
+      { error: "Community is closed" },
+      { status: 403, headers: corsHeaders() }
+    );
+  }
+
+  const authMessage = "24-7-playground";
+  let walletAddress = "";
+  try {
+    walletAddress = getAddress(verifyMessage(authMessage, signature)).toLowerCase();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid signature" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
 
   const ownerWallet = community.ownerWallet?.toLowerCase() || "";
-  if (!ownerWallet || ownerWallet !== session.walletAddress.toLowerCase()) {
+  if (ownerWallet && ownerWallet !== walletAddress) {
     return NextResponse.json(
       { error: "Only the community owner can update system threads" },
       { status: 403, headers: corsHeaders() }
@@ -121,6 +112,29 @@ export async function POST(request: Request) {
   }
 
   const faucetFunction = detectFaucet(abiJson);
+  const draftBody = buildSystemBody({
+    name: community.serviceContract.name,
+    address,
+    chain,
+    sourceInfo,
+    abiJson,
+  });
+  const draftHash = hashSystemBody(draftBody);
+
+  const latestSystemThread = await prisma.thread.findFirst({
+    where: { communityId: community.id, type: "SYSTEM" },
+    orderBy: { createdAt: "desc" },
+  });
+  const latestHash = latestSystemThread
+    ? hashSystemBody(latestSystemThread.body)
+    : community.lastSystemHash;
+
+  if (latestHash && latestHash === draftHash) {
+    return NextResponse.json(
+      { updated: false },
+      { headers: corsHeaders() }
+    );
+  }
 
   await prisma.serviceContract.update({
     where: { id: community.serviceContract.id },
@@ -135,14 +149,16 @@ export async function POST(request: Request) {
     data: {
       communityId: community.id,
       title: `Contract update detected for ${community.serviceContract.name}`,
-      body: buildSystemBody({
-        name: community.serviceContract.name,
-        address,
-        chain,
-        sourceInfo,
-        abiJson,
-      }),
+      body: draftBody,
       type: "SYSTEM",
+    },
+  });
+
+  await prisma.community.update({
+    where: { id: community.id },
+    data: {
+      lastSystemHash: draftHash,
+      ownerWallet: ownerWallet || walletAddress,
     },
   });
 

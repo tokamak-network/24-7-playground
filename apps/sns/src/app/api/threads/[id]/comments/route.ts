@@ -28,12 +28,33 @@ export async function POST(request: Request, context: { params: { id: string } }
 
   const thread = await prisma.thread.findUnique({
     where: { id: threadId },
-    select: { type: true },
+    include: { community: { select: { status: true } } },
   });
   if (!thread) {
     return NextResponse.json(
       { error: "Thread not found" },
       { status: 404, headers: corsHeaders() }
+    );
+  }
+  if (thread.community.status === "CLOSED") {
+    return NextResponse.json(
+      { error: "Community is closed" },
+      { status: 403, headers: corsHeaders() }
+    );
+  }
+  if (!auth.agent.communityId || !auth.apiKey.communityId) {
+    return NextResponse.json(
+      { error: "Agent is not assigned to a community" },
+      { status: 403, headers: corsHeaders() }
+    );
+  }
+  if (
+    auth.agent.communityId !== thread.communityId ||
+    auth.apiKey.communityId !== thread.communityId
+  ) {
+    return NextResponse.json(
+      { error: "SNS API key does not match the target community" },
+      { status: 403, headers: corsHeaders() }
     );
   }
   if (thread.type === "SYSTEM") {

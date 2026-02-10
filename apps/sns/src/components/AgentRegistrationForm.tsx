@@ -5,9 +5,26 @@ import { getAddress } from "ethers";
 import { Button, Field } from "src/components/ui";
 import { useEffect } from "react";
 
-export function AgentRegistrationForm() {
+type CommunityOption = {
+  id: string;
+  slug: string;
+  name: string;
+  chain: string;
+  address: string;
+};
+
+type AgentRegistrationFormProps = {
+  communities: CommunityOption[];
+};
+
+export function AgentRegistrationForm({ communities }: AgentRegistrationFormProps) {
   const [handle, setHandle] = useState("");
   const [wallet, setWallet] = useState("");
+  const [communityId, setCommunityId] = useState(
+    communities[0]?.id || ""
+  );
+  const [currentCommunity, setCurrentCommunity] = useState<string | null>(null);
+  const [hasExisting, setHasExisting] = useState(false);
   const [status, setStatus] = useState("");
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -17,6 +34,42 @@ export function AgentRegistrationForm() {
       return getAddress(value);
     } catch {
       return value;
+    }
+  };
+
+  const resetAgentState = () => {
+    setHandle("");
+    setCurrentCommunity(null);
+    setHasExisting(false);
+  };
+
+  const loadAgent = async (nextWallet: string) => {
+    if (!nextWallet) {
+      resetAgentState();
+      return;
+    }
+    setStatus("Checking existing registration...");
+    setApiKey(null);
+    try {
+      const res = await fetch(
+        `/api/agents/lookup?walletAddress=${encodeURIComponent(nextWallet)}`
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        resetAgentState();
+        setStatus("No existing agent found. You can register a new handle.");
+        return;
+      }
+      setHandle(data.agent.handle || "");
+      setCurrentCommunity(data.community?.slug || null);
+      if (data.agent.communityId) {
+        setCommunityId(data.agent.communityId);
+      }
+      setHasExisting(true);
+      setStatus("Existing agent loaded. You can update the community.");
+    } catch {
+      resetAgentState();
+      setStatus("Failed to load agent data.");
     }
   };
 
@@ -33,7 +86,9 @@ export function AgentRegistrationForm() {
       const accounts = (await window.ethereum.request({
         method: "eth_requestAccounts",
       })) as string[];
-      setWallet(normalizeAddress(accounts[0]));
+      const nextWallet = normalizeAddress(accounts[0]);
+      setWallet(nextWallet);
+      void loadAgent(nextWallet);
     } catch {
       setStatus("Wallet switch failed. Try again in MetaMask.");
     }
@@ -46,9 +101,12 @@ export function AgentRegistrationForm() {
     const handleAccounts = (accounts: string[]) => {
       if (!accounts || accounts.length === 0) {
         setWallet("");
+        resetAgentState();
         return;
       }
-      setWallet(normalizeAddress(accounts[0]));
+      const nextWallet = normalizeAddress(accounts[0]);
+      setWallet(nextWallet);
+      void loadAgent(nextWallet);
     };
 
     eth.on("accountsChanged", handleAccounts);
@@ -60,6 +118,10 @@ export function AgentRegistrationForm() {
   const registerAgent = async () => {
     if (!handle) {
       setStatus("Handle is required.");
+      return;
+    }
+    if (!communityId) {
+      setStatus("Select a community.");
       return;
     }
 
@@ -75,7 +137,7 @@ export function AgentRegistrationForm() {
     }
 
     setBusy(true);
-    setStatus("Registering agent...");
+    setStatus(hasExisting ? "Updating agent..." : "Registering agent...");
 
     try {
       let signature: string;
@@ -97,7 +159,7 @@ export function AgentRegistrationForm() {
       const registerRes = await fetch("/api/agents/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ handle, signature }),
+        body: JSON.stringify({ handle, signature, communityId }),
       });
 
       if (!registerRes.ok) {
@@ -109,7 +171,16 @@ export function AgentRegistrationForm() {
       if (data.apiKey) {
         setApiKey(data.apiKey);
       }
-      setStatus("Agent verified successfully.");
+      const communityLabel = data.community?.slug
+        ? ` for ${data.community.slug}`
+        : "";
+      setHasExisting(true);
+      setCurrentCommunity(data.community?.slug || currentCommunity);
+      setStatus(
+        hasExisting
+          ? `Community updated${communityLabel}.`
+          : `Agent verified${communityLabel}.`
+      );
     } catch (error) {
       if (error instanceof Error) {
         setStatus(error.message);
@@ -134,11 +205,6 @@ export function AgentRegistrationForm() {
         void registerAgent();
       }}
     >
-      <Field
-        label="Agent Handle"
-        placeholder="alpha-scout-07"
-        onChange={(event) => setHandle(event.currentTarget.value)}
-      />
       <div className="field">
         <label>Wallet Address</label>
         <div className="row">
@@ -151,18 +217,64 @@ export function AgentRegistrationForm() {
           />
         </div>
       </div>
+      {wallet ? (
+        <>
+          <Field
+            label="Agent Handle"
+            placeholder="alpha-scout-07"
+            onChange={(event) => setHandle(event.currentTarget.value)}
+            value={handle}
+            readOnly={hasExisting}
+          />
+          <div className="field">
+            <label>Current Community</label>
+            <input
+              value={currentCommunity || "Not assigned"}
+              readOnly
+              placeholder="Switch wallet to load"
+            />
+          </div>
+          <div className="field">
+            <label>Target Community</label>
+            {communities.length === 0 ? (
+              <div className="status">
+                No communities available. Register a contract first.
+              </div>
+            ) : (
+              <select
+                value={communityId}
+                onChange={(event) => setCommunityId(event.currentTarget.value)}
+              >
+                {communities.map((community) => (
+                  <option key={community.id} value={community.id}>
+                    {community.slug} · {community.chain} · {community.address.slice(0, 10)}…
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+        </>
+      ) : null}
       <div className="status">{status}</div>
       {apiKey ? (
         <div className="api-key">
-          <p>API Key (store this now):</p>
+          <p>New API Key (store this now):</p>
           <code>{apiKey}</code>
         </div>
       ) : null}
-      <Button
-        label={busy ? "Working..." : "Sign & Register"}
-        type="submit"
-        disabled={!wallet || busy}
-      />
+      {wallet ? (
+        <Button
+          label={
+            busy
+              ? "Working..."
+              : hasExisting
+              ? "Sign & Update"
+              : "Sign & Register"
+          }
+          type="submit"
+          disabled={busy || communities.length === 0}
+        />
+      ) : null}
     </form>
   );
 }

@@ -55,6 +55,8 @@ export async function POST(request: Request) {
       data: {
         account: null,
         ownerWallet: null,
+        communityId: null,
+        communitySlug: null,
         encryptedSecrets: null,
         status: "PENDING",
         isActive: false,

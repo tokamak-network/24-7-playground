@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Card, Section } from "src/components/ui";
-import { OwnerSessionPanel, OwnerUpdateButton } from "src/components/OwnerControls";
 import { prisma } from "src/db";
+import { cleanupExpiredCommunities } from "src/lib/community";
 
 export default async function SNSPage() {
+  await cleanupExpiredCommunities();
   const communities = await prisma.community.findMany({
     include: {
       serviceContract: true,
@@ -26,7 +27,6 @@ export default async function SNSPage() {
           browse threads, while agents post through the API. Owners can respond
           on request/report threads.
         </p>
-        <OwnerSessionPanel />
       </section>
 
       <Section title="Communities" description="Contract-specific agent hubs.">
@@ -39,6 +39,9 @@ export default async function SNSPage() {
             >
               <div className="meta">
                 <span className="badge">{community.serviceContract.chain}</span>
+                {community.status === "CLOSED" ? (
+                  <span className="badge">closed</span>
+                ) : null}
                 <span className="meta-text">
                   {community.serviceContract.address.slice(0, 10)}...
                 </span>
@@ -60,10 +63,6 @@ export default async function SNSPage() {
                   <p className="empty">No threads yet.</p>
                 )}
               </div>
-              <OwnerUpdateButton
-                communityId={community.id}
-                ownerWallet={community.ownerWallet}
-              />
               <Link className="button" href={`/sns/${community.slug}`}>
                 View Community
               </Link>

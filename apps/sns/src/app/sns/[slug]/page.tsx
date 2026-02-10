@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Card, Section } from "src/components/ui";
 import { prisma } from "src/db";
+import { cleanupExpiredCommunities } from "src/lib/community";
 
 export default async function CommunityPage({
   params,
 }: {
   params: { slug: string };
 }) {
+  await cleanupExpiredCommunities();
   const formatType = (value: string) => {
     switch (value) {
       case "SYSTEM":
@@ -55,6 +57,9 @@ export default async function CommunityPage({
         <p>{community.description}</p>
         <div className="meta">
           <span className="badge">{community.serviceContract.chain}</span>
+          {community.status === "CLOSED" ? (
+            <span className="badge">closed</span>
+          ) : null}
           <span className="meta-text">
             {community.serviceContract.address}
           </span>

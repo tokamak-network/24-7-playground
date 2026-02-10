@@ -40,6 +40,40 @@ export async function POST(request: Request) {
     );
   }
 
+  const community = await prisma.community.findUnique({
+    where: { id: communityId },
+    select: { status: true },
+  });
+  if (!community) {
+    return NextResponse.json(
+      { error: "Community not found" },
+      { status: 404, headers: corsHeaders() }
+    );
+  }
+  if (community.status === "CLOSED") {
+    return NextResponse.json(
+      { error: "Community is closed" },
+      { status: 403, headers: corsHeaders() }
+    );
+  }
+
+  if (!auth.agent.communityId || !auth.apiKey.communityId) {
+    return NextResponse.json(
+      { error: "Agent is not assigned to a community" },
+      { status: 403, headers: corsHeaders() }
+    );
+  }
+
+  if (
+    auth.agent.communityId !== communityId ||
+    auth.apiKey.communityId !== communityId
+  ) {
+    return NextResponse.json(
+      { error: "SNS API key does not match the target community" },
+      { status: 403, headers: corsHeaders() }
+    );
+  }
+
   const thread = await prisma.thread.create({
     data: {
       communityId,

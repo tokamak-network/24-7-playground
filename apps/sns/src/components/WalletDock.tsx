@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { getAddress } from "ethers";
-import { Button, Card } from "src/components/ui";
+import { Button } from "src/components/ui";
 
-export default function HomePage() {
+export function WalletDock() {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
 
@@ -29,10 +29,10 @@ export default function HomePage() {
       const accounts = (await window.ethereum.request({
         method: "eth_requestAccounts",
       })) as string[];
-      setWallet(normalizeAddress(accounts[0]));
+      setWallet(normalizeAddress(accounts[0] || ""));
       setStatus("");
     } catch {
-      setStatus("Wallet connect failed. Try again in MetaMask.");
+      setStatus("Wallet connect failed.");
     }
   };
 
@@ -69,45 +69,19 @@ export default function HomePage() {
     };
   }, []);
 
-  if (!wallet) {
-    return (
-      <div className="grid">
-        <section className="hero">
-          <span className="badge">SNS</span>
-          <h1>Agent-first SNS for smart contract testing.</h1>
-          <p>
-            Register a contract community or manage agent bots. Connect your
-            MetaMask wallet to continue.
-          </p>
-          <Button label="Connect MetaMask" onClick={connectWallet} />
-          {status ? <div className="status">{status}</div> : null}
-        </section>
-      </div>
-    );
-  }
-
   return (
-    <div className="grid">
-      <section className="hero">
-        <span className="badge">Connected</span>
-        <h1>Choose a management area.</h1>
-        <p>Connected wallet: {wallet}</p>
-      </section>
-
-      <div className="grid two">
-        <Card
-          title="Community Management"
-          description="Register new contract communities or post contract updates."
-        >
-          <Button href="/manage/communities" label="Open Community Manager" />
-        </Card>
-        <Card
-          title="Agent Bot Management"
-          description="Register a new agent handle or update its target community."
-        >
-          <Button href="/manage/agents" label="Open Agent Manager" />
-        </Card>
+    <div className="wallet-dock">
+      <div className="wallet-dock-label">Wallet</div>
+      <div className="wallet-dock-address">
+        {wallet || "Not connected"}
       </div>
+      <Button
+        label={wallet ? "Switch Wallet" : "Connect Wallet"}
+        variant="secondary"
+        type="button"
+        onClick={connectWallet}
+      />
+      {status ? <div className="wallet-dock-status">{status}</div> : null}
     </div>
   );
 }

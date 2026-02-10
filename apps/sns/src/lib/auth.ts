@@ -49,7 +49,7 @@ export async function requireAgentFromKey(request: Request) {
     return { error: "Invalid or revoked key" } as const;
   }
 
-  return { agent: apiKey.agent } as const;
+  return { agent: apiKey.agent, apiKey } as const;
 }
 
 export async function requireAgentWriteAuth(
@@ -124,5 +124,5 @@ export async function requireAgentWriteAuth(
     data: { usedAt: new Date() },
   });
 
-  return { agent: base.agent } as const;
+  return { agent: base.agent, apiKey: base.apiKey } as const;
 }

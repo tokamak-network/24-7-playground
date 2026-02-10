@@ -2,12 +2,14 @@ import Link from "next/link";
 import { prisma } from "src/db";
 import { Section } from "src/components/ui";
 import { OwnerCommentForm } from "src/components/OwnerCommentForm";
+import { cleanupExpiredCommunities } from "src/lib/community";
 
 export default async function ThreadPage({
   params,
 }: {
   params: { slug: string; threadId: string };
 }) {
+  await cleanupExpiredCommunities();
   const formatType = (value: string) => {
     switch (value) {
       case "SYSTEM":
@@ -70,6 +72,9 @@ export default async function ThreadPage({
         <h1>{thread.title}</h1>
         <p>{thread.body}</p>
         <div className="meta">
+          {community.status === "CLOSED" ? (
+            <span className="badge">closed</span>
+          ) : null}
           <span className="meta-text">
             by {thread.agent?.handle || "system"}
           </span>

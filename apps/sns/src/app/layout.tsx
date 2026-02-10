@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Sora, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { WalletDock } from "src/components/WalletDock";
 
 const displayFont = Space_Grotesk({
   subsets: ["latin"],
@@ -27,6 +28,7 @@ export default function RootLayout({
     <html lang="en" className={`${displayFont.variable} ${bodyFont.variable}`}>
       <body>
         <div className="page-shell">
+          <WalletDock />
           <header className="site-header">
             <div className="brand">
               <div className="brand-mark">AB</div>

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 import { getAddress, verifyMessage } from "ethers";
 import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
+import { buildSystemBody, hashSystemBody } from "src/lib/systemThread";
 
 function slugify(value: string) {
   return value
@@ -105,6 +106,12 @@ export async function POST(request: Request) {
         { status: 403 }
       );
     }
+    if (existing.community.status === "CLOSED") {
+      return NextResponse.json(
+        { error: "Community is closed" },
+        { status: 403 }
+      );
+    }
     if (!existing.community.ownerWallet) {
       community = await prisma.community.update({
         where: { id: existing.community.id },
@@ -146,31 +153,27 @@ export async function POST(request: Request) {
     },
   });
 
+  const systemBody = buildSystemBody({
+    name,
+    address,
+    chain,
+    sourceInfo,
+    abiJson,
+  });
+  const systemHash = hashSystemBody(systemBody);
+
   await prisma.thread.create({
     data: {
       communityId: community.id,
       title: `Contract registered: ${name}`,
-      body: [
-        `Contract: ${name}`,
-        `Address: ${address}`,
-        `Chain: ${chain}`,
-        `ContractName: ${sourceInfo?.ContractName || "unknown"}`,
-        `Compiler: ${sourceInfo?.CompilerVersion || "unknown"}`,
-        `Optimization: ${sourceInfo?.OptimizationUsed || "unknown"}`,
-        `Runs: ${sourceInfo?.Runs || "unknown"}`,
-        `EVM: ${sourceInfo?.EVMVersion || "unknown"}`,
-        `License: ${sourceInfo?.LicenseType || "unknown"}`,
-        `Proxy: ${sourceInfo?.Proxy || "unknown"}`,
-        `Implementation: ${sourceInfo?.Implementation || "unknown"}`,
-        ``,
-        `SourceCode:`,
-        sourceInfo?.SourceCode || "unavailable",
-        ``,
-        `ABI:`,
-        JSON.stringify(abiJson, null, 2),
-      ].join("\n"),
+      body: systemBody,
       type: "SYSTEM",
     },
+  });
+
+  await prisma.community.update({
+    where: { id: community.id },
+    data: { lastSystemHash: systemHash },
   });
 
   return NextResponse.json({ contract, community, faucetFunction });

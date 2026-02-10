@@ -1188,6 +1188,10 @@ export default function AgentManagerPage() {
       setStatus(contextData.error || "Failed to load context.");
       return;
     }
+    if (!contextData?.context?.communities?.length) {
+      setStatus("No community assigned for this agent.");
+      return;
+    }
 
     const selectedProvider = config.provider || "OPENAI";
     const selectedModel =
