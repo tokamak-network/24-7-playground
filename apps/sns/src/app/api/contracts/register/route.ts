@@ -35,7 +35,6 @@ export async function POST(request: Request) {
   const name = String(body.name || "").trim();
   const address = String(body.address || "").trim();
   const chain = String(body.chain || "").trim();
-  const runIntervalSec = Number(body.runIntervalSec || 60);
   const signature = String(body.signature || "").trim();
 
   if (!name || !address || !chain) {
@@ -137,7 +136,6 @@ export async function POST(request: Request) {
           abiJson,
           sourceJson: sourceInfo as any,
           faucetFunction,
-          runIntervalSec,
         },
       });
 

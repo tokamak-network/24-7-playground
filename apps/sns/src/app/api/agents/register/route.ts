@@ -15,17 +15,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const authMessage = "24-7-playground";
-  let walletAddress: string;
-  try {
-    walletAddress = getAddress(verifyMessage(authMessage, signature)).toLowerCase();
-  } catch {
-    return NextResponse.json(
-      { error: "Invalid signature" },
-      { status: 400 }
-    );
-  }
-
   const community = await prisma.community.findUnique({
     where: { id: communityId },
   });
@@ -42,9 +31,20 @@ export async function POST(request: Request) {
     );
   }
 
+  const authMessage = `24-7-playground${community.slug}`;
+  let ownerWallet: string;
+  try {
+    ownerWallet = getAddress(verifyMessage(authMessage, signature)).toLowerCase();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid signature" },
+      { status: 400 }
+    );
+  }
+
   const existingOwner = await prisma.agent.findFirst({
     where: {
-      ownerWallet: walletAddress,
+      ownerWallet,
       NOT: { handle },
     },
   });
@@ -73,11 +73,9 @@ export async function POST(request: Request) {
   const existing = await prisma.agent.findUnique({ where: { handle } });
   let agent = existing;
   const canUpdateExisting =
-    existing &&
-    existing.status === "VERIFIED" &&
-    existing.ownerWallet === walletAddress;
+    existing && existing.ownerWallet === ownerWallet;
 
-  if (existing && existing.status === "VERIFIED" && !canUpdateExisting) {
+  if (existing && !canUpdateExisting) {
     return NextResponse.json(
       { error: "handle already exists" },
       { status: 409 }
@@ -88,24 +86,22 @@ export async function POST(request: Request) {
     agent = await prisma.agent.create({
       data: {
         handle,
-        walletAddress,
-        ownerWallet: walletAddress,
+        ownerWallet,
         account: signature,
         communityId: community.id,
-        communitySlug: community.slug,
-        status: "VERIFIED",
+        runner: { status: "STOPPED", intervalSec: 60 },
       },
     });
   } else {
     agent = await prisma.agent.update({
       where: { id: existing.id },
       data: {
-        walletAddress,
-        ownerWallet: walletAddress,
+        ownerWallet,
         account: signature,
         communityId: community.id,
-        communitySlug: community.slug,
-        status: "VERIFIED",
+        runner:
+          (existing as { runner?: { status?: string; intervalSec?: number } })
+            ?.runner || { status: "STOPPED", intervalSec: 60 },
       },
     });
   }

@@ -7,12 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum AgentStatus {
-  PENDING
-  VERIFIED
-  SUSPENDED
-}
-
 enum ThreadType {
   SYSTEM
   DISCUSSION
@@ -24,11 +18,6 @@ enum ApiKeyType {
   SNS
 }
 
-enum RunnerStatus {
-  STOPPED
-  RUNNING
-}
-
 enum CommunityStatus {
   ACTIVE
   CLOSED
@@ -37,22 +26,16 @@ enum CommunityStatus {
 model Agent {
   id            String        @id @default(cuid())
   handle        String        @unique
-  walletAddress String
   ownerWallet   String?       @unique
   account       String?       @unique
   communityId   String?
-  community     Community?    @relation(fields: [communityId], references: [id])
-  communitySlug String?
   encryptedSecrets Json?
-  runnerStatus  RunnerStatus  @default(STOPPED)
-  runnerIntervalSec Int       @default(60)
-  status        AgentStatus   @default(PENDING)
   isActive      Boolean       @default(true)
-  lastRunAt     DateTime?
-  createdAt     DateTime      @default(now())
+  runner        Json?
+  createdTime   DateTime      @default(now())
+  lastActivityTime DateTime?
   comments      Comment[]
   votes         Vote[]
-  heartbeats    Heartbeat[]
   threads       Thread[]
   apiKeys       ApiKey[]
   nonces        AgentNonce[]
@@ -66,7 +49,6 @@ model ServiceContract {
   abiJson   Json
   sourceJson Json?
   faucetFunction String?
-  runIntervalSec Int      @default(60)
   lastRunAt DateTime?
   createdAt DateTime   @default(now())
   community Community?
@@ -84,7 +66,6 @@ model Community {
   closedAt    DateTime?
   deleteAt    DateTime?
   lastSystemHash String?
-  agents      Agent[]
   apiKeys     ApiKey[]
   threads     Thread[]
 }
@@ -124,15 +105,6 @@ model Vote {
   createdAt DateTime @default(now())
 
   @@unique([threadId, agentId])
-}
-
-model Heartbeat {
-  id         String   @id @default(cuid())
-  agentId    String
-  agent      Agent    @relation(fields: [agentId], references: [id])
-  status     String
-  payload    Json?
-  lastSeenAt DateTime @default(now())
 }
 
 model ApiKey {

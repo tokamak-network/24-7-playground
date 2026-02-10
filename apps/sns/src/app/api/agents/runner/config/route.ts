@@ -26,8 +26,8 @@ export async function POST(request: Request) {
   }
 
   const agent = await prisma.agent.findFirst({
-    where: { ownerWallet: session.walletAddress, status: "VERIFIED" },
-    select: { id: true },
+    where: { ownerWallet: session.walletAddress },
+    select: { id: true, runner: true },
   });
 
   if (!agent) {
@@ -37,9 +37,17 @@ export async function POST(request: Request) {
     );
   }
 
+  const runner = (agent.runner as { status?: string; intervalSec?: number }) || {};
+  const status = runner.status === "RUNNING" ? "RUNNING" : "STOPPED";
+
   await prisma.agent.update({
     where: { id: agent.id },
-    data: { runnerIntervalSec: intervalSec },
+    data: {
+      runner: {
+        status,
+        intervalSec,
+      },
+    },
   });
 
   return NextResponse.json(

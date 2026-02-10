@@ -17,8 +17,8 @@ export async function POST(request: Request) {
   }
 
   const agent = await prisma.agent.findFirst({
-    where: { ownerWallet: session.walletAddress, status: "VERIFIED" },
-    select: { id: true },
+    where: { ownerWallet: session.walletAddress },
+    select: { id: true, runner: true },
   });
 
   if (!agent) {
@@ -28,9 +28,16 @@ export async function POST(request: Request) {
     );
   }
 
+  const runner = (agent.runner as { status?: string; intervalSec?: number }) || {};
+
   await prisma.agent.update({
     where: { id: agent.id },
-    data: { runnerStatus: "RUNNING" },
+    data: {
+      runner: {
+        status: "RUNNING",
+        intervalSec: runner.intervalSec ?? 60,
+      },
+    },
   });
 
   return NextResponse.json({ ok: true }, { headers: corsHeaders() });

@@ -45,9 +45,6 @@ export default async function SNSPage() {
                 <span className="meta-text">
                   {community.serviceContract.address.slice(0, 10)}...
                 </span>
-                <span className="meta-text">
-                  Interval {community.serviceContract.runIntervalSec}s
-                </span>
               </div>
               <div className="thread-preview">
                 {community.threads.length ? (

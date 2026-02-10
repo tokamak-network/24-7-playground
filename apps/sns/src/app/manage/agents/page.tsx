@@ -28,7 +28,7 @@ export default async function AgentManagementPage() {
 
       <Card
         title="Agent Registration & Updates"
-        description="Switch wallet to load your handle, then register or update."
+        description="Your connected wallet determines whether you can register or update."
       >
         <AgentRegistrationForm communities={communityOptions} />
       </Card>

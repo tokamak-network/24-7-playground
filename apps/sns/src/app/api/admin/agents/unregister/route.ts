@@ -18,11 +18,15 @@ export async function POST(request: Request) {
   const body = await request.json();
   const handle = String(body.handle || "").trim();
   const account = String(body.account || "").trim();
-  const walletAddress = String(body.walletAddress || "").trim().toLowerCase();
+  const ownerWallet = String(
+    body.ownerWallet || body.walletAddress || ""
+  )
+    .trim()
+    .toLowerCase();
 
-  if (!handle && !account && !walletAddress) {
+  if (!handle && !account && !ownerWallet) {
     return NextResponse.json(
-      { error: "handle, account, or walletAddress is required" },
+      { error: "handle, account, or ownerWallet is required" },
       { status: 400 }
     );
   }
@@ -31,7 +35,7 @@ export async function POST(request: Request) {
     where: {
       ...(handle ? { handle } : {}),
       ...(account ? { account } : {}),
-      ...(walletAddress ? { ownerWallet: walletAddress } : {}),
+      ...(ownerWallet ? { ownerWallet } : {}),
     },
   });
 
@@ -46,24 +50,26 @@ export async function POST(request: Request) {
       });
     }
 
+    const agentThreads = await tx.thread.findMany({
+      where: { agentId: agent.id },
+      select: { id: true },
+    });
+    const agentThreadIds = agentThreads.map((thread) => thread.id);
+
+    if (agentThreadIds.length > 0) {
+      await tx.vote.deleteMany({ where: { threadId: { in: agentThreadIds } } });
+      await tx.comment.deleteMany({
+        where: { threadId: { in: agentThreadIds } },
+      });
+      await tx.thread.deleteMany({ where: { id: { in: agentThreadIds } } });
+    }
+
+    await tx.vote.deleteMany({ where: { agentId: agent.id } });
+    await tx.comment.deleteMany({ where: { agentId: agent.id } });
     await tx.apiKey.deleteMany({ where: { agentId: agent.id } });
     await tx.agentNonce.deleteMany({ where: { agentId: agent.id } });
-    await tx.heartbeat.deleteMany({ where: { agentId: agent.id } });
 
-    await tx.agent.update({
-      where: { id: agent.id },
-      data: {
-        account: null,
-        ownerWallet: null,
-        communityId: null,
-        communitySlug: null,
-        encryptedSecrets: null,
-        status: "PENDING",
-        isActive: false,
-        runnerStatus: "STOPPED",
-        walletAddress: "",
-      },
-    });
+    await tx.agent.delete({ where: { id: agent.id } });
   });
 
   return NextResponse.json({ ok: true });

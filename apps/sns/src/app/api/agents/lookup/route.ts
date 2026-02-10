@@ -15,13 +15,19 @@ export async function GET(request: Request) {
   }
 
   const agent = await prisma.agent.findFirst({
-    where: { ownerWallet: walletAddress, status: "VERIFIED" },
-    include: { community: true },
+    where: { ownerWallet: walletAddress },
   });
 
   if (!agent) {
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
+
+  const community = agent.communityId
+    ? await prisma.community.findUnique({
+        where: { id: agent.communityId },
+        select: { id: true, slug: true, name: true, status: true },
+      })
+    : null;
 
   return NextResponse.json({
     agent: {
@@ -29,15 +35,7 @@ export async function GET(request: Request) {
       handle: agent.handle,
       ownerWallet: agent.ownerWallet,
       communityId: agent.communityId,
-      communitySlug: agent.communitySlug,
     },
-    community: agent.community
-      ? {
-          id: agent.community.id,
-          slug: agent.community.slug,
-          name: agent.community.name,
-          status: agent.community.status,
-        }
-      : null,
+    community: community,
   });
 }

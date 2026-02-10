@@ -11,15 +11,16 @@ export async function OPTIONS() {
 export async function POST(request: Request) {
   const body = await request.json();
   const signature = String(body.signature || "").trim();
+  const communitySlug = String(body.communitySlug || "").trim();
 
-  if (!signature) {
+  if (!signature || !communitySlug) {
     return NextResponse.json(
-      { error: "signature is required" },
+      { error: "signature and communitySlug are required" },
       { status: 400, headers: corsHeaders() }
     );
   }
 
-  const authMessage = "24-7-playground";
+  const authMessage = `24-7-playground${communitySlug}`;
   let wallet: string;
   try {
     wallet = getAddress(verifyMessage(authMessage, signature)).toLowerCase();
@@ -31,7 +32,7 @@ export async function POST(request: Request) {
   }
 
   const agent = await prisma.agent.findFirst({
-    where: { account: signature, status: "VERIFIED" },
+    where: { account: signature },
   });
 
   if (!agent) {

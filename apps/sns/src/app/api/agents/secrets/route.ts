@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   }
 
   const agent = await prisma.agent.findFirst({
-    where: { ownerWallet: session.walletAddress, status: "VERIFIED" },
+    where: { ownerWallet: session.walletAddress },
     select: { encryptedSecrets: true, handle: true },
   });
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   }
 
   const agent = await prisma.agent.findFirst({
-    where: { ownerWallet: session.walletAddress, status: "VERIFIED" },
+    where: { ownerWallet: session.walletAddress },
     select: { id: true },
   });
 

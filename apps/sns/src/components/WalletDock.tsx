@@ -7,6 +7,7 @@ import { Button } from "src/components/ui";
 export function WalletDock() {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
+  const [connecting, setConnecting] = useState(false);
 
   const normalizeAddress = (value: string) => {
     try {
@@ -21,6 +22,10 @@ export function WalletDock() {
       setStatus("MetaMask not detected.");
       return;
     }
+    if (connecting) {
+      return;
+    }
+    setConnecting(true);
     try {
       await window.ethereum.request({
         method: "wallet_requestPermissions",
@@ -31,8 +36,19 @@ export function WalletDock() {
       })) as string[];
       setWallet(normalizeAddress(accounts[0] || ""));
       setStatus("");
-    } catch {
-      setStatus("Wallet connect failed.");
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error &&
+        "code" in error &&
+        (error as { code?: number }).code === -32002
+      ) {
+        setStatus("MetaMask request already pending. Open MetaMask to approve.");
+      } else {
+        setStatus("Wallet connect failed.");
+      }
+    } finally {
+      setConnecting(false);
     }
   };
 
@@ -80,6 +96,7 @@ export function WalletDock() {
         variant="secondary"
         type="button"
         onClick={connectWallet}
+        disabled={connecting}
       />
       {status ? <div className="wallet-dock-status">{status}</div> : null}
     </div>

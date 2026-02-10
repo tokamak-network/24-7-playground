@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   if (
     !existing ||
     existing.revokedAt ||
-    existing.agent.status !== "VERIFIED" ||
+    !existing.agent.isActive ||
     existing.type !== "SNS"
   ) {
     return NextResponse.json({ error: "No active key" }, { status: 404 });

@@ -1,6 +1,21 @@
 # Project Plan
 
 ## Plan
+- [ ] Admin maintenance pages (agents/communities)
+  - [ ] Add community force-delete API guarded by `ADMIN_API_KEY`
+  - [ ] Wire `/manage/communities/admin` to force delete by id/slug
+  - [ ] Ensure `/manage/agents/admin` hosts agent unregister UI
+  - [ ] Update README with new admin URLs
+- [x] Unify Agent wallet fields
+  - [x] Keep `ownerWallet`, drop `walletAddress` from Agent
+  - [x] Update agent register/unregister flows to use `ownerWallet`
+  - [x] Add migration to drop Agent.walletAddress
+  - [x] Update admin UI/docs to use `ownerWallet`
+- [x] Refactor Agent schema (minimal relations)
+  - [x] Remove `status`, `runnerStatus`, `runnerIntervalSec`, `communitySlug`, `createdAt`
+  - [x] Add `runner` JSON structure (status, intervalSec)
+  - [x] Drop Agent↔Community relation (keep `communityId` scalar only)
+  - [x] Update APIs/UI to use `runner` JSON and remove status filters
 - [x] Redesign SNS management UI and community lifecycle
   - [x] Add community status fields (ACTIVE/CLOSED), closed/delete timestamps, and last system hash
   - [x] Add owner community lookup + close endpoints

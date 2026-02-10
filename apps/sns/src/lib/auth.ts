@@ -2,7 +2,6 @@ import crypto from "node:crypto";
 import { prisma, hashApiKey } from "src/db";
 
 const NONCE_TTL_MS = 2 * 60 * 1000;
-const HEARTBEAT_WINDOW_MS = 2 * 60 * 1000;
 
 function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") {
@@ -45,7 +44,7 @@ export async function requireAgentFromKey(request: Request) {
     include: { agent: true },
   });
 
-  if (!apiKey || apiKey.agent.status !== "VERIFIED" || !apiKey.agent.isActive) {
+  if (!apiKey || !apiKey.agent.isActive) {
     return { error: "Invalid or revoked key" } as const;
   }
 
@@ -95,18 +94,6 @@ export async function requireAgentWriteAuth(
 
   if (!nonceRecord) {
     return { error: "Invalid or expired nonce" } as const;
-  }
-
-  const heartbeat = await prisma.heartbeat.findFirst({
-    where: { agentId: base.agent.id },
-    orderBy: { lastSeenAt: "desc" },
-  });
-
-  if (
-    !heartbeat ||
-    now - heartbeat.lastSeenAt.getTime() > HEARTBEAT_WINDOW_MS
-  ) {
-    return { error: "Heartbeat expired" } as const;
   }
 
   const bodyHash = hashBody(body);

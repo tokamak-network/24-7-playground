@@ -10,8 +10,10 @@ type AgentRecord = {
   handle: string;
   ownerWallet?: string | null;
   encryptedSecrets?: any;
-  runnerIntervalSec?: number;
-  runnerStatus?: string;
+  runner?: {
+    status?: string;
+    intervalSec?: number;
+  };
 };
 
 type LlmLogRecord = {
@@ -542,9 +544,9 @@ export default function AgentManagerPage() {
     const data = await res.json();
     const nextAgent = data.agent || null;
     setAgent(nextAgent);
-    if (nextAgent?.runnerStatus === "RUNNING") {
+    if (nextAgent?.runner?.status === "RUNNING") {
       setRunnerOn(true);
-    } else if (nextAgent?.runnerStatus === "STOPPED") {
+    } else {
       setRunnerOn(false);
     }
   }, [token]);
@@ -592,9 +594,9 @@ export default function AgentManagerPage() {
       .then((data) => {
         if (data?.agent) {
           setAgent(data.agent);
-          if (data.agent?.runnerStatus === "RUNNING") {
+          if (data.agent?.runner?.status === "RUNNING") {
             setRunnerOn(true);
-          } else if (data.agent?.runnerStatus === "STOPPED") {
+          } else {
             setRunnerOn(false);
           }
           setStatus("Session restored.");
@@ -624,7 +626,7 @@ export default function AgentManagerPage() {
   useEffect(() => {
     if (autoResumeRef.current) return;
     if (!agent || !token || runnerOn) return;
-    if (agent.runnerStatus !== "RUNNING") return;
+    if (agent.runner?.status !== "RUNNING") return;
     if (
       executionKeyStatus.startsWith("OK") &&
       alchemyKeyStatus.startsWith("OK")
@@ -751,13 +753,36 @@ export default function AgentManagerPage() {
         setStatus("Connect wallet first.");
         return;
       }
+      const lookupRes = await fetch(
+        snsUrl(
+          `/api/agents/lookup?walletAddress=${encodeURIComponent(
+            walletAddress.toLowerCase()
+          )}`
+        )
+      );
+      const lookupData = await lookupRes.json();
+      if (!lookupRes.ok) {
+        setStatus(
+          lookupData.error ||
+            "No agent handle registered for this wallet. Register in SNS first."
+        );
+        return;
+      }
+
+      const communitySlug = lookupData.community?.slug;
+      if (!communitySlug) {
+        setStatus("No target community assigned for this handle.");
+        return;
+      }
       const provider = new BrowserProvider((window as any).ethereum);
       const signer = await provider.getSigner();
-      const signature = await signer.signMessage("24-7-playground");
+      const signature = await signer.signMessage(
+        `24-7-playground${communitySlug}`
+      );
       const verifyRes = await fetch(snsUrl("/api/auth/verify"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signature }),
+        body: JSON.stringify({ signature, communitySlug }),
       });
       const verifyData = await verifyRes.json();
       if (!verifyRes.ok) {
@@ -1471,10 +1496,6 @@ export default function AgentManagerPage() {
     });
 
     const tick = () => {
-      fetch(snsUrl("/api/agents/heartbeat"), {
-        method: "POST",
-        headers: authHeaders,
-      }).catch(() => undefined);
       runCycle({
         llmKey: nextLlmKey,
         snsKey: nextSnsKey,

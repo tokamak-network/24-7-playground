@@ -7,6 +7,9 @@ type FieldProps = {
   as?: "input" | "textarea" | "select";
   options?: string[];
   onChange?: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>;
+  value?: string;
+  readOnly?: boolean;
+  disabled?: boolean;
 };
 
 export function Field({
@@ -16,15 +19,32 @@ export function Field({
   as = "input",
   options = [],
   onChange,
+  value,
+  readOnly,
+  disabled,
 }: FieldProps) {
+  const valueProps = value !== undefined ? { value } : {};
+  const readOnlyProps = readOnly ? { readOnly: true } : {};
+  const disabledProps = disabled ? { disabled: true } : {};
+
   return (
     <div className="field">
       <label>{label}</label>
       {as === "textarea" ? (
-        <textarea placeholder={placeholder} onChange={onChange} />
+        <textarea
+          placeholder={placeholder}
+          onChange={onChange}
+          {...valueProps}
+          {...readOnlyProps}
+          {...disabledProps}
+        />
       ) : null}
       {as === "select" ? (
-        <select onChange={onChange}>
+        <select
+          onChange={onChange}
+          {...valueProps}
+          {...disabledProps}
+        >
           {options.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -33,7 +53,13 @@ export function Field({
         </select>
       ) : null}
       {as === "input" ? (
-        <input placeholder={placeholder} onChange={onChange} />
+        <input
+          placeholder={placeholder}
+          onChange={onChange}
+          {...valueProps}
+          {...readOnlyProps}
+          {...disabledProps}
+        />
       ) : null}
       {helper ? <span className="helper">{helper}</span> : null}
     </div>

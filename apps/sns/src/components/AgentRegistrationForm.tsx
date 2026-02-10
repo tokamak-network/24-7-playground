@@ -73,30 +73,27 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
     }
   };
 
-  const switchWallet = async () => {
-    if (!window.ethereum) {
-      setStatus("MetaMask not detected.");
-      return;
-    }
-    try {
-      await window.ethereum.request({
-        method: "wallet_requestPermissions",
-        params: [{ eth_accounts: {} }],
-      });
-      const accounts = (await window.ethereum.request({
-        method: "eth_requestAccounts",
-      })) as string[];
-      const nextWallet = normalizeAddress(accounts[0]);
-      setWallet(nextWallet);
-      void loadAgent(nextWallet);
-    } catch {
-      setStatus("Wallet switch failed. Try again in MetaMask.");
-    }
-  };
-
   useEffect(() => {
     const eth = window.ethereum;
     if (!eth?.on) return;
+
+    const hydrateWallet = async () => {
+      try {
+        const accounts = (await eth.request({
+          method: "eth_accounts",
+        })) as string[];
+        const nextWallet = accounts?.[0] ? normalizeAddress(accounts[0]) : "";
+        setWallet(nextWallet);
+        if (!nextWallet) {
+          resetAgentState();
+          setStatus("Connect your wallet to manage an agent handle.");
+        }
+      } catch {
+        setStatus("Failed to read wallet state.");
+      }
+    };
+
+    void hydrateWallet();
 
     const handleAccounts = (accounts: string[]) => {
       if (!accounts || accounts.length === 0) {
@@ -106,7 +103,6 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
       }
       const nextWallet = normalizeAddress(accounts[0]);
       setWallet(nextWallet);
-      void loadAgent(nextWallet);
     };
 
     eth.on("accountsChanged", handleAccounts);
@@ -115,6 +111,44 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
     };
   }, []);
 
+  useEffect(() => {
+    const eth = window.ethereum;
+    if (!eth) return;
+    if (wallet) return;
+
+    let active = true;
+    const pollAccounts = async () => {
+      try {
+        const accounts = (await eth.request({
+          method: "eth_accounts",
+        })) as string[];
+        if (!active) return;
+        const nextWallet = accounts?.[0] ? normalizeAddress(accounts[0]) : "";
+        if (nextWallet) {
+          setWallet(nextWallet);
+        }
+      } catch {
+        // ignore polling errors
+      }
+    };
+
+    const interval = window.setInterval(pollAccounts, 1500);
+    void pollAccounts();
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [wallet]);
+
+  useEffect(() => {
+    if (!wallet) {
+      resetAgentState();
+      return;
+    }
+    void loadAgent(wallet);
+  }, [wallet]);
+
   const registerAgent = async () => {
     if (!handle) {
       setStatus("Handle is required.");
@@ -122,6 +156,13 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
     }
     if (!communityId) {
       setStatus("Select a community.");
+      return;
+    }
+    const selectedCommunity = communities.find(
+      (community) => community.id === communityId
+    );
+    if (!selectedCommunity) {
+      setStatus("Select a valid community.");
       return;
     }
 
@@ -142,9 +183,10 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
     try {
       let signature: string;
       try {
+        const message = `24-7-playground${selectedCommunity.slug}`;
         signature = (await ethProvider.request({
           method: "personal_sign",
-          params: ["24-7-playground", wallet],
+          params: [message, wallet],
         })) as string;
       } catch (error) {
         const reason =
@@ -205,18 +247,6 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
         void registerAgent();
       }}
     >
-      <div className="field">
-        <label>Wallet Address</label>
-        <div className="row">
-          <input placeholder="0x..." value={wallet} readOnly />
-          <Button
-            label="Switch Wallet Account"
-            variant="secondary"
-            type="button"
-            onClick={switchWallet}
-          />
-        </div>
-      </div>
       {wallet ? (
         <>
           <Field
@@ -226,14 +256,16 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
             value={handle}
             readOnly={hasExisting}
           />
-          <div className="field">
-            <label>Current Community</label>
-            <input
-              value={currentCommunity || "Not assigned"}
-              readOnly
-              placeholder="Switch wallet to load"
-            />
-          </div>
+          {hasExisting ? (
+            <div className="field">
+              <label>Current Community</label>
+              <input
+                value={currentCommunity || "Not assigned"}
+                readOnly
+                placeholder="Switch wallet to load"
+              />
+            </div>
+          ) : null}
           <div className="field">
             <label>Target Community</label>
             {communities.length === 0 ? (
@@ -268,8 +300,8 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
             busy
               ? "Working..."
               : hasExisting
-              ? "Sign & Update"
-              : "Sign & Register"
+              ? "Update"
+              : "Register"
           }
           type="submit"
           disabled={busy || communities.length === 0}

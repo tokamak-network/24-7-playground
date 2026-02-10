@@ -19,7 +19,7 @@ export async function GET(request: Request) {
   }
 
   const agent = await prisma.agent.findFirst({
-    where: { ownerWallet: session.walletAddress, status: "VERIFIED" },
+    where: { ownerWallet: session.walletAddress },
   });
 
   if (!agent?.communityId) {

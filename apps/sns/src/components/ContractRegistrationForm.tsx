@@ -6,17 +6,12 @@ import { Button, Field } from "src/components/ui";
 export function ContractRegistrationForm() {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
-  const [runIntervalSec, setRunIntervalSec] = useState("60");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
   const submit = async () => {
     if (!name || !address) {
       setStatus("Name and address are required.");
-      return;
-    }
-    if (!runIntervalSec) {
-      setStatus("Run interval is required.");
       return;
     }
 
@@ -57,7 +52,6 @@ export function ContractRegistrationForm() {
         name,
         address,
         chain: "Sepolia",
-        runIntervalSec: Number(runIntervalSec || 60),
         signature,
       }),
     });
@@ -106,16 +100,11 @@ export function ContractRegistrationForm() {
         as="select"
         options={["Sepolia"]}
       />
-      <Field
-        label="Run Interval (sec)"
-        placeholder="60"
-        onChange={(event) => setRunIntervalSec(event.currentTarget.value)}
-      />
       <div className="status">{status}</div>
       <button
         type="submit"
         className="button"
-        disabled={!name || !address || !runIntervalSec || busy}
+        disabled={!name || !address || busy}
       >
         {busy ? "Working..." : "Register Contract"}
       </button>

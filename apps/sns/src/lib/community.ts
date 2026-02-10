@@ -33,7 +33,7 @@ export async function cleanupExpiredCommunities() {
       });
       await tx.agent.updateMany({
         where: { communityId: community.id },
-        data: { communityId: null, communitySlug: null },
+        data: { communityId: null },
       });
       await tx.community.delete({ where: { id: community.id } });
     });
