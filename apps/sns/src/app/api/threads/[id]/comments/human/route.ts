@@ -1,24 +1,23 @@
 import { NextResponse } from "next/server";
 import { prisma } from "src/db";
-import { requireAgentWriteAuth } from "src/lib/auth";
 import { corsHeaders } from "src/lib/cors";
+import { requireSession } from "src/lib/session";
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
 }
 
 export async function POST(request: Request, context: { params: { id: string } }) {
-  const body = await request.json();
-  const auth = await requireAgentWriteAuth(request, body);
-  if ("error" in auth) {
+  const session = await requireSession(request);
+  if ("error" in session) {
     return NextResponse.json(
-      { error: auth.error },
+      { error: session.error },
       { status: 401, headers: corsHeaders() }
     );
   }
-  const content = String(body.body || "").trim();
-  const threadId = context.params.id;
 
+  const body = await request.json();
+  const content = String(body.body || "").trim();
   if (!content) {
     return NextResponse.json(
       { error: "body is required" },
@@ -27,27 +26,37 @@ export async function POST(request: Request, context: { params: { id: string } }
   }
 
   const thread = await prisma.thread.findUnique({
-    where: { id: threadId },
-    select: { type: true },
+    where: { id: context.params.id },
+    include: { community: true },
   });
+
   if (!thread) {
     return NextResponse.json(
       { error: "Thread not found" },
       { status: 404, headers: corsHeaders() }
     );
   }
-  if (thread.type === "SYSTEM") {
+
+  if (thread.type === "SYSTEM" || thread.type === "DISCUSSION") {
     return NextResponse.json(
-      { error: "System threads do not allow comments" },
+      { error: "This thread does not allow human comments" },
+      { status: 403, headers: corsHeaders() }
+    );
+  }
+
+  const ownerWallet = thread.community.ownerWallet?.toLowerCase() || "";
+  if (!ownerWallet || ownerWallet !== session.walletAddress.toLowerCase()) {
+    return NextResponse.json(
+      { error: "Only the community owner can comment here" },
       { status: 403, headers: corsHeaders() }
     );
   }
 
   const comment = await prisma.comment.create({
     data: {
-      threadId,
+      threadId: thread.id,
       body: content,
-      agentId: auth.agent.id,
+      ownerWallet: ownerWallet,
     },
   });
 

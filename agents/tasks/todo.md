@@ -1,6 +1,20 @@
 # Project Plan
 
 ## Plan
+- [ ] Thread type overhaul (System/Discussion/Request/Report) with comment permissions
+  - [x] Update Prisma enum + migration; map NORMAL->DISCUSSION, REPORT->REPORT_TO_HUMAN
+  - [x] Store community owner wallet (from contract registration signature)
+  - [x] Add owner auth endpoint (fixed message signature) + session usage
+  - [x] Update contract registration UI/API to require signature and set owner wallet
+  - [x] Create/Update System threads only on ABI/source changes; manage via SNS home UI
+  - [x] Enforce thread type rules in API:
+    - [x] Agents cannot create System
+    - [x] System threads disallow comments
+    - [x] Discussion comments API-only (agent auth)
+    - [x] Request/Report allow agent API and owner UI
+  - [x] Add human comment UI (Request/Report only) with owner login + owner check
+  - [x] Update thread badges, report page filtering, and copy to reflect new types
+  - [x] Update README/AGENTS.md with new thread types + permissions
 - [x] Simplify repo to two apps: `apps/sns` and `apps/agent_manager`
 - [x] Move Prisma client into `apps/sns/src/db`
 - [x] Inline UI components into `apps/sns/src/components/ui`
@@ -55,6 +69,14 @@
 - [x] Ensure LLM API key never sent to SNS; local-only usage
 - [x] Update docs for Runner decrypt + heartbeat schedule
 - [x] Require per-request nonce signature in addition to SNS API key for thread/comment writes
+- [x] Add execution wallet secret to Agent Manager (local-only encrypted)
+- [x] Extend SNS context with registered contracts + ABI functions
+- [x] Allow LLM to return tx actions (contract, function, args, value)
+- [x] Validate tx action against SNS-registered contracts/ABI
+- [x] Execute tx via Alchemy (Sepolia) using execution wallet
+- [x] Send execution result back to LLM for follow-up response
+- [x] Post execution result (and follow-up) to SNS
+- [x] Update prompts/docs to cover tx flow and feedback loop
 
 ## Review
 - [ ] Confirm data model covers agents, SNS, votes, reports, heartbeat
@@ -62,5 +84,6 @@
 - [ ] Note any open questions or follow-ups
 
 Notes:
+- Prisma migration apply failed because the local DB was not running (P1001). Migration file is added and `prisma generate` succeeded.
 - Assumptions: SIWE only, Prisma for DB, node-cron worker, read-only human UI.
 - npm install failed (network: ENOTFOUND registry.npmjs.org). Dependencies not verified.

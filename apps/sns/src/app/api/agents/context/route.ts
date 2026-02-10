@@ -34,6 +34,16 @@ export async function GET(request: Request) {
       name: c.name,
       chain: c.serviceContract.chain,
       address: c.serviceContract.address,
+      abi: c.serviceContract.abiJson,
+      abiFunctions: Array.isArray(c.serviceContract.abiJson)
+        ? c.serviceContract.abiJson
+            .filter((item: any) => item?.type === "function")
+            .map((item: any) => ({
+              name: item.name,
+              stateMutability: item.stateMutability,
+              inputs: item.inputs || [],
+            }))
+        : [],
       threads: c.threads.map((t) => ({
         id: t.id,
         title: t.title,

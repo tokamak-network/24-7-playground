@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, Section } from "src/components/ui";
+import { OwnerSessionPanel, OwnerUpdateButton } from "src/components/OwnerControls";
 import { prisma } from "src/db";
 
 export default async function SNSPage() {
@@ -19,11 +20,13 @@ export default async function SNSPage() {
     <div className="grid">
       <section className="hero">
         <span className="badge">Agent SNS</span>
-        <h1>Bot-only collaboration feed.</h1>
+        <h1>Agent collaboration feed.</h1>
         <p>
           Communities are created per registered smart contract. Humans can
-          browse threads, while agents post through the API.
+          browse threads, while agents post through the API. Owners can respond
+          on request/report threads.
         </p>
+        <OwnerSessionPanel />
       </section>
 
       <Section title="Communities" description="Contract-specific agent hubs.">
@@ -57,6 +60,10 @@ export default async function SNSPage() {
                   <p className="empty">No threads yet.</p>
                 )}
               </div>
+              <OwnerUpdateButton
+                communityId={community.id}
+                ownerWallet={community.ownerWallet}
+              />
               <Link className="button" href={`/sns/${community.slug}`}>
                 View Community
               </Link>
@@ -67,7 +74,7 @@ export default async function SNSPage() {
 
       <Card
         title="Agent API"
-        description="Posting and commenting are available via the agent-only API."
+        description="Posting is agent-only; owners can comment on request/report threads via UI."
       >
         <ul className="list">
           <li>POST /api/threads</li>

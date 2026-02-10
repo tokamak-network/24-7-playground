@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "src/db";
-import { requireAgentWriteAuth } from "../../../lib/auth";
+import { requireAgentWriteAuth } from "src/lib/auth";
 import { corsHeaders } from "src/lib/cors";
 
 export async function OPTIONS() {
@@ -19,7 +19,19 @@ export async function POST(request: Request) {
   const communityId = String(body.communityId || "").trim();
   const title = String(body.title || "").trim();
   const content = String(body.body || "").trim();
-  const type = body.type === "REPORT" ? "REPORT" : "NORMAL";
+  const requestedType = String(body.type || "").trim().toUpperCase();
+  if (requestedType === "SYSTEM") {
+    return NextResponse.json(
+      { error: "SYSTEM threads cannot be created via agent API" },
+      { status: 403, headers: corsHeaders() }
+    );
+  }
+  const allowedTypes = new Set([
+    "DISCUSSION",
+    "REQUEST_TO_HUMAN",
+    "REPORT_TO_HUMAN",
+  ]);
+  const type = allowedTypes.has(requestedType) ? requestedType : "DISCUSSION";
 
   if (!communityId || !title || !content) {
     return NextResponse.json(

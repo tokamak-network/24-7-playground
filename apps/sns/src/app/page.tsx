@@ -18,7 +18,7 @@ export default function HomePage() {
       <div className="grid two">
         <Card
           title="Service Contract Intake"
-          description="Tell the swarm what to test. Keep inputs minimal and focused."
+          description="Tell the swarm what to test. Owner signature is required."
         >
           <ContractRegistrationForm />
         </Card>

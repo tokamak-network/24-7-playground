@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BrowserProvider, getAddress } from "ethers";
+import { BrowserProvider, Contract, JsonRpcProvider, Wallet, getAddress } from "ethers";
 import { decryptSecrets, encryptSecrets } from "../lib/crypto";
 import { snsUrl } from "../lib/api";
 
@@ -14,11 +14,23 @@ type AgentRecord = {
   runnerStatus?: string;
 };
 
-type HeartbeatRecord = {
+type LlmLogRecord = {
   id: string;
-  status: string;
-  payload?: any;
-  lastSeenAt: string;
+  createdAt: string;
+  system: string;
+  user: string;
+  response: string;
+  kind?: "cycle" | "tx_feedback";
+  direction?: "agent_to_manager" | "manager_to_agent";
+  actionTypes?: string[];
+};
+
+type LlmLogItem = {
+  id: string;
+  createdAt: string;
+  direction: "agent_to_manager" | "manager_to_agent";
+  actionTypes: string[];
+  content: string;
 };
 
 type DecryptedSecrets = {
@@ -43,6 +55,24 @@ function stableStringify(value: unknown): string {
   return `{${keys
     .map((key) => `${JSON.stringify(key)}:${stableStringify(obj[key])}`)
     .join(",")}}`;
+}
+
+function toJsonSafe(value: unknown): unknown {
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => toJsonSafe(item));
+  }
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    Object.keys(obj).forEach((key) => {
+      result[key] = toJsonSafe(obj[key]);
+    });
+    return result;
+  }
+  return value;
 }
 
 async function sha256(value: string) {
@@ -205,7 +235,189 @@ function extractJsonPayload(output: string) {
       }
     }
   }
+  const firstBrace = trimmed.indexOf("{");
+  const firstBracket = trimmed.indexOf("[");
+  const start =
+    firstBrace === -1
+      ? firstBracket
+      : firstBracket === -1
+      ? firstBrace
+      : Math.min(firstBrace, firstBracket);
+  if (start === -1) return trimmed;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < trimmed.length; i += 1) {
+    const ch = trimmed[i];
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (ch === "\\") {
+        escape = true;
+      } else if (ch === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === "\"") {
+      inString = true;
+      continue;
+    }
+    if (ch === "{" || ch === "[") {
+      depth += 1;
+    } else if (ch === "}" || ch === "]") {
+      depth -= 1;
+      if (depth === 0) {
+        return trimmed.slice(start, i + 1).trim();
+      }
+    }
+  }
   return trimmed;
+}
+
+function sanitizeJsonPayload(input: string): string {
+  const normalized = input
+    .replace(/[“”]/g, "\"")
+    .replace(/[‘’]/g, "'")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "")
+    .replace(/,\s*([}\]])/g, "$1");
+  let output = "";
+  let inString = false;
+  let escape = false;
+  for (let i = 0; i < normalized.length; i += 1) {
+    const ch = normalized[i];
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (ch === "\\") {
+        escape = true;
+      } else if (ch === "\"") {
+        inString = false;
+      } else if (ch === "\n") {
+        output += "\\n";
+        continue;
+      } else if (ch === "\r") {
+        continue;
+      }
+    } else if (ch === "\"") {
+      inString = true;
+    }
+    output += ch;
+  }
+  return output;
+}
+
+function extractActionTypes(output: string): string[] {
+  if (!output) return [];
+  try {
+    const jsonPayload = extractJsonPayload(output);
+    if (!jsonPayload) return [];
+    const parsed = JSON.parse(jsonPayload);
+    const actions = Array.isArray(parsed) ? parsed : [parsed];
+    const types = actions
+      .map((item) => (item && typeof item.action === "string" ? item.action : null))
+      .filter((action): action is string => Boolean(action));
+    return Array.from(new Set(types));
+  } catch {
+    return [];
+  }
+}
+
+function normalizeLlmLog(log: LlmLogRecord): LlmLogRecord {
+  const kind = log.kind || "cycle";
+  const direction = log.direction || "agent_to_manager";
+  const actionTypes = log.actionTypes || [];
+  const raw = log.response || "";
+  let isTxFeedbackPayload = false;
+  try {
+    const payload = JSON.parse(raw);
+    isTxFeedbackPayload = payload?.type === "tx_feedback";
+  } catch {
+    try {
+      const payload = JSON.parse(extractJsonPayload(raw));
+      isTxFeedbackPayload = payload?.type === "tx_feedback";
+    } catch {
+      isTxFeedbackPayload = false;
+    }
+  }
+  if ((kind === "tx_feedback" || direction === "manager_to_agent") && !isTxFeedbackPayload) {
+    return {
+      ...log,
+      kind: "cycle",
+      direction: "agent_to_manager",
+      actionTypes,
+    };
+  }
+  if (isTxFeedbackPayload) {
+    return {
+      ...log,
+      kind: "tx_feedback",
+      direction: "manager_to_agent",
+      actionTypes: actionTypes.length > 0 ? actionTypes : ["tx"],
+    };
+  }
+  return {
+    ...log,
+    kind,
+    direction,
+    actionTypes,
+  };
+}
+
+function parseJsonPayload(input: string): unknown {
+  try {
+    return JSON.parse(input);
+  } catch {
+    try {
+      return JSON.parse(sanitizeJsonPayload(extractJsonPayload(input)));
+    } catch {
+      return null;
+    }
+  }
+}
+
+function expandLlmLogs(logs: LlmLogRecord[]): LlmLogItem[] {
+  const items: LlmLogItem[] = [];
+  for (const log of logs) {
+    const base = {
+      createdAt: log.createdAt,
+      direction: log.direction || "agent_to_manager",
+    };
+    const parsed = parseJsonPayload(log.response || "");
+    if (Array.isArray(parsed)) {
+      parsed.forEach((entry, idx) => {
+        const action = entry && typeof entry.action === "string" ? entry.action : null;
+        items.push({
+          id: `${log.id}:${idx}`,
+          ...base,
+          actionTypes: action ? [action] : [],
+          content: JSON.stringify(entry, null, 2),
+        });
+      });
+      continue;
+    }
+    if (parsed && typeof parsed === "object") {
+      const action =
+        (parsed as any).action && typeof (parsed as any).action === "string"
+          ? String((parsed as any).action)
+          : null;
+      items.push({
+        id: `${log.id}:0`,
+        ...base,
+        actionTypes: action ? [action] : log.actionTypes || [],
+        content: JSON.stringify(parsed, null, 2),
+      });
+      continue;
+    }
+    items.push({
+      id: `${log.id}:0`,
+      ...base,
+      actionTypes: log.actionTypes || [],
+      content: log.response || "",
+    });
+  }
+  return items;
 }
 
 export default function AgentManagerPage() {
@@ -217,6 +429,8 @@ export default function AgentManagerPage() {
   const [status, setStatus] = useState<string>("");
   const [llmKey, setLlmKey] = useState<string>("");
   const [snsKey, setSnsKey] = useState<string>("");
+  const [executionKey, setExecutionKey] = useState<string>("");
+  const [alchemyKey, setAlchemyKey] = useState<string>("");
   const [provider, setProvider] = useState<string>("GEMINI");
   const [model, setModel] = useState<string>("gemini-1.5-flash-002");
   const [availableModels, setAvailableModels] = useState<string[]>([]);
@@ -227,10 +441,20 @@ export default function AgentManagerPage() {
   const [debugClicks, setDebugClicks] = useState<number>(0);
   const [llmTestStatus, setLlmTestStatus] = useState<string>("");
   const [snsTestStatus, setSnsTestStatus] = useState<string>("");
-  const [heartbeats, setHeartbeats] = useState<HeartbeatRecord[]>([]);
-  const [heartbeatStatus, setHeartbeatStatus] = useState<string>("");
+  const [executionKeyStatus, setExecutionKeyStatus] = useState<string>("");
+  const [alchemyKeyStatus, setAlchemyKeyStatus] = useState<string>("");
   const [lastLlmOutput, setLastLlmOutput] = useState<string>("");
+  const [llmLogs, setLlmLogs] = useState<LlmLogRecord[]>([]);
+  const [llmLogFilter, setLlmLogFilter] = useState<
+    "all" | "create_thread" | "comment" | "tx" | "etc"
+  >("all");
+  const [llmLogPage, setLlmLogPage] = useState<number>(1);
+  const [systemPrompt, setSystemPrompt] = useState<string>("");
+  const [userPromptTemplate, setUserPromptTemplate] = useState<string>("");
   const intervalRef = useRef<number | null>(null);
+  const runInFlightRef = useRef<boolean>(false);
+  const autoTestRef = useRef<boolean>(false);
+  const autoResumeRef = useRef<boolean>(false);
 
   const saveToken = (value: string) => {
     setToken(value);
@@ -259,7 +483,56 @@ export default function AgentManagerPage() {
     }
   };
 
+  const saveLlmLogs = (logs: LlmLogRecord[]) => {
+    const normalized = logs.map(normalizeLlmLog);
+    setLlmLogs(normalized);
+    localStorage.setItem("agent_llm_logs", JSON.stringify(normalized));
+  };
+
+  const saveLocalExecution = (key: string, alchemy: string) => {
+    localStorage.setItem(
+      "agent_execution_config",
+      JSON.stringify({ executionKey: key, alchemyKey: alchemy })
+    );
+  };
+
+  const addLlmLog = (log: LlmLogRecord) => {
+    let current = llmLogs;
+    try {
+      const stored = localStorage.getItem("agent_llm_logs");
+      if (stored) {
+        current = JSON.parse(stored).map(normalizeLlmLog);
+      }
+    } catch {
+      current = llmLogs;
+    }
+    const nextLogs = [log, ...(Array.isArray(current) ? current : [])].slice(0, 50);
+    saveLlmLogs(nextLogs);
+    setLlmLogPage(1);
+  };
+
   const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  const expandedLlmLogs = expandLlmLogs(llmLogs);
+  const filteredLlmLogs =
+    llmLogFilter === "all"
+      ? expandedLlmLogs
+      : expandedLlmLogs.filter((log) => {
+          const types = log.actionTypes || [];
+          if (llmLogFilter === "etc") {
+            return types.length === 0;
+          }
+          return types.includes(llmLogFilter);
+        });
+  const llmLogPageSize = 5;
+  const llmLogTotalPages = Math.max(
+    1,
+    Math.ceil(filteredLlmLogs.length / llmLogPageSize)
+  );
+  const clampedLlmLogPage = Math.min(llmLogPage, llmLogTotalPages);
+  const pagedLlmLogs = filteredLlmLogs.slice(
+    (clampedLlmLogPage - 1) * llmLogPageSize,
+    clampedLlmLogPage * llmLogPageSize
+  );
 
   const fetchAgent = useCallback(async () => {
     if (!token) return;
@@ -267,13 +540,21 @@ export default function AgentManagerPage() {
       headers: authHeaders,
     });
     const data = await res.json();
-    setAgent(data.agent || null);
+    const nextAgent = data.agent || null;
+    setAgent(nextAgent);
+    if (nextAgent?.runnerStatus === "RUNNING") {
+      setRunnerOn(true);
+    } else if (nextAgent?.runnerStatus === "STOPPED") {
+      setRunnerOn(false);
+    }
   }, [token]);
 
   useEffect(() => {
     const stored = localStorage.getItem("sns_session_token");
     const storedAccount = localStorage.getItem("agent_account_signature");
     const storedSecrets = localStorage.getItem("agent_encrypted_secrets");
+    const storedLogs = localStorage.getItem("agent_llm_logs");
+    const storedExec = localStorage.getItem("agent_execution_config");
     if (storedAccount) {
       setAccountSignature(storedAccount);
     }
@@ -282,6 +563,23 @@ export default function AgentManagerPage() {
         setCachedEncryptedSecrets(JSON.parse(storedSecrets));
       } catch {
         setCachedEncryptedSecrets(null);
+      }
+    }
+    if (storedLogs) {
+      try {
+        setLlmLogs(JSON.parse(storedLogs).map(normalizeLlmLog));
+      } catch {
+        setLlmLogs([]);
+      }
+    }
+    if (storedExec) {
+      try {
+        const parsed = JSON.parse(storedExec);
+        setExecutionKey(parsed.executionKey || "");
+        setAlchemyKey(parsed.alchemyKey || "");
+      } catch {
+        setExecutionKey("");
+        setAlchemyKey("");
       }
     }
     if (!stored) return;
@@ -294,6 +592,11 @@ export default function AgentManagerPage() {
       .then((data) => {
         if (data?.agent) {
           setAgent(data.agent);
+          if (data.agent?.runnerStatus === "RUNNING") {
+            setRunnerOn(true);
+          } else if (data.agent?.runnerStatus === "STOPPED") {
+            setRunnerOn(false);
+          }
           setStatus("Session restored.");
         } else {
           saveToken("");
@@ -304,6 +607,60 @@ export default function AgentManagerPage() {
         saveToken("");
         setAgent(null);
       });
+  }, []);
+
+  useEffect(() => {
+    if (autoTestRef.current) return;
+    if (!executionKey && !alchemyKey) return;
+    autoTestRef.current = true;
+    if (executionKey) {
+      testExecutionKey().catch?.(() => undefined);
+    }
+    if (alchemyKey) {
+      testAlchemyKey().catch?.(() => undefined);
+    }
+  }, [executionKey, alchemyKey]);
+
+  useEffect(() => {
+    if (autoResumeRef.current) return;
+    if (!agent || !token || runnerOn) return;
+    if (agent.runnerStatus !== "RUNNING") return;
+    if (
+      executionKeyStatus.startsWith("OK") &&
+      alchemyKeyStatus.startsWith("OK")
+    ) {
+      autoResumeRef.current = true;
+      startRunner().catch(() => undefined);
+    } else if (executionKey || alchemyKey) {
+      setStatus("Runner was running. Validate keys and click Start to resume.");
+    }
+  }, [
+    agent,
+    token,
+    runnerOn,
+    executionKeyStatus,
+    alchemyKeyStatus,
+    executionKey,
+    alchemyKey,
+  ]);
+
+  useEffect(() => {
+    const loadPrompts = async () => {
+      try {
+        const [systemRes, userRes] = await Promise.all([
+          fetch("/prompts/agent.md"),
+          fetch("/prompts/user.md"),
+        ]);
+        const systemText = systemRes.ok ? await systemRes.text() : "";
+        const userText = userRes.ok ? await userRes.text() : "";
+        setSystemPrompt(systemText.trim());
+        setUserPromptTemplate(userText.trim());
+      } catch {
+        setSystemPrompt("");
+        setUserPromptTemplate("");
+      }
+    };
+    loadPrompts().catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -386,11 +743,14 @@ export default function AgentManagerPage() {
 
   const login = async () => {
     setDebugClicks((value) => value + 1);
-    if (!walletAddress) {
-      setStatus("Connect wallet first.");
-      return;
-    }
     try {
+      if (!walletAddress) {
+        await switchWallet();
+      }
+      if (!walletAddress) {
+        setStatus("Connect wallet first.");
+        return;
+      }
       const provider = new BrowserProvider((window as any).ethereum);
       const signer = await provider.getSigner();
       const signature = await signer.signMessage("24-7-playground");
@@ -455,8 +815,12 @@ export default function AgentManagerPage() {
     setSnsKey("");
     setLlmTestStatus("");
     setSnsTestStatus("");
+    setExecutionKeyStatus("");
+    setAlchemyKeyStatus("");
     setAvailableModels([]);
     setModelStatus("");
+    setLlmLogs([]);
+    localStorage.removeItem("agent_llm_logs");
     setStatus("Signed out.");
   };
 
@@ -526,6 +890,8 @@ export default function AgentManagerPage() {
       )) as DecryptedSecrets;
       setLlmKey(decrypted.llmKey || "");
       setSnsKey(decrypted.snsKey || "");
+      setExecutionKey(decrypted.executionKey || "");
+      setAlchemyKey(decrypted.alchemyKey || "");
       const nextConfig = decrypted.config || {};
       setProvider(nextConfig.provider || "GEMINI");
       setModel(nextConfig.model || "gemini-1.5-flash-002");
@@ -644,6 +1010,42 @@ export default function AgentManagerPage() {
     }
   };
 
+  const testExecutionKey = async () => {
+    setDebugClicks((value) => value + 1);
+    setExecutionKeyStatus("");
+    if (!executionKey) {
+      setExecutionKeyStatus("Execution key missing.");
+      return;
+    }
+    try {
+      const wallet = new Wallet(executionKey);
+      const address = await wallet.getAddress();
+      setExecutionKeyStatus(`OK: ${address}`);
+      saveLocalExecution(executionKey, alchemyKey);
+    } catch {
+      setExecutionKeyStatus("Invalid private key.");
+    }
+  };
+
+  const testAlchemyKey = async () => {
+    setDebugClicks((value) => value + 1);
+    setAlchemyKeyStatus("");
+    if (!alchemyKey) {
+      setAlchemyKeyStatus("Alchemy key missing.");
+      return;
+    }
+    try {
+      const provider = new JsonRpcProvider(
+        `https://eth-sepolia.g.alchemy.com/v2/${alchemyKey}`
+      );
+      const network = await provider.getNetwork();
+      setAlchemyKeyStatus(`OK: chainId ${network.chainId}`);
+      saveLocalExecution(executionKey, alchemyKey);
+    } catch {
+      setAlchemyKeyStatus("Alchemy key test failed.");
+    }
+  };
+
   const refreshModels = async () => {
     setDebugClicks((value) => value + 1);
     setModelStatus("");
@@ -675,27 +1077,10 @@ export default function AgentManagerPage() {
     }
   };
 
-  const fetchHeartbeats = async () => {
-    setDebugClicks((value) => value + 1);
-    if (!token) {
-      setHeartbeatStatus("Login required.");
-      return;
-    }
-    setHeartbeatStatus("Loading...");
-    try {
-      const res = await fetch(snsUrl("/api/agents/heartbeat"), {
-        headers: authHeaders,
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setHeartbeatStatus(data.error || "Failed to load heartbeats.");
-        return;
-      }
-      setHeartbeats(Array.isArray(data.heartbeats) ? data.heartbeats : []);
-      setHeartbeatStatus("Loaded.");
-    } catch {
-      setHeartbeatStatus("Failed to load heartbeats.");
-    }
+
+  const clearLlmLogs = () => {
+    setLlmLogs([]);
+    localStorage.removeItem("agent_llm_logs");
   };
 
   const buildSignedHeaders = async (
@@ -731,12 +1116,61 @@ export default function AgentManagerPage() {
     };
   };
 
+  const executeTx = async (
+    item: any,
+    community: any,
+    abi: any[],
+    execKey: string,
+    rpcKey: string
+  ) => {
+    const rpcUrl = `https://eth-sepolia.g.alchemy.com/v2/${rpcKey}`;
+    const provider = new JsonRpcProvider(rpcUrl);
+    const wallet = new Wallet(execKey, provider);
+    const contract = new Contract(community.address, abi, wallet);
+    const fn = String(item.functionName || "");
+    const args = Array.isArray(item.args) ? item.args : [];
+    const fragment = contract.interface.getFunction(fn);
+    const value =
+      item.value !== undefined && item.value !== null
+        ? BigInt(item.value)
+        : undefined;
+
+    if (fragment.stateMutability === "view" || fragment.stateMutability === "pure") {
+      const result = await contract[fn](...args);
+      return {
+        type: "call",
+        functionName: fn,
+        args,
+        result,
+      };
+    }
+
+    const tx = await contract[fn](...args, value ? { value } : {});
+    const receipt = await tx.wait(1);
+    return {
+      type: "tx",
+      functionName: fn,
+      args,
+      hash: tx.hash,
+      status: receipt?.status,
+      gasUsed: receipt?.gasUsed?.toString?.() || null,
+      blockNumber: receipt?.blockNumber,
+    };
+  };
+
   const runCycle = async (override?: {
     llmKey: string;
     snsKey: string;
+    executionKey?: string;
+    alchemyKey?: string;
     provider: string;
     model: string;
   }) => {
+    if (runInFlightRef.current) {
+      return;
+    }
+    runInFlightRef.current = true;
+    try {
     const activeLlmKey = override?.llmKey || llmKey;
     const activeSnsKey = override?.snsKey || snsKey;
     if (!activeLlmKey || !activeSnsKey) return;
@@ -765,14 +1199,33 @@ export default function AgentManagerPage() {
         : "gpt-4o-mini");
 
     const system =
-      "You are an autonomous testing agent. Review the SNS context every cycle, infer the most useful role for this cycle, then choose one community and post exactly one action (a thread or a comment).";
-    const user = [
-      "Return strict JSON only with fields:",
-      "{ action: 'create_thread'|'comment', communitySlug, threadId?, title?, body }",
-      "If commenting, provide threadId. If creating thread, provide title and body.",
-      "Context:",
-      JSON.stringify(contextData.context),
-    ].join("\n");
+      systemPrompt ||
+      [
+        "You are a smart contract auditor and beta tester.",
+        "You MUST:",
+        "1) Summarize the contract’s core assets and privileged actions.",
+        "2) Identify the single highest-risk interaction to test next.",
+        "3) Produce exactly one SNS action:",
+        "- create_thread OR comment",
+        "- Must include concrete test steps and expected outcomes.",
+        "4) Do NOT respond with acknowledgements or generic status.",
+        "Return JSON only.",
+      ].join("\n");
+    const userTemplate =
+      userPromptTemplate ||
+      [
+        "Return strict JSON only with fields:",
+        "{ action: 'create_thread'|'comment'|'tx', communitySlug, threadId?, title?, body, threadType?, contractAddress?, functionName?, args?, value? }",
+        "If commenting, provide threadId. If creating thread, provide title and body.",
+        "threadType can be DISCUSSION, REQUEST_TO_HUMAN, or REPORT_TO_HUMAN.",
+        "If action is tx, provide contractAddress, functionName, and args (array). value is optional (wei).",
+        "Context:",
+        "{{context}}",
+      ].join("\n");
+    const user = userTemplate.replace(
+      "{{context}}",
+      JSON.stringify(contextData.context)
+    );
 
     const output = await callLlm({
       provider: selectedProvider,
@@ -782,53 +1235,147 @@ export default function AgentManagerPage() {
       user,
     });
     setLastLlmOutput(output || "");
+    const newLog: LlmLogRecord = {
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      system,
+      user,
+      response: output || "",
+      kind: "cycle",
+      direction: "agent_to_manager",
+      actionTypes: extractActionTypes(output || ""),
+    };
+    addLlmLog(newLog);
 
     let decision: any = null;
     try {
       const jsonPayload = extractJsonPayload(output);
       decision = JSON.parse(jsonPayload);
     } catch {
-      setStatus("Invalid LLM output.");
-      return;
+      try {
+        const jsonPayload = sanitizeJsonPayload(extractJsonPayload(output));
+        decision = JSON.parse(jsonPayload);
+      } catch {
+        setStatus("Invalid LLM output.");
+        return;
+      }
     }
 
-    if (!decision || !decision.action || !decision.communitySlug) {
+    const actions = Array.isArray(decision) ? decision : [decision];
+    const validActions = actions.filter(
+      (item) => item && item.action && item.communitySlug
+    );
+
+    if (validActions.length === 0) {
       setStatus("LLM decision missing fields.");
       return;
     }
 
-    const community = contextData.context.communities.find(
-      (c: any) => c.slug === decision.communitySlug
-    );
-    if (!community) {
-      setStatus("Community not found.");
-      return;
-    }
+    const execKey = override?.executionKey || executionKey;
+    const rpcKey = override?.alchemyKey || alchemyKey;
 
-    if (decision.action === "create_thread") {
-      const body = {
-        communityId: community.id,
-        title: decision.title || "Agent update",
-        body: decision.body || "",
-        type: "NORMAL",
-      };
-      const headers = await buildSignedHeaders(body, activeSnsKey);
-      await fetch(snsUrl("/api/threads"), {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
-    } else if (decision.action === "comment" && decision.threadId) {
-      const body = { body: decision.body || "" };
-      const headers = await buildSignedHeaders(body, activeSnsKey);
-      await fetch(
-        snsUrl(`/api/threads/${decision.threadId}/comments`),
-        {
+    for (const item of validActions) {
+      const community = contextData.context.communities.find(
+        (c: any) => c.slug === item.communitySlug
+      );
+      if (!community) {
+        continue;
+      }
+
+      if (item.action === "tx") {
+        if (!execKey || !rpcKey) {
+          setStatus("Execution wallet or Alchemy key missing.");
+          continue;
+        }
+        if (!community.abi || !Array.isArray(community.abi)) {
+          setStatus("Contract ABI not available.");
+          continue;
+        }
+        if (
+          item.contractAddress &&
+          String(item.contractAddress).toLowerCase() !==
+            String(community.address).toLowerCase()
+        ) {
+          setStatus("Contract address not allowed.");
+          continue;
+        }
+        const fnName = String(item.functionName || "");
+        const allowed = community.abiFunctions?.some(
+          (fn: any) => fn.name === fnName
+        );
+        if (!allowed) {
+          setStatus("Function not allowed.");
+          continue;
+        }
+
+        let txResult: any;
+        try {
+          txResult = await executeTx(item, community, community.abi, execKey, rpcKey);
+        } catch (error: any) {
+          txResult = { error: String(error?.message || "Tx failed") };
+        }
+
+        const feedbackPayload = {
+          type: "tx_feedback",
+          communitySlug: community.slug,
+          threadId: item.threadId || null,
+          contractAddress: community.address,
+          functionName: item.functionName || null,
+          args: item.args || [],
+          value: item.value || null,
+          result: toJsonSafe(txResult),
+        };
+        const feedbackLog: LlmLogRecord = {
+          id: crypto.randomUUID(),
+          createdAt: new Date().toISOString(),
+          system,
+          user: "TX feedback (manager -> agent)",
+          response: JSON.stringify(feedbackPayload, null, 2),
+          kind: "tx_feedback",
+          direction: "manager_to_agent",
+          actionTypes: ["tx"],
+        };
+        setLastLlmOutput(feedbackLog.response);
+        addLlmLog(feedbackLog);
+      } else if (item.action === "create_thread") {
+        const requestedThreadType = String(item.threadType || "")
+          .trim()
+          .toUpperCase();
+        const allowedThreadTypes = new Set([
+          "DISCUSSION",
+          "REQUEST_TO_HUMAN",
+          "REPORT_TO_HUMAN",
+        ]);
+        const threadType = allowedThreadTypes.has(requestedThreadType)
+          ? requestedThreadType
+          : "DISCUSSION";
+        const body = {
+          communityId: community.id,
+          title: item.title || "Agent update",
+          body: item.body || "",
+          type: threadType,
+        };
+        const headers = await buildSignedHeaders(body, activeSnsKey);
+        await fetch(snsUrl("/api/threads"), {
           method: "POST",
           headers,
           body: JSON.stringify(body),
-        }
-      );
+        });
+      } else if (item.action === "comment" && item.threadId) {
+        const body = { body: item.body || "" };
+        const headers = await buildSignedHeaders(body, activeSnsKey);
+        await fetch(
+          snsUrl(`/api/threads/${item.threadId}/comments`),
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify(body),
+          }
+        );
+      }
+    }
+    } finally {
+      runInFlightRef.current = false;
     }
   };
 
@@ -883,6 +1430,8 @@ export default function AgentManagerPage() {
 
     const nextLlmKey = decrypted.llmKey || "";
     const nextSnsKey = decrypted.snsKey || "";
+    const nextExecutionKey = executionKey;
+    const nextAlchemyKey = alchemyKey;
     if (!nextLlmKey || !nextSnsKey) {
       setStatus("Decrypted keys missing.");
       return;
@@ -890,6 +1439,8 @@ export default function AgentManagerPage() {
 
     setLlmKey(nextLlmKey);
     setSnsKey(nextSnsKey);
+    setExecutionKey(nextExecutionKey);
+    setAlchemyKey(nextAlchemyKey);
     const nextConfig = decrypted.config || {};
     const nextProvider = nextConfig.provider || provider || "GEMINI";
     const nextModel = nextConfig.model || model || "gemini-1.5-flash-002";
@@ -923,6 +1474,8 @@ export default function AgentManagerPage() {
       runCycle({
         llmKey: nextLlmKey,
         snsKey: nextSnsKey,
+        executionKey: nextExecutionKey,
+        alchemyKey: nextAlchemyKey,
         provider: nextProvider,
         model: nextModel,
       }).catch(() => undefined);
@@ -956,7 +1509,7 @@ export default function AgentManagerPage() {
         <h2>Login</h2>
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <button type="button" onClick={switchWallet}>Switch Wallet Account</button>
-          <button onClick={token ? signOut : login} disabled={!walletAddress && !token}>
+          <button onClick={token ? signOut : login}>
             {token ? "Sign Out" : "Sign In (Signature)"}
           </button>
           <span>{walletAddress || "No wallet connected"}</span>
@@ -1073,8 +1626,36 @@ export default function AgentManagerPage() {
 
       <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
         <h2>Runner</h2>
+        <label>Execution Wallet Private Key (Sepolia)</label>
+        <input
+          value={executionKey}
+          onChange={(e) => setExecutionKey(e.target.value)}
+          style={{ width: "100%", marginBottom: 12 }}
+        />
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+          <button type="button" onClick={testExecutionKey}>Test Execution Key</button>
+          <span style={{ color: "var(--muted)" }}>{executionKeyStatus}</span>
+        </div>
+        <label>Alchemy API Key (Sepolia)</label>
+        <input
+          value={alchemyKey}
+          onChange={(e) => setAlchemyKey(e.target.value)}
+          style={{ width: "100%", marginBottom: 12 }}
+        />
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+          <button type="button" onClick={testAlchemyKey}>Test Alchemy Key</button>
+          <span style={{ color: "var(--muted)" }}>{alchemyKeyStatus}</span>
+        </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <button type="button" onClick={startRunner} disabled={runnerOn}>
+          <button
+            type="button"
+            onClick={startRunner}
+            disabled={
+              runnerOn ||
+              !executionKeyStatus.startsWith("OK") ||
+              !alchemyKeyStatus.startsWith("OK")
+            }
+          >
             Start
           </button>
           <button type="button" onClick={stopRunner} disabled={!runnerOn}>
@@ -1084,45 +1665,133 @@ export default function AgentManagerPage() {
       </section>
 
       <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
-        <h2>Heartbeat Log</h2>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
-          <button type="button" onClick={fetchHeartbeats}>Refresh</button>
-          <span style={{ color: "var(--muted)" }}>{heartbeatStatus}</span>
-        </div>
-        {heartbeats.length === 0 ? (
-          <div style={{ color: "var(--muted)" }}>No heartbeat records.</div>
+        <h2>LLM Communication Log</h2>
+        {!token ? (
+          <div style={{ color: "var(--muted)" }}>Login required.</div>
         ) : (
-          <div style={{ display: "grid", gap: 8 }}>
-            {heartbeats.map((hb) => (
-              <div
-                key={hb.id}
-                style={{
-                  border: "1px solid var(--border)",
-                  borderRadius: 8,
-                  padding: 10,
+          <>
+            <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  clearLlmLogs();
+                  setLlmLogPage(1);
                 }}
               >
-                <div><strong>{hb.status}</strong></div>
-                <div style={{ color: "var(--muted)" }}>
-                  {new Date(hb.lastSeenAt).toLocaleString()}
-                </div>
-                {hb.payload ? (
-                  <pre style={{ whiteSpace: "pre-wrap", marginTop: 8 }}>
-                    {JSON.stringify(hb.payload, null, 2)}
-                  </pre>
-                ) : null}
+                Clear
+              </button>
+              <span style={{ color: "var(--muted)" }}>{filteredLlmLogs.length} entries</span>
+            </div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+              {[
+                { id: "all", label: "All" },
+                { id: "create_thread", label: "create_thread" },
+                { id: "comment", label: "comment" },
+                { id: "tx", label: "tx" },
+                { id: "etc", label: "etc" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setLlmLogFilter(
+                      tab.id as "all" | "create_thread" | "comment" | "tx" | "etc"
+                    );
+                    setLlmLogPage(1);
+                  }}
+                  style={{
+                    padding: "6px 10px",
+                    borderRadius: 999,
+                    border: "1px solid var(--border)",
+                    background: llmLogFilter === tab.id ? "var(--accent)" : "transparent",
+                    color: llmLogFilter === tab.id ? "var(--accent-text)" : "inherit",
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            {llmLogs.length === 0 ? (
+              <div style={{ color: "var(--muted)" }}>No logs yet.</div>
+            ) : filteredLlmLogs.length === 0 ? (
+              <div style={{ color: "var(--muted)" }}>No logs for this filter.</div>
+            ) : (
+              <div style={{ display: "grid", gap: 12 }}>
+                {pagedLlmLogs.map((log) => (
+                  <div key={log.id} style={{ border: "1px solid var(--border)", borderRadius: 8, padding: 12 }}>
+                    <div style={{ color: "var(--muted)", marginBottom: 8 }}>
+                      {new Date(log.createdAt).toLocaleString()}
+                    </div>
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        padding: "2px 8px",
+                        borderRadius: 999,
+                        border: "1px solid var(--border)",
+                        fontSize: 12,
+                        marginBottom: 8,
+                      }}
+                    >
+                      {log.direction === "manager_to_agent" ? "Manager -> Agent" : "Agent -> Manager"}
+                    </div>
+                    {log.actionTypes && log.actionTypes.length > 0 ? (
+                      <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 8 }}>
+                        Action: {log.actionTypes.join(", ")}
+                      </div>
+                    ) : null}
+                    <pre style={{ whiteSpace: "pre-wrap" }}>{log.content}</pre>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+            {filteredLlmLogs.length > 0 ? (
+              <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 12 }}>
+                <button
+                  type="button"
+                  onClick={() => setLlmLogPage((page) => Math.max(1, page - 1))}
+                  disabled={clampedLlmLogPage <= 1}
+                >
+                  Prev
+                </button>
+                <span style={{ color: "var(--muted)" }}>
+                  Page {clampedLlmLogPage} of {llmLogTotalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setLlmLogPage((page) => Math.min(llmLogTotalPages, page + 1))
+                  }
+                  disabled={clampedLlmLogPage >= llmLogTotalPages}
+                >
+                  Next
+                </button>
+              </div>
+            ) : null}
+          </>
         )}
       </section>
 
       <section style={{ marginTop: 24 }}>
-        <strong>Status:</strong> {status} (clicks: {debugClicks})
-        {lastLlmOutput ? (
-          <pre style={{ marginTop: 12, whiteSpace: "pre-wrap" }}>
-            {lastLlmOutput}
-          </pre>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
+          <strong>Status:</strong>
+          <span style={{ color: "var(--muted)" }}>
+            {status || "—"} (clicks: {debugClicks})
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setStatus("");
+              setLastLlmOutput("");
+            }}
+          >
+            Clear
+          </button>
+        </div>
+        {lastLlmOutput && status ? (
+          <>
+            <div style={{ fontWeight: 600, marginBottom: 6 }}>Last LLM Output</div>
+            <pre style={{ whiteSpace: "pre-wrap" }}>{lastLlmOutput}</pre>
+          </>
         ) : null}
       </section>
     </main>

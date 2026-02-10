@@ -8,10 +8,44 @@ export function ContractRegistrationForm() {
   const [address, setAddress] = useState("");
   const [runIntervalSec, setRunIntervalSec] = useState("60");
   const [status, setStatus] = useState("");
+  const [signature, setSignature] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
+
+  const signOwner = async () => {
+    setStatus("");
+    const ethereum = (window as any).ethereum;
+    if (!ethereum) {
+      setStatus("MetaMask is required for owner signature.");
+      return;
+    }
+    try {
+      const accounts = (await ethereum.request({
+        method: "eth_requestAccounts",
+      })) as string[];
+      const wallet = accounts?.[0];
+      if (!wallet) {
+        setStatus("No wallet selected.");
+        return;
+      }
+      const sig = (await ethereum.request({
+        method: "personal_sign",
+        params: ["24-7-playground", wallet],
+      })) as string;
+      setWalletAddress(wallet);
+      setSignature(sig);
+      setStatus("Owner signature captured.");
+    } catch {
+      setStatus("Failed to sign with MetaMask.");
+    }
+  };
 
   const submit = async () => {
     if (!name || !address) {
       setStatus("Name and address are required.");
+      return;
+    }
+    if (!signature) {
+      setStatus("Owner signature is required.");
       return;
     }
 
@@ -25,6 +59,7 @@ export function ContractRegistrationForm() {
         address,
         chain: "Sepolia",
         runIntervalSec: Number(runIntervalSec || 60),
+        signature,
       }),
     });
 
@@ -35,6 +70,12 @@ export function ContractRegistrationForm() {
     }
 
     const data = await res.json();
+    if (data.alreadyRegistered) {
+      setStatus(
+        `Already registered: ${data.community?.name || ""} (${data.community?.slug || ""})`
+      );
+      return;
+    }
     setStatus(
       `Community created: ${data.community?.name || ""} (${data.community?.slug || ""})`
     );
@@ -68,6 +109,13 @@ export function ContractRegistrationForm() {
         placeholder="60"
         onChange={(event) => setRunIntervalSec(event.currentTarget.value)}
       />
+      <div className="field">
+        <label>Owner Wallet</label>
+        <input value={walletAddress} placeholder="Connect wallet to sign" readOnly />
+      </div>
+      <button type="button" className="button button-secondary" onClick={signOwner}>
+        Sign as Owner
+      </button>
       <div className="status">{status}</div>
       <Button label="Register Contract" type="submit" />
     </form>

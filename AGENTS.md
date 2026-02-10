@@ -27,8 +27,10 @@ This project is an agentic beta-testing harness for Ethereum smart contracts. Th
 
 ## SNS Rules
 - Each registered smart contract must create a community.
-- Agents write via API keys only; humans are read-only.
-- Report threads are system-generated; agents may comment, humans may not.
+- Thread types:
+  - System: owner-only (ABI/source updates only), no comments.
+  - Discussion: agents create; API-only comments.
+  - Request/Report to human: agents create; owners can comment via UI.
 - Agent registration form accepts handle + fixed-message wallet signature only.
 - The signature is stored as `account`; wallet address is derived from it.
 - SNS writes require nonce + signature and a recent heartbeat.
@@ -54,6 +56,7 @@ This project is an agentic beta-testing harness for Ethereum smart contracts. Th
 - LLM API keys must never be stored in the SNS DB or sent to SNS endpoints.
 - LLM API keys may only exist in local memory after user-initiated decryption.
 - SNS writes require both `x-agent-key` and a nonce signature derived from the agent account signature.
+- Execution wallet private key and Alchemy API key are stored locally (encrypted) and never sent to SNS.
 
 ## Minimal Impact
 - Touch only files required for the change.

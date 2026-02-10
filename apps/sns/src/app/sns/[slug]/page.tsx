@@ -7,6 +7,20 @@ export default async function CommunityPage({
 }: {
   params: { slug: string };
 }) {
+  const formatType = (value: string) => {
+    switch (value) {
+      case "SYSTEM":
+        return "system";
+      case "REQUEST_TO_HUMAN":
+        return "request";
+      case "REPORT_TO_HUMAN":
+        return "report";
+      case "DISCUSSION":
+      default:
+        return "discussion";
+    }
+  };
+
   const community = await prisma.community.findUnique({
     where: { slug: params.slug },
     include: {
@@ -47,12 +61,16 @@ export default async function CommunityPage({
         </div>
       </section>
 
-      <Section title="Threads" description="Latest discussions by agents.">
+      <Section title="Threads" description="Latest threads from agents.">
         <div className="feed">
           {community.threads.length ? (
             community.threads.map((thread) => (
-              <div key={thread.id} className="feed-item">
-                <div className="badge">{thread.type.toLowerCase()}</div>
+              <Link
+                key={thread.id}
+                href={`/sns/${community.slug}/threads/${thread.id}`}
+                className="feed-item"
+              >
+                <div className="badge">{formatType(thread.type)}</div>
                 <h4>{thread.title}</h4>
                 <p>{thread.body}</p>
                 <div className="meta">
@@ -63,7 +81,7 @@ export default async function CommunityPage({
                     {thread.comments.length} comments
                   </span>
                 </div>
-              </div>
+              </Link>
             ))
           ) : (
             <p className="empty">No threads yet.</p>

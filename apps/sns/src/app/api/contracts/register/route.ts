@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "src/db";
+import { getAddress, verifyMessage } from "ethers";
+import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
 
 function slugify(value: string) {
   return value
@@ -9,8 +11,6 @@ function slugify(value: string) {
 }
 
 const SEPOLIA_CHAIN = "Sepolia";
-const SEPOLIA_CHAIN_ID = 11155111;
-
 function detectFaucet(abi: unknown) {
   if (!Array.isArray(abi)) {
     return null;
@@ -29,93 +29,13 @@ function detectFaucet(abi: unknown) {
   return entry?.name || null;
 }
 
-async function fetchEtherscanAbi(address: string) {
-  const apiKey = process.env.ETHERSCAN_API_KEY;
-  if (!apiKey) {
-    throw new Error("ETHERSCAN_API_KEY is not configured");
-  }
-
-  const params = new URLSearchParams({
-    chainid: String(SEPOLIA_CHAIN_ID),
-    module: "contract",
-    action: "getabi",
-    address,
-    apikey: apiKey,
-  });
-
-  const response = await fetch(`https://api.etherscan.io/v2/api?${params}`);
-  if (!response.ok) {
-    throw new Error("Failed to fetch ABI from Etherscan");
-  }
-
-  const payload = (await response.json()) as {
-    status?: string;
-    message?: string;
-    result?: string;
-  };
-
-  if (payload.status !== "1" || !payload.result) {
-    throw new Error(payload.message || "Etherscan ABI not available");
-  }
-
-  try {
-    return JSON.parse(payload.result);
-  } catch {
-    throw new Error("Invalid ABI format from Etherscan");
-  }
-}
-
-async function fetchEtherscanSource(address: string) {
-  const apiKey = process.env.ETHERSCAN_API_KEY;
-  if (!apiKey) {
-    throw new Error("ETHERSCAN_API_KEY is not configured");
-  }
-
-  const params = new URLSearchParams({
-    chainid: String(SEPOLIA_CHAIN_ID),
-    module: "contract",
-    action: "getsourcecode",
-    address,
-    apikey: apiKey,
-  });
-
-  const response = await fetch(`https://api.etherscan.io/v2/api?${params}`);
-  if (!response.ok) {
-    throw new Error("Failed to fetch source from Etherscan");
-  }
-
-  const payload = (await response.json()) as {
-    status?: string;
-    message?: string;
-    result?: Array<{
-      SourceCode?: string;
-      ABI?: string;
-      ContractName?: string;
-      CompilerVersion?: string;
-      OptimizationUsed?: string;
-      Runs?: string;
-      EVMVersion?: string;
-      Library?: string;
-      LicenseType?: string;
-      Proxy?: string;
-      Implementation?: string;
-      SwarmSource?: string;
-    }>;
-  };
-
-  if (payload.status !== "1" || !payload.result?.length) {
-    throw new Error(payload.message || "Etherscan source not available");
-  }
-
-  return payload.result[0];
-}
-
 export async function POST(request: Request) {
   const body = await request.json();
   const name = String(body.name || "").trim();
   const address = String(body.address || "").trim();
   const chain = String(body.chain || "").trim();
   const runIntervalSec = Number(body.runIntervalSec || 60);
+  const signature = String(body.signature || "").trim();
 
   if (!name || !address || !chain) {
     return NextResponse.json(
@@ -123,10 +43,27 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+  if (!signature) {
+    return NextResponse.json(
+      { error: "signature is required" },
+      { status: 400 }
+    );
+  }
 
   if (chain !== SEPOLIA_CHAIN) {
     return NextResponse.json(
       { error: "Only Sepolia is supported for now" },
+      { status: 400 }
+    );
+  }
+
+  const authMessage = "24-7-playground";
+  let ownerWallet: string;
+  try {
+    ownerWallet = getAddress(verifyMessage(authMessage, signature)).toLowerCase();
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid signature" },
       { status: 400 }
     );
   }
@@ -161,44 +98,40 @@ export async function POST(request: Request) {
   });
 
   if (existing?.community) {
-    await prisma.thread.create({
-      data: {
-        communityId: existing.community.id,
-        title: `Contract update detected for ${existing.name}`,
-        body: [
-          `Contract: ${existing.name}`,
-          `Address: ${existing.address}`,
-          `Chain: ${existing.chain}`,
-          `ContractName: ${sourceInfo?.ContractName || "unknown"}`,
-          `Compiler: ${sourceInfo?.CompilerVersion || "unknown"}`,
-          `Optimization: ${sourceInfo?.OptimizationUsed || "unknown"}`,
-          `Runs: ${sourceInfo?.Runs || "unknown"}`,
-          `EVM: ${sourceInfo?.EVMVersion || "unknown"}`,
-          `License: ${sourceInfo?.LicenseType || "unknown"}`,
-          `Proxy: ${sourceInfo?.Proxy || "unknown"}`,
-          `Implementation: ${sourceInfo?.Implementation || "unknown"}`,
-          ``,
-          `SourceCode:`,
-          sourceInfo?.SourceCode || "unavailable",
-          ``,
-          `ABI:`,
-          JSON.stringify(abiJson, null, 2),
-        ].join("\n"),
-        type: "NORMAL",
-      },
-    });
+    let community = existing.community;
+    if (existing.community.ownerWallet && existing.community.ownerWallet !== ownerWallet) {
+      return NextResponse.json(
+        { error: "Only the community owner can manage this contract" },
+        { status: 403 }
+      );
+    }
+    if (!existing.community.ownerWallet) {
+      community = await prisma.community.update({
+        where: { id: existing.community.id },
+        data: { ownerWallet },
+      });
+    }
 
     return NextResponse.json({
       contract: existing,
-      community: existing.community,
+      community,
       faucetFunction,
+      alreadyRegistered: true,
     });
   }
 
   const contract = existing
     ? existing
     : await prisma.serviceContract.create({
-        data: { name, address, chain, abiJson, faucetFunction, runIntervalSec },
+        data: {
+          name,
+          address,
+          chain,
+          abiJson,
+          sourceJson: sourceInfo as any,
+          faucetFunction,
+          runIntervalSec,
+        },
       });
 
   const baseSlug =
@@ -209,6 +142,7 @@ export async function POST(request: Request) {
       name: `${name} (${address.slice(0, 6)}...)`,
       slug: baseSlug,
       description: `Agent community for ${name} on ${chain}.`,
+      ownerWallet,
     },
   });
 
@@ -235,7 +169,7 @@ export async function POST(request: Request) {
         `ABI:`,
         JSON.stringify(abiJson, null, 2),
       ].join("\n"),
-      type: "NORMAL",
+      type: "SYSTEM",
     },
   });
 
