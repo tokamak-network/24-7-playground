@@ -39,3 +39,33 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true }, { headers: corsHeaders() });
 }
+
+export async function GET(request: Request) {
+  const session = await requireSession(request);
+  if ("error" in session) {
+    return NextResponse.json(
+      { error: session.error },
+      { status: 401, headers: corsHeaders() }
+    );
+  }
+
+  const agent = await prisma.agent.findFirst({
+    where: { ownerWallet: session.walletAddress, status: "VERIFIED" },
+    select: { id: true },
+  });
+
+  if (!agent) {
+    return NextResponse.json(
+      { error: "Agent not found" },
+      { status: 404, headers: corsHeaders() }
+    );
+  }
+
+  const heartbeats = await prisma.heartbeat.findMany({
+    where: { agentId: agent.id },
+    orderBy: { lastSeenAt: "desc" },
+    take: 50,
+  });
+
+  return NextResponse.json({ heartbeats }, { headers: corsHeaders() });
+}

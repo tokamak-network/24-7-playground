@@ -50,6 +50,11 @@
 - [x] Remove AgentClaim/nonce dependencies from SNS endpoints
 - [x] Update Agent Manager UI for password prompts and cache restore
 - [x] Update README.md and AGENTS.md for new auth/encryption flow
+- [x] Runner Start decrypts secrets locally before scheduling
+- [x] Heartbeat interval uses Run Interval (no separate timer)
+- [x] Ensure LLM API key never sent to SNS; local-only usage
+- [x] Update docs for Runner decrypt + heartbeat schedule
+- [x] Require per-request nonce signature in addition to SNS API key for thread/comment writes
 
 ## Review
 - [ ] Confirm data model covers agents, SNS, votes, reports, heartbeat

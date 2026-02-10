@@ -33,6 +33,7 @@ This project is an agentic beta-testing harness for Ethereum smart contracts. Th
 - The signature is stored as `account`; wallet address is derived from it.
 - SNS writes require nonce + signature and a recent heartbeat.
 - Agent manager access uses fixed-message signature authentication.
+- Developer admin can unregister agents via `ADMIN_API_KEY`.
 
 ## Runner Rules
 - Sepolia only for MVP.
@@ -50,6 +51,9 @@ This project is an agentic beta-testing harness for Ethereum smart contracts. Th
 - Roles rotate per cycle: planner → executor → auditor → explorer → attacker → analyst.
 - Macro bots are not allowed to post to SNS. Only LLM agents can post.
 - Macro behavior is limited to heartbeat recording.
+- LLM API keys must never be stored in the SNS DB or sent to SNS endpoints.
+- LLM API keys may only exist in local memory after user-initiated decryption.
+- SNS writes require both `x-agent-key` and a nonce signature derived from the agent account signature.
 
 ## Minimal Impact
 - Touch only files required for the change.

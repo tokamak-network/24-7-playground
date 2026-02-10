@@ -14,6 +14,13 @@ type AgentRecord = {
   runnerStatus?: string;
 };
 
+type HeartbeatRecord = {
+  id: string;
+  status: string;
+  payload?: any;
+  lastSeenAt: string;
+};
+
 type DecryptedSecrets = {
   llmKey: string;
   snsKey: string;
@@ -183,6 +190,24 @@ async function callLlm({
   return "";
 }
 
+function extractJsonPayload(output: string) {
+  const trimmed = output.trim();
+  if (!trimmed) return "";
+  if (trimmed.startsWith("```")) {
+    const lines = trimmed.split("\n");
+    const fenceIndex = lines.findIndex((line) => line.startsWith("```"));
+    if (fenceIndex !== -1) {
+      const endIndex = lines.findIndex(
+        (line, idx) => idx > fenceIndex && line.startsWith("```")
+      );
+      if (endIndex !== -1) {
+        return lines.slice(fenceIndex + 1, endIndex).join("\n").trim();
+      }
+    }
+  }
+  return trimmed;
+}
+
 export default function AgentManagerPage() {
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [token, setToken] = useState<string>("");
@@ -202,8 +227,10 @@ export default function AgentManagerPage() {
   const [debugClicks, setDebugClicks] = useState<number>(0);
   const [llmTestStatus, setLlmTestStatus] = useState<string>("");
   const [snsTestStatus, setSnsTestStatus] = useState<string>("");
+  const [heartbeats, setHeartbeats] = useState<HeartbeatRecord[]>([]);
+  const [heartbeatStatus, setHeartbeatStatus] = useState<string>("");
+  const [lastLlmOutput, setLastLlmOutput] = useState<string>("");
   const intervalRef = useRef<number | null>(null);
-  const heartbeatRef = useRef<number | null>(null);
 
   const saveToken = (value: string) => {
     setToken(value);
@@ -648,10 +675,42 @@ export default function AgentManagerPage() {
     }
   };
 
-  const buildSignedHeaders = async (body: unknown) => {
+  const fetchHeartbeats = async () => {
+    setDebugClicks((value) => value + 1);
+    if (!token) {
+      setHeartbeatStatus("Login required.");
+      return;
+    }
+    setHeartbeatStatus("Loading...");
+    try {
+      const res = await fetch(snsUrl("/api/agents/heartbeat"), {
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setHeartbeatStatus(data.error || "Failed to load heartbeats.");
+        return;
+      }
+      setHeartbeats(Array.isArray(data.heartbeats) ? data.heartbeats : []);
+      setHeartbeatStatus("Loaded.");
+    } catch {
+      setHeartbeatStatus("Failed to load heartbeats.");
+    }
+  };
+
+  const buildSignedHeaders = async (
+    body: unknown,
+    keyOverride?: string,
+    accountOverride?: string
+  ) => {
+    const key = keyOverride || snsKey;
+    const account = accountOverride || accountSignature;
+    if (!account) {
+      throw new Error("Missing account signature");
+    }
     const nonceRes = await fetch(snsUrl("/api/agents/nonce"), {
       method: "POST",
-      headers: { "x-agent-key": snsKey },
+      headers: { "x-agent-key": key },
     });
     const nonceData = await nonceRes.json();
     if (!nonceRes.ok || !nonceData.nonce) {
@@ -660,23 +719,30 @@ export default function AgentManagerPage() {
     const timestamp = Date.now().toString();
     const bodyHash = await sha256(stableStringify(body));
     const signature = await hmac(
-      snsKey,
+      account,
       `${nonceData.nonce}.${timestamp}.${bodyHash}`
     );
     return {
       "Content-Type": "application/json",
-      "x-agent-key": snsKey,
+      "x-agent-key": key,
       "x-agent-nonce": nonceData.nonce,
       "x-agent-timestamp": timestamp,
       "x-agent-signature": signature,
     };
   };
 
-  const runCycle = async () => {
-    if (!llmKey || !snsKey) return;
+  const runCycle = async (override?: {
+    llmKey: string;
+    snsKey: string;
+    provider: string;
+    model: string;
+  }) => {
+    const activeLlmKey = override?.llmKey || llmKey;
+    const activeSnsKey = override?.snsKey || snsKey;
+    if (!activeLlmKey || !activeSnsKey) return;
     const config: any = {
-      provider,
-      model,
+      provider: override?.provider || provider,
+      model: override?.model || model,
       runIntervalSec,
     };
 
@@ -711,14 +777,16 @@ export default function AgentManagerPage() {
     const output = await callLlm({
       provider: selectedProvider,
       model: selectedModel,
-      apiKey: llmKey,
+      apiKey: activeLlmKey,
       system,
       user,
     });
+    setLastLlmOutput(output || "");
 
     let decision: any = null;
     try {
-      decision = JSON.parse(output);
+      const jsonPayload = extractJsonPayload(output);
+      decision = JSON.parse(jsonPayload);
     } catch {
       setStatus("Invalid LLM output.");
       return;
@@ -744,7 +812,7 @@ export default function AgentManagerPage() {
         body: decision.body || "",
         type: "NORMAL",
       };
-      const headers = await buildSignedHeaders(body);
+      const headers = await buildSignedHeaders(body, activeSnsKey);
       await fetch(snsUrl("/api/threads"), {
         method: "POST",
         headers,
@@ -752,7 +820,7 @@ export default function AgentManagerPage() {
       });
     } else if (decision.action === "comment" && decision.threadId) {
       const body = { body: decision.body || "" };
-      const headers = await buildSignedHeaders(body);
+      const headers = await buildSignedHeaders(body, activeSnsKey);
       await fetch(
         snsUrl(`/api/threads/${decision.threadId}/comments`),
         {
@@ -766,11 +834,71 @@ export default function AgentManagerPage() {
 
   const startRunner = async () => {
     setDebugClicks((value) => value + 1);
-    if (!token) return;
-    if (!llmKey || !snsKey) {
-      setStatus("Decrypt secrets before running.");
+    if (!token) {
+      setStatus("Login required.");
       return;
     }
+    if (!accountSignature) {
+      setStatus("Missing account signature. Please sign in again.");
+      return;
+    }
+
+    setStatus("Loading encrypted secrets...");
+    let encrypted = cachedEncryptedSecrets;
+    try {
+      const res = await fetch(snsUrl("/api/agents/secrets"), {
+        headers: authHeaders,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        saveEncryptedCache(data.encryptedSecrets || null);
+        encrypted = data.encryptedSecrets || null;
+      }
+    } catch {
+      // fallback to cached value
+    }
+
+    if (!encrypted) {
+      setStatus("No encrypted secrets available.");
+      return;
+    }
+
+    const password = window.prompt("Enter password to start runner");
+    if (!password) {
+      setStatus("Password required.");
+      return;
+    }
+
+    let decrypted: DecryptedSecrets;
+    try {
+      decrypted = (await decryptSecrets(
+        accountSignature,
+        password,
+        encrypted
+      )) as DecryptedSecrets;
+    } catch {
+      setStatus("Failed to decrypt secrets.");
+      return;
+    }
+
+    const nextLlmKey = decrypted.llmKey || "";
+    const nextSnsKey = decrypted.snsKey || "";
+    if (!nextLlmKey || !nextSnsKey) {
+      setStatus("Decrypted keys missing.");
+      return;
+    }
+
+    setLlmKey(nextLlmKey);
+    setSnsKey(nextSnsKey);
+    const nextConfig = decrypted.config || {};
+    const nextProvider = nextConfig.provider || provider || "GEMINI";
+    const nextModel = nextConfig.model || model || "gemini-1.5-flash-002";
+    const nextInterval = Number.isFinite(nextConfig.runIntervalSec)
+      ? nextConfig.runIntervalSec
+      : runIntervalSec;
+    setProvider(nextProvider);
+    setModel(nextModel);
+    setRunIntervalSec(nextInterval);
 
     await fetch(snsUrl("/api/agents/runner/start"), {
       method: "POST",
@@ -778,7 +906,7 @@ export default function AgentManagerPage() {
     });
 
     const intervalMs = (() => {
-      return Math.max(10, Number(runIntervalSec || 60)) * 1000;
+      return Math.max(10, Number(nextInterval || 60)) * 1000;
     })();
 
     await fetch(snsUrl("/api/agents/runner/config"), {
@@ -787,21 +915,21 @@ export default function AgentManagerPage() {
       body: JSON.stringify({ intervalSec: Math.floor(intervalMs / 1000) }),
     });
 
-    intervalRef.current = window.setInterval(() => {
-      runCycle().catch(() => undefined);
-    }, intervalMs);
-
-    heartbeatRef.current = window.setInterval(() => {
+    const tick = () => {
       fetch(snsUrl("/api/agents/heartbeat"), {
         method: "POST",
         headers: authHeaders,
       }).catch(() => undefined);
-    }, 60_000);
+      runCycle({
+        llmKey: nextLlmKey,
+        snsKey: nextSnsKey,
+        provider: nextProvider,
+        model: nextModel,
+      }).catch(() => undefined);
+    };
 
-    fetch(snsUrl("/api/agents/heartbeat"), {
-      method: "POST",
-      headers: authHeaders,
-    }).catch(() => undefined);
+    tick();
+    intervalRef.current = window.setInterval(tick, intervalMs);
 
     setRunnerOn(true);
   };
@@ -809,9 +937,7 @@ export default function AgentManagerPage() {
   const stopRunner = async () => {
     setDebugClicks((value) => value + 1);
     if (intervalRef.current) window.clearInterval(intervalRef.current);
-    if (heartbeatRef.current) window.clearInterval(heartbeatRef.current);
     intervalRef.current = null;
-    heartbeatRef.current = null;
     await fetch(snsUrl("/api/agents/runner/stop"), {
       method: "POST",
       headers: authHeaders,
@@ -957,8 +1083,47 @@ export default function AgentManagerPage() {
         </div>
       </section>
 
+      <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
+        <h2>Heartbeat Log</h2>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+          <button type="button" onClick={fetchHeartbeats}>Refresh</button>
+          <span style={{ color: "var(--muted)" }}>{heartbeatStatus}</span>
+        </div>
+        {heartbeats.length === 0 ? (
+          <div style={{ color: "var(--muted)" }}>No heartbeat records.</div>
+        ) : (
+          <div style={{ display: "grid", gap: 8 }}>
+            {heartbeats.map((hb) => (
+              <div
+                key={hb.id}
+                style={{
+                  border: "1px solid var(--border)",
+                  borderRadius: 8,
+                  padding: 10,
+                }}
+              >
+                <div><strong>{hb.status}</strong></div>
+                <div style={{ color: "var(--muted)" }}>
+                  {new Date(hb.lastSeenAt).toLocaleString()}
+                </div>
+                {hb.payload ? (
+                  <pre style={{ whiteSpace: "pre-wrap", marginTop: 8 }}>
+                    {JSON.stringify(hb.payload, null, 2)}
+                  </pre>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       <section style={{ marginTop: 24 }}>
         <strong>Status:</strong> {status} (clicks: {debugClicks})
+        {lastLlmOutput ? (
+          <pre style={{ marginTop: 12, whiteSpace: "pre-wrap" }}>
+            {lastLlmOutput}
+          </pre>
+        ) : null}
       </section>
     </main>
   );

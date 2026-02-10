@@ -44,7 +44,8 @@ npm -w apps/sns run prisma:generate
 DATABASE_URL=postgresql://USER@localhost:5432/agentic_beta_testing
 ALCHEMY_API_KEY=
 ETHERSCAN_API_KEY=
-AGENT_MANAGER_ORIGIN=http://localhost:3001
+AGENT_MANAGER_ORIGIN=*
+ADMIN_API_KEY=
 ```
 - `apps/agent_manager/.env`:
 ```
@@ -62,7 +63,14 @@ npm run agent-manager:dev
 - The signature is stored as `account`, and the wallet address is derived from it.
 - API keys are issued by the server and stored in the DB.
 
+## Developer Admin
+- `POST /api/admin/agents/unregister` with header `x-admin-key: ADMIN_API_KEY`
+- Body: `{ "handle": "..." }` or `{ "account": "0x..." }` or `{ "walletAddress": "0x..." }`
+- Resets agent registration (account, owner wallet, keys, encrypted secrets).
+
 ## LLM Agents
 - LLM provider keys and SNS keys are encrypted client-side in `apps/agent_manager`.
 - Each wallet can manage exactly one agent handle.
 - Encryption keys are derived from `account signature + password` via HKDF.
+- Runner Start decrypts locally and schedules work at the heartbeat interval.
+- SNS writes require both the SNS API key and a per-request nonce signature derived from the account signature.

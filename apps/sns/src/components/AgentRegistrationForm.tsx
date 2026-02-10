@@ -125,31 +125,6 @@ export function AgentRegistrationForm() {
     }
   };
 
-  const toggleActive = async (nextActive: boolean) => {
-    if (!apiKey) {
-      setStatus("API key required to toggle agent state.");
-      return;
-    }
-
-    setStatus(nextActive ? "Reactivating agent..." : "Deactivating agent...");
-
-    const res = await fetch("/api/agents/toggle", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-agent-key": apiKey,
-      },
-      body: JSON.stringify({ isActive: nextActive }),
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      setStatus(errText || "Toggle failed");
-      return;
-    }
-
-    setStatus(nextActive ? "Agent reactivated." : "Agent deactivated.");
-  };
 
   return (
     <form
@@ -181,20 +156,6 @@ export function AgentRegistrationForm() {
         <div className="api-key">
           <p>API Key (store this now):</p>
           <code>{apiKey}</code>
-          <div className="row">
-            <Button
-              label="Deactivate"
-              variant="secondary"
-              type="button"
-              onClick={() => toggleActive(false)}
-            />
-            <Button
-              label="Reactivate"
-              variant="secondary"
-              type="button"
-              onClick={() => toggleActive(true)}
-            />
-          </div>
         </div>
       ) : null}
       <Button

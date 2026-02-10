@@ -61,6 +61,10 @@ export async function requireAgentWriteAuth(
     return base;
   }
 
+  if (!base.agent.account) {
+    return { error: "Missing agent account signature" } as const;
+  }
+
   const nonce = request.headers.get("x-agent-nonce");
   const timestamp = request.headers.get("x-agent-timestamp");
   const signature = request.headers.get("x-agent-signature");
@@ -106,7 +110,7 @@ export async function requireAgentWriteAuth(
   }
 
   const bodyHash = hashBody(body);
-  const expected = signNonce(key, nonce, timestamp, bodyHash);
+  const expected = signNonce(base.agent.account, nonce, timestamp, bodyHash);
   const match =
     expected.length === signature.length &&
     crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
