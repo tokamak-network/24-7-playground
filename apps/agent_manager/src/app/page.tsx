@@ -41,6 +41,8 @@ type DecryptedSecrets = {
   config: {
     provider?: string;
     model?: string;
+    llmBaseUrl?: string;
+    commentLimit?: number;
     runIntervalSec?: number;
   };
 };
@@ -108,12 +110,14 @@ async function callLlm({
   provider,
   model,
   apiKey,
+  baseUrl,
   system,
   user,
 }: {
   provider: string;
   model: string;
   apiKey: string;
+  baseUrl?: string;
   system: string;
   user: string;
 }) {
@@ -127,6 +131,42 @@ async function callLlm({
       return response.statusText || "Unknown error";
     }
   };
+
+  const normalizeOpenAiBaseUrl = (input?: string) => {
+    const trimmed = String(input || "").trim().replace(/\/+$/, "");
+    if (!trimmed) return "";
+    return trimmed.endsWith("/v1") ? trimmed : `${trimmed}/v1`;
+  };
+
+  if (provider === "LITELLM") {
+    const base = normalizeOpenAiBaseUrl(baseUrl);
+    if (!base) {
+      throw new Error("LiteLLM base URL missing.");
+    }
+    const payload: Record<string, unknown> = {
+      model,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    };
+    const response = await fetch(`${base}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const message = await readErrorMessage(response);
+      throw new Error(`LiteLLM error ${response.status}: ${message}`);
+    }
+
+    const data = await response.json();
+    return data?.choices?.[0]?.message?.content || "";
+  }
 
   if (provider === "OPENAI") {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -379,6 +419,71 @@ function parseJsonPayload(input: string): unknown {
   }
 }
 
+function splitLlmOutput(output: string): { json: string | null; plain: string } {
+  const trimmed = output.trim();
+  if (!trimmed) {
+    return { json: null, plain: "" };
+  }
+  if (trimmed.startsWith("```")) {
+    const lines = trimmed.split("\n");
+    const startIndex = lines.findIndex((line) => line.startsWith("```"));
+    if (startIndex !== -1) {
+      const endIndex = lines.findIndex(
+        (line, idx) => idx > startIndex && line.startsWith("```")
+      );
+      if (endIndex !== -1) {
+        const json = lines.slice(startIndex + 1, endIndex).join("\n").trim();
+        const before = lines.slice(0, startIndex).join("\n").trim();
+        const after = lines.slice(endIndex + 1).join("\n").trim();
+        const plain = [before, after].filter(Boolean).join("\n\n").trim();
+        return { json: json || null, plain };
+      }
+    }
+  }
+  const firstBrace = trimmed.indexOf("{");
+  const firstBracket = trimmed.indexOf("[");
+  const start =
+    firstBrace === -1
+      ? firstBracket
+      : firstBracket === -1
+      ? firstBrace
+      : Math.min(firstBrace, firstBracket);
+  if (start === -1) {
+    return { json: null, plain: trimmed };
+  }
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < trimmed.length; i += 1) {
+    const ch = trimmed[i];
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (ch === "\\") {
+        escape = true;
+      } else if (ch === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+    if (ch === "\"") {
+      inString = true;
+      continue;
+    }
+    if (ch === "{" || ch === "[") {
+      depth += 1;
+    } else if (ch === "}" || ch === "]") {
+      depth -= 1;
+      if (depth === 0) {
+        const json = trimmed.slice(start, i + 1).trim();
+        const plain = `${trimmed.slice(0, start)}${trimmed.slice(i + 1)}`.trim();
+        return { json: json || null, plain };
+      }
+    }
+  }
+  return { json: null, plain: trimmed };
+}
+
 function expandLlmLogs(logs: LlmLogRecord[]): LlmLogItem[] {
   const items: LlmLogItem[] = [];
   for (const log of logs) {
@@ -386,7 +491,8 @@ function expandLlmLogs(logs: LlmLogRecord[]): LlmLogItem[] {
       createdAt: log.createdAt,
       direction: log.direction || "agent_to_manager",
     };
-    const parsed = parseJsonPayload(log.response || "");
+    const { json, plain } = splitLlmOutput(log.response || "");
+    const parsed = json ? parseJsonPayload(json) : null;
     if (Array.isArray(parsed)) {
       parsed.forEach((entry, idx) => {
         const action = entry && typeof entry.action === "string" ? entry.action : null;
@@ -397,6 +503,14 @@ function expandLlmLogs(logs: LlmLogRecord[]): LlmLogItem[] {
           content: JSON.stringify(entry, null, 2),
         });
       });
+      if (plain) {
+        items.push({
+          id: `${log.id}:plain`,
+          ...base,
+          actionTypes: [],
+          content: plain,
+        });
+      }
       continue;
     }
     if (parsed && typeof parsed === "object") {
@@ -410,14 +524,24 @@ function expandLlmLogs(logs: LlmLogRecord[]): LlmLogItem[] {
         actionTypes: action ? [action] : log.actionTypes || [],
         content: JSON.stringify(parsed, null, 2),
       });
+      if (plain) {
+        items.push({
+          id: `${log.id}:plain`,
+          ...base,
+          actionTypes: [],
+          content: plain,
+        });
+      }
       continue;
     }
-    items.push({
-      id: `${log.id}:0`,
-      ...base,
-      actionTypes: log.actionTypes || [],
-      content: log.response || "",
-    });
+    if (plain) {
+      items.push({
+        id: `${log.id}:0`,
+        ...base,
+        actionTypes: log.actionTypes || [],
+        content: plain,
+      });
+    }
   }
   return items;
 }
@@ -431,6 +555,7 @@ export default function AgentManagerPage() {
   const [status, setStatus] = useState<string>("");
   const [llmKey, setLlmKey] = useState<string>("");
   const [snsKey, setSnsKey] = useState<string>("");
+  const [llmBaseUrl, setLlmBaseUrl] = useState<string>("");
   const [executionKey, setExecutionKey] = useState<string>("");
   const [alchemyKey, setAlchemyKey] = useState<string>("");
   const [provider, setProvider] = useState<string>("GEMINI");
@@ -438,6 +563,7 @@ export default function AgentManagerPage() {
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [modelStatus, setModelStatus] = useState<string>("");
   const [runIntervalSec, setRunIntervalSec] = useState<number>(60);
+  const [commentLimitInput, setCommentLimitInput] = useState<string>("50");
   const [configJson, setConfigJson] = useState<string>("{}");
   const [runnerOn, setRunnerOn] = useState<boolean>(false);
   const [debugClicks, setDebugClicks] = useState<number>(0);
@@ -457,6 +583,26 @@ export default function AgentManagerPage() {
   const runInFlightRef = useRef<boolean>(false);
   const autoTestRef = useRef<boolean>(false);
   const autoResumeRef = useRef<boolean>(false);
+  const fallbackModels =
+    provider === "GEMINI"
+      ? ["gemini-1.5-flash-002", "gemini-1.5-pro-002"]
+      : provider === "OPENAI"
+      ? ["gpt-4o-mini", "gpt-4o"]
+      : provider === "LITELLM"
+      ? ["gpt-4o-mini", "gpt-4o"]
+      : provider === "ANTHROPIC"
+      ? ["claude-3-5-sonnet-20240620", "claude-3-5-haiku-20241022"]
+      : [];
+  const knownModels = new Set([
+    ...availableModels,
+    ...(availableModels.length === 0 ? fallbackModels : []),
+  ]);
+  const showSavedModel = Boolean(model) && !knownModels.has(model);
+  const parseCommentLimit = (value: string, fallback: number) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : fallback;
+  };
+  const commentLimit = parseCommentLimit(commentLimitInput, 50);
 
   const saveToken = (value: string) => {
     setToken(value);
@@ -700,14 +846,16 @@ export default function AgentManagerPage() {
   }, [fetchAgent]);
 
   useEffect(() => {
-    const nextConfig = {
-      provider,
-      model,
-      roleMode: "auto",
-      runIntervalSec,
+      const nextConfig = {
+        provider,
+        model,
+        llmBaseUrl,
+        roleMode: "auto",
+        runIntervalSec,
+      commentLimit,
     };
     setConfigJson(JSON.stringify(nextConfig, null, 2));
-  }, [provider, model, runIntervalSec]);
+  }, [provider, model, llmBaseUrl, runIntervalSec, commentLimit]);
 
   useEffect(() => {
     setAvailableModels([]);
@@ -920,6 +1068,12 @@ export default function AgentManagerPage() {
       const nextConfig = decrypted.config || {};
       setProvider(nextConfig.provider || "GEMINI");
       setModel(nextConfig.model || "gemini-1.5-flash-002");
+      setLlmBaseUrl(nextConfig.llmBaseUrl || "");
+      setCommentLimitInput(
+        Number.isFinite(nextConfig.commentLimit)
+          ? String(Math.max(0, Number(nextConfig.commentLimit)))
+          : "50"
+      );
       setRunIntervalSec(
         Number.isFinite(nextConfig.runIntervalSec)
           ? nextConfig.runIntervalSec
@@ -939,6 +1093,10 @@ export default function AgentManagerPage() {
     }
     if (!accountSignature) {
       setStatus("Missing account signature. Please sign in again.");
+      return;
+    }
+    if (provider === "LITELLM" && !llmBaseUrl.trim()) {
+      setStatus("LiteLLM base URL required.");
       return;
     }
     const password = window.prompt("Enter password to encrypt secrets");
@@ -986,6 +1144,10 @@ export default function AgentManagerPage() {
       return;
     }
     const selectedProvider = provider || "OPENAI";
+    if (selectedProvider === "LITELLM" && !llmBaseUrl.trim()) {
+      setLlmTestStatus("LiteLLM base URL required.");
+      return;
+    }
     const selectedModel =
       model ||
       (selectedProvider === "ANTHROPIC"
@@ -998,6 +1160,7 @@ export default function AgentManagerPage() {
         provider: selectedProvider,
         model: selectedModel,
         apiKey: llmKey,
+        baseUrl: llmBaseUrl,
         system: "You are a health check.",
         user: "Respond with the single word OK.",
       });
@@ -1078,11 +1241,15 @@ export default function AgentManagerPage() {
       setModelStatus("LLM API key missing.");
       return;
     }
+    if (provider === "LITELLM" && !llmBaseUrl.trim()) {
+      setModelStatus("LiteLLM base URL required.");
+      return;
+    }
     try {
       const res = await fetch(snsUrl("/api/agents/models"), {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders },
-        body: JSON.stringify({ provider, apiKey: llmKey }),
+        body: JSON.stringify({ provider, apiKey: llmKey, baseUrl: llmBaseUrl }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -1190,6 +1357,8 @@ export default function AgentManagerPage() {
     alchemyKey?: string;
     provider: string;
     model: string;
+    llmBaseUrl?: string;
+    commentLimit?: number;
   }) => {
     if (runInFlightRef.current) {
       return;
@@ -1202,10 +1371,19 @@ export default function AgentManagerPage() {
     const config: any = {
       provider: override?.provider || provider,
       model: override?.model || model,
+      llmBaseUrl: override?.llmBaseUrl || llmBaseUrl,
       runIntervalSec,
+      commentLimit:
+        typeof override?.commentLimit === "number"
+          ? override?.commentLimit
+          : commentLimit,
     };
 
-    const contextRes = await fetch(snsUrl("/api/agents/context"), {
+    const commentLimitParam =
+      typeof config.commentLimit === "number"
+        ? `?commentLimit=${encodeURIComponent(String(config.commentLimit))}`
+        : "";
+    const contextRes = await fetch(snsUrl(`/api/agents/context${commentLimitParam}`), {
       headers: authHeaders,
     });
     const contextData = await contextRes.json();
@@ -1219,6 +1397,10 @@ export default function AgentManagerPage() {
     }
 
     const selectedProvider = config.provider || "OPENAI";
+    if (selectedProvider === "LITELLM" && !String(config.llmBaseUrl || "").trim()) {
+      setStatus("LiteLLM base URL required.");
+      return;
+    }
     const selectedModel =
       config.model ||
       (selectedProvider === "ANTHROPIC"
@@ -1260,6 +1442,7 @@ export default function AgentManagerPage() {
       provider: selectedProvider,
       model: selectedModel,
       apiKey: activeLlmKey,
+      baseUrl: config.llmBaseUrl,
       system,
       user,
     });
@@ -1473,12 +1656,23 @@ export default function AgentManagerPage() {
     const nextConfig = decrypted.config || {};
     const nextProvider = nextConfig.provider || provider || "GEMINI";
     const nextModel = nextConfig.model || model || "gemini-1.5-flash-002";
+    const nextBaseUrl = nextConfig.llmBaseUrl || llmBaseUrl || "";
+    const nextCommentLimit = Number.isFinite(nextConfig.commentLimit)
+      ? Math.max(0, Number(nextConfig.commentLimit))
+      : commentLimit;
     const nextInterval = Number.isFinite(nextConfig.runIntervalSec)
       ? nextConfig.runIntervalSec
       : runIntervalSec;
     setProvider(nextProvider);
     setModel(nextModel);
+    setLlmBaseUrl(nextBaseUrl);
+    setCommentLimitInput(String(nextCommentLimit));
     setRunIntervalSec(nextInterval);
+
+    if (nextProvider === "LITELLM" && !String(nextBaseUrl).trim()) {
+      setStatus("LiteLLM base URL required.");
+      return;
+    }
 
     await fetch(snsUrl("/api/agents/runner/start"), {
       method: "POST",
@@ -1503,6 +1697,8 @@ export default function AgentManagerPage() {
         alchemyKey: nextAlchemyKey,
         provider: nextProvider,
         model: nextModel,
+        llmBaseUrl: nextBaseUrl,
+        commentLimit: nextCommentLimit,
       }).catch(() => undefined);
     };
 
@@ -1593,8 +1789,20 @@ export default function AgentManagerPage() {
         >
           <option value="GEMINI">GEMINI</option>
           <option value="OPENAI">OPENAI</option>
+          <option value="LITELLM">LITELLM</option>
           <option value="ANTHROPIC">ANTHROPIC</option>
         </select>
+        {provider === "LITELLM" ? (
+          <>
+            <label>LiteLLM Base URL (required)</label>
+            <input
+              value={llmBaseUrl}
+              onChange={(e) => setLlmBaseUrl(e.target.value)}
+              placeholder="https://your-litellm-host/v1"
+              style={{ width: "100%", marginBottom: 12 }}
+            />
+          </>
+        ) : null}
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
           <button type="button" onClick={refreshModels}>Refresh Models</button>
           <span style={{ color: "var(--muted)" }}>{modelStatus}</span>
@@ -1605,6 +1813,9 @@ export default function AgentManagerPage() {
           onChange={(e) => setModel(e.target.value)}
           style={{ width: "100%", marginBottom: 12 }}
         >
+          {showSavedModel ? (
+            <option value={model}>{model} (saved)</option>
+          ) : null}
           {availableModels.length > 0
             ? availableModels.map((name) => (
                 <option key={name} value={name}>
@@ -1614,24 +1825,38 @@ export default function AgentManagerPage() {
             : null}
           {availableModels.length === 0 && provider === "GEMINI" ? (
             <>
-              <option value="gemini-1.5-flash-002">gemini-1.5-flash-002</option>
-              <option value="gemini-1.5-pro-002">gemini-1.5-pro-002</option>
+              {fallbackModels.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
             </>
           ) : null}
           {availableModels.length === 0 && provider === "OPENAI" ? (
             <>
-              <option value="gpt-4o-mini">gpt-4o-mini</option>
-              <option value="gpt-4o">gpt-4o</option>
+              {fallbackModels.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
+            </>
+          ) : null}
+          {availableModels.length === 0 && provider === "LITELLM" ? (
+            <>
+              {fallbackModels.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
             </>
           ) : null}
           {availableModels.length === 0 && provider === "ANTHROPIC" ? (
             <>
-              <option value="claude-3-5-sonnet-20240620">
-                claude-3-5-sonnet-20240620
-              </option>
-              <option value="claude-3-5-haiku-20241022">
-                claude-3-5-haiku-20241022
-              </option>
+              {fallbackModels.map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
             </>
           ) : null}
         </select>
@@ -1651,6 +1876,17 @@ export default function AgentManagerPage() {
 
       <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
         <h2>Runner</h2>
+        <label>Comment Context Limit (community-wide)</label>
+        <input
+          type="number"
+          min={0}
+          value={commentLimitInput}
+          onChange={(e) => setCommentLimitInput(e.target.value)}
+          style={{ width: "100%", marginBottom: 6 }}
+        />
+        <div style={{ color: "var(--muted)", marginBottom: 12 }}>
+          Higher values increase token usage.
+        </div>
         <label>Execution Wallet Private Key (Sepolia)</label>
         <input
           value={executionKey}

@@ -1,6 +1,19 @@
 # Project Plan
 
 ## Plan
+- [x] Add LiteLLM provider support in Agent Manager
+  - [x] Add provider option `LITELLM` in UI and runtime config
+  - [x] Add base URL input for LiteLLM (required for testing/models)
+  - [x] Send LiteLLM base URL to `/api/agents/models` and use it for model listing
+  - [x] Route LLM test + runner calls through LiteLLM base URL
+  - [x] Update README/AGENTS.md with LiteLLM usage notes
+- [x] Limit comment context size for LLM prompts (community-wide)
+  - [x] Add comment limit input (N) to Agent Manager Runner UI with token-usage note
+  - [x] Persist comment limit in encrypted config and load on decrypt/start
+  - [x] Pass comment limit to `/api/agents/context` and limit comments across community
+  - [x] Include all thread metadata with threadId in context
+  - [x] Include threadId on each returned comment in context
+  - [x] Include total comment count while returning only recent N comments
 - [ ] Admin maintenance pages (agents/communities)
   - [ ] Add community force-delete API guarded by `ADMIN_API_KEY`
   - [ ] Wire `/manage/communities/admin` to force delete by id/slug

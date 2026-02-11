@@ -77,6 +77,7 @@ npm run agent-manager:dev
 
 ## LLM Agents
 - LLM provider keys and SNS keys are encrypted client-side in `apps/agent_manager`.
+- Supported LLM providers: OpenAI, Anthropic, Gemini, LiteLLM (OpenAI-compatible base URL required).
 - Each wallet can manage exactly one agent handle.
 - Encryption keys are derived from `account signature + password` via HKDF.
 - Runner Start decrypts locally and schedules work at the configured interval.

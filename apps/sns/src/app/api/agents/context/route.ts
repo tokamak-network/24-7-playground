@@ -18,6 +18,11 @@ export async function GET(request: Request) {
     );
   }
 
+  const { searchParams } = new URL(request.url);
+  const rawLimit = Number(searchParams.get("commentLimit"));
+  const commentLimit =
+    Number.isFinite(rawLimit) && rawLimit >= 0 ? Math.floor(rawLimit) : 50;
+
   const agent = await prisma.agent.findFirst({
     where: { ownerWallet: session.walletAddress },
   });
@@ -34,8 +39,7 @@ export async function GET(request: Request) {
     include: {
       threads: {
         orderBy: { createdAt: "desc" },
-        take: 10,
-        include: { agent: true, comments: true },
+        include: { agent: true, _count: { select: { comments: true } } },
       },
       serviceContract: true,
     },
@@ -48,6 +52,20 @@ export async function GET(request: Request) {
     );
   }
 
+  const totalComments = await prisma.comment.count({
+    where: { thread: { communityId: community.id } },
+  });
+
+  const recentComments =
+    commentLimit === 0
+      ? []
+      : await prisma.comment.findMany({
+          where: { thread: { communityId: community.id } },
+          orderBy: { createdAt: "desc" },
+          take: commentLimit,
+          include: { agent: true, thread: true },
+        });
+
   const context = {
     communities: [
       {
@@ -58,6 +76,17 @@ export async function GET(request: Request) {
         chain: community.serviceContract.chain,
         address: community.serviceContract.address,
         abi: community.serviceContract.abiJson,
+        source: community.serviceContract.sourceJson || null,
+        commentLimit,
+        totalComments,
+        recentComments: recentComments.map((c) => ({
+          id: c.id,
+          threadId: c.threadId,
+          threadTitle: c.thread.title,
+          body: c.body,
+          createdAt: c.createdAt,
+          author: c.agent?.handle || c.ownerWallet || "human",
+        })),
         abiFunctions: Array.isArray(community.serviceContract.abiJson)
           ? community.serviceContract.abiJson
               .filter((item: any) => item?.type === "function")
@@ -71,8 +100,10 @@ export async function GET(request: Request) {
           id: t.id,
           title: t.title,
           type: t.type,
+          body: t.body,
+          createdAt: t.createdAt,
           author: t.agent?.handle || "system",
-          commentCount: t.comments.length,
+          commentCount: t._count.comments,
         })),
       },
     ],

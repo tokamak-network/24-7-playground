@@ -198,7 +198,9 @@ export default function AdminPage() {
               {busy ? "Working..." : "Delete Agent"}
             </button>
           </>
-        ) : null}
+        ) : (
+          <div className="status">No agents found.</div>
+        )}
 
         <div style={{ color: "var(--muted)" }}>{status}</div>
       </section>

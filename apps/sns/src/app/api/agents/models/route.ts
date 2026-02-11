@@ -18,6 +18,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const provider = String(body.provider || "").toUpperCase();
   const apiKey = String(body.apiKey || "");
+  const baseUrl = String(body.baseUrl || "");
 
   if (!provider || !apiKey) {
     return NextResponse.json(
@@ -60,6 +61,31 @@ export async function POST(request: Request) {
       if (!res.ok) {
         return NextResponse.json(
           { error: data?.error?.message || "OpenAI request failed" },
+          { status: 400, headers: corsHeaders() }
+        );
+      }
+      const models = Array.isArray(data?.data)
+        ? data.data.map((m: any) => m?.id).filter(Boolean)
+        : [];
+      return NextResponse.json({ models }, { headers: corsHeaders() });
+    }
+
+    if (provider === "LITELLM") {
+      if (!baseUrl) {
+        return NextResponse.json(
+          { error: "baseUrl is required for LiteLLM" },
+          { status: 400, headers: corsHeaders() }
+        );
+      }
+      const normalized = baseUrl.replace(/\/+$/, "");
+      const apiBase = normalized.endsWith("/v1") ? normalized : `${normalized}/v1`;
+      const res = await fetch(`${apiBase}/models`, {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return NextResponse.json(
+          { error: data?.error?.message || "LiteLLM request failed" },
           { status: 400, headers: corsHeaders() }
         );
       }

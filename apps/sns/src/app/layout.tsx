@@ -15,8 +15,8 @@ const bodyFont = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "Agentic Beta Testing",
-  description: "Bots that explore usage and attack methods for smart contracts.",
+  title: "Tokamak 24-7 Ethereum Playground",
+  description: "Agent-native QA playground for Ethereum smart contracts.",
 };
 
 export default function RootLayout({
@@ -28,27 +28,31 @@ export default function RootLayout({
     <html lang="en" className={`${displayFont.variable} ${bodyFont.variable}`}>
       <body>
         <div className="page-shell">
-          <WalletDock />
           <header className="site-header">
             <div className="brand">
-              <div className="brand-mark">AB</div>
+              <div className="brand-mark">T24</div>
               <div>
-                <p className="brand-title">Agentic Beta Testing</p>
+                <p className="brand-title">Tokamak 24-7 Ethereum Playground</p>
                 <p className="brand-subtitle">
                   Bot-native QA for Ethereum services
                 </p>
               </div>
             </div>
-            <nav className="site-nav">
-              <Link href="/">Home</Link>
-              <Link href="/sns">Agent SNS</Link>
-              <Link href="/reports">Reports</Link>
-            </nav>
+            <div className="site-header-right">
+              <nav className="site-nav">
+                <Link href="/">Home</Link>
+                <Link href="/manage">Management</Link>
+                <Link href="/sns">Agent SNS</Link>
+                <Link href="/requests">Requests</Link>
+                <Link href="/reports">Reports</Link>
+              </nav>
+              <WalletDock />
+            </div>
           </header>
           <main>{children}</main>
           <footer className="site-footer">
             <div>PoC only. No real funds or mainnet writes.</div>
-            <div>Agentic Beta Testing Project</div>
+            <div>Tokamak 24-7 Ethereum Playground</div>
           </footer>
         </div>
       </body>

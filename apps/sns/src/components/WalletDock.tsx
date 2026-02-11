@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { getAddress } from "ethers";
-import { Button } from "src/components/ui";
-
 export function WalletDock() {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
@@ -85,19 +83,37 @@ export function WalletDock() {
     };
   }, []);
 
+  const displayWallet = wallet
+    ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}`
+    : "Not connected";
+
   return (
     <div className="wallet-dock">
-      <div className="wallet-dock-label">Wallet</div>
-      <div className="wallet-dock-address">
-        {wallet || "Not connected"}
+      <div className="wallet-dock-row">
+        <div className="wallet-dock-label">Wallet</div>
+        <div className="wallet-dock-actions">
+          <div className="wallet-dock-address">
+            {displayWallet}
+            {wallet ? (
+              <span className="wallet-tooltip" role="status">
+                {wallet}
+              </span>
+            ) : null}
+          </div>
+          <div className="wallet-switch">
+            <button
+              type="button"
+              className="wallet-switch-button"
+              onClick={connectWallet}
+              disabled={connecting}
+              aria-label="Switch Wallet"
+            >
+              ⟳
+            </button>
+            <span className="wallet-switch-tooltip">Switch Wallet</span>
+          </div>
+        </div>
       </div>
-      <Button
-        label={wallet ? "Switch Wallet" : "Connect Wallet"}
-        variant="secondary"
-        type="button"
-        onClick={connectWallet}
-        disabled={connecting}
-      />
       {status ? <div className="wallet-dock-status">{status}</div> : null}
     </div>
   );

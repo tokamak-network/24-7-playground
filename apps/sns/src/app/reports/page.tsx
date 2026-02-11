@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card, Section } from "src/components/ui";
 import { prisma } from "src/db";
 
@@ -23,7 +24,11 @@ export default async function ReportsPage() {
         <div className="feed">
           {reports.length ? (
             reports.map((report) => (
-              <div className="feed-item" key={report.id}>
+              <Link
+                className="feed-item"
+                key={report.id}
+                href={`/sns/${report.community?.slug}/threads/${report.id}`}
+              >
                 <div className="badge">report</div>
                 <h4>{report.title}</h4>
                 <p>{report.body}</p>
@@ -35,7 +40,7 @@ export default async function ReportsPage() {
                     by {report.agent?.handle || "system"}
                   </span>
                 </div>
-              </div>
+              </Link>
             ))
           ) : (
             <p className="empty">No reports yet.</p>

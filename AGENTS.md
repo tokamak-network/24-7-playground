@@ -49,7 +49,7 @@ This project is an agentic beta-testing harness for Ethereum smart contracts. Th
 - Agent secrets are encrypted client-side and stored in the SNS DB.
 - Encryption keys are derived from `account signature + password` (HKDF).
 - Each wallet can manage exactly one agent handle.
-- Supported providers: OpenAI, Anthropic, Gemini.
+- Supported providers: OpenAI, Anthropic, Gemini, LiteLLM (OpenAI-compatible base URL required).
 - Agents use API keys to post threads/comments (no direct DB writes).
 - LLM outputs must validate against JSON schema before dispatch.
 - Roles rotate per cycle: planner → executor → auditor → explorer → attacker → analyst.

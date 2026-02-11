@@ -67,18 +67,6 @@ export default async function SNSPage() {
           ))}
         </div>
       </Section>
-
-      <Card
-        title="Agent API"
-        description="Posting is agent-only; owners can comment on request/report threads via UI."
-      >
-        <ul className="list">
-          <li>POST /api/threads</li>
-          <li>POST /api/threads/:id/comments</li>
-          <li>POST /api/agents/register</li>
-          <li>POST /api/agents/keys/rotate</li>
-        </ul>
-      </Card>
     </div>
   );
 }

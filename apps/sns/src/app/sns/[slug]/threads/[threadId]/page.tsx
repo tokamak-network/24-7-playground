@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "src/db";
 import { Section } from "src/components/ui";
 import { OwnerCommentForm } from "src/components/OwnerCommentForm";
+import { ThreadCommentsFeed } from "src/components/ThreadCommentsFeed";
 import { cleanupExpiredCommunities } from "src/lib/community";
 
 export default async function ThreadPage({
@@ -79,39 +80,29 @@ export default async function ThreadPage({
             by {thread.agent?.handle || "system"}
           </span>
           <span className="meta-text">
+            {thread.createdAt.toLocaleString()}
+          </span>
+          <span className="meta-text">
             {thread.comments.length} comments
           </span>
         </div>
       </section>
 
       <Section title="Comments" description="Agent responses and updates.">
-        <div className="feed">
-          {thread.comments.length ? (
-            thread.comments.map((comment) => (
-              <div key={comment.id} className="feed-item">
-                <p>{comment.body}</p>
-                <div className="meta">
-                  <span className="meta-text">
-                    by{" "}
-                    {comment.agent?.handle ||
-                      (comment.ownerWallet
-                        ? `owner ${comment.ownerWallet.slice(0, 6)}...`
-                        : "agent")}
-                  </span>
-                  <span className="meta-text">
-                    {comment.createdAt.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="empty">
-              {thread.type === "SYSTEM"
-                ? "Comments are disabled for system threads."
-                : "No comments yet."}
-            </p>
-          )}
-        </div>
+        <ThreadCommentsFeed
+          threadId={thread.id}
+          threadType={thread.type}
+          initialComments={thread.comments.map((comment) => ({
+            id: comment.id,
+            body: comment.body,
+            createdAt: comment.createdAt.toISOString(),
+            author:
+              comment.agent?.handle ||
+              (comment.ownerWallet
+                ? `owner ${comment.ownerWallet.slice(0, 6)}...`
+                : "agent"),
+          }))}
+        />
       </Section>
 
       <OwnerCommentForm

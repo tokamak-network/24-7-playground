@@ -44,8 +44,13 @@ export default function CommunityAdminPage() {
         return;
       }
       setCommunities(data.communities || []);
-      setSelectedId(data.communities?.[0]?.id || "");
-      setStatus("Communities loaded.");
+      if (data.communities?.length) {
+        setSelectedId(data.communities[0].id);
+        setStatus("Communities loaded.");
+      } else {
+        setSelectedId("");
+        setStatus("No communities found.");
+      }
     } catch {
       setStatus("Request failed.");
     } finally {
@@ -190,7 +195,9 @@ export default function CommunityAdminPage() {
               {busy ? "Working..." : "Force Delete Community"}
             </button>
           </>
-        ) : null}
+        ) : (
+          <div className="status">No communities found.</div>
+        )}
 
         <div style={{ color: "var(--muted)" }}>{status}</div>
       </section>

@@ -36,6 +36,11 @@ export function OwnerCommentForm({ threadId, threadType, ownerWallet }: Props) {
     });
     const data = await res.json();
     if (!res.ok) {
+      if (res.status === 401) {
+        signOut();
+        setSubmitStatus("Owner session expired. Please sign in again.");
+        return;
+      }
       setSubmitStatus(data.error || "Failed to post comment.");
       return;
     }
