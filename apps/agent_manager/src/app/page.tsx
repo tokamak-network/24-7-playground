@@ -571,6 +571,10 @@ export default function AgentManagerPage() {
   const [snsTestStatus, setSnsTestStatus] = useState<string>("");
   const [executionKeyStatus, setExecutionKeyStatus] = useState<string>("");
   const [alchemyKeyStatus, setAlchemyKeyStatus] = useState<string>("");
+  const [showLlmKey, setShowLlmKey] = useState<boolean>(false);
+  const [showSnsKey, setShowSnsKey] = useState<boolean>(false);
+  const [showExecutionKey, setShowExecutionKey] = useState<boolean>(false);
+  const [showAlchemyKey, setShowAlchemyKey] = useState<boolean>(false);
   const [lastLlmOutput, setLastLlmOutput] = useState<string>("");
   const [llmLogs, setLlmLogs] = useState<LlmLogRecord[]>([]);
   const [llmLogFilter, setLlmLogFilter] = useState<
@@ -1752,21 +1756,33 @@ export default function AgentManagerPage() {
       <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
         <h2>Secrets</h2>
         <label>LLM API Key</label>
-        <input
-          value={llmKey}
-          onChange={(e) => setLlmKey(e.target.value)}
-          style={{ width: "100%", marginBottom: 12 }}
-        />
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+          <input
+            type={showLlmKey ? "text" : "password"}
+            value={llmKey}
+            onChange={(e) => setLlmKey(e.target.value)}
+            style={{ width: "100%" }}
+          />
+          <button type="button" onClick={() => setShowLlmKey((value) => !value)}>
+            {showLlmKey ? "Hide" : "Show"}
+          </button>
+        </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
           <button type="button" onClick={testLlmKey}>Test LLM Key</button>
           <span style={{ color: "var(--muted)" }}>{llmTestStatus}</span>
         </div>
         <label>SNS API Key</label>
-        <input
-          value={snsKey}
-          onChange={(e) => setSnsKey(e.target.value)}
-          style={{ width: "100%", marginBottom: 12 }}
-        />
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+          <input
+            type={showSnsKey ? "text" : "password"}
+            value={snsKey}
+            onChange={(e) => setSnsKey(e.target.value)}
+            style={{ width: "100%" }}
+          />
+          <button type="button" onClick={() => setShowSnsKey((value) => !value)}>
+            {showSnsKey ? "Hide" : "Show"}
+          </button>
+        </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
           <button type="button" onClick={testSnsKey}>Test SNS Key</button>
           <span style={{ color: "var(--muted)" }}>{snsTestStatus}</span>
@@ -1888,21 +1904,33 @@ export default function AgentManagerPage() {
           Higher values increase token usage.
         </div>
         <label>Execution Wallet Private Key (Sepolia)</label>
-        <input
-          value={executionKey}
-          onChange={(e) => setExecutionKey(e.target.value)}
-          style={{ width: "100%", marginBottom: 12 }}
-        />
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+          <input
+            type={showExecutionKey ? "text" : "password"}
+            value={executionKey}
+            onChange={(e) => setExecutionKey(e.target.value)}
+            style={{ width: "100%" }}
+          />
+          <button type="button" onClick={() => setShowExecutionKey((value) => !value)}>
+            {showExecutionKey ? "Hide" : "Show"}
+          </button>
+        </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
           <button type="button" onClick={testExecutionKey}>Test Execution Key</button>
           <span style={{ color: "var(--muted)" }}>{executionKeyStatus}</span>
         </div>
         <label>Alchemy API Key (Sepolia)</label>
-        <input
-          value={alchemyKey}
-          onChange={(e) => setAlchemyKey(e.target.value)}
-          style={{ width: "100%", marginBottom: 12 }}
-        />
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+          <input
+            type={showAlchemyKey ? "text" : "password"}
+            value={alchemyKey}
+            onChange={(e) => setAlchemyKey(e.target.value)}
+            style={{ width: "100%" }}
+          />
+          <button type="button" onClick={() => setShowAlchemyKey((value) => !value)}>
+            {showAlchemyKey ? "Hide" : "Show"}
+          </button>
+        </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
           <button type="button" onClick={testAlchemyKey}>Test Alchemy Key</button>
           <span style={{ color: "var(--muted)" }}>{alchemyKeyStatus}</span>
