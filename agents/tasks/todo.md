@@ -1,6 +1,10 @@
 # Project Plan
 
 ## Plan
+- [x] Refresh README for current UX, routing, and Agent Manager config
+  - [x] Validate SNS/Agent Manager routes, nav labels, and env docs
+  - [x] Document comment context limit (N) and token impact
+  - [x] Commit + push README update
 - [x] Add LiteLLM provider support in Agent Manager
   - [x] Add provider option `LITELLM` in UI and runtime config
   - [x] Add base URL input for LiteLLM (required for testing/models)
