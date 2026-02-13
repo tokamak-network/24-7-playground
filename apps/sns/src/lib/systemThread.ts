@@ -1,5 +1,10 @@
 import crypto from "node:crypto";
 
+function asText(value: unknown, fallback = "unknown") {
+  const normalized = String(value ?? "").trim();
+  return normalized || fallback;
+}
+
 export function buildSystemBody(input: {
   name: string;
   address: string;
@@ -8,24 +13,36 @@ export function buildSystemBody(input: {
   abiJson: unknown;
 }) {
   const { name, address, chain, sourceInfo, abiJson } = input;
+  const sourceCode = asText(sourceInfo?.SourceCode, "unavailable");
+  const abiPretty = JSON.stringify(abiJson, null, 2);
+
   return [
-    `Contract: ${name}`,
-    `Address: ${address}`,
-    `Chain: ${chain}`,
-    `ContractName: ${sourceInfo?.ContractName || "unknown"}`,
-    `Compiler: ${sourceInfo?.CompilerVersion || "unknown"}`,
-    `Optimization: ${sourceInfo?.OptimizationUsed || "unknown"}`,
-    `Runs: ${sourceInfo?.Runs || "unknown"}`,
-    `EVM: ${sourceInfo?.EVMVersion || "unknown"}`,
-    `License: ${sourceInfo?.LicenseType || "unknown"}`,
-    `Proxy: ${sourceInfo?.Proxy || "unknown"}`,
-    `Implementation: ${sourceInfo?.Implementation || "unknown"}`,
+    `# Contract Information`,
     ``,
-    `SourceCode:`,
-    sourceInfo?.SourceCode || "unavailable",
+    `## Summary`,
+    `- **Community Contract:** \`${asText(name)}\``,
+    `- **Address:** \`${asText(address)}\``,
+    `- **Chain:** \`${asText(chain)}\``,
     ``,
-    `ABI:`,
-    JSON.stringify(abiJson, null, 2),
+    `## Build Metadata`,
+    `- **Contract Name:** \`${asText(sourceInfo?.ContractName)}\``,
+    `- **Compiler:** \`${asText(sourceInfo?.CompilerVersion)}\``,
+    `- **Optimization:** \`${asText(sourceInfo?.OptimizationUsed)}\``,
+    `- **Runs:** \`${asText(sourceInfo?.Runs)}\``,
+    `- **EVM Version:** \`${asText(sourceInfo?.EVMVersion)}\``,
+    `- **License:** \`${asText(sourceInfo?.LicenseType)}\``,
+    `- **Proxy:** \`${asText(sourceInfo?.Proxy)}\``,
+    `- **Implementation:** \`${asText(sourceInfo?.Implementation)}\``,
+    ``,
+    `## Source Code`,
+    `\`\`\`solidity`,
+    sourceCode,
+    `\`\`\``,
+    ``,
+    `## ABI`,
+    `\`\`\`json`,
+    abiPretty,
+    `\`\`\``,
   ].join("\n");
 }
 

@@ -14,6 +14,11 @@
 - [x] Update agent prompts to enforce human-readable output structure
 - [x] Run type check/build verification and document result
 
+## 2026-02-13 System Thread Formatting
+- [x] Improve auto-generated SYSTEM thread body with markdown sections
+- [x] Keep source code and ABI readable in fenced code blocks
+- [x] Verify SNS TypeScript build checks
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -160,3 +165,8 @@ Content Readability Review (2026-02-13):
 - Applied formatted rendering to thread detail, thread comments, requests, reports, and community thread feed.
 - Updated agent prompts to produce human-friendly structured markdown content.
 - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed; `npm -w apps/sns run build` still blocked by local DB connectivity (`localhost:5432`).
+
+System Thread Formatting Review (2026-02-13):
+- Updated `buildSystemBody` to produce markdown sections for summary/metadata/source/ABI.
+- Auto-created SYSTEM threads now render in readable structured format in SNS.
+- `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
