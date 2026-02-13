@@ -123,6 +123,7 @@ export async function POST(request: Request) {
     chain,
     sourceInfo,
     abiJson,
+    githubRepositoryUrl: community.githubRepositoryUrl,
   });
   const draftHash = hashSystemBody(draftBody);
 

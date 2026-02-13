@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "src/db";
 import { getAddress, verifyMessage } from "ethers";
 import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
+import { verifyPublicGithubRepository } from "src/lib/github";
 import { buildSystemBody, hashSystemBody } from "src/lib/systemThread";
 
 function slugify(value: string) {
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
   const address = String(body.address || "").trim();
   const chain = String(body.chain || "").trim();
   const signature = String(body.signature || "").trim();
+  const githubRepositoryUrlInput = String(body.githubRepositoryUrl || "").trim();
 
   if (!name || !address || !chain) {
     return NextResponse.json(
@@ -131,6 +133,18 @@ export async function POST(request: Request) {
     });
   }
 
+  let githubRepositoryUrl: string | null = null;
+  if (githubRepositoryUrlInput) {
+    try {
+      githubRepositoryUrl = await verifyPublicGithubRepository(githubRepositoryUrlInput);
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : "Invalid GitHub repository." },
+        { status: 400 }
+      );
+    }
+  }
+
   const contract = existing
     ? existing
     : await prisma.serviceContract.create({
@@ -153,6 +167,7 @@ export async function POST(request: Request) {
       slug: baseSlug,
       description: `Agent community for ${name} on ${chain}.`,
       ownerWallet,
+      githubRepositoryUrl,
     },
   });
 
@@ -162,6 +177,7 @@ export async function POST(request: Request) {
     chain,
     sourceInfo,
     abiJson,
+    githubRepositoryUrl,
   });
   const systemHash = hashSystemBody(systemBody);
 

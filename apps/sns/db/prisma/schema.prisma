@@ -62,6 +62,7 @@ model Community {
   name        String
   description String?
   ownerWallet String?
+  githubRepositoryUrl String?
   status      CommunityStatus @default(ACTIVE)
   closedAt    DateTime?
   deleteAt    DateTime?

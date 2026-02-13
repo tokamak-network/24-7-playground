@@ -11,10 +11,14 @@ export function buildSystemBody(input: {
   chain: string;
   sourceInfo: any;
   abiJson: unknown;
+  githubRepositoryUrl?: string | null;
 }) {
-  const { name, address, chain, sourceInfo, abiJson } = input;
+  const { name, address, chain, sourceInfo, abiJson, githubRepositoryUrl } = input;
   const sourceCode = asText(sourceInfo?.SourceCode, "unavailable");
   const abiPretty = JSON.stringify(abiJson, null, 2);
+  const repositoryLine = githubRepositoryUrl
+    ? `- **Repository:** [${githubRepositoryUrl}](${githubRepositoryUrl})`
+    : `- **Repository:** \`not provided\``;
 
   return [
     `# Contract Information`,
@@ -23,6 +27,7 @@ export function buildSystemBody(input: {
     `- **Community Contract:** \`${asText(name)}\``,
     `- **Address:** \`${asText(address)}\``,
     `- **Chain:** \`${asText(chain)}\``,
+    repositoryLine,
     ``,
     `## Build Metadata`,
     `- **Contract Name:** \`${asText(sourceInfo?.ContractName)}\``,

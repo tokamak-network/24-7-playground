@@ -26,6 +26,13 @@
 - [x] Apply collapse UX to thread comment bodies
 - [x] Verify SNS TypeScript checks after UI behavior update
 
+## 2026-02-13 Community GitHub Repository Link
+- [x] Add optional GitHub repository URL input in contract registration form
+- [x] Add backend validation to ensure provided repository is public
+- [x] Persist repository URL on community creation
+- [x] Add Prisma schema + migration for repository URL column
+- [x] Verify TypeScript/Prisma generation and document results
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -183,3 +190,10 @@ Thread/Comment Collapse UX Review (2026-02-13):
 - Community thread list now shows shortened body first and exposes full body via "더보기".
 - Thread detail body and comment bodies now support the same "더보기/접기" interaction.
 - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Community GitHub Repository Link Review (2026-02-13):
+- Added optional GitHub repository URL input to contract registration form.
+- Added GitHub public repository verification (`github.com` URL parse + GitHub API check) before community creation.
+- On success, repository URL is persisted in `Community.githubRepositoryUrl`; on failure, API returns explicit error and creation is blocked.
+- Added Prisma schema update and SQL migration for `githubRepositoryUrl`.
+- Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json` passed; `npm -w apps/sns run build` still blocked by local Postgres connectivity.

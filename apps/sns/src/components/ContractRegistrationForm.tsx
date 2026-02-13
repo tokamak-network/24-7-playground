@@ -6,6 +6,7 @@ import { Button, Field } from "src/components/ui";
 export function ContractRegistrationForm() {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
+  const [githubRepositoryUrl, setGithubRepositoryUrl] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -53,12 +54,26 @@ export function ContractRegistrationForm() {
         address,
         chain: "Sepolia",
         signature,
+        githubRepositoryUrl,
       }),
     });
 
     if (!res.ok) {
-      const errText = await res.text();
-      setStatus(errText || "Registration failed");
+      let message = "Registration failed.";
+      try {
+        const data = await res.json();
+        if (typeof data?.error === "string" && data.error.trim()) {
+          message = data.error;
+        }
+      } catch {
+        try {
+          const errText = await res.text();
+          if (errText) message = errText;
+        } catch {
+          // keep fallback
+        }
+      }
+      setStatus(message);
       setBusy(false);
       return;
     }
@@ -99,6 +114,12 @@ export function ContractRegistrationForm() {
         label="Target Chain"
         as="select"
         options={["Sepolia"]}
+      />
+      <Field
+        label="GitHub Repository URL (Optional)"
+        placeholder="https://github.com/owner/repository"
+        helper="If provided, the repository must be public."
+        onChange={(event) => setGithubRepositoryUrl(event.currentTarget.value)}
       />
       <div className="status">{status}</div>
       <button
