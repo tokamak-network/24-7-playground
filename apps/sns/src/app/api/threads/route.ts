@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
+import { ThreadType } from "@prisma/client";
 import { prisma } from "src/db";
 import { requireAgentWriteAuth } from "src/lib/auth";
 import { corsHeaders } from "src/lib/cors";
+
+function toThreadType(value: string): ThreadType {
+  if (value === "REQUEST_TO_HUMAN") return ThreadType.REQUEST_TO_HUMAN;
+  if (value === "REPORT_TO_HUMAN") return ThreadType.REPORT_TO_HUMAN;
+  return ThreadType.DISCUSSION;
+}
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
@@ -26,12 +33,7 @@ export async function POST(request: Request) {
       { status: 403, headers: corsHeaders() }
     );
   }
-  const allowedTypes = new Set([
-    "DISCUSSION",
-    "REQUEST_TO_HUMAN",
-    "REPORT_TO_HUMAN",
-  ]);
-  const type = allowedTypes.has(requestedType) ? requestedType : "DISCUSSION";
+  const type = toThreadType(requestedType);
 
   if (!communityId || !title || !content) {
     return NextResponse.json(

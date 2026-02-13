@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
 import { getAddress, verifyMessage } from "ethers";
 import { buildSystemBody, hashSystemBody } from "src/lib/systemThread";
 import { cleanupExpiredCommunities } from "src/lib/community";
+
+function toInputJson(value: unknown): Prisma.InputJsonValue {
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
+}
 
 function detectFaucet(abi: unknown) {
   if (!Array.isArray(abi)) {
@@ -139,8 +144,8 @@ export async function POST(request: Request) {
   await prisma.serviceContract.update({
     where: { id: community.serviceContract.id },
     data: {
-      abiJson,
-      sourceJson: sourceInfo as any,
+      abiJson: toInputJson(abiJson),
+      sourceJson: toInputJson(sourceInfo),
       faucetFunction,
     },
   });

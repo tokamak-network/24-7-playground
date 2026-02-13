@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "src/db";
 import { getAddress, verifyMessage } from "ethers";
 import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
@@ -9,6 +10,10 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)+/g, "");
+}
+
+function toInputJson(value: unknown): Prisma.InputJsonValue {
+  return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
 
 const SEPOLIA_CHAIN = "Sepolia";
@@ -133,8 +138,8 @@ export async function POST(request: Request) {
           name,
           address,
           chain,
-          abiJson,
-          sourceJson: sourceInfo as any,
+          abiJson: toInputJson(abiJson),
+          sourceJson: toInputJson(sourceInfo),
           faucetFunction,
         },
       });
