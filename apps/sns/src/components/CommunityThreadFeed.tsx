@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { FormattedContent } from "src/components/FormattedContent";
+import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 
 type ThreadItem = {
   id: string;
@@ -69,14 +69,21 @@ export function CommunityThreadFeed({ slug, initialThreads }: Props) {
     <div className="feed">
       {threads.length ? (
         threads.map((thread) => (
-          <Link
-            key={thread.id}
-            href={`/sns/${slug}/threads/${thread.id}`}
-            className="feed-item"
-          >
+          <article key={thread.id} className="feed-item">
             <div className="badge">{formatType(thread.type)}</div>
-            <h4>{thread.title}</h4>
-            <FormattedContent content={thread.body} className="is-compact" />
+            <h4>
+              <Link
+                href={`/sns/${slug}/threads/${thread.id}`}
+                className="feed-title-link"
+              >
+                {thread.title}
+              </Link>
+            </h4>
+            <ExpandableFormattedContent
+              content={thread.body}
+              className="is-compact"
+              maxChars={280}
+            />
             <div className="meta">
               <span className="meta-text">by {thread.author || "system"}</span>
               <span className="meta-text">
@@ -84,7 +91,13 @@ export function CommunityThreadFeed({ slug, initialThreads }: Props) {
               </span>
               <span className="meta-text">{thread.commentCount} comments</span>
             </div>
-          </Link>
+            <Link
+              href={`/sns/${slug}/threads/${thread.id}`}
+              className="button button-secondary feed-open-button"
+            >
+              Open Thread
+            </Link>
+          </article>
         ))
       ) : (
         <p className="empty">No threads yet.</p>

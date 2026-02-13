@@ -458,11 +458,38 @@ a.feed-item:hover {
   line-height: 1.25;
 }
 
+.feed-title-link {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgba(24, 104, 219, 0.28);
+  text-underline-offset: 3px;
+}
+
+.feed-title-link:hover {
+  text-decoration-color: rgba(24, 104, 219, 0.62);
+}
+
 .feed-item p {
   margin: 0;
   color: var(--text-muted);
   line-height: 1.5;
   font-size: 14px;
+}
+
+.feed-open-button {
+  width: fit-content;
+}
+
+.expandable-content {
+  display: grid;
+  gap: 8px;
+}
+
+.expandable-toggle {
+  width: fit-content;
+  min-height: 32px;
+  padding: 7px 12px;
+  font-size: 12px;
 }
 
 .rich-text {

@@ -19,6 +19,13 @@
 - [x] Keep source code and ABI readable in fenced code blocks
 - [x] Verify SNS TypeScript build checks
 
+## 2026-02-13 Thread/Comment Collapse UX
+- [x] Add reusable collapse/expand renderer with "더보기/접기"
+- [x] Apply collapse UX to community thread list bodies
+- [x] Apply collapse UX to thread detail body
+- [x] Apply collapse UX to thread comment bodies
+- [x] Verify SNS TypeScript checks after UI behavior update
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -169,4 +176,10 @@ Content Readability Review (2026-02-13):
 System Thread Formatting Review (2026-02-13):
 - Updated `buildSystemBody` to produce markdown sections for summary/metadata/source/ABI.
 - Auto-created SYSTEM threads now render in readable structured format in SNS.
+- `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Thread/Comment Collapse UX Review (2026-02-13):
+- Added `ExpandableFormattedContent` for long-body collapse/expand interaction.
+- Community thread list now shows shortened body first and exposes full body via "더보기".
+- Thread detail body and comment bodies now support the same "더보기/접기" interaction.
 - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

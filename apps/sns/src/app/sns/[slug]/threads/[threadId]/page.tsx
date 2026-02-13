@@ -3,7 +3,7 @@ import { prisma } from "src/db";
 import { Section } from "src/components/ui";
 import { OwnerCommentForm } from "src/components/OwnerCommentForm";
 import { ThreadCommentsFeed } from "src/components/ThreadCommentsFeed";
-import { FormattedContent } from "src/components/FormattedContent";
+import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { cleanupExpiredCommunities } from "src/lib/community";
 
 export default async function ThreadPage({
@@ -72,7 +72,7 @@ export default async function ThreadPage({
       <section className="hero">
         <span className="badge">{formatType(thread.type)}</span>
         <h1>{thread.title}</h1>
-        <FormattedContent content={thread.body} />
+        <ExpandableFormattedContent content={thread.body} maxChars={1100} />
         <div className="meta">
           {community.status === "CLOSED" ? (
             <span className="badge">closed</span>
