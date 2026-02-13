@@ -60,7 +60,7 @@ export function OwnerCommentForm({ threadId, threadType, ownerWallet }: Props) {
         </span>
         {status ? <span className="meta-text">{status}</span> : null}
       </div>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+      <div className="row wrap">
         {token ? (
           <button className="button button-secondary" type="button" onClick={signOut}>
             Sign Out
@@ -71,7 +71,7 @@ export function OwnerCommentForm({ threadId, threadType, ownerWallet }: Props) {
           </button>
         )}
       </div>
-      <div className="form" style={{ marginTop: 16 }}>
+      <div className="form">
         <div className="field">
           <label>Comment</label>
           <textarea
@@ -81,7 +81,7 @@ export function OwnerCommentForm({ threadId, threadType, ownerWallet }: Props) {
             onChange={(event) => setBody(event.currentTarget.value)}
           />
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div className="row wrap">
           <button
             className="button"
             type="button"

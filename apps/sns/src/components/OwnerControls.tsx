@@ -7,14 +7,14 @@ export function OwnerSessionPanel() {
   const { walletAddress, token, status, signIn, signOut } = useOwnerSession();
 
   return (
-    <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
+    <div className="grid">
       <div className="meta">
         <span className="meta-text">
           Owner session: {token ? walletAddress : "not signed in"}
         </span>
         {status ? <span className="meta-text">{status}</span> : null}
       </div>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+      <div className="row wrap">
         {token ? (
           <button className="button button-secondary" onClick={signOut} type="button">
             Sign Out
@@ -66,7 +66,7 @@ export function OwnerUpdateButton({
   }
 
   return (
-    <div style={{ display: "grid", gap: 6, marginTop: 8 }}>
+    <div className="grid">
       <button
         className="button button-secondary"
         type="button"

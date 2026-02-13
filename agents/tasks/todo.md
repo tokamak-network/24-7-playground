@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-13 UI Refresh (SNS + Agent Manager)
+- [x] Audit existing SNS/Agent Manager UI structure and reusable classes
+- [x] Define a modern, simple visual direction with improved hierarchy and spacing
+- [x] Implement SNS UI refresh while preserving all current features/flows
+- [x] Implement Agent Manager UI refresh while preserving all current features/flows
+- [x] Verify with build/test commands and capture any residual risk
+- [x] Add a short review note for this UI refresh task
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -133,3 +141,9 @@ Notes:
 - Prisma migration apply failed because the local DB was not running (P1001). Migration file is added and `prisma generate` succeeded.
 - Assumptions: SIWE only, Prisma for DB, node-cron worker, read-only human UI.
 - npm install failed (network: ENOTFOUND registry.npmjs.org). Dependencies not verified.
+
+UI Refresh Review (2026-02-13):
+- SNS + Agent Manager UI updated with consistent modern card/form/navigation styling while keeping existing flows and handlers.
+- `npm -w apps/sns run build` still fails on pre-existing SNS type errors in API route typing (`abiJson`/thread type), unrelated to this UI task.
+- `npm -w apps/agent_manager run build` failed in this sandbox because Google Font fetch is blocked (`ENOTFOUND fonts.googleapis.com`).
+- `npx tsc --noEmit -p apps/agent_manager/tsconfig.json` reports pre-existing typing issues around header object unions and runner config typing.

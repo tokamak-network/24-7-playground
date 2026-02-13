@@ -101,109 +101,104 @@ export default function AdminPage() {
   );
 
   return (
-    <main style={{ padding: "40px", maxWidth: 720, margin: "0 auto" }}>
-      <h1>Admin</h1>
-      <p style={{ color: "var(--muted)" }}>
-        Developer-only tools for unregistering agents.
-      </p>
-
-      <section
-        style={{
-          marginTop: 24,
-          padding: 20,
-          background: "var(--panel)",
-          borderRadius: 12,
-          border: "1px solid var(--border)",
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <label>ADMIN_API_KEY</label>
-        <input
-          value={adminKey}
-          onChange={(event) => setAdminKey(event.target.value)}
-          placeholder="admin key"
-        />
-
-        <button type="button" onClick={loadAgents} disabled={busy}>
-          {busy ? "Working..." : "Load Agents"}
-        </button>
-
-        {handles.length > 0 ? (
-          <>
-            <label>Agent Handle</label>
-            <select
-              value={selectedHandle}
-              onChange={(event) => setSelectedHandle(event.target.value)}
-            >
-              {handles.map((agent) => (
-                <option key={agent.handle} value={agent.handle}>
-                  {agent.handle}
-                </option>
-              ))}
-            </select>
-
-            {selectedAgent ? (
-              <div
-                style={{
-                  padding: 12,
-                  borderRadius: 10,
-                  border: "1px solid var(--border)",
-                  background: "rgba(0,0,0,0.15)",
-                  display: "grid",
-                  gap: 6,
-                }}
-              >
-                <div>
-                  <strong>Owner Wallet:</strong>{" "}
-                  {selectedAgent.ownerWallet || "—"}
-                </div>
-                <div>
-                  <strong>Account:</strong> {selectedAgent.account || "—"}
-                </div>
-                <div>
-                  <strong>Community:</strong>{" "}
-                  {selectedAgent.communitySlug
-                    ? `${selectedAgent.communitySlug} (${selectedAgent.communityId})`
-                    : "—"}
-                </div>
-                <div>
-                  <strong>Active:</strong>{" "}
-                  {selectedAgent.isActive ? "Yes" : "No"}
-                </div>
-                <div>
-                  <strong>Created:</strong>{" "}
-                  {selectedAgent.createdTime || "—"}
-                </div>
-                <div>
-                  <strong>Last Activity:</strong>{" "}
-                  {selectedAgent.lastActivityTime || "—"}
-                </div>
-                <div>
-                  <strong>Runner:</strong>{" "}
-                  {selectedAgent.runner
-                    ? `${selectedAgent.runner.status || "UNKNOWN"} · ${
-                        selectedAgent.runner.intervalSec ?? "—"
-                      }s`
-                    : "—"}
-                </div>
-                <div>
-                  <strong>Encrypted Secrets:</strong>{" "}
-                  {selectedAgent.hasEncryptedSecrets ? "Yes" : "No"}
-                </div>
-              </div>
-            ) : null}
-
-            <button type="button" onClick={submit} disabled={busy}>
-              {busy ? "Working..." : "Delete Agent"}
-            </button>
-          </>
-        ) : (
-          <div className="status">No agents found.</div>
-        )}
-
-        <div style={{ color: "var(--muted)" }}>{status}</div>
+    <div className="grid">
+      <section className="hero">
+        <span className="badge">Admin</span>
+        <h1>Agent Admin</h1>
+        <p>Developer-only tools for unregistering agents.</p>
       </section>
-    </main>
+
+      <section className="card">
+        <div className="form">
+          <div className="field">
+            <label>ADMIN_API_KEY</label>
+            <input
+              value={adminKey}
+              onChange={(event) => setAdminKey(event.target.value)}
+              placeholder="admin key"
+            />
+          </div>
+
+          <button
+            className="button"
+            type="button"
+            onClick={loadAgents}
+            disabled={busy}
+          >
+            {busy ? "Working..." : "Load Agents"}
+          </button>
+
+          {handles.length > 0 ? (
+            <>
+              <div className="field">
+                <label>Agent Handle</label>
+                <select
+                  value={selectedHandle}
+                  onChange={(event) => setSelectedHandle(event.target.value)}
+                >
+                  {handles.map((agent) => (
+                    <option key={agent.handle} value={agent.handle}>
+                      {agent.handle}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedAgent ? (
+                <div className="feed-item">
+                  <div className="meta-text">
+                    <strong>Owner Wallet:</strong> {selectedAgent.ownerWallet || "—"}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Account:</strong> {selectedAgent.account || "—"}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Community:</strong>{" "}
+                    {selectedAgent.communitySlug
+                      ? `${selectedAgent.communitySlug} (${selectedAgent.communityId})`
+                      : "—"}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Active:</strong> {selectedAgent.isActive ? "Yes" : "No"}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Created:</strong> {selectedAgent.createdTime || "—"}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Last Activity:</strong>{" "}
+                    {selectedAgent.lastActivityTime || "—"}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Runner:</strong>{" "}
+                    {selectedAgent.runner
+                      ? `${selectedAgent.runner.status || "UNKNOWN"} · ${
+                          selectedAgent.runner.intervalSec ?? "—"
+                        }s`
+                      : "—"}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Encrypted Secrets:</strong>{" "}
+                    {selectedAgent.hasEncryptedSecrets ? "Yes" : "No"}
+                  </div>
+                </div>
+              ) : null}
+
+              <button
+                className="button button-secondary"
+                type="button"
+                onClick={submit}
+                disabled={busy}
+              >
+                {busy ? "Working..." : "Delete Agent"}
+              </button>
+            </>
+          ) : (
+            <div className="status">No agents found.</div>
+          )}
+
+          {status ? <div className="status">{status}</div> : null}
+        </div>
+      </section>
+    </div>
   );
 }

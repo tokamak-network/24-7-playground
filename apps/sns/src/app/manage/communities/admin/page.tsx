@@ -101,106 +101,100 @@ export default function CommunityAdminPage() {
   );
 
   return (
-    <main style={{ padding: "40px", maxWidth: 720, margin: "0 auto" }}>
-      <h1>Community Admin</h1>
-      <p style={{ color: "var(--muted)" }}>
-        Developer-only tools for force deleting communities.
-      </p>
-
-      <section
-        style={{
-          marginTop: 24,
-          padding: 20,
-          background: "var(--panel)",
-          borderRadius: 12,
-          border: "1px solid var(--border)",
-          display: "grid",
-          gap: 12,
-        }}
-      >
-        <label>ADMIN_API_KEY</label>
-        <input
-          value={adminKey}
-          onChange={(event) => setAdminKey(event.target.value)}
-          placeholder="admin key"
-        />
-
-        <button type="button" onClick={loadCommunities} disabled={busy}>
-          {busy ? "Working..." : "Load Communities"}
-        </button>
-
-        {communities.length > 0 ? (
-          <>
-            <label>Community</label>
-            <select
-              value={selectedId}
-              onChange={(event) => setSelectedId(event.target.value)}
-            >
-              {communities.map((community) => (
-                <option key={community.id} value={community.id}>
-                  {community.slug}
-                </option>
-              ))}
-            </select>
-
-            {selectedCommunity ? (
-              <div
-                style={{
-                  padding: 12,
-                  borderRadius: 10,
-                  border: "1px solid var(--border)",
-                  background: "rgba(0,0,0,0.15)",
-                  display: "grid",
-                  gap: 6,
-                }}
-              >
-                <div>
-                  <strong>Name:</strong> {selectedCommunity.name}
-                </div>
-                <div>
-                  <strong>Status:</strong> {selectedCommunity.status}
-                </div>
-                <div>
-                  <strong>Owner Wallet:</strong>{" "}
-                  {selectedCommunity.ownerWallet || "—"}
-                </div>
-                <div>
-                  <strong>Contract:</strong>{" "}
-                  {selectedCommunity.contractName} ·{" "}
-                  {selectedCommunity.contractAddress}
-                </div>
-                <div>
-                  <strong>Chain:</strong> {selectedCommunity.chain}
-                </div>
-                <div>
-                  <strong>Created:</strong>{" "}
-                  {selectedCommunity.createdAt || "—"}
-                </div>
-                <div>
-                  <strong>Closed:</strong>{" "}
-                  {selectedCommunity.closedAt || "—"}
-                </div>
-                <div>
-                  <strong>Delete At:</strong>{" "}
-                  {selectedCommunity.deleteAt || "—"}
-                </div>
-                <div>
-                  <strong>Last System Hash:</strong>{" "}
-                  {selectedCommunity.lastSystemHash || "—"}
-                </div>
-              </div>
-            ) : null}
-
-            <button type="button" onClick={submit} disabled={busy}>
-              {busy ? "Working..." : "Force Delete Community"}
-            </button>
-          </>
-        ) : (
-          <div className="status">No communities found.</div>
-        )}
-
-        <div style={{ color: "var(--muted)" }}>{status}</div>
+    <div className="grid">
+      <section className="hero">
+        <span className="badge">Admin</span>
+        <h1>Community Admin</h1>
+        <p>Developer-only tools for force deleting communities.</p>
       </section>
-    </main>
+
+      <section className="card">
+        <div className="form">
+          <div className="field">
+            <label>ADMIN_API_KEY</label>
+            <input
+              value={adminKey}
+              onChange={(event) => setAdminKey(event.target.value)}
+              placeholder="admin key"
+            />
+          </div>
+
+          <button
+            className="button"
+            type="button"
+            onClick={loadCommunities}
+            disabled={busy}
+          >
+            {busy ? "Working..." : "Load Communities"}
+          </button>
+
+          {communities.length > 0 ? (
+            <>
+              <div className="field">
+                <label>Community</label>
+                <select
+                  value={selectedId}
+                  onChange={(event) => setSelectedId(event.target.value)}
+                >
+                  {communities.map((community) => (
+                    <option key={community.id} value={community.id}>
+                      {community.slug}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedCommunity ? (
+                <div className="feed-item">
+                  <div className="meta-text">
+                    <strong>Name:</strong> {selectedCommunity.name}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Status:</strong> {selectedCommunity.status}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Owner Wallet:</strong>{" "}
+                    {selectedCommunity.ownerWallet || "—"}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Contract:</strong> {selectedCommunity.contractName} ·{" "}
+                    {selectedCommunity.contractAddress}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Chain:</strong> {selectedCommunity.chain}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Created:</strong> {selectedCommunity.createdAt || "—"}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Closed:</strong> {selectedCommunity.closedAt || "—"}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Delete At:</strong> {selectedCommunity.deleteAt || "—"}
+                  </div>
+                  <div className="meta-text">
+                    <strong>Last System Hash:</strong>{" "}
+                    {selectedCommunity.lastSystemHash || "—"}
+                  </div>
+                </div>
+              ) : null}
+
+              <button
+                className="button button-secondary"
+                type="button"
+                onClick={submit}
+                disabled={busy}
+              >
+                {busy ? "Working..." : "Force Delete Community"}
+              </button>
+            </>
+          ) : (
+            <div className="status">No communities found.</div>
+          )}
+
+          {status ? <div className="status">{status}</div> : null}
+        </div>
+      </section>
+    </div>
   );
 }

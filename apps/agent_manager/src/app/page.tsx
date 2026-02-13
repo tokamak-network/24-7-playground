@@ -38,6 +38,8 @@ type LlmLogItem = {
 type DecryptedSecrets = {
   llmKey: string;
   snsKey: string;
+  executionKey?: string;
+  alchemyKey?: string;
   config: {
     provider?: string;
     model?: string;
@@ -1750,219 +1752,289 @@ export default function AgentManagerPage() {
   };
 
   return (
-    <main style={{ padding: "40px", maxWidth: 960, margin: "0 auto" }}>
-      <h1>Agent Manager</h1>
-      <p style={{ color: "var(--muted)" }}>
-        Manage encrypted agent secrets and scheduling.
-      </p>
+    <main className="manager-shell">
+      <section className="manager-hero">
+        <span className="manager-kicker">Agent Runtime</span>
+        <h1>Agent Manager</h1>
+        <p>Manage encrypted agent secrets, model settings, and runner operations.</p>
+      </section>
 
-      <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
-        <h2>Login</h2>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          <button type="button" onClick={switchWallet}>Switch Wallet Account</button>
-          <button onClick={token ? signOut : login}>
+      <section className="manager-panel">
+        <div className="manager-panel-head">
+          <h2>Login</h2>
+        </div>
+        <div className="manager-row manager-wrap">
+          <button className="manager-button" type="button" onClick={switchWallet}>
+            Switch Wallet Account
+          </button>
+          <button className="manager-button" type="button" onClick={token ? signOut : login}>
             {token ? "Sign Out" : "Sign In (Signature)"}
           </button>
-          <span>{walletAddress || "No wallet connected"}</span>
+          <span className="manager-note">
+            {walletAddress || "No wallet connected"}
+          </span>
         </div>
       </section>
 
-      <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
-        <h2>Agent</h2>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <button type="button" onClick={fetchAgent}>Refresh Agent</button>
-          <button type="button" onClick={fetchSecrets}>Load Encrypted Secrets</button>
-          <button type="button" onClick={decryptAndLoad}>Decrypt Secrets</button>
+      <section className="manager-panel">
+        <div className="manager-panel-head">
+          <h2>Agent</h2>
         </div>
-        <pre style={{ whiteSpace: "pre-wrap", color: "var(--muted)" }}>
+        <div className="manager-row manager-wrap">
+          <button className="manager-button" type="button" onClick={fetchAgent}>
+            Refresh Agent
+          </button>
+          <button className="manager-button" type="button" onClick={fetchSecrets}>
+            Load Encrypted Secrets
+          </button>
+          <button className="manager-button" type="button" onClick={decryptAndLoad}>
+            Decrypt Secrets
+          </button>
+        </div>
+        <pre className="manager-codeblock">
           {agent ? JSON.stringify(agent, null, 2) : "No agent found."}
         </pre>
       </section>
 
-      <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
-        <h2>Secrets</h2>
-        <label>LLM API Key</label>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
-          <input
-            type={showLlmKey ? "text" : "password"}
-            value={llmKey}
-            onChange={(e) => setLlmKey(e.target.value)}
-            style={{ width: "100%" }}
-          />
-          <button type="button" onClick={() => setShowLlmKey((value) => !value)}>
-            {showLlmKey ? "Hide" : "Show"}
+      <section className="manager-panel">
+        <div className="manager-panel-head">
+          <h2>Secrets</h2>
+        </div>
+
+        <div className="manager-field">
+          <label>LLM API Key</label>
+          <div className="manager-inline-field">
+            <input
+              type={showLlmKey ? "text" : "password"}
+              value={llmKey}
+              onChange={(e) => setLlmKey(e.target.value)}
+            />
+            <button
+              className="manager-button manager-button-ghost"
+              type="button"
+              onClick={() => setShowLlmKey((value) => !value)}
+            >
+              {showLlmKey ? "Hide" : "Show"}
+            </button>
+          </div>
+        </div>
+        <div className="manager-row manager-wrap manager-row-gap-sm">
+          <button className="manager-button manager-button-soft" type="button" onClick={testLlmKey}>
+            Test LLM Key
           </button>
+          <span className="manager-note">{llmTestStatus}</span>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
-          <button type="button" onClick={testLlmKey}>Test LLM Key</button>
-          <span style={{ color: "var(--muted)" }}>{llmTestStatus}</span>
+
+        <div className="manager-field">
+          <label>SNS API Key</label>
+          <div className="manager-inline-field">
+            <input
+              type={showSnsKey ? "text" : "password"}
+              value={snsKey}
+              onChange={(e) => setSnsKey(e.target.value)}
+            />
+            <button
+              className="manager-button manager-button-ghost"
+              type="button"
+              onClick={() => setShowSnsKey((value) => !value)}
+            >
+              {showSnsKey ? "Hide" : "Show"}
+            </button>
+          </div>
         </div>
-        <label>SNS API Key</label>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
-          <input
-            type={showSnsKey ? "text" : "password"}
-            value={snsKey}
-            onChange={(e) => setSnsKey(e.target.value)}
-            style={{ width: "100%" }}
-          />
-          <button type="button" onClick={() => setShowSnsKey((value) => !value)}>
-            {showSnsKey ? "Hide" : "Show"}
+        <div className="manager-row manager-wrap manager-row-gap-sm">
+          <button className="manager-button manager-button-soft" type="button" onClick={testSnsKey}>
+            Test SNS Key
           </button>
+          <span className="manager-note">{snsTestStatus}</span>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
-          <button type="button" onClick={testSnsKey}>Test SNS Key</button>
-          <span style={{ color: "var(--muted)" }}>{snsTestStatus}</span>
+
+        <div className="manager-field">
+          <label>LLM Provider</label>
+          <select
+            value={provider}
+            onChange={(e) => {
+              const next = e.target.value;
+              setProvider(next);
+              if (next === "GEMINI") {
+                setModel("gemini-1.5-flash-002");
+              } else if (next === "ANTHROPIC") {
+                setModel("claude-3-5-sonnet-20240620");
+              } else {
+                setModel("gpt-4o-mini");
+              }
+            }}
+          >
+            <option value="GEMINI">GEMINI</option>
+            <option value="OPENAI">OPENAI</option>
+            <option value="LITELLM">LITELLM</option>
+            <option value="ANTHROPIC">ANTHROPIC</option>
+          </select>
         </div>
-        <label>LLM Provider</label>
-        <select
-          value={provider}
-          onChange={(e) => {
-            const next = e.target.value;
-            setProvider(next);
-            if (next === "GEMINI") {
-              setModel("gemini-1.5-flash-002");
-            } else if (next === "ANTHROPIC") {
-              setModel("claude-3-5-sonnet-20240620");
-            } else {
-              setModel("gpt-4o-mini");
-            }
-          }}
-          style={{ width: "100%", marginBottom: 12 }}
-        >
-          <option value="GEMINI">GEMINI</option>
-          <option value="OPENAI">OPENAI</option>
-          <option value="LITELLM">LITELLM</option>
-          <option value="ANTHROPIC">ANTHROPIC</option>
-        </select>
+
         {provider === "LITELLM" ? (
-          <>
+          <div className="manager-field">
             <label>LiteLLM Base URL (required)</label>
             <input
               value={llmBaseUrl}
               onChange={(e) => setLlmBaseUrl(e.target.value)}
               placeholder="https://your-litellm-host/v1"
-              style={{ width: "100%", marginBottom: 12 }}
             />
-          </>
+          </div>
         ) : null}
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
-          <button type="button" onClick={refreshModels}>Refresh Models</button>
-          <span style={{ color: "var(--muted)" }}>{modelStatus}</span>
+
+        <div className="manager-row manager-wrap manager-row-gap-sm">
+          <button className="manager-button manager-button-soft" type="button" onClick={refreshModels}>
+            Refresh Models
+          </button>
+          <span className="manager-note">{modelStatus}</span>
         </div>
-        <label>Model</label>
-        <select
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          style={{ width: "100%", marginBottom: 12 }}
-        >
-          {showSavedModel ? (
-            <option value={model}>{model} (saved)</option>
-          ) : null}
-          {availableModels.length > 0
-            ? availableModels.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))
-            : null}
-          {availableModels.length === 0 && provider === "GEMINI" ? (
-            <>
-              {fallbackModels.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </>
-          ) : null}
-          {availableModels.length === 0 && provider === "OPENAI" ? (
-            <>
-              {fallbackModels.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </>
-          ) : null}
-          {availableModels.length === 0 && provider === "LITELLM" ? (
-            <>
-              {fallbackModels.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </>
-          ) : null}
-          {availableModels.length === 0 && provider === "ANTHROPIC" ? (
-            <>
-              {fallbackModels.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </>
-          ) : null}
-        </select>
-        <label>Heartbeat (sec)</label>
-        <select
-          value={String(runIntervalSec)}
-          onChange={(e) => setRunIntervalSec(Number(e.target.value))}
-          style={{ width: "100%", marginBottom: 12 }}
-        >
-          <option value="30">30</option>
-          <option value="60">60</option>
-          <option value="120">120</option>
-          <option value="300">300</option>
-        </select>
-        <button type="button" onClick={saveSecrets}>Encrypt & Save</button>
+
+        <div className="manager-field">
+          <label>Model</label>
+          <select value={model} onChange={(e) => setModel(e.target.value)}>
+            {showSavedModel ? (
+              <option value={model}>{model} (saved)</option>
+            ) : null}
+            {availableModels.length > 0
+              ? availableModels.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))
+              : null}
+            {availableModels.length === 0 && provider === "GEMINI" ? (
+              <>
+                {fallbackModels.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </>
+            ) : null}
+            {availableModels.length === 0 && provider === "OPENAI" ? (
+              <>
+                {fallbackModels.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </>
+            ) : null}
+            {availableModels.length === 0 && provider === "LITELLM" ? (
+              <>
+                {fallbackModels.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </>
+            ) : null}
+            {availableModels.length === 0 && provider === "ANTHROPIC" ? (
+              <>
+                {fallbackModels.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </>
+            ) : null}
+          </select>
+        </div>
+
+        <div className="manager-field">
+          <label>Heartbeat (sec)</label>
+          <select
+            value={String(runIntervalSec)}
+            onChange={(e) => setRunIntervalSec(Number(e.target.value))}
+          >
+            <option value="30">30</option>
+            <option value="60">60</option>
+            <option value="120">120</option>
+            <option value="300">300</option>
+          </select>
+        </div>
+
+        <button className="manager-button manager-button-primary" type="button" onClick={saveSecrets}>
+          Encrypt &amp; Save
+        </button>
       </section>
 
-      <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
-        <h2>Runner</h2>
-        <label>Comment Context Limit (community-wide)</label>
-        <input
-          type="number"
-          min={0}
-          value={commentLimitInput}
-          onChange={(e) => setCommentLimitInput(e.target.value)}
-          style={{ width: "100%", marginBottom: 6 }}
-        />
-        <div style={{ color: "var(--muted)", marginBottom: 12 }}>
-          Higher values increase token usage.
+      <section className="manager-panel">
+        <div className="manager-panel-head">
+          <h2>Runner</h2>
         </div>
-        <label>Execution Wallet Private Key (Sepolia)</label>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+
+        <div className="manager-field">
+          <label>Comment Context Limit (community-wide)</label>
           <input
-            type={showExecutionKey ? "text" : "password"}
-            value={executionKey}
-            onChange={(e) => setExecutionKey(e.target.value)}
-            style={{ width: "100%" }}
+            type="number"
+            min={0}
+            value={commentLimitInput}
+            onChange={(e) => setCommentLimitInput(e.target.value)}
           />
-          <button type="button" onClick={() => setShowExecutionKey((value) => !value)}>
-            {showExecutionKey ? "Hide" : "Show"}
-          </button>
+          <div className="manager-note">Higher values increase token usage.</div>
         </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
-          <button type="button" onClick={testExecutionKey}>Test Execution Key</button>
-          <span style={{ color: "var(--muted)" }}>{executionKeyStatus}</span>
+
+        <div className="manager-field">
+          <label>Execution Wallet Private Key (Sepolia)</label>
+          <div className="manager-inline-field">
+            <input
+              type={showExecutionKey ? "text" : "password"}
+              value={executionKey}
+              onChange={(e) => setExecutionKey(e.target.value)}
+            />
+            <button
+              className="manager-button manager-button-ghost"
+              type="button"
+              onClick={() => setShowExecutionKey((value) => !value)}
+            >
+              {showExecutionKey ? "Hide" : "Show"}
+            </button>
+          </div>
         </div>
-        <label>Alchemy API Key (Sepolia)</label>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
-          <input
-            type={showAlchemyKey ? "text" : "password"}
-            value={alchemyKey}
-            onChange={(e) => setAlchemyKey(e.target.value)}
-            style={{ width: "100%" }}
-          />
-          <button type="button" onClick={() => setShowAlchemyKey((value) => !value)}>
-            {showAlchemyKey ? "Hide" : "Show"}
-          </button>
-        </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
-          <button type="button" onClick={testAlchemyKey}>Test Alchemy Key</button>
-          <span style={{ color: "var(--muted)" }}>{alchemyKeyStatus}</span>
-        </div>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div className="manager-row manager-wrap manager-row-gap-sm">
           <button
+            className="manager-button manager-button-soft"
+            type="button"
+            onClick={testExecutionKey}
+          >
+            Test Execution Key
+          </button>
+          <span className="manager-note">{executionKeyStatus}</span>
+        </div>
+
+        <div className="manager-field">
+          <label>Alchemy API Key (Sepolia)</label>
+          <div className="manager-inline-field">
+            <input
+              type={showAlchemyKey ? "text" : "password"}
+              value={alchemyKey}
+              onChange={(e) => setAlchemyKey(e.target.value)}
+            />
+            <button
+              className="manager-button manager-button-ghost"
+              type="button"
+              onClick={() => setShowAlchemyKey((value) => !value)}
+            >
+              {showAlchemyKey ? "Hide" : "Show"}
+            </button>
+          </div>
+        </div>
+        <div className="manager-row manager-wrap manager-row-gap-sm">
+          <button
+            className="manager-button manager-button-soft"
+            type="button"
+            onClick={testAlchemyKey}
+          >
+            Test Alchemy Key
+          </button>
+          <span className="manager-note">{alchemyKeyStatus}</span>
+        </div>
+
+        <div className="manager-row manager-wrap">
+          <button
+            className="manager-button manager-button-primary"
             type="button"
             onClick={startRunner}
             disabled={
@@ -1973,20 +2045,28 @@ export default function AgentManagerPage() {
           >
             Start
           </button>
-          <button type="button" onClick={stopRunner} disabled={!runnerOn}>
+          <button
+            className="manager-button manager-button-soft"
+            type="button"
+            onClick={stopRunner}
+            disabled={!runnerOn}
+          >
             Stop
           </button>
         </div>
       </section>
 
-      <section style={{ marginTop: 24, padding: 20, background: "var(--panel)", borderRadius: 12, border: "1px solid var(--border)" }}>
-        <h2>LLM Communication Log</h2>
+      <section className="manager-panel">
+        <div className="manager-panel-head">
+          <h2>LLM Communication Log</h2>
+        </div>
         {!token ? (
-          <div style={{ color: "var(--muted)" }}>Login required.</div>
+          <div className="manager-note">Login required.</div>
         ) : (
           <>
-            <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+            <div className="manager-row manager-wrap manager-row-gap-sm">
               <button
+                className="manager-button manager-button-soft"
                 type="button"
                 onClick={() => {
                   clearLlmLogs();
@@ -1995,9 +2075,10 @@ export default function AgentManagerPage() {
               >
                 Clear
               </button>
-              <span style={{ color: "var(--muted)" }}>{filteredLlmLogs.length} entries</span>
+              <span className="manager-note">{filteredLlmLogs.length} entries</span>
             </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+
+            <div className="manager-tabs">
               {[
                 { id: "all", label: "All" },
                 { id: "create_thread", label: "create_thread" },
@@ -2008,70 +2089,61 @@ export default function AgentManagerPage() {
                 <button
                   key={tab.id}
                   type="button"
+                  className={`manager-tab${llmLogFilter === tab.id ? " is-active" : ""}`}
                   onClick={() => {
                     setLlmLogFilter(
                       tab.id as "all" | "create_thread" | "comment" | "tx" | "etc"
                     );
                     setLlmLogPage(1);
                   }}
-                  style={{
-                    padding: "6px 10px",
-                    borderRadius: 999,
-                    border: "1px solid var(--border)",
-                    background: llmLogFilter === tab.id ? "var(--accent)" : "transparent",
-                    color: llmLogFilter === tab.id ? "var(--accent-text)" : "inherit",
-                  }}
                 >
                   {tab.label}
                 </button>
               ))}
             </div>
+
             {llmLogs.length === 0 ? (
-              <div style={{ color: "var(--muted)" }}>No logs yet.</div>
+              <div className="manager-note">No logs yet.</div>
             ) : filteredLlmLogs.length === 0 ? (
-              <div style={{ color: "var(--muted)" }}>No logs for this filter.</div>
+              <div className="manager-note">No logs for this filter.</div>
             ) : (
-              <div style={{ display: "grid", gap: 12 }}>
+              <div className="manager-log-list">
                 {pagedLlmLogs.map((log) => (
-                  <div key={log.id} style={{ border: "1px solid var(--border)", borderRadius: 8, padding: 12 }}>
-                    <div style={{ color: "var(--muted)", marginBottom: 8 }}>
+                  <article key={log.id} className="manager-log-item">
+                    <div className="manager-note">
                       {new Date(log.createdAt).toLocaleString()}
                     </div>
-                    <div
-                      style={{
-                        display: "inline-flex",
-                        padding: "2px 8px",
-                        borderRadius: 999,
-                        border: "1px solid var(--border)",
-                        fontSize: 12,
-                        marginBottom: 8,
-                      }}
-                    >
-                      {log.direction === "manager_to_agent" ? "Manager -> Agent" : "Agent -> Manager"}
+                    <div className="manager-pill">
+                      {log.direction === "manager_to_agent"
+                        ? "Manager -> Agent"
+                        : "Agent -> Manager"}
                     </div>
                     {log.actionTypes && log.actionTypes.length > 0 ? (
-                      <div style={{ color: "var(--muted)", fontSize: 12, marginBottom: 8 }}>
+                      <div className="manager-note">
                         Action: {log.actionTypes.join(", ")}
                       </div>
                     ) : null}
-                    <pre style={{ whiteSpace: "pre-wrap" }}>{log.content}</pre>
-                  </div>
+                    <pre className="manager-codeblock">{log.content}</pre>
+                  </article>
                 ))}
               </div>
             )}
+
             {filteredLlmLogs.length > 0 ? (
-              <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 12 }}>
+              <div className="manager-row manager-wrap manager-row-gap-sm">
                 <button
+                  className="manager-button manager-button-soft"
                   type="button"
                   onClick={() => setLlmLogPage((page) => Math.max(1, page - 1))}
                   disabled={clampedLlmLogPage <= 1}
                 >
                   Prev
                 </button>
-                <span style={{ color: "var(--muted)" }}>
+                <span className="manager-note">
                   Page {clampedLlmLogPage} of {llmLogTotalPages}
                 </span>
                 <button
+                  className="manager-button manager-button-soft"
                   type="button"
                   onClick={() =>
                     setLlmLogPage((page) => Math.min(llmLogTotalPages, page + 1))
@@ -2086,13 +2158,14 @@ export default function AgentManagerPage() {
         )}
       </section>
 
-      <section style={{ marginTop: 24 }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 8 }}>
+      <section className="manager-panel manager-panel-status">
+        <div className="manager-row manager-wrap manager-row-gap-sm">
           <strong>Status:</strong>
-          <span style={{ color: "var(--muted)" }}>
+          <span className="manager-note">
             {status || "—"} (clicks: {debugClicks})
           </span>
           <button
+            className="manager-button manager-button-soft"
             type="button"
             onClick={() => {
               setStatus("");
@@ -2103,10 +2176,10 @@ export default function AgentManagerPage() {
           </button>
         </div>
         {lastLlmOutput && status ? (
-          <>
-            <div style={{ fontWeight: 600, marginBottom: 6 }}>Last LLM Output</div>
-            <pre style={{ whiteSpace: "pre-wrap" }}>{lastLlmOutput}</pre>
-          </>
+          <div className="manager-output">
+            <div className="manager-output-title">Last LLM Output</div>
+            <pre className="manager-codeblock">{lastLlmOutput}</pre>
+          </div>
         ) : null}
       </section>
     </main>
