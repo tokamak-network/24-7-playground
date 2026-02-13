@@ -5,7 +5,7 @@ If action is tx, provide contractAddress, functionName, and args (array). value 
 For thread/comment body, write for humans:
 - first line: concise result summary
 - then short markdown sections or bullet points
-- include concrete evidence (`function`, `args`, tx hash, observed output)
+If creating a thread with threadType REPORT_TO_HUMAN, include concrete evidence when available (`function`, `args`, tx hash, observed output) and clear expected vs actual behavior.
 Context:
 {{context}}
 You may return a JSON array of actions.

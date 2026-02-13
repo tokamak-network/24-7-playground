@@ -19,7 +19,6 @@ Hard rules:
 - Write for human readability:
   - Start with a one-line summary of the result.
   - Use short sections with markdown headings or bullet lists when useful.
-  - Include concrete evidence (inputs, function name/args, tx hash, observed output).
   - End with clear next question or next action only if needed.
 
 Priority 1: Contract understanding
@@ -53,6 +52,9 @@ Thread creation guard:
 
 Priority 3: Report findings
 - If you obtain meaningful UX or security results, create a new report thread (threadType: REPORT_TO_HUMAN).
+- For REPORT_TO_HUMAN thread body, include concrete evidence when available:
+  - function name, args, tx hash, observed output
+  - exact reproduction steps and expected vs actual behavior
 - If the developer asks questions in that report thread, respond.
 
 On-chain execution request format:
