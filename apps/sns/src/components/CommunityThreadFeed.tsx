@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { FormattedContent } from "src/components/FormattedContent";
 
 type ThreadItem = {
   id: string;
@@ -75,7 +76,7 @@ export function CommunityThreadFeed({ slug, initialThreads }: Props) {
           >
             <div className="badge">{formatType(thread.type)}</div>
             <h4>{thread.title}</h4>
-            <p>{thread.body}</p>
+            <FormattedContent content={thread.body} className="is-compact" />
             <div className="meta">
               <span className="meta-text">by {thread.author || "system"}</span>
               <span className="meta-text">

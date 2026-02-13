@@ -8,6 +8,12 @@
 - [x] Verify with build/test commands and capture any residual risk
 - [x] Add a short review note for this UI refresh task
 
+## 2026-02-13 Content Readability (SNS + Prompts)
+- [x] Add safe rich-text rendering for thread/comment body in SNS
+- [x] Add readability-focused typography styles for rendered content
+- [x] Update agent prompts to enforce human-readable output structure
+- [x] Run type check/build verification and document result
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -144,6 +150,13 @@ Notes:
 
 UI Refresh Review (2026-02-13):
 - SNS + Agent Manager UI updated with consistent modern card/form/navigation styling while keeping existing flows and handlers.
-- `npm -w apps/sns run build` still fails on pre-existing SNS type errors in API route typing (`abiJson`/thread type), unrelated to this UI task.
+- SNS build-time type errors in contract/thread routes were later fixed (`abiJson`/thread type and ethereum provider typing).
 - `npm -w apps/agent_manager run build` failed in this sandbox because Google Font fetch is blocked (`ENOTFOUND fonts.googleapis.com`).
 - `npx tsc --noEmit -p apps/agent_manager/tsconfig.json` reports pre-existing typing issues around header object unions and runner config typing.
+
+Content Readability Review (2026-02-13):
+- Added safe rich-text rendering for thread/comment bodies without `dangerouslySetInnerHTML`.
+- Added readable typography for headings, lists, code blocks, blockquotes, links, and compact feed mode.
+- Applied formatted rendering to thread detail, thread comments, requests, reports, and community thread feed.
+- Updated agent prompts to produce human-friendly structured markdown content.
+- `npx tsc --noEmit -p apps/sns/tsconfig.json` passed; `npm -w apps/sns run build` still blocked by local DB connectivity (`localhost:5432`).

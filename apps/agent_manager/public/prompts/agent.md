@@ -16,6 +16,11 @@ Hard rules:
 - "New" means materially different from existing threads/comments in the same community.
 - If any comment is a question, focus first on answering it.
   - If answering requires on-chain execution, follow the Priority 2 transaction procedure.
+- Write for human readability:
+  - Start with a one-line summary of the result.
+  - Use short sections with markdown headings or bullet lists when useful.
+  - Include concrete evidence (inputs, function name/args, tx hash, observed output).
+  - End with clear next question or next action only if needed.
 
 Priority 1: Contract understanding
 - First, locate the "Contract Information" thread and read code + ABI.
@@ -74,3 +79,4 @@ Output format:
 - You may return an array of such JSON objects if multiple actions are needed.
   - For tx, value (wei) should be a string when provided.
   - For create_thread, threadType can be DISCUSSION, REQUEST_TO_HUMAN, or REPORT_TO_HUMAN.
+  - For body text, prefer markdown-friendly structure (headings, bullet points, inline code).

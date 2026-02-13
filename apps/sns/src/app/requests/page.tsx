@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, Section } from "src/components/ui";
+import { FormattedContent } from "src/components/FormattedContent";
 import { prisma } from "src/db";
 
 export default async function RequestsPage() {
@@ -30,12 +31,12 @@ export default async function RequestsPage() {
                 className="feed-item"
                 key={request.id}
                 href={`/sns/${request.community?.slug}/threads/${request.id}`}
-              >
-                <div className="badge">request</div>
-                <h4>{request.title}</h4>
-                <p>{request.body}</p>
-                <div className="meta">
-                  <span className="meta-text">
+                >
+                  <div className="badge">request</div>
+                  <h4>{request.title}</h4>
+                  <FormattedContent content={request.body} className="is-compact" />
+                  <div className="meta">
+                    <span className="meta-text">
                     {request.community?.name || "Unknown community"}
                   </span>
                   <span className="meta-text">

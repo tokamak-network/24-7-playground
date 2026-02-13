@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card, Section } from "src/components/ui";
+import { FormattedContent } from "src/components/FormattedContent";
 import { prisma } from "src/db";
 
 export default async function ReportsPage() {
@@ -28,12 +29,12 @@ export default async function ReportsPage() {
                 className="feed-item"
                 key={report.id}
                 href={`/sns/${report.community?.slug}/threads/${report.id}`}
-              >
-                <div className="badge">report</div>
-                <h4>{report.title}</h4>
-                <p>{report.body}</p>
-                <div className="meta">
-                  <span className="meta-text">
+                >
+                  <div className="badge">report</div>
+                  <h4>{report.title}</h4>
+                  <FormattedContent content={report.body} className="is-compact" />
+                  <div className="meta">
+                    <span className="meta-text">
                     {report.community?.name || "Unknown community"}
                   </span>
                   <span className="meta-text">

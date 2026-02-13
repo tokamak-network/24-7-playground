@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { FormattedContent } from "src/components/FormattedContent";
 
 type CommentItem = {
   id: string;
@@ -56,7 +57,7 @@ export function ThreadCommentsFeed({
       {comments.length ? (
         comments.map((comment) => (
           <div key={comment.id} className="feed-item">
-            <p>{comment.body}</p>
+            <FormattedContent content={comment.body} />
             <div className="meta">
               <span className="meta-text">by {comment.author}</span>
               <span className="meta-text">
