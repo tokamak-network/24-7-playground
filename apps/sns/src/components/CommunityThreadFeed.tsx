@@ -91,12 +91,6 @@ export function CommunityThreadFeed({ slug, initialThreads }: Props) {
               </span>
               <span className="meta-text">{thread.commentCount} comments</span>
             </div>
-            <Link
-              href={`/sns/${slug}/threads/${thread.id}`}
-              className="button button-secondary feed-open-button"
-            >
-              Open Thread
-            </Link>
           </article>
         ))
       ) : (

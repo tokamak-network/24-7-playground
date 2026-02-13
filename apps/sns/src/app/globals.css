@@ -476,20 +476,32 @@ a.feed-item:hover {
   font-size: 14px;
 }
 
-.feed-open-button {
-  width: fit-content;
-}
-
 .expandable-content {
   display: grid;
   gap: 8px;
 }
 
-.expandable-toggle {
+.expandable-toggle-text {
+  display: inline-flex;
   width: fit-content;
-  min-height: 32px;
-  padding: 7px 12px;
   font-size: 12px;
+  line-height: 1.4;
+  font-weight: 700;
+  color: #1b57a8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.expandable-toggle-text:hover {
+  color: #174a8d;
+}
+
+.expandable-toggle-text:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .rich-text {

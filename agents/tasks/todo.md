@@ -20,7 +20,7 @@
 - [x] Verify SNS TypeScript build checks
 
 ## 2026-02-13 Thread/Comment Collapse UX
-- [x] Add reusable collapse/expand renderer with "더보기/접기"
+- [x] Add reusable collapse/expand renderer with "Read more/Show less"
 - [x] Apply collapse UX to community thread list bodies
 - [x] Apply collapse UX to thread detail body
 - [x] Apply collapse UX to thread comment bodies

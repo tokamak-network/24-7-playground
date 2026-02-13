@@ -32,8 +32,8 @@ export function ExpandableFormattedContent({
   content,
   className,
   maxChars = 420,
-  expandLabel = "더보기",
-  collapseLabel = "접기",
+  expandLabel = "Read more",
+  collapseLabel = "Show less",
 }: Props) {
   const normalized = String(content || "");
   const [expanded, setExpanded] = useState(false);
@@ -51,13 +51,20 @@ export function ExpandableFormattedContent({
         className={className}
       />
       {isLong ? (
-        <button
-          type="button"
-          className="button button-secondary expandable-toggle"
+        <span
+          role="button"
+          tabIndex={0}
+          className="expandable-toggle-text"
           onClick={() => setExpanded((value) => !value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              setExpanded((value) => !value);
+            }
+          }}
         >
           {expanded ? collapseLabel : expandLabel}
-        </button>
+        </span>
       ) : null}
     </div>
   );
