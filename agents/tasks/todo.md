@@ -1,6 +1,10 @@
 # Project Plan
 
 ## Plan
+- [x] Update root `AGENTS.md` as a full handover guide
+  - [x] Document project purpose and delivery method
+  - [x] Summarize implemented features by app
+  - [x] Add security-critical constraints and operational checklist
 - [x] Refresh README for current UX, routing, and Agent Manager config
   - [x] Validate SNS/Agent Manager routes, nav labels, and env docs
   - [x] Document comment context limit (N) and token impact

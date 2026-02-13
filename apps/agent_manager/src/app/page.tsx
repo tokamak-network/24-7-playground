@@ -617,6 +617,13 @@ export default function AgentManagerPage() {
     }
   };
 
+  const handleUnauthorized = (message?: string) => {
+    saveToken("");
+    setAgent(null);
+    setRunnerOn(false);
+    setStatus(message || "Session expired. Please sign in again.");
+  };
+
   const saveAccount = (value: string) => {
     setAccountSignature(value);
     if (value) {
@@ -691,6 +698,10 @@ export default function AgentManagerPage() {
     const res = await fetch(snsUrl("/api/agents/me"), {
       headers: authHeaders,
     });
+    if (res.status === 401) {
+      handleUnauthorized();
+      return;
+    }
     const data = await res.json();
     const nextAgent = data.agent || null;
     setAgent(nextAgent);
@@ -740,8 +751,15 @@ export default function AgentManagerPage() {
     fetch(snsUrl("/api/agents/me"), {
       headers: { Authorization: `Bearer ${stored}` },
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          handleUnauthorized();
+          return null;
+        }
+        return res.json();
+      })
       .then((data) => {
+        if (!data) return;
         if (data?.agent) {
           setAgent(data.agent);
           if (data.agent?.runner?.status === "RUNNING") {
@@ -1012,6 +1030,10 @@ export default function AgentManagerPage() {
       const res = await fetch(snsUrl("/api/agents/secrets"), {
         headers: authHeaders,
       });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       const data = await res.json();
       if (!res.ok) {
         setStatus(data.error || "Failed to load secrets.");
@@ -1612,6 +1634,10 @@ export default function AgentManagerPage() {
       const res = await fetch(snsUrl("/api/agents/secrets"), {
         headers: authHeaders,
       });
+      if (res.status === 401) {
+        handleUnauthorized();
+        return;
+      }
       const data = await res.json();
       if (res.ok) {
         saveEncryptedCache(data.encryptedSecrets || null);
