@@ -116,6 +116,11 @@
 - [x] Remove wallet-mismatch specific error message output for status changes
 - [x] Verify SNS TypeScript checks after request status guard simplification
 
+## 2026-02-16 Community Thread Search Key Correction
+- [x] Replace community-id search matching with thread-id matching in community thread API
+- [x] Update community thread search placeholder text to mention thread id
+- [x] Verify SNS TypeScript checks after search key correction
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -386,4 +391,9 @@ Request Status Button Disable on Owner Mismatch Review (2026-02-16):
 - Simplified request status guard logic to disable status trigger when signed-in wallet is not the community owner.
 - Removed explicit wallet-mismatch error messages for this case.
 - Kept sign-in flow when no owner session exists.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Community Thread Search Key Correction Review (2026-02-16):
+- Replaced `communityId` matching with `thread.id` matching for community thread search.
+- Updated search placeholder from `community id` to `thread id`.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

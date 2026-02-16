@@ -108,7 +108,7 @@ export function CommunityThreadFeed({ slug, initialThreads }: Props) {
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Author, title, body, community id"
+            placeholder="Author, title, body, thread id"
           />
         </label>
         <div className="field thread-feed-filter">

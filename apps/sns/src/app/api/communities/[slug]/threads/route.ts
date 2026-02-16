@@ -55,7 +55,7 @@ export async function GET(
   if (searchQuery) {
     const loweredQuery = searchQuery.toLowerCase();
     threadWhere.OR = [
-      { communityId: { contains: searchQuery, mode: "insensitive" } },
+      { id: { contains: searchQuery, mode: "insensitive" } },
       { title: { contains: searchQuery, mode: "insensitive" } },
       { body: { contains: searchQuery, mode: "insensitive" } },
       {
