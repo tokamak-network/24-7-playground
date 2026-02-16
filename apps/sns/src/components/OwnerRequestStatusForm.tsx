@@ -24,7 +24,7 @@ export function OwnerRequestStatusForm({
   initialResolved,
   initialRejected,
 }: Props) {
-  const { walletAddress, token, signIn, signOut, status } = useOwnerSession();
+  const { walletAddress, token, signIn, status } = useOwnerSession();
   const [isResolved, setIsResolved] = useState(initialResolved);
   const [isRejected, setIsRejected] = useState(initialRejected);
   const [submitStatus, setSubmitStatus] = useState("");
@@ -33,8 +33,9 @@ export function OwnerRequestStatusForm({
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const normalizedOwner = ownerWallet?.toLowerCase() || "";
-  const isOwner =
-    token && normalizedOwner && walletAddress.toLowerCase() === normalizedOwner;
+  const isOwner = Boolean(
+    token && normalizedOwner && walletAddress.toLowerCase() === normalizedOwner
+  );
   const canSetStatus = threadType === "REQUEST_TO_HUMAN";
   const currentStatus = useMemo(
     () => statusFromFlags(isResolved, isRejected),
@@ -53,66 +54,19 @@ export function OwnerRequestStatusForm({
     return () => window.removeEventListener("mousedown", onClickOutside);
   }, [isMenuOpen]);
 
+  useEffect(() => {
+    if (!isOwner) {
+      setIsMenuOpen(false);
+    }
+  }, [isOwner]);
+
   if (!canSetStatus) {
     return null;
   }
 
-  const ensureOwnerWalletMatch = async () => {
-    if (!token) {
-      await signIn();
-      return false;
-    }
-
-    if (!normalizedOwner) {
-      setSubmitStatus("Community owner wallet is not configured.");
-      return false;
-    }
-
-    const sessionWallet = walletAddress.toLowerCase();
-    if (sessionWallet !== normalizedOwner) {
-      setSubmitStatus("Signed-in wallet is not the community owner.");
-      return false;
-    }
-
-    const ethereum = (window as any).ethereum;
-    if (!ethereum) {
-      return true;
-    }
-
-    try {
-      const accounts = (await ethereum.request({
-        method: "eth_accounts",
-      })) as string[];
-      const connectedWallet = String(accounts?.[0] || "").toLowerCase();
-      if (!connectedWallet) {
-        setSubmitStatus("No wallet is currently connected.");
-        return false;
-      }
-
-      if (connectedWallet !== normalizedOwner) {
-        setSubmitStatus(
-          "Current connected wallet does not match the community owner wallet."
-        );
-        return false;
-      }
-
-      if (connectedWallet !== sessionWallet) {
-        signOut();
-        setSubmitStatus("Wallet changed. Please sign in again as owner.");
-        return false;
-      }
-    } catch {
-      setSubmitStatus("Failed to verify current connected wallet.");
-      return false;
-    }
-
-    return true;
-  };
-
   const submit = async (nextStatus: "resolved" | "rejected" | "pending") => {
     setSubmitStatus("");
-    const canProceed = await ensureOwnerWalletMatch();
-    if (!canProceed) {
+    if (!isOwner) {
       return;
     }
 
@@ -147,10 +101,11 @@ export function OwnerRequestStatusForm({
 
   const openOrSignIn = async () => {
     setSubmitStatus("");
-    const canProceed = await ensureOwnerWalletMatch();
-    if (!canProceed) {
+    if (!token) {
+      await signIn();
       return;
     }
+    if (!isOwner) return;
     setIsMenuOpen((prev) => !prev);
   };
 
@@ -159,7 +114,7 @@ export function OwnerRequestStatusForm({
       <button
         className="request-status-trigger"
         type="button"
-        disabled={isSubmitting}
+        disabled={isSubmitting || (Boolean(token) && !isOwner)}
         onClick={openOrSignIn}
       >
         {currentStatus}
