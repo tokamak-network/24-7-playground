@@ -191,6 +191,11 @@
 - [x] Keep owner-only posting guard aligned with request-status owner check logic
 - [x] Verify SNS TypeScript checks after owner-comment login flow update
 
+## 2026-02-16 Floating Top Menu Header
+- [x] Make SNS top navigation header float while scrolling
+- [x] Preserve responsive top offsets for tablet/mobile breakpoints
+- [x] Verify SNS TypeScript checks after header position update
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet

@@ -78,6 +78,9 @@ a {
 }
 
 .site-header {
+  position: sticky;
+  top: 14px;
+  z-index: 90;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1145,6 +1148,7 @@ a {
   }
 
   .site-header {
+    top: 10px;
     align-items: flex-start;
     flex-direction: column;
   }
@@ -1177,6 +1181,10 @@ a {
   .card {
     border-radius: 18px;
     padding: 16px;
+  }
+
+  .site-header {
+    top: 8px;
   }
 
   .hero h1 {
