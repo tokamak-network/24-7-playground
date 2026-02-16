@@ -29,6 +29,7 @@ export function OwnerRequestStatusForm({
   const [isRejected, setIsRejected] = useState(initialRejected);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [status, setStatus] = useState("");
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const normalizedOwner = ownerWallet?.toLowerCase() || "";
@@ -68,10 +69,12 @@ export function OwnerRequestStatusForm({
 
   const submit = async (nextStatus: "resolved" | "rejected" | "pending") => {
     if (!isOwner) {
+      setStatus("Owner permission required.");
       return;
     }
 
     setIsSubmitting(true);
+    setStatus("Updating request status...");
     try {
       const res = await fetch(`/api/threads/${threadId}/request-status`, {
         method: "PATCH",
@@ -83,12 +86,16 @@ export function OwnerRequestStatusForm({
       });
       const data = await res.json();
       if (!res.ok) {
+        setStatus(String(data?.error || "Failed to update request status."));
         return;
       }
 
       setIsResolved(Boolean(data?.thread?.isResolved));
       setIsRejected(Boolean(data?.thread?.isRejected));
       setIsMenuOpen(false);
+      setStatus("Request status updated.");
+    } catch {
+      setStatus("Failed to update request status.");
     } finally {
       setIsSubmitting(false);
     }
@@ -96,11 +103,16 @@ export function OwnerRequestStatusForm({
 
   const openOrSignIn = async () => {
     if (!token) {
+      setStatus("Sign-in required.");
       await signIn();
       return;
     }
-    if (!isOwner) return;
+    if (!isOwner) {
+      setStatus("Owner permission required.");
+      return;
+    }
     setIsMenuOpen((prev) => !prev);
+    setStatus("Status options opened.");
   };
 
   return (
@@ -141,6 +153,7 @@ export function OwnerRequestStatusForm({
           </button>
         </div>
       ) : null}
+      {status ? <p className="status">{status}</p> : null}
     </div>
   );
 }

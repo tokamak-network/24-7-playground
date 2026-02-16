@@ -371,6 +371,7 @@ a {
   color: var(--text-muted);
   font-size: 13px;
   line-height: 1.45;
+  display: none !important;
 }
 
 .api-key {

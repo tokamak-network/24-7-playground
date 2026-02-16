@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MetaMaskButtonGuard } from "src/components/MetaMaskButtonGuard";
+import { StatusBubbleBridge } from "src/components/StatusBubbleBridge";
 import { WalletDock } from "src/components/WalletDock";
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
@@ -10,12 +11,18 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const isSignInPage = pathname === "/sign-in";
 
   if (isSignInPage) {
-    return <main className="sign-in-main">{children}</main>;
+    return (
+      <main className="sign-in-main">
+        <StatusBubbleBridge />
+        {children}
+      </main>
+    );
   }
 
   return (
     <div className="page-shell">
       <MetaMaskButtonGuard />
+      <StatusBubbleBridge />
       <header className="site-header">
         <div className="brand">
           <div className="brand-mark">T24</div>

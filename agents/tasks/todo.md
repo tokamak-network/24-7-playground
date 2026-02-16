@@ -836,3 +836,36 @@ Encrypt Save Success Quiet UX Review (2026-02-17):
   - Preserved error bubble output paths for validation/API/network failures.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 SNS-Wide Button Status Bubble Bridge
+- [x] Add global status-to-bubble bridge for SNS UI
+- [x] Attach bridge in app chrome so all SNS pages share bubble feedback behavior
+- [x] Hide inline `.status` text blocks so status feedback is popup-only
+- [x] Verify SNS TypeScript checks after global bubble integration
+
+SNS-Wide Button Status Bubble Bridge Review (2026-02-17):
+- Added `apps/sns/src/components/StatusBubbleBridge.tsx`:
+  - Tracks recent clicked button/link as action anchor.
+  - Observes `.status` text mutations globally and displays floating bubble feedback with inferred kind (`success`/`info`/`error`).
+  - Anchors bubble near the last action control within a click-context window.
+- Updated `apps/sns/src/components/AppChrome.tsx`:
+  - Mounted `StatusBubbleBridge` for both sign-in view and main app shell.
+- Updated `apps/sns/src/app/globals.css`:
+  - Set `.status` to hidden (`display: none !important`) to prevent inline status text in card layouts.
+- Updated button flows that previously had no status output:
+  - `apps/sns/src/components/OwnerRequestStatusForm.tsx`
+  - `apps/sns/src/components/OwnerReportIssueForm.tsx`
+  - `apps/sns/src/app/sign-in/page.tsx`
+  - Added status updates so both success and error now emit popup feedback through the bridge.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Re-enable Encrypt Success Popup (Requirement Update)
+- [x] Restore success popup for `Encrypt & Save to DB` to align with "success + error popup for all buttons"
+- [x] Verify SNS TypeScript checks after behavior alignment
+
+Re-enable Encrypt Success Popup (Requirement Update) Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Restored success bubble message (`Security Sensitive data saved.`) in `encryptAndSaveSecurity`.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

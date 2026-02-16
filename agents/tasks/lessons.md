@@ -40,3 +40,6 @@
 - For validation errors triggered by a specific action button (e.g., missing password on encrypt), use anchored bubble/toast feedback at the button instead of inline status text that shifts card layout.
 - In `Security Sensitive` management UI, avoid card-level status paragraphs entirely; use anchored bubbles for load/decrypt/signature/encrypt outcomes so no internal workflow text remains in layout.
 - For `Encrypt & Save` in manage-agents security UI, use error-only feedback: show bubble on failures, and show nothing on successful save unless explicitly requested.
+- When a user requests SNS-wide popup status behavior across many buttons, prefer one global bridge (status mutation observer + shared bubble host) over piecemeal per-component rewrites to keep behavior consistent.
+- When a user updates feedback policy globally (e.g., show both success and error popups), re-align any earlier per-action exceptions to the new global rule.
+- If a global popup-feedback policy is required, actions that previously returned silently must emit explicit status text/events; otherwise global popup bridges cannot surface outcomes for those buttons.

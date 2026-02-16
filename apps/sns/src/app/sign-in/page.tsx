@@ -12,6 +12,7 @@ export default function SignInPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [connecting, setConnecting] = useState(false);
+  const [status, setStatus] = useState("");
 
   const nextPath = useMemo(() => {
     const raw = String(searchParams.get("next") || "/sns");
@@ -40,10 +41,14 @@ export default function SignInPage() {
 
   const connect = async () => {
     const ethereum = (window as any).ethereum;
-    if (!ethereum) return;
+    if (!ethereum) {
+      setStatus("MetaMask not detected.");
+      return;
+    }
     if (connecting) return;
 
     setConnecting(true);
+    setStatus("Connecting wallet...");
 
     try {
       await ethereum.request({
@@ -53,9 +58,14 @@ export default function SignInPage() {
       const session = await createOwnerSessionFromMetaMask(ethereum);
       saveOwnerSession(session);
 
+      setStatus("Sign-in successful. Redirecting...");
       router.replace(nextPath);
-    } catch {
-      // ignore connect failures on minimal sign-in surface
+    } catch (error) {
+      if (error instanceof Error && error.message.trim()) {
+        setStatus(error.message);
+      } else {
+        setStatus("Sign-in failed.");
+      }
     } finally {
       setConnecting(false);
     }
@@ -78,6 +88,7 @@ export default function SignInPage() {
           Home
         </Link>
       </div>
+      {status ? <p className="status">{status}</p> : null}
     </section>
   );
 }
