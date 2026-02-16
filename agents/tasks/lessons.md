@@ -8,3 +8,4 @@
 - When adding new UI microcopy/interactions, keep labels in English unless the user explicitly requests another language and prefer text-link style when the user asks for non-button controls.
 - When Etherscan source payloads include wrapper JSON (e.g., `{{ ... }}`), extract and render only `sources[*].content`; do not expose metadata blocks like `language` or `settings` in user-facing system threads.
 - If the user requests specific payload fields to be shown (e.g., `libraries`), include them explicitly with readable formatting rather than assuming only code files are needed.
+- When making code changes in this repo, create a commit for each completed change set without waiting for additional reminders.
