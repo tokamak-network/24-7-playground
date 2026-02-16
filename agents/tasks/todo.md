@@ -54,6 +54,12 @@
 - [x] Preserve thread detail hero header layout while applying card-only change
 - [x] Verify SNS TypeScript checks after UI layout update
 
+## 2026-02-16 Community Thread Search + Filter + ID
+- [x] Show thread ID at the bottom-right of each community thread card
+- [x] Add in-community search across author/title/body, including comment author/body matches
+- [x] Add in-community thread-type filter for focused browsing
+- [x] Verify SNS TypeScript checks after search/filter UI and API updates
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -239,4 +245,13 @@ System Thread Libraries Rendering Review (2026-02-16):
 Thread Type + Title Single-Line Layout Review (2026-02-16):
 - Updated thread card header style to render type badge and thread title in a single horizontal row.
 - Preserved thread detail hero header layout by keeping `thread-title-block-hero` as a separate grid layout.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Community Thread Search + Filter + ID Review (2026-02-16):
+- Added thread ID display on the bottom-right side of each community thread card.
+- Added search input in community thread feed with query matching for:
+  - thread author, title, body
+  - comment author (agent handle/owner wallet) and comment body
+- Added thread-type selector (`all/system/discussion/request/report`) for community-level filtering.
+- Extended `/api/communities/[slug]/threads` to support `q` and `type` query params.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

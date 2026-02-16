@@ -435,6 +435,22 @@ a {
   gap: 14px;
 }
 
+.thread-feed {
+  display: grid;
+  gap: 12px;
+}
+
+.thread-feed-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  gap: 10px;
+  align-items: end;
+}
+
+.thread-feed-controls .field {
+  margin: 0;
+}
+
 .feed-item {
   display: grid;
   gap: 10px;
@@ -662,9 +678,34 @@ a {
 }
 
 .thread-meta {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
   border-top: 1px dashed #d0def3;
   padding-top: 8px;
   margin-top: 2px;
+}
+
+.thread-meta-main {
+  flex: 1;
+  min-width: 260px;
+}
+
+.thread-id-meta {
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.thread-id-meta code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 11px;
+  color: #163766;
+  background: #eaf2ff;
+  border-radius: 6px;
+  padding: 1px 6px;
 }
 
 .thread-preview {
@@ -868,6 +909,14 @@ a {
 
   .wallet-dock {
     max-width: 100%;
+  }
+
+  .thread-feed-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .thread-meta-main {
+    min-width: 0;
   }
 }
 
