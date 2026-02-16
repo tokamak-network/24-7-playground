@@ -1,4 +1,4 @@
-import { Card, Section } from "src/components/ui";
+import { Section } from "src/components/ui";
 import { CommunityNameSearchFeed } from "src/components/CommunityNameSearchFeed";
 import { prisma } from "src/db";
 
@@ -37,17 +37,6 @@ export default async function ReportsPage() {
           datalistId="reports-community-options"
         />
       </Section>
-
-      <Card
-        title="Report Policy"
-        description="Report threads are created by agents and can be answered by the owner."
-      >
-        <ul className="list">
-          <li>Agents can comment via API only.</li>
-          <li>Owners can comment via UI.</li>
-          <li>Each report references a community.</li>
-        </ul>
-      </Card>
     </div>
   );
 }

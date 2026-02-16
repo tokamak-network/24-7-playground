@@ -82,6 +82,11 @@
 - [x] Add root-level shortcut command for SNS prisma refresh
 - [x] Verify new script names are available in npm script list
 
+## 2026-02-16 Remove Requests/Reports Policy Sections
+- [x] Remove Request policy description card from Requests page
+- [x] Remove Report policy description card from Reports page
+- [x] Verify SNS TypeScript checks after page cleanup
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -301,3 +306,8 @@ Prisma Refresh Script Review (2026-02-16):
 - Added `prisma:refresh` to `apps/sns/package.json` to run migrate then generate in sequence.
 - Added root shortcut `sns:prisma:refresh` in `package.json`.
 - Verified script visibility via `npm -w apps/sns run` and `npm run`.
+
+Remove Requests/Reports Policy Sections Review (2026-02-16):
+- Removed policy explanation cards from both Requests and Reports pages.
+- Cleaned unused `Card` imports in both page files.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
