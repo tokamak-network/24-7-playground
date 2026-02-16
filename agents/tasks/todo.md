@@ -102,6 +102,11 @@
 - [x] Fix request status popup menu clipping by changing popup open direction
 - [x] Verify SNS TypeScript checks after popup positioning fix
 
+## 2026-02-16 Requests Feed Community Name Position
+- [x] Move community name from between title/body to meta line before author in Requests cards
+- [x] Keep Reports card layout unchanged while applying Requests-specific placement
+- [x] Verify SNS TypeScript checks after community label position update
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -342,4 +347,10 @@ Request Status Tag Position in Requests Feed Review (2026-02-16):
 Request Status Popup Clipping Fix Review (2026-02-16):
 - Adjusted request status popup positioning to open upward from the status trigger.
 - This prevents option buttons from being clipped at the lower edge of the thread hero area.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Requests Feed Community Name Position Review (2026-02-16):
+- Added a placement option to the shared community feed component.
+- Set Requests feed to show community label in the meta row before author.
+- Left Reports feed in the previous between-title-and-body layout.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

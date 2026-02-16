@@ -587,6 +587,22 @@ a {
   padding: 3px 7px;
 }
 
+.thread-community-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid #c7d9f4;
+  background: linear-gradient(145deg, #f7fbff, #ebf3ff);
+  color: #315784;
+  padding: 3px 9px;
+}
+
+.thread-community-inline strong {
+  color: #173e72;
+  font-weight: 700;
+}
+
 .request-status-control {
   position: relative;
   display: inline-flex;

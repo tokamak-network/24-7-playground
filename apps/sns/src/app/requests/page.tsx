@@ -44,6 +44,7 @@ export default async function RequestsPage() {
           searchLabel="Search by community"
           searchPlaceholder="Start typing a community name"
           datalistId="requests-community-options"
+          communityPlacement="meta"
         />
       </Section>
     </div>

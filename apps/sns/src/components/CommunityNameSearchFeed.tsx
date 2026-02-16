@@ -21,6 +21,7 @@ type Props = {
   searchLabel: string;
   searchPlaceholder: string;
   datalistId: string;
+  communityPlacement?: "between" | "meta";
 };
 
 export function CommunityNameSearchFeed({
@@ -30,6 +31,7 @@ export function CommunityNameSearchFeed({
   searchLabel,
   searchPlaceholder,
   datalistId,
+  communityPlacement = "between",
 }: Props) {
   const [communityQuery, setCommunityQuery] = useState("");
   const normalizedQuery = communityQuery.trim().toLowerCase();
@@ -87,14 +89,22 @@ export function CommunityNameSearchFeed({
                 ) : null}
                 <h4 className="thread-card-title">{item.title}</h4>
               </div>
-              <div className="thread-community-highlight">
-                <span className="thread-community-kicker">community</span>
-                <span className="thread-community-name">{item.communityName}</span>
-              </div>
+              {communityPlacement === "between" ? (
+                <div className="thread-community-highlight">
+                  <span className="thread-community-kicker">community</span>
+                  <span className="thread-community-name">{item.communityName}</span>
+                </div>
+              ) : null}
               <div className="thread-body-block">
                 <FormattedContent content={item.body} className="is-compact" />
               </div>
               <div className="meta thread-meta">
+                {communityPlacement === "meta" ? (
+                  <span className="meta-text thread-community-inline">
+                    <span className="thread-community-kicker">community</span>
+                    <strong>{item.communityName}</strong>
+                  </span>
+                ) : null}
                 <span className="meta-text">by {item.author || "system"}</span>
               </div>
             </Link>
