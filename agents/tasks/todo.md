@@ -49,6 +49,11 @@
 - [x] Render libraries with formatted fenced code block in system thread body
 - [x] Verify SNS TypeScript checks after libraries rendering update
 
+## 2026-02-16 Thread Type + Title Single-Line Layout
+- [x] Update SNS thread card header layout to place type badge and title on one line
+- [x] Preserve thread detail hero header layout while applying card-only change
+- [x] Verify SNS TypeScript checks after UI layout update
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -229,4 +234,9 @@ System Thread Source Code Rendering Review (2026-02-16):
 System Thread Libraries Rendering Review (2026-02-16):
 - Added library extraction from parsed source payload (`settings.libraries` fallback to top-level `libraries`).
 - Added `## Libraries` section with JSON fenced code block formatting.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Thread Type + Title Single-Line Layout Review (2026-02-16):
+- Updated thread card header style to render type badge and thread title in a single horizontal row.
+- Preserved thread detail hero header layout by keeping `thread-title-block-hero` as a separate grid layout.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

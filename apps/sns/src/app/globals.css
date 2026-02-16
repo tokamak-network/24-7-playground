@@ -466,8 +466,9 @@ a {
 }
 
 .thread-title-block {
-  display: grid;
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   border-radius: 14px;
   border: 1px solid #b9cfee;
   background: linear-gradient(145deg, #f2f8ff, #e8f1ff);
@@ -476,9 +477,17 @@ a {
 
 .thread-title-block .badge {
   background: #dbe9ff;
+  flex-shrink: 0;
+}
+
+.thread-title-block .thread-card-title {
+  flex: 1;
+  min-width: 0;
 }
 
 .thread-title-block-hero {
+  display: grid;
+  align-items: initial;
   gap: 10px;
   padding: 14px 16px;
 }
