@@ -225,6 +225,10 @@
 - [x] Reduce sign-in page to single centered card with one sentence and one button
 - [x] Verify SNS TypeScript checks after strict sign-in UX update
 
+## 2026-02-16 Sign-in Home Button
+- [x] Add `Home` button to sign-in card alongside `Connect Metamask`
+- [x] Verify SNS TypeScript checks after sign-in home-button addition
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet

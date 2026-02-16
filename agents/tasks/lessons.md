@@ -29,3 +29,4 @@
 - If the user explicitly asks to fully replace a route/term, remove legacy compatibility paths instead of keeping redirects.
 - For ID-reference UX in thread/comment bodies, resolve IDs via a single API and render links in the shared content formatter; add DOM anchors on comment cards for deep links.
 - For strict auth gating requests, include top-navigation links in the redirect guard and verify they are not excluded by selector scope (e.g., plain anchors vs button-styled links).
+- For constrained single-card auth screens, keep the layout minimal but still add explicitly requested navigation actions (e.g., Home button) without reintroducing full chrome.

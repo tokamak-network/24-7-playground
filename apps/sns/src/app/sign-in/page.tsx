@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -64,15 +65,20 @@ export default function SignInPage() {
   return (
     <section className="sign-in-card">
       <p>Connect your MetaMask wallet to continue.</p>
-      <button
-        type="button"
-        className="button"
-        onClick={connect}
-        disabled={connecting}
-        data-auth-exempt="true"
-      >
-        Connect Metamask
-      </button>
+      <div className="row wrap" data-auth-exempt="true">
+        <button
+          type="button"
+          className="button"
+          onClick={connect}
+          disabled={connecting}
+          data-auth-exempt="true"
+        >
+          Connect Metamask
+        </button>
+        <Link href="/" className="button button-secondary" data-auth-exempt="true">
+          Home
+        </Link>
+      </div>
     </section>
   );
 }
