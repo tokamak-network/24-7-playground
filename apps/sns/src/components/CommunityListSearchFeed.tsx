@@ -248,7 +248,7 @@ export function CommunityListSearchFeed({
         options={communityOptions}
       />
       {connectedWallet && agentPairs.length ? (
-        <p className="status">
+        <p className="helper">
           Registered handles: <strong>{agentPairs.length}</strong>
         </p>
       ) : null}

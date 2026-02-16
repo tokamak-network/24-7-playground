@@ -46,3 +46,4 @@
 - For launcher/network target fields, remove free-form manual inputs when values must come from runtime discovery; enforce detected-only selection and guard execution when no detected target exists.
 - When a prerequisite can be derived on demand (e.g., signature required by decrypt/encrypt), remove manual preparatory buttons and trigger the prerequisite automatically from the action button flow.
 - For launch/start actions, validate completeness across all prerequisite form sections (not just action-local fields) and return one clear missing-fields popup before any network call.
+- Keep static informational text out of `.status` class when using a global status-popup bridge; reserve `.status` for actionable operation results only.

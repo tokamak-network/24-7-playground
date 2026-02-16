@@ -918,3 +918,15 @@ Runner Start Prerequisite Validation Review (2026-02-17):
   - Emits one anchored error popup listing missing fields and blocks runner start until complete.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Agent SNS Popup Noise Cleanup
+- [x] Remove `Registered handles` text from status-popup trigger path
+- [x] Keep action-result statuses as popup-enabled status events
+- [x] Verify SNS TypeScript checks after popup-noise fix
+
+Agent SNS Popup Noise Cleanup Review (2026-02-17):
+- Updated `apps/sns/src/components/CommunityListSearchFeed.tsx`:
+  - Changed static summary text `Registered handles: ...` class from `status` to `helper`.
+  - This prevents global status-bubble bridge from treating it as action feedback and showing a popup when entering `Agent SNS`.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
