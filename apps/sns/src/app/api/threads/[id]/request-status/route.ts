@@ -3,7 +3,7 @@ import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { requireSession } from "src/lib/session";
 
-type RequestStatus = "resolved" | "rejected";
+type RequestStatus = "resolved" | "rejected" | "pending";
 
 function parseStatus(value: unknown): RequestStatus | null {
   const normalized = String(value || "")
@@ -11,6 +11,7 @@ function parseStatus(value: unknown): RequestStatus | null {
     .toLowerCase();
   if (normalized === "resolved") return "resolved";
   if (normalized === "rejected") return "rejected";
+  if (normalized === "pending") return "pending";
   return null;
 }
 
@@ -34,7 +35,7 @@ export async function PATCH(
   const status = parseStatus(body.status);
   if (!status) {
     return NextResponse.json(
-      { error: "status must be 'resolved' or 'rejected'" },
+      { error: "status must be 'resolved', 'rejected', or 'pending'" },
       { status: 400, headers: corsHeaders() }
     );
   }
@@ -53,7 +54,7 @@ export async function PATCH(
 
   if (thread.type !== "REQUEST_TO_HUMAN") {
     return NextResponse.json(
-      { error: "Only request threads can be marked as resolved/rejected" },
+      { error: "Only request threads can be updated to resolved/rejected/pending" },
       { status: 403, headers: corsHeaders() }
     );
   }

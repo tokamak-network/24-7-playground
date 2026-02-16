@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useOwnerSession } from "./ownerSession";
 
 type Props = {
@@ -24,11 +24,13 @@ export function OwnerRequestStatusForm({
   initialResolved,
   initialRejected,
 }: Props) {
-  const { walletAddress, token, signIn, signOut, status } = useOwnerSession();
+  const { walletAddress, token, signIn, status } = useOwnerSession();
   const [isResolved, setIsResolved] = useState(initialResolved);
   const [isRejected, setIsRejected] = useState(initialRejected);
   const [submitStatus, setSubmitStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   const normalizedOwner = ownerWallet?.toLowerCase() || "";
   const isOwner =
@@ -39,11 +41,23 @@ export function OwnerRequestStatusForm({
     [isResolved, isRejected]
   );
 
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const onClickOutside = (event: MouseEvent) => {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", onClickOutside);
+    return () => window.removeEventListener("mousedown", onClickOutside);
+  }, [isMenuOpen]);
+
   if (!canSetStatus) {
     return null;
   }
 
-  const submit = async (nextStatus: "resolved" | "rejected") => {
+  const submit = async (nextStatus: "resolved" | "rejected" | "pending") => {
     setSubmitStatus("");
     setIsSubmitting(true);
     try {
@@ -58,7 +72,6 @@ export function OwnerRequestStatusForm({
       const data = await res.json();
       if (!res.ok) {
         if (res.status === 401) {
-          signOut();
           setSubmitStatus("Owner session expired. Please sign in again.");
           return;
         }
@@ -69,64 +82,65 @@ export function OwnerRequestStatusForm({
       setIsResolved(Boolean(data?.thread?.isResolved));
       setIsRejected(Boolean(data?.thread?.isRejected));
       setSubmitStatus("Request status updated.");
+      setIsMenuOpen(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const openOrSignIn = async () => {
+    setSubmitStatus("");
+    if (!token) {
+      await signIn();
+      return;
+    }
+    if (!isOwner) {
+      setSubmitStatus("Only the community owner can update request status.");
+      return;
+    }
+    setIsMenuOpen((prev) => !prev);
+  };
+
   return (
-    <div className="card">
-      <h3>Request Status</h3>
-      <p className="meta-text">
-        Only the community owner can mark this request as resolved or rejected.
-      </p>
-      <div className="meta">
-        <span className="meta-text">
-          Current status: <strong>{currentStatus}</strong>
-        </span>
-        <span className="meta-text">
-          Owner session: {token ? walletAddress : "not signed in"}
-        </span>
-        {status ? <span className="meta-text">{status}</span> : null}
-      </div>
-      <div className="row wrap">
-        {token ? (
+    <div className="request-status-control" ref={menuRef}>
+      <button
+        className="request-status-trigger"
+        type="button"
+        disabled={isSubmitting}
+        onClick={openOrSignIn}
+      >
+        {currentStatus}
+      </button>
+      {isMenuOpen ? (
+        <div className="request-status-menu">
           <button
-            className="button button-secondary"
+            className="request-status-option-button"
             type="button"
-            onClick={signOut}
-            disabled={isSubmitting}
+            onClick={() => submit("pending")}
+            disabled={isSubmitting || !isOwner}
           >
-            Sign Out
+            Mark Pending
           </button>
-        ) : (
           <button
-            className="button"
+            className="request-status-option-button"
             type="button"
-            onClick={signIn}
-            disabled={isSubmitting}
+            onClick={() => submit("resolved")}
+            disabled={isSubmitting || !isOwner}
           >
-            Sign In as Owner
+            Mark Resolved
           </button>
-        )}
-        <button
-          className="button"
-          type="button"
-          disabled={!isOwner || isSubmitting}
-          onClick={() => submit("resolved")}
-        >
-          Mark Resolved
-        </button>
-        <button
-          className="button button-secondary"
-          type="button"
-          disabled={!isOwner || isSubmitting}
-          onClick={() => submit("rejected")}
-        >
-          Mark Rejected
-        </button>
-        {submitStatus ? <span className="meta-text">{submitStatus}</span> : null}
-      </div>
+          <button
+            className="request-status-option-button"
+            type="button"
+            onClick={() => submit("rejected")}
+            disabled={isSubmitting || !isOwner}
+          >
+            Mark Rejected
+          </button>
+        </div>
+      ) : null}
+      {submitStatus ? <span className="meta-text">{submitStatus}</span> : null}
+      {status ? <span className="meta-text">{status}</span> : null}
     </div>
   );
 }

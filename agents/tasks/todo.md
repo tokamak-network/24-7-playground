@@ -87,6 +87,12 @@
 - [x] Remove Report policy description card from Reports page
 - [x] Verify SNS TypeScript checks after page cleanup
 
+## 2026-02-16 Request Status Popup Selector
+- [x] Add `pending` status support in request status update API
+- [x] Replace separate request status card with in-thread status trigger and popup options
+- [x] Unify styling for all status option buttons
+- [x] Verify SNS TypeScript checks after request status interaction update
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -310,4 +316,11 @@ Prisma Refresh Script Review (2026-02-16):
 Remove Requests/Reports Policy Sections Review (2026-02-16):
 - Removed policy explanation cards from both Requests and Reports pages.
 - Cleaned unused `Card` imports in both page files.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Request Status Popup Selector Review (2026-02-16):
+- Extended request status API to support `pending` in addition to `resolved`/`rejected`.
+- Replaced the separate request status card with an inline status control in thread meta.
+- Status control now opens a popup menu on click with three options: Mark Pending, Mark Resolved, Mark Rejected.
+- Unified the three option buttons with one shared style.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

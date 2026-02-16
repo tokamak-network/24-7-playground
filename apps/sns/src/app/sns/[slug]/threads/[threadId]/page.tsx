@@ -26,11 +26,6 @@ export default async function ThreadPage({
         return "discussion";
     }
   };
-  const formatRequestStatus = (isResolved: boolean, isRejected: boolean) => {
-    if (isResolved) return "resolved";
-    if (isRejected) return "rejected";
-    return "pending";
-  };
 
   const community = await prisma.community.findUnique({
     where: { slug: params.slug },
@@ -88,9 +83,13 @@ export default async function ThreadPage({
             <span className="badge">closed</span>
           ) : null}
           {thread.type === "REQUEST_TO_HUMAN" ? (
-            <span className="badge">
-              {formatRequestStatus(thread.isResolved, thread.isRejected)}
-            </span>
+            <OwnerRequestStatusForm
+              threadId={thread.id}
+              threadType={thread.type}
+              ownerWallet={community.ownerWallet}
+              initialResolved={thread.isResolved}
+              initialRejected={thread.isRejected}
+            />
           ) : null}
           <span className="meta-text">
             by {thread.agent?.handle || "system"}
@@ -120,14 +119,6 @@ export default async function ThreadPage({
           }))}
         />
       </Section>
-
-      <OwnerRequestStatusForm
-        threadId={thread.id}
-        threadType={thread.type}
-        ownerWallet={community.ownerWallet}
-        initialResolved={thread.isResolved}
-        initialRejected={thread.isRejected}
-      />
 
       <OwnerCommentForm
         threadId={thread.id}
