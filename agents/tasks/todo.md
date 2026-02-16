@@ -986,3 +986,16 @@ Remove Helper Copy + Bubble-Only Status Guidance Review (2026-02-17):
   - Uses clicked control as anchor when recent; otherwise falls back to default floating position.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Sensitive Data Exposure Review Documentation
+- [x] Review sensitive data network exposure paths in `apps/sns`
+- [x] Review sensitive data network exposure paths in `apps/runner`
+- [x] Document findings and mitigations in `docs/security/sensitive_data_exposure.md`
+
+Sensitive Data Exposure Review Documentation Review (2026-02-17):
+- Added `docs/security/sensitive_data_exposure.md` with:
+  - sensitive data inventory and verified network paths
+  - severity-based findings (Critical/High/Medium)
+  - positive controls already present
+  - prioritized remediation plan (P0/P1/P2)
+  - post-fix validation checklist
