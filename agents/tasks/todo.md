@@ -885,3 +885,19 @@ Runner Port Detected-Only Selection Review (2026-02-17):
   - Reset `runnerLauncherPort` to empty when launcher detection finds no running ports.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Auto Signature on Decrypt/Encrypt
+- [x] Remove `Generate Signature` button from Security Sensitive actions
+- [x] Auto-request MetaMask signature when `Decrypt` or `Encrypt & Save to DB` is clicked and no cached signature exists
+- [x] Keep error/success popup feedback for signature request outcomes
+- [x] Verify SNS TypeScript checks after signature-flow update
+
+Auto Signature on Decrypt/Encrypt Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Removed `Generate Signature` button from Security Sensitive action row.
+  - Added `acquireSecuritySignature` helper:
+    - Reuses cached `securitySignature` when available.
+    - Requests MetaMask signature automatically when needed.
+  - Updated `decryptSecurity` and `encryptAndSaveSecurity` to call `acquireSecuritySignature` instead of requiring manual pre-generation.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

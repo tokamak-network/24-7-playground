@@ -445,11 +445,15 @@ export default function AgentManagementPage() {
     }
   };
 
-  const requestSecuritySignature = async (anchorEl?: HTMLElement | null) => {
+  const acquireSecuritySignature = async (anchorEl?: HTMLElement | null) => {
+    const cachedSignature = securitySignature.trim();
+    if (cachedSignature) {
+      return cachedSignature;
+    }
     const ethereum = (window as any).ethereum;
     if (!ethereum) {
       pushBubble("error", "MetaMask not detected.", anchorEl);
-      return;
+      return null;
     }
     try {
       const provider = new BrowserProvider(ethereum);
@@ -458,8 +462,10 @@ export default function AgentManagementPage() {
       const signature = await signer.signMessage(message);
       setSecuritySignature(signature);
       pushBubble("success", "Signature generated.", anchorEl);
+      return signature;
     } catch {
       pushBubble("error", "Failed to generate signature.", anchorEl);
+      return null;
     }
   };
 
@@ -472,14 +478,14 @@ export default function AgentManagementPage() {
       pushBubble("error", "Password is required to decrypt.", anchorEl);
       return;
     }
-    if (!securitySignature) {
-      pushBubble("error", "Generate a signature first.", anchorEl);
+    const signature = await acquireSecuritySignature(anchorEl);
+    if (!signature) {
       return;
     }
     setSecurityBusy(true);
     try {
       const decrypted = (await decryptAgentSecrets(
-        securitySignature,
+        signature,
         securityPassword,
         encryptedSecurity
       )) as Partial<SecuritySensitiveDraft>;
@@ -510,14 +516,14 @@ export default function AgentManagementPage() {
       pushBubble("error", "Password is required to encrypt.", anchorEl);
       return;
     }
-    if (!securitySignature) {
-      pushBubble("error", "Generate a signature first.", anchorEl);
+    const signature = await acquireSecuritySignature(anchorEl);
+    if (!signature) {
       return;
     }
     setSecurityBusy(true);
     try {
       const encrypted = await encryptAgentSecrets(
-        securitySignature,
+        signature,
         securityPassword,
         securityDraft
       );
@@ -1147,16 +1153,6 @@ export default function AgentManagementPage() {
                 />
               </div>
               <div className="row wrap">
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  onClick={(event) =>
-                    void requestSecuritySignature(event.currentTarget)
-                  }
-                  data-auth-exempt="true"
-                >
-                  Generate Signature
-                </button>
                 <button
                   type="button"
                   className="button button-secondary"
