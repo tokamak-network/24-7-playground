@@ -60,6 +60,17 @@ type RunnerDraft = {
   commentContextLimit: string;
 };
 
+type BubbleKind = "success" | "error" | "info";
+type BubblePlacement = "above" | "below";
+
+type BubbleMessage = {
+  kind: BubbleKind;
+  text: string;
+  left: number;
+  top: number;
+  placement: BubblePlacement;
+};
+
 const PROVIDER_OPTIONS = ["GEMINI", "OPENAI", "LITELLM", "ANTHROPIC"] as const;
 const DEFAULT_RUNNER_INTERVAL_SEC = "60";
 const DEFAULT_COMMENT_CONTEXT_LIMIT = "50";
@@ -142,10 +153,7 @@ export default function AgentManagementPage() {
   const [detectRunnerBusy, setDetectRunnerBusy] = useState(false);
   const [startRunnerBusy, setStartRunnerBusy] = useState(false);
   const [runnerStatus, setRunnerStatus] = useState("");
-  const [bubbleMessage, setBubbleMessage] = useState<{
-    kind: "success" | "error" | "info";
-    text: string;
-  } | null>(null);
+  const [bubbleMessage, setBubbleMessage] = useState<BubbleMessage | null>(null);
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const authHeaders = useMemo(
@@ -177,11 +185,34 @@ export default function AgentManagementPage() {
   );
 
   const pushBubble = useCallback(
-    (kind: "success" | "error" | "info", text: string) => {
+    (kind: BubbleKind, text: string, anchorEl?: HTMLElement | null) => {
       if (bubbleTimerRef.current) {
         clearTimeout(bubbleTimerRef.current);
       }
-      setBubbleMessage({ kind, text });
+
+      const viewportWidth =
+        typeof window !== "undefined" ? window.innerWidth : 1200;
+      const defaultLeft = Math.max(120, viewportWidth - 220);
+      const defaultTop = 96;
+
+      let left = defaultLeft;
+      let top = defaultTop;
+      let placement: BubblePlacement = "below";
+
+      if (anchorEl && typeof window !== "undefined") {
+        const rect = anchorEl.getBoundingClientRect();
+        const nextLeft = rect.left + rect.width / 2;
+        left = Math.min(Math.max(nextLeft, 80), viewportWidth - 80);
+        if (rect.top > 120) {
+          top = rect.top;
+          placement = "above";
+        } else {
+          top = rect.bottom;
+          placement = "below";
+        }
+      }
+
+      setBubbleMessage({ kind, text, left, top, placement });
       bubbleTimerRef.current = setTimeout(() => {
         setBubbleMessage(null);
       }, 3600);
@@ -204,16 +235,20 @@ export default function AgentManagementPage() {
   };
 
   const fetchModelsByApiKey = useCallback(
-    async (options?: { showSuccessBubble?: boolean }) => {
+    async (options?: {
+      showSuccessBubble?: boolean;
+      anchorEl?: HTMLElement | null;
+    }) => {
       const llmApiKey = securityDraft.llmApiKey.trim();
       if (!token || !authHeaders) {
-        pushBubble("error", "Sign in required.");
+        pushBubble("error", "Sign in required.", options?.anchorEl);
         return;
       }
       if (!llmApiKey) {
         pushBubble(
           "error",
-          "LLM API key is required. Enter it in Security Sensitive or decrypt saved data first."
+          "LLM API key is required. Enter it in Security Sensitive or decrypt saved data first.",
+          options?.anchorEl
         );
         return;
       }
@@ -239,7 +274,8 @@ export default function AgentManagementPage() {
         if (!response.ok) {
           pushBubble(
             "error",
-            String(data?.error || "Failed to load model list.")
+            String(data?.error || "Failed to load model list."),
+            options?.anchorEl
           );
           return;
         }
@@ -251,7 +287,7 @@ export default function AgentManagementPage() {
           : [];
 
         if (!models.length) {
-          pushBubble("error", "No models returned from provider.");
+          pushBubble("error", "No models returned from provider.", options?.anchorEl);
           return;
         }
 
@@ -262,10 +298,10 @@ export default function AgentManagementPage() {
           return models[0];
         });
         if (options?.showSuccessBubble !== false) {
-          pushBubble("success", `Loaded ${models.length} models.`);
+          pushBubble("success", `Loaded ${models.length} models.`, options?.anchorEl);
         }
       } catch {
-        pushBubble("error", "Failed to load model list.");
+        pushBubble("error", "Failed to load model list.", options?.anchorEl);
       } finally {
         setModelsBusy(false);
       }
@@ -584,9 +620,9 @@ export default function AgentManagementPage() {
     }
   };
 
-  const testSnsApiKey = useCallback(async () => {
+  const testSnsApiKey = useCallback(async (anchorEl?: HTMLElement | null) => {
     if (!currentSnsApiKey) {
-      pushBubble("error", "SNS API key is missing.");
+      pushBubble("error", "SNS API key is missing.", anchorEl);
       return;
     }
     try {
@@ -597,35 +633,35 @@ export default function AgentManagementPage() {
       const message = response.ok
         ? "SNS API key test passed."
         : await readError(response);
-      pushBubble(response.ok ? "success" : "error", message);
+      pushBubble(response.ok ? "success" : "error", message, anchorEl);
     } catch {
-      pushBubble("error", "SNS API key test failed.");
+      pushBubble("error", "SNS API key test failed.", anchorEl);
     }
   }, [currentSnsApiKey, pushBubble]);
 
-  const testLlmApiKey = useCallback(async () => {
-    await fetchModelsByApiKey({ showSuccessBubble: true });
+  const testLlmApiKey = useCallback(async (anchorEl?: HTMLElement | null) => {
+    await fetchModelsByApiKey({ showSuccessBubble: true, anchorEl });
   }, [fetchModelsByApiKey]);
 
-  const testExecutionWalletKey = useCallback(async () => {
+  const testExecutionWalletKey = useCallback(async (anchorEl?: HTMLElement | null) => {
     const privateKey = securityDraft.executionWalletPrivateKey.trim();
     if (!privateKey) {
-      pushBubble("error", "Execution wallet private key is missing.");
+      pushBubble("error", "Execution wallet private key is missing.", anchorEl);
       return;
     }
     try {
       const wallet = new Wallet(privateKey);
       const address = await wallet.getAddress();
-      pushBubble("success", `Execution key valid: ${address}`);
+      pushBubble("success", `Execution key valid: ${address}`, anchorEl);
     } catch {
-      pushBubble("error", "Execution wallet private key is invalid.");
+      pushBubble("error", "Execution wallet private key is invalid.", anchorEl);
     }
   }, [pushBubble, securityDraft.executionWalletPrivateKey]);
 
-  const testAlchemyApiKey = useCallback(async () => {
+  const testAlchemyApiKey = useCallback(async (anchorEl?: HTMLElement | null) => {
     const alchemyApiKey = securityDraft.alchemyApiKey.trim();
     if (!alchemyApiKey) {
-      pushBubble("error", "Alchemy API key is missing.");
+      pushBubble("error", "Alchemy API key is missing.", anchorEl);
       return;
     }
     try {
@@ -635,15 +671,20 @@ export default function AgentManagementPage() {
       const network = await provider.getNetwork();
       pushBubble(
         "success",
-        `Alchemy key test passed (chainId: ${String(network.chainId)}).`
+        `Alchemy key test passed (chainId: ${String(network.chainId)}).`,
+        anchorEl
       );
     } catch {
-      pushBubble("error", "Alchemy API key test failed.");
+      pushBubble("error", "Alchemy API key test failed.", anchorEl);
     }
   }, [pushBubble, securityDraft.alchemyApiKey]);
 
   const detectRunnerLauncherPorts = useCallback(
-    async (options?: { preferredPort?: string; silent?: boolean }) => {
+    async (options?: {
+      preferredPort?: string;
+      silent?: boolean;
+      anchorEl?: HTMLElement | null;
+    }) => {
       setDetectRunnerBusy(true);
       try {
         const currentPort = Number.parseInt(
@@ -686,10 +727,18 @@ export default function AgentManagementPage() {
         if (matched.length) {
           setRunnerLauncherPort(String(matched[0]));
           if (!options?.silent) {
-            pushBubble("success", `Detected launcher port: ${matched.join(", ")}`);
+            pushBubble(
+              "success",
+              `Detected launcher port: ${matched.join(", ")}`,
+              options?.anchorEl
+            );
           }
         } else if (!options?.silent) {
-          pushBubble("error", "No running runner launcher detected.");
+          pushBubble(
+            "error",
+            "No running runner launcher detected.",
+            options?.anchorEl
+          );
         }
       } finally {
         setDetectRunnerBusy(false);
@@ -698,21 +747,22 @@ export default function AgentManagementPage() {
     [pushBubble]
   );
 
-  const startRunnerLauncher = useCallback(async () => {
+  const startRunnerLauncher = useCallback(async (anchorEl?: HTMLElement | null) => {
     if (!token || !selectedPair) {
-      pushBubble("error", "Sign in and select an agent pair first.");
+      pushBubble("error", "Sign in and select an agent pair first.", anchorEl);
       return;
     }
     const snsApiKey = currentSnsApiKey.trim();
     if (!snsApiKey) {
-      pushBubble("error", "SNS API key is missing.");
+      pushBubble("error", "SNS API key is missing.", anchorEl);
       return;
     }
     const llmApiKey = securityDraft.llmApiKey.trim();
     if (!llmApiKey) {
       pushBubble(
         "error",
-        "LLM API key is required. Enter it in Security Sensitive or decrypt saved data first."
+        "LLM API key is required. Enter it in Security Sensitive or decrypt saved data first.",
+        anchorEl
       );
       return;
     }
@@ -736,7 +786,7 @@ export default function AgentManagementPage() {
     });
 
     if (typeof window === "undefined") {
-      pushBubble("error", "Browser environment is required.");
+      pushBubble("error", "Browser environment is required.", anchorEl);
       return;
     }
 
@@ -777,17 +827,17 @@ export default function AgentManagementPage() {
       if (!response.ok) {
         const message = await readError(response);
         setRunnerStatus(message);
-        pushBubble("error", message);
+        pushBubble("error", message, anchorEl);
         return;
       }
       setRunnerStatus(`Runner started on localhost:${launcherPort}.`);
       saveRunnerConfig();
-      pushBubble("success", `Runner started on localhost:${launcherPort}.`);
+      pushBubble("success", `Runner started on localhost:${launcherPort}.`, anchorEl);
     } catch {
       const message =
         "Could not reach local runner launcher. Start apps/runner first.";
       setRunnerStatus(message);
-      pushBubble("error", message);
+      pushBubble("error", message, anchorEl);
     } finally {
       setStartRunnerBusy(false);
     }
@@ -864,7 +914,11 @@ export default function AgentManagementPage() {
       </section>
       {bubbleMessage ? (
         <div
-          className={`floating-status-bubble floating-status-bubble-${bubbleMessage.kind}`}
+          className={`floating-status-bubble floating-status-bubble-${bubbleMessage.kind} floating-status-bubble-${bubbleMessage.placement}`}
+          style={{
+            left: `${bubbleMessage.left}px`,
+            top: `${bubbleMessage.top}px`,
+          }}
           role="status"
           aria-live="polite"
         >
@@ -967,7 +1021,7 @@ export default function AgentManagementPage() {
                   <button
                     type="button"
                     className="button button-secondary"
-                    onClick={() => void testSnsApiKey()}
+                    onClick={(event) => void testSnsApiKey(event.currentTarget)}
                   >
                     Test
                   </button>
@@ -1019,7 +1073,12 @@ export default function AgentManagementPage() {
                   <button
                     type="button"
                     className="button button-secondary"
-                    onClick={() => void fetchModelsByApiKey({ showSuccessBubble: true })}
+                    onClick={(event) =>
+                      void fetchModelsByApiKey({
+                        showSuccessBubble: true,
+                        anchorEl: event.currentTarget,
+                      })
+                    }
                     disabled={modelsBusy}
                   >
                     {modelsBusy ? "Loading..." : "Load Model List"}
@@ -1109,7 +1168,7 @@ export default function AgentManagementPage() {
                   <button
                     type="button"
                     className="button button-secondary"
-                    onClick={() => void testLlmApiKey()}
+                    onClick={(event) => void testLlmApiKey(event.currentTarget)}
                     disabled={modelsBusy}
                   >
                     {modelsBusy ? "Testing..." : "Test"}
@@ -1139,7 +1198,9 @@ export default function AgentManagementPage() {
                   <button
                     type="button"
                     className="button button-secondary"
-                    onClick={() => void testExecutionWalletKey()}
+                    onClick={(event) =>
+                      void testExecutionWalletKey(event.currentTarget)
+                    }
                   >
                     Test
                   </button>
@@ -1168,7 +1229,7 @@ export default function AgentManagementPage() {
                   <button
                     type="button"
                     className="button button-secondary"
-                    onClick={() => void testAlchemyApiKey()}
+                    onClick={(event) => void testAlchemyApiKey(event.currentTarget)}
                   >
                     Test
                   </button>
@@ -1269,8 +1330,11 @@ export default function AgentManagementPage() {
               <button
                 type="button"
                 className="button button-secondary"
-                onClick={() =>
-                  void detectRunnerLauncherPorts({ preferredPort: runnerLauncherPort })
+                onClick={(event) =>
+                  void detectRunnerLauncherPorts({
+                    preferredPort: runnerLauncherPort,
+                    anchorEl: event.currentTarget,
+                  })
                 }
                 disabled={detectRunnerBusy}
               >
@@ -1279,7 +1343,7 @@ export default function AgentManagementPage() {
               <button
                 type="button"
                 className="button"
-                onClick={() => void startRunnerLauncher()}
+                onClick={(event) => void startRunnerLauncher(event.currentTarget)}
                 disabled={startRunnerBusy}
               >
                 {startRunnerBusy ? "Starting..." : "Start Runner"}

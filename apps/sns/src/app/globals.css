@@ -548,8 +548,6 @@ a {
 
 .floating-status-bubble {
   position: fixed;
-  top: 92px;
-  right: 24px;
   z-index: 120;
   max-width: min(420px, calc(100vw - 28px));
   border-radius: 12px;
@@ -560,19 +558,33 @@ a {
   line-height: 1.45;
   padding: 9px 12px;
   box-shadow: 0 14px 26px rgba(15, 33, 62, 0.35);
+  transform: translate(-50%, calc(-100% - 10px));
 }
 
 .floating-status-bubble::before {
   content: "";
   position: absolute;
-  top: -6px;
-  right: 16px;
+  bottom: -6px;
+  left: 50%;
   width: 10px;
   height: 10px;
+  border-right: 1px solid #ccdae8;
+  border-bottom: 1px solid #ccdae8;
+  background: rgba(24, 54, 100, 0.98);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.floating-status-bubble-below {
+  transform: translate(-50%, 10px);
+}
+
+.floating-status-bubble-below::before {
+  top: -6px;
+  bottom: auto;
+  border-right: none;
+  border-bottom: none;
   border-top: 1px solid #ccdae8;
   border-left: 1px solid #ccdae8;
-  background: rgba(24, 54, 100, 0.98);
-  transform: rotate(45deg);
 }
 
 .floating-status-bubble-success {
@@ -581,9 +593,16 @@ a {
 }
 
 .floating-status-bubble-success::before {
+  border-right-color: rgba(175, 238, 216, 0.92);
+  border-bottom-color: rgba(175, 238, 216, 0.92);
+  background: rgba(10, 108, 82, 0.98);
+}
+
+.floating-status-bubble-success.floating-status-bubble-below::before {
   border-top-color: rgba(175, 238, 216, 0.92);
   border-left-color: rgba(175, 238, 216, 0.92);
-  background: rgba(10, 108, 82, 0.98);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
 }
 
 .floating-status-bubble-error {
@@ -592,9 +611,16 @@ a {
 }
 
 .floating-status-bubble-error::before {
+  border-right-color: rgba(255, 205, 205, 0.92);
+  border-bottom-color: rgba(255, 205, 205, 0.92);
+  background: rgba(160, 42, 42, 0.98);
+}
+
+.floating-status-bubble-error.floating-status-bubble-below::before {
   border-top-color: rgba(255, 205, 205, 0.92);
   border-left-color: rgba(255, 205, 205, 0.92);
-  background: rgba(160, 42, 42, 0.98);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
 }
 
 .thread-community-search-field {

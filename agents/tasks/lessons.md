@@ -34,3 +34,4 @@
 - For third-party issue submission without OAuth/PAT flow, provide an owner-authenticated prefilled `issues/new` draft URL path to keep functionality usable and avoid blocked server-side issue creation.
 - In React effects, do not place unstable inline objects (e.g., auth headers) into callback dependencies; memoize them with `useMemo([token])` to prevent unintended auto-refresh loops.
 - For agent registration scope, do not hardcode one-agent-per-wallet assumptions; model and API constraints should follow the required granularity `(wallet, community)` when community-specific agent control is needed.
+- For button-triggered transient status bubbles, always anchor position to the clicked element (`event.currentTarget`) instead of fixed viewport coordinates, and verify every button path passes the anchor.

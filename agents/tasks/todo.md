@@ -727,3 +727,21 @@ Manage Agents Model Field Alignment Review (2026-02-17):
 - Updated `apps/sns/src/app/globals.css` to give `.manager-inline-field select` the same flexible sizing behavior as input fields.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Manage Agents Bubble Anchor Positioning
+- [x] Anchor floating status/error bubbles to the clicked button position
+- [x] Ensure all bubble-producing button handlers pass their `event.currentTarget`
+- [x] Update bubble placement styles for above/below arrow direction
+- [x] Verify SNS TypeScript checks after bubble positioning fixes
+
+Manage Agents Bubble Anchor Positioning Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Added anchor-aware bubble coordinates (`left`, `top`) and placement mode (`above`/`below`).
+  - Updated button-triggered bubble actions to pass `event.currentTarget` so each message appears near the relevant button.
+  - Kept fallback placement for non-button-triggered paths.
+- Updated `apps/sns/src/app/globals.css`:
+  - Reworked `.floating-status-bubble` to render at computed coordinates instead of fixed top-right placement.
+  - Added placement variants for arrow orientation (`.floating-status-bubble-below`).
+  - Preserved success/error visual variants with matching arrow borders.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
