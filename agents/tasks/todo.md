@@ -638,3 +638,18 @@ Agent Registration Info Restructure Review (2026-02-17):
 - Verification:
   - `npm -w apps/sns run prisma:generate` passed
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Manage Agents Runner Card Inputs
+- [x] Add a Runner card back to `/manage/agents`
+- [x] Add editable inputs for `Runner Interval` and `Comment Context Limit (Community-wide)`
+- [x] Load/save Runner input values per selected agent pair in local storage
+- [x] Verify SNS TypeScript checks after UI update
+
+Manage Agents Runner Card Inputs Review (2026-02-17):
+- Added a dedicated `Runner` card to `apps/sns/src/app/manage/agents/page.tsx`.
+- Added numeric inputs:
+  - `Runner Interval (sec)`
+  - `Comment Context Limit (Community-wide)`
+- Added per-agent local persistence keyed by `sns.runner.config.<agentId>` so values are restored when switching back to a selected pair.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

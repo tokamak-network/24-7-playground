@@ -55,7 +55,14 @@ type SecuritySensitiveDraft = {
   alchemyApiKey: string;
 };
 
+type RunnerDraft = {
+  intervalSec: string;
+  commentContextLimit: string;
+};
+
 const PROVIDER_OPTIONS = ["GEMINI", "OPENAI", "LITELLM", "ANTHROPIC"] as const;
+const DEFAULT_RUNNER_INTERVAL_SEC = "60";
+const DEFAULT_COMMENT_CONTEXT_LIMIT = "50";
 
 function defaultModelByProvider(provider: string) {
   if (provider === "ANTHROPIC") return "claude-3-5-sonnet-20240620";
@@ -68,6 +75,18 @@ function shortenWalletAddress(input: string | null) {
   if (!value) return "-";
   if (value.length <= 12) return value;
   return `${value.slice(0, 6)}...${value.slice(-4)}`;
+}
+
+function runnerStorageKey(agentId: string) {
+  return `sns.runner.config.${agentId}`;
+}
+
+function normalizePositiveInteger(value: string, fallback: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return fallback;
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return String(Math.floor(parsed));
 }
 
 export default function AgentManagementPage() {
@@ -99,6 +118,11 @@ export default function AgentManagementPage() {
   const [showLlmApiKey, setShowLlmApiKey] = useState(false);
   const [showExecutionKey, setShowExecutionKey] = useState(false);
   const [showAlchemyKey, setShowAlchemyKey] = useState(false);
+  const [runnerDraft, setRunnerDraft] = useState<RunnerDraft>({
+    intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
+    commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
+  });
+  const [runnerStatus, setRunnerStatus] = useState("");
 
   const authHeaders = useMemo(
     () =>
@@ -346,6 +370,77 @@ export default function AgentManagementPage() {
     }
   };
 
+  const loadRunnerConfig = useCallback(
+    (agentId: string) => {
+      if (!agentId || typeof window === "undefined") {
+        setRunnerDraft({
+          intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
+          commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
+        });
+        setRunnerStatus("");
+        return;
+      }
+
+      try {
+        const raw = window.localStorage.getItem(runnerStorageKey(agentId));
+        if (!raw) {
+          setRunnerDraft({
+            intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
+            commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
+          });
+          setRunnerStatus("Using default Runner settings.");
+          return;
+        }
+
+        const parsed = JSON.parse(raw) as Partial<RunnerDraft>;
+        setRunnerDraft({
+          intervalSec: normalizePositiveInteger(
+            String(parsed?.intervalSec || ""),
+            DEFAULT_RUNNER_INTERVAL_SEC
+          ),
+          commentContextLimit: normalizePositiveInteger(
+            String(parsed?.commentContextLimit || ""),
+            DEFAULT_COMMENT_CONTEXT_LIMIT
+          ),
+        });
+        setRunnerStatus("Runner settings loaded.");
+      } catch {
+        setRunnerDraft({
+          intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
+          commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
+        });
+        setRunnerStatus("Failed to load Runner settings.");
+      }
+    },
+    []
+  );
+
+  const saveRunnerConfig = () => {
+    if (!selectedAgentId || typeof window === "undefined") return;
+
+    const nextDraft = {
+      intervalSec: normalizePositiveInteger(
+        runnerDraft.intervalSec,
+        DEFAULT_RUNNER_INTERVAL_SEC
+      ),
+      commentContextLimit: normalizePositiveInteger(
+        runnerDraft.commentContextLimit,
+        DEFAULT_COMMENT_CONTEXT_LIMIT
+      ),
+    };
+    setRunnerDraft(nextDraft);
+
+    try {
+      window.localStorage.setItem(
+        runnerStorageKey(selectedAgentId),
+        JSON.stringify(nextDraft)
+      );
+      setRunnerStatus("Runner settings saved.");
+    } catch {
+      setRunnerStatus("Failed to save Runner settings.");
+    }
+  };
+
   useEffect(() => {
     void loadPairs();
   }, [loadPairs]);
@@ -371,7 +466,8 @@ export default function AgentManagementPage() {
       executionWalletPrivateKey: "",
       alchemyApiKey: "",
     });
-  }, [loadGeneral, selectedAgentId]);
+    loadRunnerConfig(selectedAgentId);
+  }, [loadGeneral, loadRunnerConfig, selectedAgentId]);
 
   return (
     <div className="grid">
@@ -440,204 +536,260 @@ export default function AgentManagementPage() {
       </Card>
 
       {selectedPair ? (
-        <div className="grid two">
+        <>
+          <div className="grid two">
+            <Card
+              title="General"
+              description="Community/Owner/SNS API key are read-only after initial registration."
+            >
+              <div className="field">
+                <label>Registered Community</label>
+                <input
+                  readOnly
+                  value={`${general?.community?.name || selectedPair.community.name} (${general?.community?.slug || selectedPair.community.slug})`}
+                />
+              </div>
+              <div className="field">
+                <label>Handle Owner MetaMask Address</label>
+                <input
+                  readOnly
+                  value={
+                    general?.agent.ownerWallet || selectedPair.ownerWallet || ""
+                  }
+                />
+              </div>
+              <div className="field">
+                <label>SNS API Key</label>
+                <input readOnly value={general?.snsApiKey || selectedPair.snsApiKey} />
+              </div>
+              <div className="field">
+                <label>LLM Handle Name</label>
+                <input
+                  value={llmHandleName}
+                  onChange={(event) => setLlmHandleName(event.currentTarget.value)}
+                />
+              </div>
+              <div className="field">
+                <label>LLM Provider</label>
+                <select
+                  value={llmProvider}
+                  onChange={(event) => {
+                    const nextProvider = event.currentTarget.value;
+                    setLlmProvider(nextProvider);
+                    if (!llmModel) {
+                      setLlmModel(defaultModelByProvider(nextProvider));
+                    }
+                  }}
+                >
+                  {PROVIDER_OPTIONS.map((provider) => (
+                    <option key={provider} value={provider}>
+                      {provider}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label>LLM Model</label>
+                <input
+                  value={llmModel}
+                  onChange={(event) => setLlmModel(event.currentTarget.value)}
+                  placeholder={defaultModelByProvider(llmProvider)}
+                />
+              </div>
+              <div className="row wrap">
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => void loadGeneral(selectedAgentId)}
+                  disabled={generalBusy}
+                >
+                  {generalBusy ? "Loading..." : "Load from DB"}
+                </button>
+                <button
+                  type="button"
+                  className="button"
+                  onClick={() => void saveGeneral()}
+                  disabled={generalBusy}
+                >
+                  {generalBusy ? "Saving..." : "Save to DB"}
+                </button>
+              </div>
+              {generalStatus ? <p className="status">{generalStatus}</p> : null}
+            </Card>
+
+            <Card
+              title="Security Sensitive"
+              description="Only encrypted values are stored in DB."
+            >
+              <div className="field">
+                <label>Password</label>
+                <input
+                  type="password"
+                  value={securityPassword}
+                  onChange={(event) => setSecurityPassword(event.currentTarget.value)}
+                  placeholder="Password for encryption/decryption"
+                />
+              </div>
+              <div className="row wrap">
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => void requestSecuritySignature()}
+                  data-auth-exempt="true"
+                >
+                  Generate Signature
+                </button>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => void loadEncryptedSecurity()}
+                  disabled={securityBusy}
+                >
+                  {securityBusy ? "Loading..." : "Load Encrypted from DB"}
+                </button>
+                <button
+                  type="button"
+                  className="button button-secondary"
+                  onClick={() => void decryptSecurity()}
+                  disabled={securityBusy}
+                >
+                  {securityBusy ? "Decrypting..." : "Decrypt"}
+                </button>
+              </div>
+              <div className="field">
+                <label>LLM API Key</label>
+                <div className="manager-inline-field">
+                  <input
+                    type={showLlmApiKey ? "text" : "password"}
+                    value={securityDraft.llmApiKey}
+                    onChange={(event) =>
+                      setSecurityDraft((prev) => ({
+                        ...prev,
+                        llmApiKey: event.currentTarget.value,
+                      }))
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => setShowLlmApiKey((prev) => !prev)}
+                  >
+                    {showLlmApiKey ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+              <div className="field">
+                <label>Execution Wallet Private Key</label>
+                <div className="manager-inline-field">
+                  <input
+                    type={showExecutionKey ? "text" : "password"}
+                    value={securityDraft.executionWalletPrivateKey}
+                    onChange={(event) =>
+                      setSecurityDraft((prev) => ({
+                        ...prev,
+                        executionWalletPrivateKey: event.currentTarget.value,
+                      }))
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => setShowExecutionKey((prev) => !prev)}
+                  >
+                    {showExecutionKey ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+              <div className="field">
+                <label>Alchemy API Key</label>
+                <div className="manager-inline-field">
+                  <input
+                    type={showAlchemyKey ? "text" : "password"}
+                    value={securityDraft.alchemyApiKey}
+                    onChange={(event) =>
+                      setSecurityDraft((prev) => ({
+                        ...prev,
+                        alchemyApiKey: event.currentTarget.value,
+                      }))
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => setShowAlchemyKey((prev) => !prev)}
+                  >
+                    {showAlchemyKey ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="button"
+                onClick={() => void encryptAndSaveSecurity()}
+                disabled={securityBusy}
+              >
+                {securityBusy ? "Saving..." : "Encrypt & Save to DB"}
+              </button>
+              <div className="status">
+                Signature: {securitySignature ? "Ready" : "Not generated"} |
+                Encrypted state: {encryptedSecurity ? "Loaded" : "Not loaded"}
+              </div>
+              {securityStatus ? <p className="status">{securityStatus}</p> : null}
+            </Card>
+          </div>
           <Card
-            title="General"
-            description="Community/Owner/SNS API key are read-only after initial registration."
+            title="Runner"
+            description="Configure Runner execution cadence and context window for this agent pair."
           >
             <div className="field">
-              <label>Registered Community</label>
+              <label>Runner Interval (sec)</label>
               <input
-                readOnly
-                value={`${general?.community?.name || selectedPair.community.name} (${general?.community?.slug || selectedPair.community.slug})`}
+                type="number"
+                min={1}
+                step={1}
+                value={runnerDraft.intervalSec}
+                onChange={(event) =>
+                  setRunnerDraft((prev) => ({
+                    ...prev,
+                    intervalSec: event.currentTarget.value,
+                  }))
+                }
               />
             </div>
             <div className="field">
-              <label>Handle Owner MetaMask Address</label>
+              <label>Comment Context Limit (Community-wide)</label>
               <input
-                readOnly
-                value={general?.agent.ownerWallet || selectedPair.ownerWallet || ""}
-              />
-            </div>
-            <div className="field">
-              <label>SNS API Key</label>
-              <input readOnly value={general?.snsApiKey || selectedPair.snsApiKey} />
-            </div>
-            <div className="field">
-              <label>LLM Handle Name</label>
-              <input
-                value={llmHandleName}
-                onChange={(event) => setLlmHandleName(event.currentTarget.value)}
-              />
-            </div>
-            <div className="field">
-              <label>LLM Provider</label>
-              <select
-                value={llmProvider}
-                onChange={(event) => {
-                  const nextProvider = event.currentTarget.value;
-                  setLlmProvider(nextProvider);
-                  if (!llmModel) {
-                    setLlmModel(defaultModelByProvider(nextProvider));
-                  }
-                }}
-              >
-                {PROVIDER_OPTIONS.map((provider) => (
-                  <option key={provider} value={provider}>
-                    {provider}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="field">
-              <label>LLM Model</label>
-              <input
-                value={llmModel}
-                onChange={(event) => setLlmModel(event.currentTarget.value)}
-                placeholder={defaultModelByProvider(llmProvider)}
+                type="number"
+                min={1}
+                step={1}
+                value={runnerDraft.commentContextLimit}
+                onChange={(event) =>
+                  setRunnerDraft((prev) => ({
+                    ...prev,
+                    commentContextLimit: event.currentTarget.value,
+                  }))
+                }
               />
             </div>
             <div className="row wrap">
               <button
                 type="button"
                 className="button button-secondary"
-                onClick={() => void loadGeneral(selectedAgentId)}
-                disabled={generalBusy}
+                onClick={() => loadRunnerConfig(selectedAgentId)}
               >
-                {generalBusy ? "Loading..." : "Load from DB"}
+                Load
               </button>
               <button
                 type="button"
                 className="button"
-                onClick={() => void saveGeneral()}
-                disabled={generalBusy}
+                onClick={saveRunnerConfig}
               >
-                {generalBusy ? "Saving..." : "Save to DB"}
+                Save
               </button>
             </div>
-            {generalStatus ? <p className="status">{generalStatus}</p> : null}
+            {runnerStatus ? <p className="status">{runnerStatus}</p> : null}
           </Card>
-
-          <Card
-            title="Security Sensitive"
-            description="Only encrypted values are stored in DB."
-          >
-            <div className="field">
-              <label>Password</label>
-              <input
-                type="password"
-                value={securityPassword}
-                onChange={(event) => setSecurityPassword(event.currentTarget.value)}
-                placeholder="Password for encryption/decryption"
-              />
-            </div>
-            <div className="row wrap">
-              <button
-                type="button"
-                className="button button-secondary"
-                onClick={() => void requestSecuritySignature()}
-                data-auth-exempt="true"
-              >
-                Generate Signature
-              </button>
-              <button
-                type="button"
-                className="button button-secondary"
-                onClick={() => void loadEncryptedSecurity()}
-                disabled={securityBusy}
-              >
-                {securityBusy ? "Loading..." : "Load Encrypted from DB"}
-              </button>
-              <button
-                type="button"
-                className="button button-secondary"
-                onClick={() => void decryptSecurity()}
-                disabled={securityBusy}
-              >
-                {securityBusy ? "Decrypting..." : "Decrypt"}
-              </button>
-            </div>
-            <div className="field">
-              <label>LLM API Key</label>
-              <div className="manager-inline-field">
-                <input
-                  type={showLlmApiKey ? "text" : "password"}
-                  value={securityDraft.llmApiKey}
-                  onChange={(event) =>
-                    setSecurityDraft((prev) => ({
-                      ...prev,
-                      llmApiKey: event.currentTarget.value,
-                    }))
-                  }
-                />
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  onClick={() => setShowLlmApiKey((prev) => !prev)}
-                >
-                  {showLlmApiKey ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
-            <div className="field">
-              <label>Execution Wallet Private Key</label>
-              <div className="manager-inline-field">
-                <input
-                  type={showExecutionKey ? "text" : "password"}
-                  value={securityDraft.executionWalletPrivateKey}
-                  onChange={(event) =>
-                    setSecurityDraft((prev) => ({
-                      ...prev,
-                      executionWalletPrivateKey: event.currentTarget.value,
-                    }))
-                  }
-                />
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  onClick={() => setShowExecutionKey((prev) => !prev)}
-                >
-                  {showExecutionKey ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
-            <div className="field">
-              <label>Alchemy API Key</label>
-              <div className="manager-inline-field">
-                <input
-                  type={showAlchemyKey ? "text" : "password"}
-                  value={securityDraft.alchemyApiKey}
-                  onChange={(event) =>
-                    setSecurityDraft((prev) => ({
-                      ...prev,
-                      alchemyApiKey: event.currentTarget.value,
-                    }))
-                  }
-                />
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  onClick={() => setShowAlchemyKey((prev) => !prev)}
-                >
-                  {showAlchemyKey ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
-            <button
-              type="button"
-              className="button"
-              onClick={() => void encryptAndSaveSecurity()}
-              disabled={securityBusy}
-            >
-              {securityBusy ? "Saving..." : "Encrypt & Save to DB"}
-            </button>
-            <div className="status">
-              Signature: {securitySignature ? "Ready" : "Not generated"} | Encrypted
-              state: {encryptedSecurity ? "Loaded" : "Not loaded"}
-            </div>
-            {securityStatus ? <p className="status">{securityStatus}</p> : null}
-          </Card>
-        </div>
+        </>
       ) : (
         <Card
           title="No Selected Pair"
