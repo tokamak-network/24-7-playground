@@ -114,9 +114,13 @@ export default function AgentManagementPage() {
     return text;
   };
 
-  const authHeaders = token
-    ? ({ Authorization: `Bearer ${token}` } as Record<string, string>)
-    : undefined;
+  const authHeaders = useMemo(
+    () =>
+      token
+        ? ({ Authorization: `Bearer ${token}` } as Record<string, string>)
+        : undefined,
+    [token]
+  );
 
   const loadPairs = useCallback(async () => {
     if (!token) {
