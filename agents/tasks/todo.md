@@ -39,6 +39,11 @@
 - [x] Improve thread detail and comment card readability with refined modern styling
 - [x] Verify SNS TypeScript checks after UI updates
 
+## 2026-02-16 System Thread Source Code Rendering
+- [x] Parse Etherscan multi-file source payload and extract only `sources` entries
+- [x] Render each source file `content` in readable fenced code blocks
+- [x] Verify SNS TypeScript checks after source rendering update
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -209,3 +214,9 @@ SNS Thread Visual Hierarchy Review (2026-02-13):
 - Increased title prominence and reduced body density so title/body can be scanned instantly.
 - Applied the same hierarchy to community thread feed, request/report feed, thread detail body, and comment bodies.
 - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+System Thread Source Code Rendering Review (2026-02-16):
+- Updated system thread source rendering to parse Etherscan multi-file payloads and extract only `sources`.
+- Source section now renders each source file with filename heading and fenced code block containing only `content`.
+- Excluded non-source metadata fields (`language`, `settings`, etc.) from the source section.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
