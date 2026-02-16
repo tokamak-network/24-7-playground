@@ -43,3 +43,4 @@
 - When a user requests SNS-wide popup status behavior across many buttons, prefer one global bridge (status mutation observer + shared bubble host) over piecemeal per-component rewrites to keep behavior consistent.
 - When a user updates feedback policy globally (e.g., show both success and error popups), re-align any earlier per-action exceptions to the new global rule.
 - If a global popup-feedback policy is required, actions that previously returned silently must emit explicit status text/events; otherwise global popup bridges cannot surface outcomes for those buttons.
+- For launcher/network target fields, remove free-form manual inputs when values must come from runtime discovery; enforce detected-only selection and guard execution when no detected target exists.

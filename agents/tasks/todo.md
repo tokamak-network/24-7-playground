@@ -869,3 +869,19 @@ Re-enable Encrypt Success Popup (Requirement Update) Review (2026-02-17):
   - Restored success bubble message (`Security Sensitive data saved.`) in `encryptAndSaveSecurity`.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Runner Port Detected-Only Selection
+- [x] Remove manual `Runner Launcher Port` text input from `/manage/agents` Runner card
+- [x] Require runner launcher port selection from detected ports dropdown only
+- [x] Block `Start Runner` when no detected launcher port exists
+- [x] Verify SNS TypeScript checks after runner-port UX enforcement
+
+Runner Port Detected-Only Selection Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Replaced manual runner port input with a single dropdown under `Runner Launcher Port (localhost)`.
+  - Dropdown now shows detected ports only and is disabled when no port is detected.
+  - Added empty-state option text: `No detected ports. Click Detect Launcher.`
+  - Updated `startRunnerLauncher` guard to require detected launcher ports and selected detected value before starting.
+  - Reset `runnerLauncherPort` to empty when launcher detection finds no running ports.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

@@ -743,11 +743,14 @@ export default function AgentManagementPage() {
             );
           }
         } else if (!options?.silent) {
+          setRunnerLauncherPort("");
           pushBubble(
             "error",
             "No running runner launcher detected.",
             options?.anchorEl
           );
+        } else {
+          setRunnerLauncherPort("");
         }
       } finally {
         setDetectRunnerBusy(false);
@@ -759,6 +762,14 @@ export default function AgentManagementPage() {
   const startRunnerLauncher = useCallback(async (anchorEl?: HTMLElement | null) => {
     if (!token || !selectedPair) {
       pushBubble("error", "Sign in and select an agent pair first.", anchorEl);
+      return;
+    }
+    if (!detectedRunnerPorts.length) {
+      pushBubble(
+        "error",
+        "No detected launcher port. Click Detect Launcher first.",
+        anchorEl
+      );
       return;
     }
     const snsApiKey = currentSnsApiKey.trim();
@@ -776,10 +787,18 @@ export default function AgentManagementPage() {
       return;
     }
 
-    const launcherPort = normalizePositiveInteger(
-      runnerLauncherPort,
-      DEFAULT_RUNNER_LAUNCHER_PORT
-    );
+    const detectedPortValues = detectedRunnerPorts.map((port) => String(port));
+    const launcherPort = detectedPortValues.includes(runnerLauncherPort)
+      ? runnerLauncherPort
+      : detectedPortValues[0] || "";
+    if (!launcherPort) {
+      pushBubble(
+        "error",
+        "No detected launcher port. Click Detect Launcher first.",
+        anchorEl
+      );
+      return;
+    }
     const normalizedInterval = normalizePositiveInteger(
       runnerDraft.intervalSec,
       DEFAULT_RUNNER_INTERVAL_SEC
@@ -852,6 +871,7 @@ export default function AgentManagementPage() {
     }
   }, [
     currentSnsApiKey,
+    detectedRunnerPorts,
     llmModel,
     llmProvider,
     pushBubble,
@@ -1299,30 +1319,26 @@ export default function AgentManagementPage() {
             </div>
             <div className="field">
               <label>Runner Launcher Port (localhost)</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={runnerLauncherPort}
-                onWheel={(event) => event.currentTarget.blur()}
+              <select
+                value={detectedRunnerPorts
+                  .map((port) => String(port))
+                  .includes(runnerLauncherPort)
+                    ? runnerLauncherPort
+                    : ""}
                 onChange={(event) => setRunnerLauncherPort(event.currentTarget.value)}
-              />
-            </div>
-            {detectedRunnerPorts.length ? (
-              <div className="field">
-                <label>Detected Runner Launcher Ports</label>
-                <select
-                  value={runnerLauncherPort}
-                  onChange={(event) => setRunnerLauncherPort(event.currentTarget.value)}
-                >
-                  {detectedRunnerPorts.map((port) => (
+                disabled={!detectedRunnerPorts.length}
+              >
+                {detectedRunnerPorts.length ? (
+                  detectedRunnerPorts.map((port) => (
                     <option key={port} value={String(port)}>
                       {port}
                     </option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
+                  ))
+                ) : (
+                  <option value="">No detected ports. Click Detect Launcher.</option>
+                )}
+              </select>
+            </div>
             <div className="row wrap">
               <button
                 type="button"
