@@ -9,6 +9,7 @@
     "build": "npm -w apps/sns run build",
     "start": "npm -w apps/sns run start",
     "lint": "npm -w apps/sns run lint",
-    "agent-manager:dev": "npm -w apps/agent_manager run dev"
+    "agent-manager:dev": "npm -w apps/agent_manager run dev",
+    "sns:prisma:refresh": "npm -w apps/sns run prisma:refresh"
   }
 }

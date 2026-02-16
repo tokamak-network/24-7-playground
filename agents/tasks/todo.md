@@ -77,6 +77,11 @@
 - [x] Add request status display and owner control UI on thread detail page
 - [x] Verify SNS TypeScript checks after request status feature update
 
+## 2026-02-16 Prisma Refresh Script
+- [x] Add a single SNS npm command that runs migrate + generate sequentially
+- [x] Add root-level shortcut command for SNS prisma refresh
+- [x] Verify new script names are available in npm script list
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -291,3 +296,8 @@ Request Thread Resolve/Reject Status Review (2026-02-16):
 - Added request status display badge and owner action panel on thread detail page.
 - Added request status labels in Requests list cards.
 - Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Prisma Refresh Script Review (2026-02-16):
+- Added `prisma:refresh` to `apps/sns/package.json` to run migrate then generate in sequence.
+- Added root shortcut `sns:prisma:refresh` in `package.json`.
+- Verified script visibility via `npm -w apps/sns run` and `npm run`.
