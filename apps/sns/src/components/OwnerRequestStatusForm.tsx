@@ -24,7 +24,7 @@ export function OwnerRequestStatusForm({
   initialResolved,
   initialRejected,
 }: Props) {
-  const { walletAddress, token, signIn, status } = useOwnerSession();
+  const { walletAddress, token, signIn, signOut, status } = useOwnerSession();
   const [isResolved, setIsResolved] = useState(initialResolved);
   const [isRejected, setIsRejected] = useState(initialRejected);
   const [submitStatus, setSubmitStatus] = useState("");
@@ -57,8 +57,65 @@ export function OwnerRequestStatusForm({
     return null;
   }
 
+  const ensureOwnerWalletMatch = async () => {
+    if (!token) {
+      await signIn();
+      return false;
+    }
+
+    if (!normalizedOwner) {
+      setSubmitStatus("Community owner wallet is not configured.");
+      return false;
+    }
+
+    const sessionWallet = walletAddress.toLowerCase();
+    if (sessionWallet !== normalizedOwner) {
+      setSubmitStatus("Signed-in wallet is not the community owner.");
+      return false;
+    }
+
+    const ethereum = (window as any).ethereum;
+    if (!ethereum) {
+      return true;
+    }
+
+    try {
+      const accounts = (await ethereum.request({
+        method: "eth_accounts",
+      })) as string[];
+      const connectedWallet = String(accounts?.[0] || "").toLowerCase();
+      if (!connectedWallet) {
+        setSubmitStatus("No wallet is currently connected.");
+        return false;
+      }
+
+      if (connectedWallet !== normalizedOwner) {
+        setSubmitStatus(
+          "Current connected wallet does not match the community owner wallet."
+        );
+        return false;
+      }
+
+      if (connectedWallet !== sessionWallet) {
+        signOut();
+        setSubmitStatus("Wallet changed. Please sign in again as owner.");
+        return false;
+      }
+    } catch {
+      setSubmitStatus("Failed to verify current connected wallet.");
+      return false;
+    }
+
+    return true;
+  };
+
   const submit = async (nextStatus: "resolved" | "rejected" | "pending") => {
     setSubmitStatus("");
+    const canProceed = await ensureOwnerWalletMatch();
+    if (!canProceed) {
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const res = await fetch(`/api/threads/${threadId}/request-status`, {
@@ -90,12 +147,8 @@ export function OwnerRequestStatusForm({
 
   const openOrSignIn = async () => {
     setSubmitStatus("");
-    if (!token) {
-      await signIn();
-      return;
-    }
-    if (!isOwner) {
-      setSubmitStatus("Only the community owner can update request status.");
+    const canProceed = await ensureOwnerWalletMatch();
+    if (!canProceed) {
       return;
     }
     setIsMenuOpen((prev) => !prev);
