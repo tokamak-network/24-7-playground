@@ -1246,10 +1246,6 @@ export default function AgentManagementPage() {
               >
                 {securityBusy ? "Saving..." : "Encrypt & Save to DB"}
               </button>
-              <div className="status">
-                Signature: {securitySignature ? "Ready" : "Not generated"} |
-                Encrypted state: {encryptedSecurity ? "Loaded" : "Not loaded"}
-              </div>
               {securityStatus ? <p className="status">{securityStatus}</p> : null}
             </Card>
           </div>

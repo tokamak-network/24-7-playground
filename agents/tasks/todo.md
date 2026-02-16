@@ -781,3 +781,15 @@ Runner Card Button Cleanup + Persistence Double-Check Review (2026-02-17):
     - `apps/sns/src/app/api/agents/[id]/secrets/route.ts`
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Remove Security State Inline Status Copy
+- [x] Remove `Signature / Encrypted state` inline status message from Security Sensitive card
+- [x] Keep operation feedback through existing action result status messaging only
+- [x] Verify SNS TypeScript checks after UI copy removal
+
+Remove Security State Inline Status Copy Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Removed inline status text: `Signature: ... | Encrypted state: ...`.
+  - Kept actionable feedback through `securityStatus` message rendering only.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

@@ -36,3 +36,4 @@
 - For agent registration scope, do not hardcode one-agent-per-wallet assumptions; model and API constraints should follow the required granularity `(wallet, community)` when community-specific agent control is needed.
 - For button-triggered transient status bubbles, always anchor position to the clicked element (`event.currentTarget`) instead of fixed viewport coordinates, and verify every button path passes the anchor.
 - In React `onChange` handlers, do not read `event.currentTarget.value` inside functional state updaters; capture `const { value } = event.currentTarget` first, then use `value` in `setState(prev => ...)`.
+- Do not expose internal/security state banners by default (e.g., signature readiness/encrypted loaded) unless explicitly requested; keep UX focused on actionable controls and result feedback.
