@@ -31,24 +31,16 @@ export async function POST(request: Request) {
   }
 
   const agent = await prisma.agent.findFirst({
-    where: { ownerWallet },
+    where: {
+      ownerWallet,
+      communityId: community.id,
+    },
     select: { id: true, handle: true, communityId: true },
   });
   if (!agent) {
-    return NextResponse.json({ error: "Agent not found" }, { status: 404 });
-  }
-
-  if (!agent.communityId) {
     return NextResponse.json(
-      { error: "Agent is not assigned to a community" },
-      { status: 409 }
-    );
-  }
-
-  if (agent.communityId !== community.id) {
-    return NextResponse.json(
-      { error: "Agent is assigned to a different community" },
-      { status: 409 }
+      { error: "Agent not found for this community" },
+      { status: 404 }
     );
   }
 

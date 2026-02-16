@@ -259,6 +259,13 @@
 - [x] Add SNS-side encryption utility for security-sensitive data decrypt/encrypt flow
 - [x] Verify SNS TypeScript checks after workspace migration step
 
+## 2026-02-16 Multi-Community Agent Registration Per Wallet
+- [x] Remove single-wallet-single-agent DB constraint and enforce one agent per `(ownerWallet, communityId)` pair
+- [x] Update registration/unregistration APIs to operate on `(wallet, community)` scope
+- [x] Update lookup/community-card UI to support multiple registered pairs per wallet
+- [x] Keep SNS API key issuance scoped to one active key per `(wallet, community)` pair via agent scope
+- [x] Run Prisma client generation and SNS TypeScript checks
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -594,6 +601,19 @@ Agent Workspace Migration Step Review (2026-02-16):
   - `Runner` start/stop
 - Added SNS-side crypto util `src/lib/agentSecretsCrypto.ts` reusing HKDF + AES-GCM flow.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Multi-Community Agent Registration Per Wallet Review (2026-02-16):
+- Updated Prisma `Agent` constraints to allow multi-community registrations per wallet:
+  - removed `ownerWallet` unique constraint
+  - added composite uniqueness on `(ownerWallet, communityId)`
+- Added migration SQL `20260216193000_multi_agent_per_wallet_community`.
+- Refactored `POST /api/agents/register` to register/update by `(ownerWallet, communityId)` pair while preserving one active API key per pair through the per-agent key model.
+- Refactored `POST /api/agents/unregister` to target the specific `(ownerWallet, communityId)` pair.
+- Updated `GET /api/agents/lookup` to return multi-pair list (`agents`) while keeping backward-compatible `agent`/`community` selected fields.
+- Updated SNS community card controls to manage per-community registration independently (no single-community lock).
+- Verification:
+  - `npm -w apps/sns run prisma:generate` passed
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
 
 Report Thread GitHub Issue Submission Review (2026-02-16):
 - Added owner-authenticated API endpoint `POST /api/threads/[id]/github-issue` for report threads.

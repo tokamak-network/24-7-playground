@@ -42,72 +42,173 @@ export async function POST(request: Request) {
     );
   }
 
-  const existingOwner = await prisma.agent.findFirst({
+  const existingPair = await prisma.agent.findFirst({
     where: {
       ownerWallet,
-      NOT: { handle },
+      communityId: community.id,
+    },
+    select: {
+      id: true,
+      handle: true,
+      ownerWallet: true,
+      communityId: true,
+      account: true,
+      runner: true,
     },
   });
 
-  if (existingOwner) {
-    return NextResponse.json(
-      { error: "wallet already has an agent handle" },
-      { status: 409 }
-    );
-  }
-
-  const existingAccount = await prisma.agent.findFirst({
-    where: {
-      account: signature,
-      NOT: { handle },
+  const existingHandle = await prisma.agent.findUnique({
+    where: { handle },
+    select: {
+      id: true,
+      handle: true,
+      ownerWallet: true,
+      communityId: true,
+      account: true,
+      runner: true,
     },
   });
 
-  if (existingAccount) {
-    return NextResponse.json(
-      { error: "account already registered to another handle" },
-      { status: 409 }
-    );
-  }
-
-  const existing = await prisma.agent.findUnique({ where: { handle } });
-  let agent = existing;
-  const canUpdateExisting =
-    existing && existing.ownerWallet === ownerWallet;
-
-  if (existing && !canUpdateExisting) {
+  if (
+    existingHandle &&
+    existingHandle.ownerWallet &&
+    existingHandle.ownerWallet !== ownerWallet
+  ) {
     return NextResponse.json(
       { error: "handle already exists" },
       { status: 409 }
     );
   }
 
-  if (!existing) {
-    agent = await prisma.agent.create({
+  const existingAccount = await prisma.agent.findFirst({
+    where: { account: signature },
+    select: {
+      id: true,
+      handle: true,
+      ownerWallet: true,
+      communityId: true,
+      account: true,
+      runner: true,
+    },
+  });
+
+  if (
+    existingAccount &&
+    existingAccount.ownerWallet &&
+    existingAccount.ownerWallet !== ownerWallet
+  ) {
+    return NextResponse.json(
+      { error: "account already registered to another handle" },
+      { status: 409 }
+    );
+  }
+
+  let agent:
+    | {
+        id: string;
+        handle: string;
+        ownerWallet: string | null;
+        account: string | null;
+        communityId: string | null;
+        runner: unknown;
+      }
+    | null = null;
+
+  if (existingPair) {
+    if (existingHandle && existingHandle.id !== existingPair.id) {
+      return NextResponse.json(
+        { error: "handle already exists" },
+        { status: 409 }
+      );
+    }
+    if (existingAccount && existingAccount.id !== existingPair.id) {
+      return NextResponse.json(
+        { error: "account already registered to another handle" },
+        { status: 409 }
+      );
+    }
+
+    agent = await prisma.agent.update({
+      where: { id: existingPair.id },
       data: {
         handle,
         ownerWallet,
         account: signature,
         communityId: community.id,
-        runner: { status: "STOPPED", intervalSec: 60 },
+        runner:
+          (existingPair as { runner?: { status?: string; intervalSec?: number } })
+            ?.runner || { status: "STOPPED", intervalSec: 60 },
+      },
+      select: {
+        id: true,
+        handle: true,
+        ownerWallet: true,
+        account: true,
+        communityId: true,
+        runner: true,
       },
     });
   } else {
-    agent = await prisma.agent.update({
-      where: { id: existing.id },
-      data: {
-        ownerWallet,
-        account: signature,
-        communityId: community.id,
-        runner:
-          (existing as { runner?: { status?: string; intervalSec?: number } })
-            ?.runner || { status: "STOPPED", intervalSec: 60 },
-      },
-    });
+    const reusableByAccount =
+      existingAccount &&
+      existingAccount.ownerWallet === ownerWallet &&
+      (!existingAccount.communityId || existingAccount.communityId === community.id)
+        ? existingAccount
+        : null;
+
+    const reusableByHandle =
+      existingHandle &&
+      existingHandle.ownerWallet === ownerWallet &&
+      (!existingHandle.communityId || existingHandle.communityId === community.id)
+        ? existingHandle
+        : null;
+
+    const reusable = reusableByAccount || reusableByHandle;
+
+    if (reusable) {
+      agent = await prisma.agent.update({
+        where: { id: reusable.id },
+        data: {
+          handle,
+          ownerWallet,
+          account: signature,
+          communityId: community.id,
+          runner:
+            (reusable as { runner?: { status?: string; intervalSec?: number } })
+              ?.runner || { status: "STOPPED", intervalSec: 60 },
+        },
+        select: {
+          id: true,
+          handle: true,
+          ownerWallet: true,
+          account: true,
+          communityId: true,
+          runner: true,
+        },
+      });
+    } else {
+      agent = await prisma.agent.create({
+        data: {
+          handle,
+          ownerWallet,
+          account: signature,
+          communityId: community.id,
+          runner: { status: "STOPPED", intervalSec: 60 },
+        },
+        select: {
+          id: true,
+          handle: true,
+          ownerWallet: true,
+          account: true,
+          communityId: true,
+          runner: true,
+        },
+      });
+    }
   }
 
   const existingKey = await prisma.apiKey.findUnique({
-    where: { agentId: agent!.id },
+    where: { agentId: agent.id },
   });
 
   if (
@@ -128,7 +229,7 @@ export async function POST(request: Request) {
   }
 
   await prisma.apiKey.upsert({
-    where: { agentId: agent!.id },
+    where: { agentId: agent.id },
     update: {
       revokedAt: null,
       keyHash: hash,
@@ -136,7 +237,7 @@ export async function POST(request: Request) {
       communityId: community.id,
     },
     create: {
-      agentId: agent!.id,
+      agentId: agent.id,
       keyHash: hash,
       keyPrefix: prefix,
       communityId: community.id,

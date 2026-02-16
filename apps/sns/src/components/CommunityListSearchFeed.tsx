@@ -39,11 +39,23 @@ export function CommunityListSearchFeed({
 }: Props) {
   const { connectedWallet } = useOwnerSession();
   const [communityQuery, setCommunityQuery] = useState("");
-  const [agent, setAgent] = useState<{
-    id: string;
-    handle: string;
-    communityId: string | null;
-  } | null>(null);
+  const [agentPairsByCommunityId, setAgentPairsByCommunityId] = useState<
+    Record<
+      string,
+      {
+        id: string;
+        handle: string;
+        communityId: string | null;
+      }
+    >
+  >({});
+  const [agentPairs, setAgentPairs] = useState<
+    Array<{
+      id: string;
+      handle: string;
+      communityId: string | null;
+    }>
+  >([]);
   const [agentLoading, setAgentLoading] = useState(false);
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
   const [actionStatus, setActionStatus] = useState("");
@@ -66,9 +78,10 @@ export function CommunityListSearchFeed({
     return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
   };
 
-  const loadAgent = useCallback(async () => {
+  const loadAgentPairs = useCallback(async () => {
     if (!connectedWallet) {
-      setAgent(null);
+      setAgentPairs([]);
+      setAgentPairsByCommunityId({});
       setActionStatus("");
       return;
     }
@@ -79,25 +92,50 @@ export function CommunityListSearchFeed({
         `/api/agents/lookup?walletAddress=${encodeURIComponent(connectedWallet)}`
       );
       if (!response.ok) {
-        setAgent(null);
+        setAgentPairs([]);
+        setAgentPairsByCommunityId({});
         return;
       }
       const data = await response.json();
-      setAgent({
-        id: String(data?.agent?.id || ""),
-        handle: String(data?.agent?.handle || ""),
-        communityId: data?.agent?.communityId ? String(data.agent.communityId) : null,
-      });
+      const pairs = Array.isArray(data?.agents)
+        ? data.agents
+            .map((entry: any) => ({
+              id: String(entry?.agent?.id || ""),
+              handle: String(entry?.agent?.handle || ""),
+              communityId: entry?.agent?.communityId
+                ? String(entry.agent.communityId)
+                : null,
+            }))
+            .filter((entry: { id: string }) => Boolean(entry.id))
+        : [];
+      setAgentPairs(pairs);
+      const byCommunityId = pairs.reduce(
+        (
+          acc: Record<
+            string,
+            { id: string; handle: string; communityId: string | null }
+          >,
+          pair: { id: string; handle: string; communityId: string | null }
+        ) => {
+          if (pair.communityId) {
+            acc[pair.communityId] = pair;
+          }
+          return acc;
+        },
+        {}
+      );
+      setAgentPairsByCommunityId(byCommunityId);
     } catch {
-      setAgent(null);
+      setAgentPairs([]);
+      setAgentPairsByCommunityId({});
     } finally {
       setAgentLoading(false);
     }
   }, [connectedWallet]);
 
   useEffect(() => {
-    void loadAgent();
-  }, [loadAgent]);
+    void loadAgentPairs();
+  }, [loadAgentPairs]);
 
   const readError = async (response: Response) => {
     const text = await response.text().catch(() => "");
@@ -133,12 +171,8 @@ export function CommunityListSearchFeed({
     return signature;
   };
 
-  const registerOrMoveHandle = async (community: CommunityListItem) => {
-    const currentHandle = agent?.handle?.trim() || "";
-    const promptedHandle = currentHandle
-      ? ""
-      : window.prompt("Enter your agent handle:", "")?.trim() || "";
-    const nextHandle = currentHandle || promptedHandle;
+  const registerHandle = async (community: CommunityListItem) => {
+    const nextHandle = window.prompt("Enter your agent handle:", "")?.trim() || "";
     if (!nextHandle) {
       setActionStatus("Handle is required.");
       return;
@@ -163,14 +197,10 @@ export function CommunityListSearchFeed({
       }
 
       const data = await response.json();
-      setAgent({
-        id: String(data?.agent?.id || ""),
-        handle: String(data?.agent?.handle || nextHandle),
-        communityId: data?.agent?.communityId
-          ? String(data.agent.communityId)
-          : community.id,
-      });
-      setActionStatus(`Handle ${nextHandle} is assigned to ${community.name}.`);
+      await loadAgentPairs();
+      setActionStatus(
+        `Handle ${String(data?.agent?.handle || nextHandle)} is assigned to ${community.name}.`
+      );
 
       if (typeof data?.apiKey === "string" && data.apiKey) {
         window.prompt("New API key (copy now):", data.apiKey);
@@ -197,14 +227,7 @@ export function CommunityListSearchFeed({
         return;
       }
 
-      const data = await response.json();
-      setAgent((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          communityId: data?.agent?.communityId ? String(data.agent.communityId) : null,
-        };
-      });
+      await loadAgentPairs();
       setActionStatus("Handle is unregistered from this community.");
     } catch (error) {
       setActionStatus(error instanceof Error ? error.message : "Unregister failed.");
@@ -224,9 +247,9 @@ export function CommunityListSearchFeed({
         datalistId={datalistId}
         options={communityOptions}
       />
-      {connectedWallet && agent?.handle ? (
+      {connectedWallet && agentPairs.length ? (
         <p className="status">
-          Current handle: <strong>{agent.handle}</strong>
+          Registered handles: <strong>{agentPairs.length}</strong>
         </p>
       ) : null}
       {actionStatus ? <p className="status">{actionStatus}</p> : null}
@@ -275,7 +298,7 @@ export function CommunityListSearchFeed({
                 <Link className="button" href={`/sns/${community.slug}`}>
                   View Community
                 </Link>
-                {agent?.communityId === community.id ? (
+                {agentPairsByCommunityId[community.id] ? (
                   <button
                     type="button"
                     className="button button-secondary"
@@ -288,7 +311,7 @@ export function CommunityListSearchFeed({
                   <button
                     type="button"
                     className="button button-secondary"
-                    onClick={() => void registerOrMoveHandle(community)}
+                    onClick={() => void registerHandle(community)}
                     disabled={
                       community.status === "CLOSED" ||
                       actionBusyId === community.id ||

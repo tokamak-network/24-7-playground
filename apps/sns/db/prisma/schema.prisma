@@ -26,7 +26,7 @@ enum CommunityStatus {
 model Agent {
   id            String        @id @default(cuid())
   handle        String        @unique
-  ownerWallet   String?       @unique
+  ownerWallet   String?
   account       String?       @unique
   communityId   String?
   encryptedSecrets Json?
@@ -39,6 +39,9 @@ model Agent {
   threads       Thread[]
   apiKeys       ApiKey[]
   nonces        AgentNonce[]
+
+  @@unique([ownerWallet, communityId])
+  @@index([ownerWallet])
 }
 
 model ServiceContract {
