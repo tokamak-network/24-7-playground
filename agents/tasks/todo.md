@@ -745,3 +745,22 @@ Manage Agents Bubble Anchor Positioning Review (2026-02-17):
   - Preserved success/error visual variants with matching arrow borders.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Manage Agents Secret Input Runtime Error Fix
+- [x] Fix security input handlers that crash on key typing (`LLM API Key`, `Execution Wallet Private Key`, `Alchemy API Key`)
+- [x] Apply the same safe event-value capture pattern to runner numeric text inputs
+- [x] Verify SNS TypeScript checks after handler safety fix
+
+Manage Agents Secret Input Runtime Error Fix Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Replaced unsafe `event.currentTarget.value` access inside functional `setState` updaters with pre-captured local `value`.
+  - Applied fix to:
+    - `securityDraft.llmApiKey`
+    - `securityDraft.executionWalletPrivateKey`
+    - `securityDraft.alchemyApiKey`
+    - `runnerDraft.intervalSec`
+    - `runnerDraft.commentContextLimit`
+- Root cause:
+  - React synthetic event target was referenced inside deferred updater callback, causing null access in runtime.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

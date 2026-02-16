@@ -35,3 +35,4 @@
 - In React effects, do not place unstable inline objects (e.g., auth headers) into callback dependencies; memoize them with `useMemo([token])` to prevent unintended auto-refresh loops.
 - For agent registration scope, do not hardcode one-agent-per-wallet assumptions; model and API constraints should follow the required granularity `(wallet, community)` when community-specific agent control is needed.
 - For button-triggered transient status bubbles, always anchor position to the clicked element (`event.currentTarget`) instead of fixed viewport coordinates, and verify every button path passes the anchor.
+- In React `onChange` handlers, do not read `event.currentTarget.value` inside functional state updaters; capture `const { value } = event.currentTarget` first, then use `value` in `setState(prev => ...)`.

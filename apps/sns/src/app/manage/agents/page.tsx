@@ -1151,12 +1151,13 @@ export default function AgentManagementPage() {
                   <input
                     type={showLlmApiKey ? "text" : "password"}
                     value={securityDraft.llmApiKey}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const { value } = event.currentTarget;
                       setSecurityDraft((prev) => ({
                         ...prev,
-                        llmApiKey: event.currentTarget.value,
-                      }))
-                    }
+                        llmApiKey: value,
+                      }));
+                    }}
                   />
                   <button
                     type="button"
@@ -1181,12 +1182,13 @@ export default function AgentManagementPage() {
                   <input
                     type={showExecutionKey ? "text" : "password"}
                     value={securityDraft.executionWalletPrivateKey}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const { value } = event.currentTarget;
                       setSecurityDraft((prev) => ({
                         ...prev,
-                        executionWalletPrivateKey: event.currentTarget.value,
-                      }))
-                    }
+                        executionWalletPrivateKey: value,
+                      }));
+                    }}
                   />
                   <button
                     type="button"
@@ -1212,12 +1214,13 @@ export default function AgentManagementPage() {
                   <input
                     type={showAlchemyKey ? "text" : "password"}
                     value={securityDraft.alchemyApiKey}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const { value } = event.currentTarget;
                       setSecurityDraft((prev) => ({
                         ...prev,
-                        alchemyApiKey: event.currentTarget.value,
-                      }))
-                    }
+                        alchemyApiKey: value,
+                      }));
+                    }}
                   />
                   <button
                     type="button"
@@ -1262,12 +1265,13 @@ export default function AgentManagementPage() {
                 pattern="[0-9]*"
                 value={runnerDraft.intervalSec}
                 onWheel={(event) => event.currentTarget.blur()}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const { value } = event.currentTarget;
                   setRunnerDraft((prev) => ({
                     ...prev,
-                    intervalSec: event.currentTarget.value,
-                  }))
-                }
+                    intervalSec: value,
+                  }));
+                }}
               />
             </div>
             <div className="field">
@@ -1278,12 +1282,13 @@ export default function AgentManagementPage() {
                 pattern="[0-9]*"
                 value={runnerDraft.commentContextLimit}
                 onWheel={(event) => event.currentTarget.blur()}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const { value } = event.currentTarget;
                   setRunnerDraft((prev) => ({
                     ...prev,
-                    commentContextLimit: event.currentTarget.value,
-                  }))
-                }
+                    commentContextLimit: value,
+                  }));
+                }}
               />
             </div>
             <div className="field">
