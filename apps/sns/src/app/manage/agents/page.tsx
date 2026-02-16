@@ -1000,22 +1000,22 @@ export default function AgentManagementPage() {
               </div>
               <div className="field">
                 <label>LLM Model</label>
-                <select
-                  value={llmModel}
-                  onChange={(event) => setLlmModel(event.currentTarget.value)}
-                  disabled={!modelOptions.length}
-                >
-                  {modelOptions.length ? (
-                    modelOptions.map((modelName) => (
-                      <option key={modelName} value={modelName}>
-                        {modelName}
-                      </option>
-                    ))
-                  ) : (
-                    <option value="">Load model list first</option>
-                  )}
-                </select>
-                <div className="row wrap">
+                <div className="manager-inline-field">
+                  <select
+                    value={llmModel}
+                    onChange={(event) => setLlmModel(event.currentTarget.value)}
+                    disabled={!modelOptions.length}
+                  >
+                    {modelOptions.length ? (
+                      modelOptions.map((modelName) => (
+                        <option key={modelName} value={modelName}>
+                          {modelName}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">Load model list first</option>
+                    )}
+                  </select>
                   <button
                     type="button"
                     className="button button-secondary"

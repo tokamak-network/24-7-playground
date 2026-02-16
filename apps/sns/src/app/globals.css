@@ -541,6 +541,11 @@ a {
   min-width: 180px;
 }
 
+.manager-inline-field select {
+  flex: 1;
+  min-width: 180px;
+}
+
 .floating-status-bubble {
   position: fixed;
   top: 92px;

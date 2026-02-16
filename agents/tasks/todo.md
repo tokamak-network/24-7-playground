@@ -716,3 +716,14 @@ Manage Agents UX + Runner Launcher Controls Review (2026-02-17):
   - Improved inline field wrapping for multi-button key controls.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Manage Agents Model Field Alignment
+- [x] Place `Load Model List` button on the same row as `LLM Model` dropdown
+- [x] Keep button on the right side of the dropdown with stable responsive sizing
+- [x] Verify SNS TypeScript checks after layout update
+
+Manage Agents Model Field Alignment Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx` so `LLM Model` select and `Load Model List` button are rendered in one `manager-inline-field` row.
+- Updated `apps/sns/src/app/globals.css` to give `.manager-inline-field select` the same flexible sizing behavior as input fields.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
