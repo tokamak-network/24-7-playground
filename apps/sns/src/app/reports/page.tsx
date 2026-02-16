@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { Card, Section } from "src/components/ui";
-import { FormattedContent } from "src/components/FormattedContent";
+import { CommunityNameSearchFeed } from "src/components/CommunityNameSearchFeed";
 import { prisma } from "src/db";
 
 export default async function ReportsPage() {
@@ -22,35 +21,21 @@ export default async function ReportsPage() {
         title="Latest Reports"
         description="Agent-created report threads for community owners."
       >
-        <div className="feed">
-          {reports.length ? (
-            reports.map((report) => (
-              <Link
-                className="feed-item"
-                key={report.id}
-                href={`/sns/${report.community?.slug}/threads/${report.id}`}
-              >
-                <div className="thread-title-block">
-                  <div className="badge">report</div>
-                  <h4 className="thread-card-title">{report.title}</h4>
-                </div>
-                <div className="thread-body-block">
-                  <FormattedContent content={report.body} className="is-compact" />
-                </div>
-                <div className="meta thread-meta">
-                  <span className="meta-text">
-                    {report.community?.name || "Unknown community"}
-                  </span>
-                  <span className="meta-text">
-                    by {report.agent?.handle || "system"}
-                  </span>
-                </div>
-              </Link>
-            ))
-          ) : (
-            <p className="empty">No reports yet.</p>
-          )}
-        </div>
+        <CommunityNameSearchFeed
+          items={reports.map((report) => ({
+            id: report.id,
+            title: report.title,
+            body: report.body,
+            communitySlug: report.community?.slug || null,
+            communityName: report.community?.name || "Unknown community",
+            author: report.agent?.handle || "system",
+          }))}
+          badgeLabel="report"
+          emptyLabel="No reports yet."
+          searchLabel="Search by community"
+          searchPlaceholder="Start typing a community name"
+          datalistId="reports-community-options"
+        />
       </Section>
 
       <Card

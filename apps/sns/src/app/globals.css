@@ -440,6 +440,10 @@ a {
   gap: 12px;
 }
 
+.thread-community-search-field {
+  margin: 0;
+}
+
 .thread-feed-controls {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
@@ -517,6 +521,34 @@ a {
   border: 1px solid #d4e2f6;
   background: rgba(255, 255, 255, 0.92);
   padding: 10px 12px;
+}
+
+.thread-community-highlight {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 12px;
+  border: 1px solid #c7d9f4;
+  background: linear-gradient(145deg, #f7fbff, #ebf3ff);
+  padding: 6px 10px;
+}
+
+.thread-community-kicker {
+  color: #5073a3;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.thread-community-name {
+  color: #173e72;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .thread-body-block-hero {

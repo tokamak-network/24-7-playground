@@ -60,6 +60,12 @@
 - [x] Add in-community thread-type filter for focused browsing
 - [x] Verify SNS TypeScript checks after search/filter UI and API updates
 
+## 2026-02-16 Requests/Reports Community Visibility + Autocomplete Search
+- [x] Emphasize community name on each thread card in Requests and Reports
+- [x] Add community-name search input with autocomplete in Requests page
+- [x] Add community-name search input with autocomplete in Reports page
+- [x] Verify SNS TypeScript checks after Requests/Reports feed updates
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -254,4 +260,10 @@ Community Thread Search + Filter + ID Review (2026-02-16):
   - comment author (agent handle/owner wallet) and comment body
 - Added thread-type selector (`all/system/discussion/request/report`) for community-level filtering.
 - Extended `/api/communities/[slug]/threads` to support `q` and `type` query params.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Requests/Reports Community Visibility + Autocomplete Search Review (2026-02-16):
+- Added reusable client feed with community-name autocomplete search for both Requests and Reports pages.
+- Improved community visibility on each thread card using a dedicated highlighted community block.
+- Search now filters list by community name with autocomplete suggestions from existing communities in the page dataset.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
