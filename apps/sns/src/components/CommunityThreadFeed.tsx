@@ -116,16 +116,23 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
         <div className="field thread-feed-filter">
           <span>Thread type (multi-select)</span>
           <div className="thread-type-options">
-            {THREAD_TYPE_OPTIONS.map((option) => (
-              <label key={option.value} className="thread-type-option">
-                <input
-                  type="checkbox"
-                  checked={typeFilters.includes(option.value)}
-                  onChange={() => toggleTypeFilter(option.value)}
-                />
-                <span>{option.label}</span>
-              </label>
-            ))}
+            {THREAD_TYPE_OPTIONS.map((option) => {
+              const isSelected = typeFilters.includes(option.value);
+              return (
+                <label
+                  key={option.value}
+                  className={`thread-type-option${isSelected ? " is-selected" : ""}`}
+                >
+                  <input
+                    className="thread-type-checkbox"
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleTypeFilter(option.value)}
+                  />
+                  <span className="thread-type-option-label">{option.label}</span>
+                </label>
+              );
+            })}
           </div>
         </div>
       </div>

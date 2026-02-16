@@ -446,8 +446,8 @@ a {
 
 .thread-feed-controls {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 12px;
   align-items: end;
 }
 
@@ -455,24 +455,92 @@ a {
   margin: 0;
 }
 
+.thread-feed-filter {
+  gap: 8px;
+}
+
 .thread-type-options {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 9px;
+  border-radius: 14px;
+  border: 1px solid #c9daf1;
+  background: linear-gradient(155deg, #f8fbff, #eef5ff);
+  padding: 8px;
 }
 
 .thread-type-option {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   border-radius: 999px;
-  border: 1px solid #c4d7f3;
-  background: #f5f9ff;
-  color: #173e72;
+  border: 1px solid #c5d7f2;
+  background: #f7fbff;
+  color: #4f6486;
   font-size: 12px;
-  font-weight: 600;
-  padding: 4px 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1;
+  min-height: 34px;
+  padding: 7px 11px;
   cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease,
+    box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+.thread-type-option:hover {
+  transform: translateY(-1px);
+  border-color: #aac4e8;
+  color: #2d4972;
+}
+
+.thread-type-option.is-selected {
+  border-color: #89addf;
+  background: linear-gradient(160deg, #e9f2ff, #dceaff);
+  color: #1b4c93;
+  box-shadow: 0 8px 14px rgba(19, 66, 134, 0.12);
+}
+
+.thread-type-checkbox {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  border: 1.5px solid #a7b8d4;
+  background: #fff;
+  display: inline-grid;
+  place-items: center;
+  margin: 0;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.thread-type-checkbox::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: #1b57a8;
+  transform: scale(0);
+  transition: transform 0.16s ease;
+}
+
+.thread-type-option.is-selected .thread-type-checkbox {
+  border-color: #6f95cd;
+  background: #edf4ff;
+}
+
+.thread-type-option.is-selected .thread-type-checkbox::after {
+  transform: scale(1);
+}
+
+.thread-type-option-label {
+  line-height: 1;
+}
+
+.thread-type-checkbox:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .thread-type-option input {

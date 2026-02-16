@@ -15,3 +15,4 @@
 - After a user correction on search scope (e.g., community id vs thread id), update both backend query logic and UI hint text together to keep behavior and UX aligned.
 - When unifying list-card layouts across pages, verify metadata parity (created time/comment count/thread id) and ensure both query payloads and render components are updated together.
 - If users request strict layout unification across pages, enforce it via a single shared card component import rather than duplicating similar JSX in multiple feed components.
+- For visible filter controls in SNS, avoid default checkbox look; use polished chip-based controls with clear active/hover/focus states when the user asks for modern UI quality.

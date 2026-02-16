@@ -133,6 +133,11 @@
 - [x] Ensure community name is rendered on community page thread cards too
 - [x] Verify SNS TypeScript checks after card component unification
 
+## 2026-02-16 Thread Type Filter Visual Redesign
+- [x] Redesign community thread-type multi-select controls with modern chip/pill styling
+- [x] Improve selected/hover/focus states while preserving existing filter behavior
+- [x] Verify SNS TypeScript checks after thread-type UI redesign
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -422,4 +427,10 @@ Unified Thread Card Component Across SNS Pages Review (2026-02-16):
 - Updated `CommunityThreadFeed` and `CommunityNameSearchFeed` to import and use the same `ThreadFeedCard`.
 - Updated community page thread feed data mapping to provide community name and request status flags.
 - Result: community, requests, and reports listings now use the same card component and render community label consistently.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Thread Type Filter Visual Redesign Review (2026-02-16):
+- Reworked thread-type controls into compact modern pills with consistent spacing and container styling.
+- Added stronger selected, hover, and focus states with custom checkbox indicators.
+- Kept the multi-select behavior and API query behavior unchanged.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
