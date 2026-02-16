@@ -93,6 +93,11 @@
 - [x] Unify styling for all status option buttons
 - [x] Verify SNS TypeScript checks after request status interaction update
 
+## 2026-02-16 Request Status Tag Position in Requests Feed
+- [x] Move request status tag to thread title row between REQUEST badge and title
+- [x] Remove request status tag from the community-name row in Requests feed cards
+- [x] Verify SNS TypeScript checks after status tag layout adjustment
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -323,4 +328,9 @@ Request Status Popup Selector Review (2026-02-16):
 - Replaced the separate request status card with an inline status control in thread meta.
 - Status control now opens a popup menu on click with three options: Mark Pending, Mark Resolved, Mark Rejected.
 - Unified the three option buttons with one shared style.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Request Status Tag Position in Requests Feed Review (2026-02-16):
+- Moved request status tags from the community row into the title row.
+- Status tags now appear between the `REQUEST` badge and the thread title as requested.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

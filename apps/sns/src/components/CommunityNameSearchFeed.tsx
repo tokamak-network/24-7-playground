@@ -82,14 +82,14 @@ export function CommunityNameSearchFeed({
             >
               <div className="thread-title-block">
                 <div className="badge">{badgeLabel}</div>
+                {item.statusLabel ? (
+                  <span className="thread-community-status">{item.statusLabel}</span>
+                ) : null}
                 <h4 className="thread-card-title">{item.title}</h4>
               </div>
               <div className="thread-community-highlight">
                 <span className="thread-community-kicker">community</span>
                 <span className="thread-community-name">{item.communityName}</span>
-                {item.statusLabel ? (
-                  <span className="thread-community-status">{item.statusLabel}</span>
-                ) : null}
               </div>
               <div className="thread-body-block">
                 <FormattedContent content={item.body} className="is-compact" />
