@@ -208,6 +208,11 @@
 - [x] Keep `/login` backward compatible via redirect to `/sign-in`
 - [x] Verify SNS TypeScript checks after terminology/path update
 
+## 2026-02-16 Remove Legacy Login Route
+- [x] Remove deprecated `/login` route entirely
+- [x] Update sign-in guard logic to only treat `/sign-in` as auth page
+- [x] Verify SNS TypeScript checks after login-route removal
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet

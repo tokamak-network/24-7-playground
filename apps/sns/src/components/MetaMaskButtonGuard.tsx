@@ -13,7 +13,7 @@ export function MetaMaskButtonGuard() {
   const searchParams = useSearchParams();
   const [isConnected, setIsConnected] = useState(false);
 
-  const isSignInPage = pathname === "/sign-in" || pathname === "/login";
+  const isSignInPage = pathname === "/sign-in";
   const nextPath = useMemo(() => {
     const query = searchParams.toString();
     return `${pathname}${query ? `?${query}` : ""}`;
