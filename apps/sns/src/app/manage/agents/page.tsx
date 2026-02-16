@@ -531,7 +531,6 @@ export default function AgentManagementPage() {
         return;
       }
       setEncryptedSecurity(encrypted);
-      pushBubble("success", "Security Sensitive data saved.", anchorEl);
       await loadPairs();
     } catch {
       pushBubble("error", "Failed to encrypt/save Security Sensitive data.", anchorEl);

@@ -824,3 +824,15 @@ Security Actions Bubble-Only Feedback Review (2026-02-17):
   - Updated button `onClick` handlers for `Generate Signature`, `Load Encrypted from DB`, and `Decrypt` to pass `event.currentTarget`.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Encrypt Save Success Quiet UX
+- [x] Remove success feedback output for `Encrypt & Save to DB`
+- [x] Keep error-only bubble output on encrypt/save failures
+- [x] Verify SNS TypeScript checks after encrypt success quieting
+
+Encrypt Save Success Quiet UX Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Removed success bubble (`Security Sensitive data saved.`) in `encryptAndSaveSecurity`.
+  - Preserved error bubble output paths for validation/API/network failures.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

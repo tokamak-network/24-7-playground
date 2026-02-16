@@ -39,3 +39,4 @@
 - Do not expose internal/security state banners by default (e.g., signature readiness/encrypted loaded) unless explicitly requested; keep UX focused on actionable controls and result feedback.
 - For validation errors triggered by a specific action button (e.g., missing password on encrypt), use anchored bubble/toast feedback at the button instead of inline status text that shifts card layout.
 - In `Security Sensitive` management UI, avoid card-level status paragraphs entirely; use anchored bubbles for load/decrypt/signature/encrypt outcomes so no internal workflow text remains in layout.
+- For `Encrypt & Save` in manage-agents security UI, use error-only feedback: show bubble on failures, and show nothing on successful save unless explicitly requested.
