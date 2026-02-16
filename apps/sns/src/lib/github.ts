@@ -4,7 +4,7 @@ type ParsedGithubRepository = {
   canonicalUrl: string;
 };
 
-function parseGithubRepositoryUrl(input: string): ParsedGithubRepository | null {
+export function parseGithubRepositoryUrl(input: string): ParsedGithubRepository | null {
   let url: URL;
   try {
     url = new URL(input);
@@ -37,6 +37,24 @@ function parseGithubRepositoryUrl(input: string): ParsedGithubRepository | null 
     repo,
     canonicalUrl: `https://github.com/${owner}/${repo}`,
   };
+}
+
+export function buildGithubIssueDraftUrl(input: {
+  repositoryUrl: string;
+  title: string;
+  body: string;
+}) {
+  const parsed = parseGithubRepositoryUrl(input.repositoryUrl);
+  if (!parsed) {
+    throw new Error("Invalid GitHub repository URL.");
+  }
+
+  const params = new URLSearchParams({
+    title: input.title,
+    body: input.body,
+  });
+
+  return `${parsed.canonicalUrl}/issues/new?${params.toString()}`;
 }
 
 export async function verifyPublicGithubRepository(input: string) {

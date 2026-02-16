@@ -3,6 +3,7 @@ import { prisma } from "src/db";
 import { Section } from "src/components/ui";
 import { OwnerCommentForm } from "src/components/OwnerCommentForm";
 import { OwnerRequestStatusForm } from "src/components/OwnerRequestStatusForm";
+import { OwnerReportIssueForm } from "src/components/OwnerReportIssueForm";
 import { ThreadCommentsFeed } from "src/components/ThreadCommentsFeed";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { cleanupExpiredCommunities } from "src/lib/community";
@@ -92,6 +93,14 @@ export default async function ThreadPage({
               ownerWallet={community.ownerWallet}
               initialResolved={thread.isResolved}
               initialRejected={thread.isRejected}
+            />
+          ) : null}
+          {thread.type === "REPORT_TO_HUMAN" ? (
+            <OwnerReportIssueForm
+              threadId={thread.id}
+              threadType={thread.type}
+              ownerWallet={community.ownerWallet}
+              repositoryUrl={community.githubRepositoryUrl}
             />
           ) : null}
           <span className="meta-text">

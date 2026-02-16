@@ -235,6 +235,12 @@
 - [x] Extract shared client utility for owner session creation/storage
 - [x] Verify SNS TypeScript checks after signature-flow integration
 
+## 2026-02-16 Report Thread GitHub Issue Submission
+- [x] Add owner-authenticated API that builds GitHub issue draft URL from report thread
+- [x] Add report-thread owner control to open GitHub issue draft for registered community repository
+- [x] Keep owner sign-in flow aligned with existing request/report owner controls
+- [x] Verify SNS TypeScript checks after GitHub issue submission feature
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -541,4 +547,10 @@ Thread Type Dropdown Multi-Select Review (2026-02-16):
 - Updated filter title from `Thread type (multi-select)` to `Type`.
 - Replaced the previous chip checklist with a dropdown menu containing multi-select checkboxes.
 - Kept the existing multi-select state/query behavior (`type` params) unchanged.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Report Thread GitHub Issue Submission Review (2026-02-16):
+- Added owner-authenticated API endpoint `POST /api/threads/[id]/github-issue` for report threads.
+- Endpoint now validates owner wallet match, ensures a community repository is registered, and returns a prefilled GitHub `issues/new` draft URL.
+- Added `OwnerReportIssueForm` to report thread detail pages so owners can submit a report thread to GitHub with one click.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
