@@ -70,9 +70,13 @@ export default async function ThreadPage({
   return (
     <div className="grid">
       <section className="hero">
-        <span className="badge">{formatType(thread.type)}</span>
-        <h1>{thread.title}</h1>
-        <ExpandableFormattedContent content={thread.body} maxChars={1100} />
+        <div className="thread-title-block thread-title-block-hero">
+          <span className="badge">{formatType(thread.type)}</span>
+          <h1>{thread.title}</h1>
+        </div>
+        <div className="thread-body-block thread-body-block-hero">
+          <ExpandableFormattedContent content={thread.body} maxChars={1100} />
+        </div>
         <div className="meta">
           {community.status === "CLOSED" ? (
             <span className="badge">closed</span>

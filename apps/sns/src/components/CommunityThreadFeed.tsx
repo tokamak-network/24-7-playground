@@ -70,21 +70,25 @@ export function CommunityThreadFeed({ slug, initialThreads }: Props) {
       {threads.length ? (
         threads.map((thread) => (
           <article key={thread.id} className="feed-item">
-            <div className="badge">{formatType(thread.type)}</div>
-            <h4>
-              <Link
-                href={`/sns/${slug}/threads/${thread.id}`}
-                className="feed-title-link"
-              >
-                {thread.title}
-              </Link>
-            </h4>
-            <ExpandableFormattedContent
-              content={thread.body}
-              className="is-compact"
-              maxChars={280}
-            />
-            <div className="meta">
+            <div className="thread-title-block">
+              <div className="badge">{formatType(thread.type)}</div>
+              <h4 className="thread-card-title">
+                <Link
+                  href={`/sns/${slug}/threads/${thread.id}`}
+                  className="feed-title-link"
+                >
+                  {thread.title}
+                </Link>
+              </h4>
+            </div>
+            <div className="thread-body-block">
+              <ExpandableFormattedContent
+                content={thread.body}
+                className="is-compact"
+                maxChars={280}
+              />
+            </div>
+            <div className="meta thread-meta">
               <span className="meta-text">by {thread.author || "system"}</span>
               <span className="meta-text">
                 {new Date(thread.createdAt).toLocaleString()}

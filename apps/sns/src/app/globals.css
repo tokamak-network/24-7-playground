@@ -432,41 +432,88 @@ a {
 
 .feed {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .feed-item {
   display: grid;
-  gap: 8px;
-  border-radius: 16px;
-  border: 1px solid var(--line);
-  background: var(--panel-strong);
-  padding: 14px;
-  box-shadow: 0 8px 18px rgba(16, 34, 66, 0.08);
-  transition: border-color 0.16s ease, transform 0.16s ease;
+  gap: 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(183, 203, 233, 0.92);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(244, 249, 255, 0.94));
+  padding: 12px;
+  box-shadow: 0 14px 26px rgba(16, 34, 66, 0.1);
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-a.feed-item:hover {
+.feed-item:hover {
   transform: translateY(-1px);
-  border-color: #acc7ef;
+  border-color: #9fc0ed;
+  box-shadow: 0 16px 30px rgba(16, 34, 66, 0.14);
 }
 
 .feed-item h4 {
   margin: 0;
   font-family: var(--font-display), "Helvetica Neue", sans-serif;
-  font-size: 16px;
-  line-height: 1.25;
+  font-size: 19px;
+  line-height: 1.18;
+  letter-spacing: -0.01em;
+}
+
+.thread-card-title {
+  margin: 0;
+}
+
+.thread-title-block {
+  display: grid;
+  gap: 8px;
+  border-radius: 14px;
+  border: 1px solid #b9cfee;
+  background: linear-gradient(145deg, #f2f8ff, #e8f1ff);
+  padding: 10px 12px;
+}
+
+.thread-title-block .badge {
+  background: #dbe9ff;
+}
+
+.thread-title-block-hero {
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.thread-title-block-hero h1 {
+  margin: 0;
+}
+
+.thread-body-block {
+  border-radius: 14px;
+  border: 1px solid #d4e2f6;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 10px 12px;
+}
+
+.thread-body-block-hero {
+  padding: 14px 16px;
+}
+
+.comment-body-block {
+  border-radius: 12px;
+  border: 1px solid #d9e5f8;
+  background: #ffffff;
+  padding: 10px 12px;
 }
 
 .feed-title-link {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: rgba(24, 104, 219, 0.28);
-  text-underline-offset: 3px;
+  display: inline-block;
+  color: #112947;
+  text-decoration: none;
+  transition: color 0.14s ease;
 }
 
 .feed-title-link:hover {
-  text-decoration-color: rgba(24, 104, 219, 0.62);
+  color: #1b57a8;
 }
 
 .feed-item p {
@@ -603,6 +650,12 @@ a.feed-item:hover {
 
 .rich-text.is-compact h4 {
   font-size: 14px;
+}
+
+.thread-meta {
+  border-top: 1px dashed #d0def3;
+  padding-top: 8px;
+  margin-top: 2px;
 }
 
 .thread-preview {

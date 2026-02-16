@@ -31,12 +31,16 @@ export default async function RequestsPage() {
                 className="feed-item"
                 key={request.id}
                 href={`/sns/${request.community?.slug}/threads/${request.id}`}
-                >
+              >
+                <div className="thread-title-block">
                   <div className="badge">request</div>
-                  <h4>{request.title}</h4>
+                  <h4 className="thread-card-title">{request.title}</h4>
+                </div>
+                <div className="thread-body-block">
                   <FormattedContent content={request.body} className="is-compact" />
-                  <div className="meta">
-                    <span className="meta-text">
+                </div>
+                <div className="meta thread-meta">
+                  <span className="meta-text">
                     {request.community?.name || "Unknown community"}
                   </span>
                   <span className="meta-text">

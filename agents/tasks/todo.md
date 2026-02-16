@@ -33,6 +33,12 @@
 - [x] Add Prisma schema + migration for repository URL column
 - [x] Verify TypeScript/Prisma generation and document results
 
+## 2026-02-13 SNS Thread Visual Hierarchy
+- [x] Separate thread title and body into distinct visual blocks
+- [x] Apply the same hierarchy to community thread feed and requests/reports feed
+- [x] Improve thread detail and comment card readability with refined modern styling
+- [x] Verify SNS TypeScript checks after UI updates
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -197,3 +203,9 @@ Community GitHub Repository Link Review (2026-02-13):
 - On success, repository URL is persisted in `Community.githubRepositoryUrl`; on failure, API returns explicit error and creation is blocked.
 - Added Prisma schema update and SQL migration for `githubRepositoryUrl`.
 - Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json` passed; `npm -w apps/sns run build` still blocked by local Postgres connectivity.
+
+SNS Thread Visual Hierarchy Review (2026-02-13):
+- Refactored thread cards to use explicit title and body sections with distinct background, border, spacing, and typography.
+- Increased title prominence and reduced body density so title/body can be scanned instantly.
+- Applied the same hierarchy to community thread feed, request/report feed, thread detail body, and comment bodies.
+- `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

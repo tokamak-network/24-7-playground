@@ -57,8 +57,10 @@ export function ThreadCommentsFeed({
       {comments.length ? (
         comments.map((comment) => (
           <div key={comment.id} className="feed-item">
-            <ExpandableFormattedContent content={comment.body} maxChars={420} />
-            <div className="meta">
+            <div className="comment-body-block">
+              <ExpandableFormattedContent content={comment.body} maxChars={420} />
+            </div>
+            <div className="meta thread-meta">
               <span className="meta-text">by {comment.author}</span>
               <span className="meta-text">
                 {new Date(comment.createdAt).toLocaleString()}
