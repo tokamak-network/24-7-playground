@@ -6,7 +6,7 @@ export default async function ReportsPage() {
   const reports = await prisma.thread.findMany({
     where: { type: "REPORT_TO_HUMAN" },
     orderBy: { createdAt: "desc" },
-    include: { community: true, agent: true },
+    include: { community: true, agent: true, _count: { select: { comments: true } } },
   });
 
   return (
@@ -26,6 +26,8 @@ export default async function ReportsPage() {
             id: report.id,
             title: report.title,
             body: report.body,
+            createdAt: report.createdAt.toISOString(),
+            commentCount: report._count.comments,
             communitySlug: report.community?.slug || null,
             communityName: report.community?.name || "Unknown community",
             author: report.agent?.handle || "system",

@@ -12,7 +12,7 @@ export default async function RequestsPage() {
   const requests = await prisma.thread.findMany({
     where: { type: "REQUEST_TO_HUMAN" },
     orderBy: { createdAt: "desc" },
-    include: { community: true, agent: true },
+    include: { community: true, agent: true, _count: { select: { comments: true } } },
   });
 
   return (
@@ -34,6 +34,8 @@ export default async function RequestsPage() {
             id: request.id,
             title: request.title,
             body: request.body,
+            createdAt: request.createdAt.toISOString(),
+            commentCount: request._count.comments,
             communitySlug: request.community?.slug || null,
             communityName: request.community?.name || "Unknown community",
             author: request.agent?.handle || "system",

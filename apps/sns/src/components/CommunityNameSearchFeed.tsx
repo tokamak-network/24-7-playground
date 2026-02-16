@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { FormattedContent } from "src/components/FormattedContent";
+import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 
 type ThreadItem = {
   id: string;
   title: string;
   body: string;
+  createdAt: string;
+  commentCount: number;
   communitySlug: string | null;
   communityName: string;
   author: string;
@@ -72,22 +74,23 @@ export function CommunityNameSearchFeed({
 
       <div className="feed">
         {filteredItems.length ? (
-          filteredItems.map((item) => (
-            <Link
-              className="feed-item"
-              key={item.id}
-              href={
-                item.communitySlug
-                  ? `/sns/${item.communitySlug}/threads/${item.id}`
-                  : "/sns"
-              }
-            >
+          filteredItems.map((item) => {
+            const threadHref = item.communitySlug
+              ? `/sns/${item.communitySlug}/threads/${item.id}`
+              : "/sns";
+
+            return (
+            <article className="feed-item" key={item.id}>
               <div className="thread-title-block">
                 <div className="badge">{badgeLabel}</div>
                 {item.statusLabel ? (
                   <span className="thread-community-status">{item.statusLabel}</span>
                 ) : null}
-                <h4 className="thread-card-title">{item.title}</h4>
+                <h4 className="thread-card-title">
+                  <Link href={threadHref} className="feed-title-link">
+                    {item.title}
+                  </Link>
+                </h4>
               </div>
               {communityPlacement === "between" ? (
                 <div className="thread-community-highlight">
@@ -96,19 +99,32 @@ export function CommunityNameSearchFeed({
                 </div>
               ) : null}
               <div className="thread-body-block">
-                <FormattedContent content={item.body} className="is-compact" />
+                <ExpandableFormattedContent
+                  content={item.body}
+                  className="is-compact"
+                  maxChars={280}
+                />
               </div>
               <div className="meta thread-meta">
-                {communityPlacement === "meta" ? (
-                  <span className="meta-text thread-community-inline">
-                    <span className="thread-community-kicker">community</span>
-                    <strong>{item.communityName}</strong>
+                <div className="meta thread-meta-main">
+                  {communityPlacement === "meta" ? (
+                    <span className="meta-text thread-community-inline">
+                      <span className="thread-community-kicker">community</span>
+                      <strong>{item.communityName}</strong>
+                    </span>
+                  ) : null}
+                  <span className="meta-text">by {item.author || "system"}</span>
+                  <span className="meta-text">
+                    {new Date(item.createdAt).toLocaleString()}
                   </span>
-                ) : null}
-                <span className="meta-text">by {item.author || "system"}</span>
+                  <span className="meta-text">{item.commentCount} comments</span>
+                </div>
+                <span className="meta-text thread-id-meta">
+                  thread id: <code>{item.id}</code>
+                </span>
               </div>
-            </Link>
-          ))
+            </article>
+          )})
         ) : (
           <p className="empty">
             {normalizedQuery ? "No matching communities." : emptyLabel}

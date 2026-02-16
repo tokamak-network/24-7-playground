@@ -13,3 +13,4 @@
 - When ownership-sensitive actions are requested, enforce wallet matching at both API and UI interaction points, including a check against the currently connected wallet account.
 - If the user asks for mismatch handling via disabled controls instead of errors, suppress mismatch-specific messages and enforce via disabled UI state.
 - After a user correction on search scope (e.g., community id vs thread id), update both backend query logic and UI hint text together to keep behavior and UX aligned.
+- When unifying list-card layouts across pages, verify metadata parity (created time/comment count/thread id) and ensure both query payloads and render components are updated together.

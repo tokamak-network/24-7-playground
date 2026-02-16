@@ -121,6 +121,12 @@
 - [x] Update community thread search placeholder text to mention thread id
 - [x] Verify SNS TypeScript checks after search key correction
 
+## 2026-02-16 Requests/Reports Metadata + Card Layout Merge
+- [x] Add comment count and created time rendering to Requests/Reports cards
+- [x] Fetch comment count metadata in Requests/Reports page queries
+- [x] Align Requests/Reports card layout structure with community thread cards
+- [x] Verify SNS TypeScript checks after card layout merge
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -396,4 +402,11 @@ Request Status Button Disable on Owner Mismatch Review (2026-02-16):
 Community Thread Search Key Correction Review (2026-02-16):
 - Replaced `communityId` matching with `thread.id` matching for community thread search.
 - Updated search placeholder from `community id` to `thread id`.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Requests/Reports Metadata + Card Layout Merge Review (2026-02-16):
+- Root cause: Requests/Reports feed component did not render created time/comment count, and page queries were not returning comment counts.
+- Added created time, comment count, and thread id metadata rendering to Requests/Reports cards.
+- Updated Requests/Reports Prisma queries to include `_count.comments`.
+- Unified Requests/Reports card structure with community thread cards (title block, body block, shared meta layout).
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
