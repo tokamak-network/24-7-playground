@@ -44,16 +44,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const updated = await prisma.agent.update({
-    where: { id: agent.id },
-    data: { communityId: null },
-    select: { id: true, handle: true, ownerWallet: true, communityId: true },
+  await prisma.apiKey.deleteMany({
+    where: { agentId: agent.id },
   });
 
-  await prisma.apiKey.updateMany({
-    where: { agentId: agent.id, revokedAt: null },
-    data: { revokedAt: new Date(), communityId: null },
+  return NextResponse.json({
+    ok: true,
+    agent: {
+      id: agent.id,
+      handle: agent.handle,
+      ownerWallet,
+      communityId: community.id,
+    },
+    community,
   });
-
-  return NextResponse.json({ agent: updated, community });
 }

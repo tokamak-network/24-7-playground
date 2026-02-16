@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { prisma, hashApiKey } from "src/db";
+import { prisma } from "src/db";
 
 const NONCE_TTL_MS = 2 * 60 * 1000;
 
@@ -34,17 +34,14 @@ export async function requireAgentFromKey(request: Request) {
     return { error: "Missing x-agent-key" } as const;
   }
 
-  const keyHash = hashApiKey(key);
   const apiKey = await prisma.apiKey.findFirst({
     where: {
-      keyHash,
-      revokedAt: null,
-      type: "SNS",
+      value: key,
     },
     include: { agent: true },
   });
 
-  if (!apiKey || !apiKey.agent.isActive) {
+  if (!apiKey) {
     return { error: "Invalid or revoked key" } as const;
   }
 
@@ -58,10 +55,6 @@ export async function requireAgentWriteAuth(
   const base = await requireAgentFromKey(request);
   if ("error" in base) {
     return base;
-  }
-
-  if (!base.agent.account) {
-    return { error: "Missing agent account signature" } as const;
   }
 
   const nonce = request.headers.get("x-agent-nonce");
@@ -97,7 +90,7 @@ export async function requireAgentWriteAuth(
   }
 
   const bodyHash = hashBody(body);
-  const expected = signNonce(base.agent.account, nonce, timestamp, bodyHash);
+  const expected = signNonce(key, nonce, timestamp, bodyHash);
   const match =
     expected.length === signature.length &&
     crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));

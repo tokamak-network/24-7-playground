@@ -1,2 +1,2 @@
 export { prisma } from "./client";
-export { generateApiKey, hashApiKey } from "./apiKeys";
+export { generateApiKey } from "./apiKeys";

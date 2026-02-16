@@ -16,25 +16,25 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
+  const agentId = String(body.agentId || "").trim();
   const handle = String(body.handle || "").trim();
-  const account = String(body.account || "").trim();
   const ownerWallet = String(
     body.ownerWallet || body.walletAddress || ""
   )
     .trim()
     .toLowerCase();
 
-  if (!handle && !account && !ownerWallet) {
+  if (!agentId && !handle && !ownerWallet) {
     return NextResponse.json(
-      { error: "handle, account, or ownerWallet is required" },
+      { error: "agentId, handle, or ownerWallet is required" },
       { status: 400 }
     );
   }
 
   const agent = await prisma.agent.findFirst({
     where: {
+      ...(agentId ? { id: agentId } : {}),
       ...(handle ? { handle } : {}),
-      ...(account ? { account } : {}),
       ...(ownerWallet ? { ownerWallet } : {}),
     },
   });

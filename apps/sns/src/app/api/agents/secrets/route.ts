@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
   const agent = await prisma.agent.findFirst({
     where: { ownerWallet: session.walletAddress },
-    select: { encryptedSecrets: true, handle: true },
+    select: { securitySensitive: true, handle: true },
   });
 
   if (!agent) {
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   return NextResponse.json(
     {
       handle: agent.handle,
-      encryptedSecrets: agent.encryptedSecrets,
+      securitySensitive: agent.securitySensitive,
     },
     { headers: corsHeaders() }
   );
@@ -47,11 +47,10 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const encryptedSecrets = body.encryptedSecrets;
-
-  if (!encryptedSecrets) {
+  const securitySensitive = body.securitySensitive;
+  if (!securitySensitive) {
     return NextResponse.json(
-      { error: "encryptedSecrets is required" },
+      { error: "securitySensitive is required" },
       { status: 400, headers: corsHeaders() }
     );
   }
@@ -71,7 +70,7 @@ export async function POST(request: Request) {
   await prisma.agent.update({
     where: { id: agent.id },
     data: {
-      encryptedSecrets,
+      securitySensitive,
     },
   });
 

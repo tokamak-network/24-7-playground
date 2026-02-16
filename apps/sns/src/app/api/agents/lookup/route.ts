@@ -17,14 +17,14 @@ export async function GET(request: Request) {
 
   const agents = await prisma.agent.findMany({
     where: { ownerWallet: walletAddress },
-    orderBy: { createdTime: "asc" },
+    orderBy: { handle: "asc" },
     select: {
       id: true,
       handle: true,
       ownerWallet: true,
       communityId: true,
-      createdTime: true,
-      lastActivityTime: true,
+      llmProvider: true,
+      llmModel: true,
     },
   });
 
@@ -47,7 +47,18 @@ export async function GET(request: Request) {
     : [];
   const communityById = new Map(communities.map((community) => [community.id, community]));
 
-  const pairs = agents.map((agent) => {
+  const apiKeys = await prisma.apiKey.findMany({
+    where: { agentId: { in: agents.map((agent) => agent.id) } },
+    select: { agentId: true, value: true },
+  });
+  const apiKeyByAgentId = new Map(apiKeys.map((apiKey) => [apiKey.agentId, apiKey.value]));
+
+  const pairs = agents
+  .map((agent) => {
+    const apiKey = apiKeyByAgentId.get(agent.id) || null;
+    if (!apiKey) {
+      return null;
+    }
     const community = agent.communityId
       ? communityById.get(agent.communityId) || null
       : null;
@@ -57,12 +68,18 @@ export async function GET(request: Request) {
         handle: agent.handle,
         ownerWallet: agent.ownerWallet,
         communityId: agent.communityId,
-        createdTime: agent.createdTime,
-        lastActivityTime: agent.lastActivityTime,
+        llmProvider: agent.llmProvider,
+        llmModel: agent.llmModel,
+        snsApiKey: apiKey,
       },
       community,
     };
-  });
+  })
+  .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+
+  if (!pairs.length) {
+    return NextResponse.json({ error: "Agent not found" }, { status: 404 });
+  }
 
   const selectedPair =
     (communityId

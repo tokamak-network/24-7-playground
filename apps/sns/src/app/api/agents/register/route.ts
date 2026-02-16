@@ -2,11 +2,27 @@ import { NextResponse } from "next/server";
 import { generateApiKey, prisma } from "src/db";
 import { getAddress, verifyMessage } from "ethers";
 
+function normalizeProvider(value: unknown) {
+  const raw = String(value || "").trim().toUpperCase();
+  if (!raw) return "GEMINI";
+  return raw;
+}
+
+function normalizeModel(value: unknown, provider: string) {
+  const raw = String(value || "").trim();
+  if (raw) return raw;
+  if (provider === "ANTHROPIC") return "claude-3-5-sonnet-20240620";
+  if (provider === "OPENAI" || provider === "LITELLM") return "gpt-4o-mini";
+  return "gemini-1.5-flash-002";
+}
+
 export async function POST(request: Request) {
   const body = await request.json();
   const handle = String(body.handle || "").trim();
   const signature = String(body.signature || "").trim();
   const communityId = String(body.communityId || "").trim();
+  const llmProvider = normalizeProvider(body.llmProvider);
+  const llmModel = normalizeModel(body.llmModel, llmProvider);
 
   if (!handle || !signature || !communityId) {
     return NextResponse.json(
@@ -17,18 +33,13 @@ export async function POST(request: Request) {
 
   const community = await prisma.community.findUnique({
     where: { id: communityId },
+    select: { id: true, slug: true, status: true },
   });
   if (!community) {
-    return NextResponse.json(
-      { error: "Community not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Community not found" }, { status: 404 });
   }
   if (community.status === "CLOSED") {
-    return NextResponse.json(
-      { error: "Community is closed" },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: "Community is closed" }, { status: 403 });
   }
 
   const authMessage = `24-7-playground${community.slug}`;
@@ -36,214 +47,71 @@ export async function POST(request: Request) {
   try {
     ownerWallet = getAddress(verifyMessage(authMessage, signature)).toLowerCase();
   } catch {
-    return NextResponse.json(
-      { error: "Invalid signature" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
   const existingPair = await prisma.agent.findFirst({
-    where: {
-      ownerWallet,
-      communityId: community.id,
-    },
-    select: {
-      id: true,
-      handle: true,
-      ownerWallet: true,
-      communityId: true,
-      account: true,
-      runner: true,
-    },
+    where: { ownerWallet, communityId: community.id },
+    select: { id: true, handle: true, ownerWallet: true, communityId: true },
   });
 
-  const existingHandle = await prisma.agent.findUnique({
-    where: { handle },
-    select: {
-      id: true,
-      handle: true,
-      ownerWallet: true,
-      communityId: true,
-      account: true,
-      runner: true,
-    },
-  });
-
-  if (
-    existingHandle &&
-    existingHandle.ownerWallet &&
-    existingHandle.ownerWallet !== ownerWallet
-  ) {
-    return NextResponse.json(
-      { error: "handle already exists" },
-      { status: 409 }
-    );
-  }
-
-  const existingAccount = await prisma.agent.findFirst({
-    where: { account: signature },
-    select: {
-      id: true,
-      handle: true,
-      ownerWallet: true,
-      communityId: true,
-      account: true,
-      runner: true,
-    },
-  });
-
-  if (
-    existingAccount &&
-    existingAccount.ownerWallet &&
-    existingAccount.ownerWallet !== ownerWallet
-  ) {
-    return NextResponse.json(
-      { error: "account already registered to another handle" },
-      { status: 409 }
-    );
-  }
-
-  let agent:
-    | {
-        id: string;
-        handle: string;
-        ownerWallet: string | null;
-        account: string | null;
-        communityId: string | null;
-        runner: unknown;
-      }
-    | null = null;
-
-  if (existingPair) {
-    if (existingHandle && existingHandle.id !== existingPair.id) {
-      return NextResponse.json(
-        { error: "handle already exists" },
-        { status: 409 }
-      );
-    }
-    if (existingAccount && existingAccount.id !== existingPair.id) {
-      return NextResponse.json(
-        { error: "account already registered to another handle" },
-        { status: 409 }
-      );
-    }
-
-    agent = await prisma.agent.update({
-      where: { id: existingPair.id },
-      data: {
-        handle,
-        ownerWallet,
-        account: signature,
-        communityId: community.id,
-        runner:
-          (existingPair as { runner?: { status?: string; intervalSec?: number } })
-            ?.runner || { status: "STOPPED", intervalSec: 60 },
-      },
-      select: {
-        id: true,
-        handle: true,
-        ownerWallet: true,
-        account: true,
-        communityId: true,
-        runner: true,
-      },
-    });
-  } else {
-    const reusableByAccount =
-      existingAccount &&
-      existingAccount.ownerWallet === ownerWallet &&
-      (!existingAccount.communityId || existingAccount.communityId === community.id)
-        ? existingAccount
-        : null;
-
-    const reusableByHandle =
-      existingHandle &&
-      existingHandle.ownerWallet === ownerWallet &&
-      (!existingHandle.communityId || existingHandle.communityId === community.id)
-        ? existingHandle
-        : null;
-
-    const reusable = reusableByAccount || reusableByHandle;
-
-    if (reusable) {
-      agent = await prisma.agent.update({
-        where: { id: reusable.id },
+  const agent = existingPair
+    ? await prisma.agent.update({
+        where: { id: existingPair.id },
         data: {
           handle,
-          ownerWallet,
-          account: signature,
-          communityId: community.id,
-          runner:
-            (reusable as { runner?: { status?: string; intervalSec?: number } })
-              ?.runner || { status: "STOPPED", intervalSec: 60 },
+          llmProvider,
+          llmModel,
         },
         select: {
           id: true,
           handle: true,
           ownerWallet: true,
-          account: true,
           communityId: true,
-          runner: true,
+          llmProvider: true,
+          llmModel: true,
         },
-      });
-    } else {
-      agent = await prisma.agent.create({
+      })
+    : await prisma.agent.create({
         data: {
           handle,
           ownerWallet,
-          account: signature,
           communityId: community.id,
-          runner: { status: "STOPPED", intervalSec: 60 },
+          llmProvider,
+          llmModel,
         },
         select: {
           id: true,
           handle: true,
           ownerWallet: true,
-          account: true,
           communityId: true,
-          runner: true,
+          llmProvider: true,
+          llmModel: true,
         },
       });
-    }
-  }
 
   const existingKey = await prisma.apiKey.findUnique({
     where: { agentId: agent.id },
+    select: { id: true, value: true, communityId: true },
   });
 
-  if (
-    existingKey &&
-    !existingKey.revokedAt &&
-    existingKey.communityId === community.id
-  ) {
-    return NextResponse.json({ agent, community });
+  if (existingKey) {
+    return NextResponse.json({
+      agent,
+      community,
+      apiKey: existingKey.value,
+      isExistingKey: true,
+    });
   }
 
-  const { plain, prefix, hash } = generateApiKey();
-
-  if (!plain) {
-    return NextResponse.json(
-      { error: "Failed to issue API key" },
-      { status: 500 }
-    );
-  }
-
-  await prisma.apiKey.upsert({
-    where: { agentId: agent.id },
-    update: {
-      revokedAt: null,
-      keyHash: hash,
-      keyPrefix: prefix,
-      communityId: community.id,
-    },
-    create: {
+  const apiKey = generateApiKey();
+  await prisma.apiKey.create({
+    data: {
       agentId: agent.id,
-      keyHash: hash,
-      keyPrefix: prefix,
       communityId: community.id,
-      type: "SNS",
+      value: apiKey,
     },
   });
 
-  return NextResponse.json({ agent, community, apiKey: plain });
+  return NextResponse.json({ agent, community, apiKey, isExistingKey: false });
 }

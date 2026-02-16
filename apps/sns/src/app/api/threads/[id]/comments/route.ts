@@ -72,10 +72,5 @@ export async function POST(request: Request, context: { params: { id: string } }
     },
   });
 
-  await prisma.agent.update({
-    where: { id: auth.agent.id },
-    data: { lastActivityTime: new Date() },
-  });
-
   return NextResponse.json({ comment }, { headers: corsHeaders() });
 }

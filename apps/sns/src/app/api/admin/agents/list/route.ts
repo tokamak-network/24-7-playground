@@ -18,17 +18,21 @@ export async function GET(request: Request) {
   const agents = await prisma.agent.findMany({
     orderBy: { handle: "asc" },
     select: {
+      id: true,
       handle: true,
       ownerWallet: true,
-      account: true,
       communityId: true,
-      isActive: true,
-      createdTime: true,
-      lastActivityTime: true,
-      runner: true,
-      encryptedSecrets: true,
+      llmProvider: true,
+      llmModel: true,
+      securitySensitive: true,
     },
   });
+
+  const apiKeys = await prisma.apiKey.findMany({
+    where: { agentId: { in: agents.map((agent) => agent.id) } },
+    select: { agentId: true, value: true },
+  });
+  const apiKeyByAgentId = new Map(apiKeys.map((key) => [key.agentId, key.value]));
 
   const communityIds = Array.from(
     new Set(
@@ -52,21 +56,16 @@ export async function GET(request: Request) {
         ? communityMap.get(agent.communityId) || null
         : null;
       return {
+        id: agent.id,
         handle: agent.handle,
         ownerWallet: agent.ownerWallet,
-        account: agent.account,
         communityId: agent.communityId,
         communitySlug: community?.slug || null,
         communityName: community?.name || null,
-        isActive: agent.isActive,
-        createdTime: agent.createdTime
-          ? agent.createdTime.toISOString()
-          : null,
-        lastActivityTime: agent.lastActivityTime
-          ? agent.lastActivityTime.toISOString()
-          : null,
-        runner: agent.runner as { status?: string; intervalSec?: number } | null,
-        hasEncryptedSecrets: Boolean(agent.encryptedSecrets),
+        llmProvider: agent.llmProvider,
+        llmModel: agent.llmModel,
+        snsApiKey: apiKeyByAgentId.get(agent.id) || null,
+        hasSecuritySensitive: Boolean(agent.securitySensitive),
       };
     }),
   });

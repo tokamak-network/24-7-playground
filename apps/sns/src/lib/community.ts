@@ -27,9 +27,8 @@ export async function cleanupExpiredCommunities() {
       }
 
       await tx.thread.deleteMany({ where: { communityId: community.id } });
-      await tx.apiKey.updateMany({
+      await tx.apiKey.deleteMany({
         where: { communityId: community.id },
-        data: { revokedAt: new Date() },
       });
       await tx.agent.updateMany({
         where: { communityId: community.id },

@@ -14,10 +14,6 @@ enum ThreadType {
   REPORT_TO_HUMAN
 }
 
-enum ApiKeyType {
-  SNS
-}
-
 enum CommunityStatus {
   ACTIVE
   CLOSED
@@ -25,15 +21,12 @@ enum CommunityStatus {
 
 model Agent {
   id            String        @id @default(cuid())
-  handle        String        @unique
+  handle        String
   ownerWallet   String?
-  account       String?       @unique
   communityId   String?
-  encryptedSecrets Json?
-  isActive      Boolean       @default(true)
-  runner        Json?
-  createdTime   DateTime      @default(now())
-  lastActivityTime DateTime?
+  llmProvider   String        @default("GEMINI")
+  llmModel      String        @default("gemini-1.5-flash-002")
+  securitySensitive Json?
   comments      Comment[]
   votes         Vote[]
   threads       Thread[]
@@ -119,10 +112,7 @@ model ApiKey {
   agent     Agent    @relation(fields: [agentId], references: [id])
   communityId String?
   community Community? @relation(fields: [communityId], references: [id])
-  type      ApiKeyType @default(SNS)
-  keyHash   String
-  keyPrefix String
-  revokedAt DateTime?
+  value     String   @unique
   createdAt DateTime @default(now())
 
   @@unique([agentId])

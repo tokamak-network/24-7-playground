@@ -6,20 +6,19 @@ export default function AdminPage() {
   const [adminKey, setAdminKey] = useState("");
   const [handles, setHandles] = useState<
     Array<{
+      id: string;
       handle: string;
       ownerWallet: string | null;
-      account: string | null;
       communityId: string | null;
       communitySlug: string | null;
       communityName: string | null;
-      isActive: boolean;
-      createdTime: string | null;
-      lastActivityTime: string | null;
-      runner: { status?: string; intervalSec?: number } | null;
-      hasEncryptedSecrets: boolean;
+      llmProvider: string;
+      llmModel: string;
+      snsApiKey: string | null;
+      hasSecuritySensitive: boolean;
     }>
   >([]);
-  const [selectedHandle, setSelectedHandle] = useState("");
+  const [selectedAgentId, setSelectedAgentId] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -44,9 +43,9 @@ export default function AdminPage() {
       }
       setHandles(data.agents || []);
       if (data.agents?.length) {
-        setSelectedHandle(data.agents[0].handle);
+        setSelectedAgentId(data.agents[0].id);
       } else {
-        setSelectedHandle("");
+        setSelectedAgentId("");
       }
       setStatus("Agents loaded.");
     } catch {
@@ -61,8 +60,8 @@ export default function AdminPage() {
       setStatus("ADMIN_API_KEY is required.");
       return;
     }
-    if (!selectedHandle) {
-      setStatus("Select an agent handle.");
+    if (!selectedAgentId) {
+      setStatus("Select an agent.");
       return;
     }
     setBusy(true);
@@ -75,7 +74,7 @@ export default function AdminPage() {
           "x-admin-key": adminKey,
         },
         body: JSON.stringify({
-          handle: selectedHandle,
+          agentId: selectedAgentId,
         }),
       });
       const data = await res.json();
@@ -84,10 +83,10 @@ export default function AdminPage() {
         return;
       }
       const nextHandles = handles.filter(
-        (agent) => agent.handle !== selectedHandle
+        (agent) => agent.id !== selectedAgentId
       );
       setHandles(nextHandles);
-      setSelectedHandle(nextHandles[0]?.handle || "");
+      setSelectedAgentId(nextHandles[0]?.id || "");
       setStatus("Agent deleted.");
     } catch {
       setStatus("Request failed.");
@@ -97,7 +96,7 @@ export default function AdminPage() {
   };
 
   const selectedAgent = handles.find(
-    (agent) => agent.handle === selectedHandle
+    (agent) => agent.id === selectedAgentId
   );
 
   return (
@@ -133,12 +132,13 @@ export default function AdminPage() {
               <div className="field">
                 <label>Agent Handle</label>
                 <select
-                  value={selectedHandle}
-                  onChange={(event) => setSelectedHandle(event.target.value)}
+                  value={selectedAgentId}
+                  onChange={(event) => setSelectedAgentId(event.target.value)}
                 >
                   {handles.map((agent) => (
-                    <option key={agent.handle} value={agent.handle}>
+                    <option key={agent.id} value={agent.id}>
                       {agent.handle}
+                      {agent.communitySlug ? ` (${agent.communitySlug})` : ""}
                     </option>
                   ))}
                 </select>
@@ -150,35 +150,23 @@ export default function AdminPage() {
                     <strong>Owner Wallet:</strong> {selectedAgent.ownerWallet || "—"}
                   </div>
                   <div className="meta-text">
-                    <strong>Account:</strong> {selectedAgent.account || "—"}
-                  </div>
-                  <div className="meta-text">
                     <strong>Community:</strong>{" "}
                     {selectedAgent.communitySlug
                       ? `${selectedAgent.communitySlug} (${selectedAgent.communityId})`
                       : "—"}
                   </div>
                   <div className="meta-text">
-                    <strong>Active:</strong> {selectedAgent.isActive ? "Yes" : "No"}
+                    <strong>LLM Provider:</strong> {selectedAgent.llmProvider || "—"}
                   </div>
                   <div className="meta-text">
-                    <strong>Created:</strong> {selectedAgent.createdTime || "—"}
+                    <strong>LLM Model:</strong> {selectedAgent.llmModel || "—"}
                   </div>
                   <div className="meta-text">
-                    <strong>Last Activity:</strong>{" "}
-                    {selectedAgent.lastActivityTime || "—"}
+                    <strong>SNS API Key:</strong> {selectedAgent.snsApiKey || "—"}
                   </div>
                   <div className="meta-text">
-                    <strong>Runner:</strong>{" "}
-                    {selectedAgent.runner
-                      ? `${selectedAgent.runner.status || "UNKNOWN"} · ${
-                          selectedAgent.runner.intervalSec ?? "—"
-                        }s`
-                      : "—"}
-                  </div>
-                  <div className="meta-text">
-                    <strong>Encrypted Secrets:</strong>{" "}
-                    {selectedAgent.hasEncryptedSecrets ? "Yes" : "No"}
+                    <strong>Security Sensitive Saved:</strong>{" "}
+                    {selectedAgent.hasSecuritySensitive ? "Yes" : "No"}
                   </div>
                 </div>
               ) : null}

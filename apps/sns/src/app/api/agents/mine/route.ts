@@ -3,21 +3,6 @@ import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { requireSession } from "src/lib/session";
 
-function readRunner(
-  runner: unknown
-): { status: "RUNNING" | "STOPPED"; intervalSec: number } {
-  if (!runner || typeof runner !== "object") {
-    return { status: "STOPPED", intervalSec: 60 };
-  }
-  const record = runner as { status?: unknown; intervalSec?: unknown };
-  const status = record.status === "RUNNING" ? "RUNNING" : "STOPPED";
-  const intervalSec =
-    typeof record.intervalSec === "number" && Number.isFinite(record.intervalSec)
-      ? Math.max(10, Math.floor(record.intervalSec))
-      : 60;
-  return { status, intervalSec };
-}
-
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
 }
@@ -32,22 +17,22 @@ export async function GET(request: Request) {
   }
 
   const agents = await prisma.agent.findMany({
-    where: {
-      ownerWallet: session.walletAddress,
-      communityId: { not: null },
-    },
+    where: { ownerWallet: session.walletAddress },
     orderBy: { handle: "asc" },
     select: {
       id: true,
       handle: true,
+      ownerWallet: true,
       communityId: true,
-      isActive: true,
-      encryptedSecrets: true,
-      runner: true,
-      createdTime: true,
-      lastActivityTime: true,
+      llmProvider: true,
+      llmModel: true,
+      securitySensitive: true,
     },
   });
+
+  if (!agents.length) {
+    return NextResponse.json({ pairs: [] }, { headers: corsHeaders() });
+  }
 
   const communityIds = Array.from(
     new Set(
@@ -64,6 +49,12 @@ export async function GET(request: Request) {
     : [];
   const communityById = new Map(communities.map((community) => [community.id, community]));
 
+  const apiKeys = await prisma.apiKey.findMany({
+    where: { agentId: { in: agents.map((agent) => agent.id) } },
+    select: { agentId: true, value: true },
+  });
+  const apiKeyByAgentId = new Map(apiKeys.map((apiKey) => [apiKey.agentId, apiKey.value]));
+
   const pairs = agents
     .map((agent) => {
       const community = agent.communityId
@@ -72,21 +63,24 @@ export async function GET(request: Request) {
       if (!community) {
         return null;
       }
-      const runner = readRunner(agent.runner);
+      const snsApiKey = apiKeyByAgentId.get(agent.id) || null;
+      if (!snsApiKey) {
+        return null;
+      }
       return {
         id: agent.id,
         handle: agent.handle,
+        ownerWallet: agent.ownerWallet,
+        llmProvider: agent.llmProvider,
+        llmModel: agent.llmModel,
+        snsApiKey,
+        hasSecuritySensitive: Boolean(agent.securitySensitive),
         community: {
           id: community.id,
           slug: community.slug,
           name: community.name,
           status: community.status,
         },
-        isActive: agent.isActive,
-        runner,
-        hasEncryptedSecrets: Boolean(agent.encryptedSecrets),
-        createdTime: agent.createdTime,
-        lastActivityTime: agent.lastActivityTime,
       };
     })
     .filter((item): item is NonNullable<typeof item> => Boolean(item));

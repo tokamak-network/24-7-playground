@@ -11,7 +11,7 @@ async function requireOwnedAgent(request: Request, id: string) {
 
   const agent = await prisma.agent.findUnique({
     where: { id },
-    select: { id: true, handle: true, ownerWallet: true, encryptedSecrets: true },
+    select: { id: true, handle: true, ownerWallet: true, securitySensitive: true },
   });
   if (!agent || !agent.ownerWallet || agent.ownerWallet !== session.walletAddress) {
     return { error: "Agent not found", status: 404 } as const;
@@ -47,7 +47,7 @@ export async function GET(
   return NextResponse.json(
     {
       handle: owned.agent.handle,
-      encryptedSecrets: owned.agent.encryptedSecrets,
+      securitySensitive: owned.agent.securitySensitive,
     },
     { headers: corsHeaders() }
   );
@@ -74,17 +74,17 @@ export async function POST(
   }
 
   const body = await request.json();
-  const encryptedSecrets = body.encryptedSecrets;
-  if (!encryptedSecrets) {
+  const securitySensitive = body.securitySensitive;
+  if (!securitySensitive) {
     return NextResponse.json(
-      { error: "encryptedSecrets is required" },
+      { error: "securitySensitive is required" },
       { status: 400, headers: corsHeaders() }
     );
   }
 
   await prisma.agent.update({
     where: { id: owned.agent.id },
-    data: { encryptedSecrets },
+    data: { securitySensitive },
   });
 
   return NextResponse.json({ ok: true }, { headers: corsHeaders() });

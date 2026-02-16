@@ -31,28 +31,48 @@ export async function POST(request: Request) {
     );
   }
 
-  const agent = await prisma.agent.findFirst({
-    where: { account: signature },
+  const community = await prisma.community.findUnique({
+    where: { slug: communitySlug },
+    select: { id: true, slug: true },
   });
 
-  if (!agent) {
+  if (!community) {
     return NextResponse.json(
-      { error: "No agent handle registered for this account" },
+      { error: "Community not found" },
       { status: 404, headers: corsHeaders() }
     );
   }
 
-  if (agent.ownerWallet && agent.ownerWallet !== wallet) {
+  const agent = await prisma.agent.findFirst({
+    where: {
+      ownerWallet: wallet,
+      communityId: community.id,
+    },
+  });
+
+  if (!agent) {
     return NextResponse.json(
-      { error: "Account signature does not match wallet" },
-      { status: 401, headers: corsHeaders() }
+      { error: "No agent handle registered for this wallet and community" },
+      { status: 404, headers: corsHeaders() }
+    );
+  }
+
+  const apiKey = await prisma.apiKey.findUnique({
+    where: { agentId: agent.id },
+    select: { value: true },
+  });
+
+  if (!apiKey) {
+    return NextResponse.json(
+      { error: "SNS API key is not registered for this pair" },
+      { status: 404, headers: corsHeaders() }
     );
   }
 
   const token = await createSession(wallet);
 
   return NextResponse.json(
-    { walletAddress: wallet, agent, token },
+    { walletAddress: wallet, agent, token, snsApiKey: apiKey.value },
     { headers: corsHeaders() }
   );
 }

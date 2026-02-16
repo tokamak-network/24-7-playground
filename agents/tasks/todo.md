@@ -620,3 +620,21 @@ Report Thread GitHub Issue Submission Review (2026-02-16):
 - Endpoint now validates owner wallet match, ensures a community repository is registered, and returns a prefilled GitHub `issues/new` draft URL.
 - Added `OwnerReportIssueForm` to report thread detail pages so owners can submit a report thread to GitHub with one click.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-17 Agent Registration Info Restructure
+- [x] Align Prisma registration schema to requested General and Security Sensitive fields
+- [x] Remove legacy registration fields from Prisma (`account`, `encryptedSecrets`, `isActive`, runner/timestamp fields, hashed API key fields)
+- [x] Rebuild `/manage/agents` UI around pair selection + General edit + encrypted Security Sensitive edit
+- [x] Update registration/auth APIs to immutable community/owner/API-key semantics and pair-scoped reads
+- [x] Fix admin agent selection/deletion flow for non-unique handles by switching to id-based targeting
+- [x] Verify with Prisma client generation and TypeScript checks
+
+Agent Registration Info Restructure Review (2026-02-17):
+- Updated Prisma `Agent`/`ApiKey` schema to keep only the new registration fields plus required relations, and removed obsolete registration fields.
+- Updated migration SQL to convert encrypted secret payload into `securitySensitive` and move API key storage from hash/prefix columns to immutable `value`.
+- Finalized `/manage/agents` workspace to expose only requested `General` + `Security Sensitive` groups, with immutable community/owner/API-key display and editable handle/provider/model.
+- Updated APIs (`register`, `lookup`, `mine`, `general`, `secrets`, auth lookup) to use `(ownerWallet, communityId)` registration pairs and immutable SNS API key behavior.
+- Updated admin agent list/delete flow to use `agentId` selection so duplicate handle names across communities are safe.
+- Verification:
+  - `npm -w apps/sns run prisma:generate` passed
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

@@ -3,21 +3,6 @@ import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { requireSession } from "src/lib/session";
 
-function readRunner(
-  runner: unknown
-): { status: "RUNNING" | "STOPPED"; intervalSec: number } {
-  if (!runner || typeof runner !== "object") {
-    return { status: "STOPPED", intervalSec: 60 };
-  }
-  const record = runner as { status?: unknown; intervalSec?: unknown };
-  const status = record.status === "RUNNING" ? "RUNNING" : "STOPPED";
-  const intervalSec =
-    typeof record.intervalSec === "number" && Number.isFinite(record.intervalSec)
-      ? Math.max(10, Math.floor(record.intervalSec))
-      : 60;
-  return { status, intervalSec };
-}
-
 async function requireOwnedAgent(request: Request, id: string) {
   const session = await requireSession(request);
   if ("error" in session) {
@@ -30,12 +15,9 @@ async function requireOwnedAgent(request: Request, id: string) {
       id: true,
       handle: true,
       ownerWallet: true,
-      account: true,
       communityId: true,
-      isActive: true,
-      runner: true,
-      createdTime: true,
-      lastActivityTime: true,
+      llmProvider: true,
+      llmModel: true,
     },
   });
   if (!agent || !agent.ownerWallet || agent.ownerWallet !== session.walletAddress) {
@@ -75,6 +57,10 @@ export async function GET(
         select: { id: true, slug: true, name: true, status: true },
       })
     : null;
+  const apiKey = await prisma.apiKey.findUnique({
+    where: { agentId: owned.agent.id },
+    select: { value: true },
+  });
 
   return NextResponse.json(
     {
@@ -82,13 +68,11 @@ export async function GET(
         id: owned.agent.id,
         handle: owned.agent.handle,
         ownerWallet: owned.agent.ownerWallet,
-        accountSignature: owned.agent.account,
-        isActive: owned.agent.isActive,
-        runner: readRunner(owned.agent.runner),
-        createdTime: owned.agent.createdTime,
-        lastActivityTime: owned.agent.lastActivityTime,
+        llmProvider: owned.agent.llmProvider,
+        llmModel: owned.agent.llmModel,
       },
       community,
+      snsApiKey: apiKey?.value || null,
     },
     { headers: corsHeaders() }
   );
@@ -116,54 +100,40 @@ export async function PATCH(
 
   const body = await request.json();
   const handle = String(body.handle || "").trim();
-  const isActive =
-    typeof body.isActive === "boolean" ? body.isActive : owned.agent.isActive;
-  const intervalSec = Number(body.intervalSec);
-  if (!handle) {
+  const llmProvider = String(body.llmProvider || "").trim().toUpperCase();
+  const llmModel = String(body.llmModel || "").trim();
+  if (!handle || !llmProvider || !llmModel) {
     return NextResponse.json(
-      { error: "handle is required" },
+      { error: "handle, llmProvider, and llmModel are required" },
       { status: 400, headers: corsHeaders() }
     );
   }
-  if (!Number.isFinite(intervalSec) || intervalSec < 10) {
-    return NextResponse.json(
-      { error: "intervalSec must be >= 10" },
-      { status: 400, headers: corsHeaders() }
-    );
-  }
-
-  if (handle !== owned.agent.handle) {
-    const conflict = await prisma.agent.findUnique({ where: { handle } });
-    if (conflict && conflict.id !== owned.agent.id) {
-      return NextResponse.json(
-        { error: "handle already exists" },
-        { status: 409, headers: corsHeaders() }
-      );
-    }
-  }
-
-  const existingRunner = readRunner(owned.agent.runner);
 
   const updated = await prisma.agent.update({
     where: { id: owned.agent.id },
     data: {
       handle,
-      isActive,
-      runner: {
-        status: existingRunner.status,
-        intervalSec: Math.floor(intervalSec),
-      },
+      llmProvider,
+      llmModel,
     },
     select: {
       id: true,
       handle: true,
       ownerWallet: true,
-      account: true,
-      isActive: true,
-      runner: true,
-      createdTime: true,
-      lastActivityTime: true,
+      llmProvider: true,
+      llmModel: true,
+      communityId: true,
     },
+  });
+  const community = updated.communityId
+    ? await prisma.community.findUnique({
+        where: { id: updated.communityId },
+        select: { id: true, slug: true, name: true, status: true },
+      })
+    : null;
+  const apiKey = await prisma.apiKey.findUnique({
+    where: { agentId: updated.id },
+    select: { value: true },
   });
 
   return NextResponse.json(
@@ -172,12 +142,11 @@ export async function PATCH(
         id: updated.id,
         handle: updated.handle,
         ownerWallet: updated.ownerWallet,
-        accountSignature: updated.account,
-        isActive: updated.isActive,
-        runner: readRunner(updated.runner),
-        createdTime: updated.createdTime,
-        lastActivityTime: updated.lastActivityTime,
+        llmProvider: updated.llmProvider,
+        llmModel: updated.llmModel,
       },
+      community,
+      snsApiKey: apiKey?.value || null,
     },
     { headers: corsHeaders() }
   );

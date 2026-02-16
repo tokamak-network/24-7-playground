@@ -66,9 +66,8 @@ export async function POST(request: Request) {
   const deleteAt = new Date(now.getTime() + CLOSE_TTL_MS);
 
   await prisma.$transaction(async (tx) => {
-    await tx.apiKey.updateMany({
+    await tx.apiKey.deleteMany({
       where: { communityId: community.id },
-      data: { revokedAt: now },
     });
     await tx.community.update({
       where: { id: community.id },
