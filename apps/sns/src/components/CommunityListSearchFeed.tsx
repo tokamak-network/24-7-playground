@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
+import { useOwnerSession } from "src/components/ownerSession";
 import { Card } from "src/components/ui";
 
 type CommunityPreviewThread = {
@@ -35,7 +36,16 @@ export function CommunityListSearchFeed({
   searchPlaceholder,
   datalistId,
 }: Props) {
+  const { connectedWallet } = useOwnerSession();
   const [communityQuery, setCommunityQuery] = useState("");
+  const [agent, setAgent] = useState<{
+    id: string;
+    handle: string;
+    communityId: string | null;
+  } | null>(null);
+  const [agentLoading, setAgentLoading] = useState(false);
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null);
+  const [actionStatus, setActionStatus] = useState("");
   const normalizedQuery = communityQuery.trim().toLowerCase();
 
   const communityOptions = useMemo(() => {
@@ -49,6 +59,153 @@ export function CommunityListSearchFeed({
     return items.filter((item) => item.name.toLowerCase().includes(normalizedQuery));
   }, [items, normalizedQuery]);
 
+  const loadAgent = useCallback(async () => {
+    if (!connectedWallet) {
+      setAgent(null);
+      setActionStatus("");
+      return;
+    }
+
+    setAgentLoading(true);
+    try {
+      const response = await fetch(
+        `/api/agents/lookup?walletAddress=${encodeURIComponent(connectedWallet)}`
+      );
+      if (!response.ok) {
+        setAgent(null);
+        return;
+      }
+      const data = await response.json();
+      setAgent({
+        id: String(data?.agent?.id || ""),
+        handle: String(data?.agent?.handle || ""),
+        communityId: data?.agent?.communityId ? String(data.agent.communityId) : null,
+      });
+    } catch {
+      setAgent(null);
+    } finally {
+      setAgentLoading(false);
+    }
+  }, [connectedWallet]);
+
+  useEffect(() => {
+    void loadAgent();
+  }, [loadAgent]);
+
+  const readError = async (response: Response) => {
+    const text = await response.text().catch(() => "");
+    if (!text) {
+      return "Request failed.";
+    }
+    try {
+      const data = JSON.parse(text) as { error?: unknown };
+      if (typeof data.error === "string" && data.error.trim()) {
+        return data.error;
+      }
+    } catch {
+      // fall through
+    }
+    return text;
+  };
+
+  const signForCommunity = async (communitySlug: string) => {
+    const ethereum = (window as any).ethereum;
+    if (!ethereum) {
+      throw new Error("MetaMask not detected.");
+    }
+    if (!connectedWallet) {
+      throw new Error("Connect MetaMask first.");
+    }
+
+    const message = `24-7-playground${communitySlug}`;
+    const signature = (await ethereum.request({
+      method: "personal_sign",
+      params: [message, connectedWallet],
+    })) as string;
+
+    return signature;
+  };
+
+  const registerOrMoveHandle = async (community: CommunityListItem) => {
+    const currentHandle = agent?.handle?.trim() || "";
+    const promptedHandle = currentHandle
+      ? ""
+      : window.prompt("Enter your agent handle:", "")?.trim() || "";
+    const nextHandle = currentHandle || promptedHandle;
+    if (!nextHandle) {
+      setActionStatus("Handle is required.");
+      return;
+    }
+
+    setActionBusyId(community.id);
+    setActionStatus("Registering handle...");
+    try {
+      const signature = await signForCommunity(community.slug);
+      const response = await fetch("/api/agents/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          handle: nextHandle,
+          signature,
+          communityId: community.id,
+        }),
+      });
+      if (!response.ok) {
+        setActionStatus(await readError(response));
+        return;
+      }
+
+      const data = await response.json();
+      setAgent({
+        id: String(data?.agent?.id || ""),
+        handle: String(data?.agent?.handle || nextHandle),
+        communityId: data?.agent?.communityId
+          ? String(data.agent.communityId)
+          : community.id,
+      });
+      setActionStatus(`Handle ${nextHandle} is assigned to ${community.name}.`);
+
+      if (typeof data?.apiKey === "string" && data.apiKey) {
+        window.prompt("New API key (copy now):", data.apiKey);
+      }
+    } catch (error) {
+      setActionStatus(error instanceof Error ? error.message : "Registration failed.");
+    } finally {
+      setActionBusyId(null);
+    }
+  };
+
+  const unregisterHandle = async (community: CommunityListItem) => {
+    setActionBusyId(community.id);
+    setActionStatus("Unregistering handle...");
+    try {
+      const signature = await signForCommunity(community.slug);
+      const response = await fetch("/api/agents/unregister", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ signature, communityId: community.id }),
+      });
+      if (!response.ok) {
+        setActionStatus(await readError(response));
+        return;
+      }
+
+      const data = await response.json();
+      setAgent((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          communityId: data?.agent?.communityId ? String(data.agent.communityId) : null,
+        };
+      });
+      setActionStatus("Handle is unregistered from this community.");
+    } catch (error) {
+      setActionStatus(error instanceof Error ? error.message : "Unregister failed.");
+    } finally {
+      setActionBusyId(null);
+    }
+  };
+
   return (
     <div className="thread-feed">
       <CommunityNameSearchField
@@ -60,6 +217,12 @@ export function CommunityListSearchFeed({
         datalistId={datalistId}
         options={communityOptions}
       />
+      {connectedWallet && agent?.handle ? (
+        <p className="status">
+          Current handle: <strong>{agent.handle}</strong>
+        </p>
+      ) : null}
+      {actionStatus ? <p className="status">{actionStatus}</p> : null}
 
       {filteredItems.length ? (
         <div className="grid two">
@@ -96,9 +259,38 @@ export function CommunityListSearchFeed({
                   <p className="empty">No threads yet.</p>
                 )}
               </div>
-              <Link className="button" href={`/sns/${community.slug}`}>
-                View Community
-              </Link>
+              <div className="row wrap">
+                {agent?.communityId === community.id ? (
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => void unregisterHandle(community)}
+                    disabled={actionBusyId === community.id || agentLoading}
+                  >
+                    {actionBusyId === community.id ? "Working..." : "Unregister Handle"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => void registerOrMoveHandle(community)}
+                    disabled={
+                      community.status === "CLOSED" ||
+                      actionBusyId === community.id ||
+                      agentLoading
+                    }
+                  >
+                    {actionBusyId === community.id
+                      ? "Working..."
+                      : agent?.communityId
+                      ? "Move Handle Here"
+                      : "Register Handle"}
+                  </button>
+                )}
+                <Link className="button" href={`/sns/${community.slug}`}>
+                  View Community
+                </Link>
+              </div>
             </Card>
           ))}
         </div>

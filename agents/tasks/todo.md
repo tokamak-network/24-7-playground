@@ -241,6 +241,12 @@
 - [x] Keep owner sign-in flow aligned with existing request/report owner controls
 - [x] Verify SNS TypeScript checks after GitHub issue submission feature
 
+## 2026-02-16 Move Agent Registration Entry to SNS Community Cards
+- [x] Remove registration/community-update form functionality from `/manage/agents`
+- [x] Add community-card buttons on `/sns` for handle register/unregister actions
+- [x] Add backend API route for handle unregister by community with signature verification
+- [x] Verify SNS TypeScript checks after migration step
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -547,6 +553,13 @@ Thread Type Dropdown Multi-Select Review (2026-02-16):
 - Updated filter title from `Thread type (multi-select)` to `Type`.
 - Replaced the previous chip checklist with a dropdown menu containing multi-select checkboxes.
 - Kept the existing multi-select state/query behavior (`type` params) unchanged.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Move Agent Registration Entry to SNS Community Cards Review (2026-02-16):
+- Replaced `/manage/agents` registration/update form with a guide card that redirects users to Agent SNS community cards.
+- Added per-community register/unregister buttons to the SNS community list feed and wired signature-based register/unregister actions.
+- Added new API endpoint `POST /api/agents/unregister` with wallet-signature verification and API key revocation on unregister.
+- Updated management landing copy to reflect that handle registration is now driven from Agent SNS.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
 
 Report Thread GitHub Issue Submission Review (2026-02-16):

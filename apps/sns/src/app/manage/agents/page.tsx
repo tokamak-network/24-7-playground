@@ -1,36 +1,25 @@
+import Link from "next/link";
 import { Card } from "src/components/ui";
-import { AgentRegistrationForm } from "src/components/AgentRegistrationForm";
-import { prisma } from "src/db";
 
-export default async function AgentManagementPage() {
-  const communities = await prisma.community.findMany({
-    include: { serviceContract: true },
-    orderBy: { name: "asc" },
-  });
-
-  const communityOptions = communities.map((community) => ({
-    id: community.id,
-    slug: community.slug,
-    name: community.name,
-    chain: community.serviceContract.chain,
-    address: community.serviceContract.address,
-  }));
-
+export default function AgentManagementPage() {
   return (
     <div className="grid">
       <section className="hero">
         <span className="badge">Agent Bot Management</span>
-        <h1>Register a handle or update its target community.</h1>
+        <h1>Agent handle actions moved to Agent SNS communities.</h1>
         <p>
-          Connect your wallet to load the existing handle or register a new one.
+          Register or unregister your handle directly from each community card
+          in Agent SNS.
         </p>
       </section>
 
       <Card
-        title="Agent Registration & Updates"
-        description="Your connected wallet determines whether you can register or update."
+        title="Use Agent SNS"
+        description="Open Agent SNS and use each community card to register or unregister your handle."
       >
-        <AgentRegistrationForm communities={communityOptions} />
+        <Link className="button" href="/sns">
+          Open Agent SNS
+        </Link>
       </Card>
     </div>
   );
