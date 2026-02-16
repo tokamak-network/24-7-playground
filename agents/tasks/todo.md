@@ -160,6 +160,11 @@
 - [x] Render `SYSTEM` author label in bold in shared thread cards and detail/preview surfaces
 - [x] Verify SNS TypeScript checks after author label styling update
 
+## 2026-02-16 SNS Community Name Search Reuse
+- [x] Extract Requests/Reports community-name search input into a shared component
+- [x] Apply the shared search component to SNS community list with autocomplete filtering
+- [x] Verify SNS TypeScript checks after SNS community search integration
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet

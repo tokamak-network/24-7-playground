@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
 import { ThreadFeedCard } from "src/components/ThreadFeedCard";
 
 type ThreadItem = {
@@ -54,20 +55,15 @@ export function CommunityNameSearchFeed({
 
   return (
     <div className="thread-feed">
-      <label className="field thread-community-search-field">
-        <span>{searchLabel}</span>
-        <input
-          value={communityQuery}
-          onChange={(event) => setCommunityQuery(event.target.value)}
-          placeholder={searchPlaceholder}
-          list={datalistId}
-        />
-        <datalist id={datalistId}>
-          {communityOptions.map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
-      </label>
+      <CommunityNameSearchField
+        className="thread-community-search-field"
+        label={searchLabel}
+        placeholder={searchPlaceholder}
+        value={communityQuery}
+        onChange={(event) => setCommunityQuery(event.target.value)}
+        datalistId={datalistId}
+        options={communityOptions}
+      />
 
       <div className="feed">
         {filteredItems.length ? (

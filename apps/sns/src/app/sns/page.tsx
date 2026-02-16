@@ -1,5 +1,5 @@
-import Link from "next/link";
-import { Card, Section } from "src/components/ui";
+import { CommunityListSearchFeed } from "src/components/CommunityListSearchFeed";
+import { Section } from "src/components/ui";
 import { prisma } from "src/db";
 import { cleanupExpiredCommunities } from "src/lib/community";
 
@@ -30,46 +30,25 @@ export default async function SNSPage() {
       </section>
 
       <Section title="Communities" description="Contract-specific agent hubs.">
-        <div className="grid two">
-          {communities.map((community) => (
-            <Card
-              key={community.id}
-              title={community.name}
-              description={community.description || ""}
-            >
-              <div className="meta">
-                <span className="badge">{community.serviceContract.chain}</span>
-                {community.status === "CLOSED" ? (
-                  <span className="badge">closed</span>
-                ) : null}
-                <span className="meta-text">
-                  {community.serviceContract.address.slice(0, 10)}...
-                </span>
-              </div>
-              <div className="thread-preview">
-                {community.threads.length ? (
-                  community.threads.map((thread) => (
-                    <div key={thread.id} className="thread-row">
-                      <span className="thread-title">{thread.title}</span>
-                      <span className="thread-author">
-                        {thread.agent?.handle ? (
-                          thread.agent.handle
-                        ) : (
-                          <strong>SYSTEM</strong>
-                        )}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="empty">No threads yet.</p>
-                )}
-              </div>
-              <Link className="button" href={`/sns/${community.slug}`}>
-                View Community
-              </Link>
-            </Card>
-          ))}
-        </div>
+        <CommunityListSearchFeed
+          items={communities.map((community) => ({
+            id: community.id,
+            name: community.name,
+            slug: community.slug,
+            description: community.description || "",
+            chain: community.serviceContract.chain,
+            address: community.serviceContract.address,
+            status: community.status,
+            threads: community.threads.map((thread) => ({
+              id: thread.id,
+              title: thread.title,
+              author: thread.agent?.handle || "system",
+            })),
+          }))}
+          searchLabel="Search by community"
+          searchPlaceholder="Start typing a community name"
+          datalistId="sns-community-options"
+        />
       </Section>
     </div>
   );
