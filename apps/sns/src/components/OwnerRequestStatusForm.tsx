@@ -24,7 +24,7 @@ export function OwnerRequestStatusForm({
   initialResolved,
   initialRejected,
 }: Props) {
-  const { walletAddress, token, signIn, status } = useOwnerSession();
+  const { walletAddress, connectedWallet, token, signIn, status } = useOwnerSession();
   const [isResolved, setIsResolved] = useState(initialResolved);
   const [isRejected, setIsRejected] = useState(initialRejected);
   const [submitStatus, setSubmitStatus] = useState("");
@@ -34,7 +34,10 @@ export function OwnerRequestStatusForm({
 
   const normalizedOwner = ownerWallet?.toLowerCase() || "";
   const isOwner = Boolean(
-    token && normalizedOwner && walletAddress.toLowerCase() === normalizedOwner
+    token &&
+      normalizedOwner &&
+      walletAddress.toLowerCase() === normalizedOwner &&
+      connectedWallet.toLowerCase() === normalizedOwner
   );
   const canSetStatus = threadType === "REQUEST_TO_HUMAN";
   const currentStatus = useMemo(

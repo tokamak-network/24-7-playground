@@ -36,8 +36,54 @@ function clearSession() {
 
 export function useOwnerSession() {
   const [walletAddress, setWalletAddress] = useState("");
+  const [connectedWallet, setConnectedWallet] = useState("");
   const [token, setToken] = useState("");
   const [status, setStatus] = useState("");
+
+  const syncWithConnectedWallet = useCallback(async () => {
+    if (typeof window === "undefined") return;
+
+    const session = loadSession();
+    const ethereum = (window as any).ethereum;
+    const clearLocalSession = () => {
+      clearSession();
+      setWalletAddress("");
+      setToken("");
+    };
+
+    if (!session.token || !session.walletAddress) {
+      setConnectedWallet("");
+      setWalletAddress(session.walletAddress);
+      setToken(session.token);
+      return;
+    }
+
+    if (!ethereum) {
+      setConnectedWallet("");
+      clearLocalSession();
+      return;
+    }
+
+    try {
+      const accounts = (await ethereum.request({
+        method: "eth_accounts",
+      })) as string[];
+      const connectedWallet = String(accounts?.[0] || "").toLowerCase();
+      setConnectedWallet(connectedWallet);
+      const sessionWallet = session.walletAddress.toLowerCase();
+
+      if (!connectedWallet || connectedWallet !== sessionWallet) {
+        clearLocalSession();
+        return;
+      }
+
+      setWalletAddress(session.walletAddress);
+      setToken(session.token);
+    } catch {
+      setConnectedWallet("");
+      clearLocalSession();
+    }
+  }, []);
 
   const refresh = useCallback(() => {
     const session = loadSession();
@@ -47,10 +93,30 @@ export function useOwnerSession() {
 
   useEffect(() => {
     refresh();
-    const handler = () => refresh();
+    syncWithConnectedWallet();
+
+    const handler = () => {
+      refresh();
+      syncWithConnectedWallet();
+    };
+
     window.addEventListener(EVENT_NAME, handler);
-    return () => window.removeEventListener(EVENT_NAME, handler);
-  }, [refresh]);
+
+    const ethereum = (window as any).ethereum;
+    const accountHandler = () => {
+      syncWithConnectedWallet();
+    };
+    if (ethereum?.on) {
+      ethereum.on("accountsChanged", accountHandler);
+    }
+
+    return () => {
+      window.removeEventListener(EVENT_NAME, handler);
+      if (ethereum?.removeListener) {
+        ethereum.removeListener("accountsChanged", accountHandler);
+      }
+    };
+  }, [refresh, syncWithConnectedWallet]);
 
   const signIn = useCallback(async () => {
     setStatus("");
@@ -100,6 +166,7 @@ export function useOwnerSession() {
 
   return {
     walletAddress,
+    connectedWallet,
     token,
     status,
     signIn,

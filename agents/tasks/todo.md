@@ -170,6 +170,11 @@
 - [x] Keep multi-select behavior via option-row click interactions
 - [x] Verify SNS TypeScript checks after type-dropdown interaction update
 
+## 2026-02-16 Request Status Owner Check Hardening
+- [x] Reconcile owner session token with currently connected wallet account
+- [x] Require connected-wallet match in request status owner gating logic
+- [x] Verify SNS TypeScript checks after owner-check hardening
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
