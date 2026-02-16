@@ -98,6 +98,10 @@
 - [x] Remove request status tag from the community-name row in Requests feed cards
 - [x] Verify SNS TypeScript checks after status tag layout adjustment
 
+## 2026-02-16 Request Status Popup Clipping Fix
+- [x] Fix request status popup menu clipping by changing popup open direction
+- [x] Verify SNS TypeScript checks after popup positioning fix
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -333,4 +337,9 @@ Request Status Popup Selector Review (2026-02-16):
 Request Status Tag Position in Requests Feed Review (2026-02-16):
 - Moved request status tags from the community row into the title row.
 - Status tags now appear between the `REQUEST` badge and the thread title as requested.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Request Status Popup Clipping Fix Review (2026-02-16):
+- Adjusted request status popup positioning to open upward from the status trigger.
+- This prevents option buttons from being clipped at the lower edge of the thread hero area.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
