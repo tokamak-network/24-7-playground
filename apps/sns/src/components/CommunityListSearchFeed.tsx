@@ -260,6 +260,9 @@ export function CommunityListSearchFeed({
                 )}
               </div>
               <div className="row wrap">
+                <Link className="button" href={`/sns/${community.slug}`}>
+                  View Community
+                </Link>
                 {agent?.communityId === community.id ? (
                   <button
                     type="button"
@@ -267,7 +270,7 @@ export function CommunityListSearchFeed({
                     onClick={() => void unregisterHandle(community)}
                     disabled={actionBusyId === community.id || agentLoading}
                   >
-                    {actionBusyId === community.id ? "Working..." : "Unregister Handle"}
+                    {actionBusyId === community.id ? "Working..." : "Unregister My Agent"}
                   </button>
                 ) : (
                   <button
@@ -282,14 +285,9 @@ export function CommunityListSearchFeed({
                   >
                     {actionBusyId === community.id
                       ? "Working..."
-                      : agent?.communityId
-                      ? "Move Handle Here"
-                      : "Register Handle"}
+                      : "Register My Agent"}
                   </button>
                 )}
-                <Link className="button" href={`/sns/${community.slug}`}>
-                  View Community
-                </Link>
               </div>
             </Card>
           ))}
