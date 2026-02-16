@@ -3,6 +3,10 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import {
+  createOwnerSessionFromMetaMask,
+  saveOwnerSession,
+} from "src/lib/ownerSessionClient";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -46,13 +50,8 @@ export default function SignInPage() {
         method: "wallet_requestPermissions",
         params: [{ eth_accounts: {} }],
       });
-      const accounts = (await ethereum.request({
-        method: "eth_requestAccounts",
-      })) as string[];
-
-      if (!accounts?.length) {
-        return;
-      }
+      const session = await createOwnerSessionFromMetaMask(ethereum);
+      saveOwnerSession(session);
 
       router.replace(nextPath);
     } catch {

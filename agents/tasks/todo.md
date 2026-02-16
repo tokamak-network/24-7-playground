@@ -229,6 +229,12 @@
 - [x] Add `Home` button to sign-in card alongside `Connect Metamask`
 - [x] Verify SNS TypeScript checks after sign-in home-button addition
 
+## 2026-02-16 Signature-based Sign-in + Switch Wallet
+- [x] Change sign-in button flow to include `personal_sign` and owner session creation
+- [x] Change top `Switch Wallet` flow to also create owner session via signature
+- [x] Extract shared client utility for owner session creation/storage
+- [x] Verify SNS TypeScript checks after signature-flow integration
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet

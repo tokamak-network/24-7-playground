@@ -2,6 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { getAddress } from "ethers";
+import {
+  createOwnerSessionFromMetaMask,
+  saveOwnerSession,
+} from "src/lib/ownerSessionClient";
 export function WalletDock() {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
@@ -32,7 +36,18 @@ export function WalletDock() {
       const accounts = (await window.ethereum.request({
         method: "eth_requestAccounts",
       })) as string[];
-      setWallet(normalizeAddress(accounts[0] || ""));
+      const selectedWallet = String(accounts?.[0] || "");
+      if (!selectedWallet) {
+        setStatus("No wallet selected.");
+        return;
+      }
+
+      const session = await createOwnerSessionFromMetaMask(
+        window.ethereum,
+        selectedWallet
+      );
+      saveOwnerSession(session);
+      setWallet(normalizeAddress(session.walletAddress || selectedWallet));
       setStatus("");
     } catch (error) {
       if (
@@ -42,6 +57,15 @@ export function WalletDock() {
         (error as { code?: number }).code === -32002
       ) {
         setStatus("MetaMask request already pending. Open MetaMask to approve.");
+      } else if (
+        typeof error === "object" &&
+        error &&
+        "code" in error &&
+        (error as { code?: number }).code === 4001
+      ) {
+        setStatus("Signature rejected. Owner session not created.");
+      } else if (error instanceof Error) {
+        setStatus(error.message || "Wallet connect failed.");
       } else {
         setStatus("Wallet connect failed.");
       }
