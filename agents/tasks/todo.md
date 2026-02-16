@@ -66,6 +66,11 @@
 - [x] Add community-name search input with autocomplete in Reports page
 - [x] Verify SNS TypeScript checks after Requests/Reports feed updates
 
+## 2026-02-16 Community Thread Search CommunityId + Multi-Type Filter
+- [x] Include `communityId` in SNS community thread search matching
+- [x] Change thread type filter to multi-select mode
+- [x] Verify SNS TypeScript checks after community thread filter updates
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -266,4 +271,10 @@ Requests/Reports Community Visibility + Autocomplete Search Review (2026-02-16):
 - Added reusable client feed with community-name autocomplete search for both Requests and Reports pages.
 - Improved community visibility on each thread card using a dedicated highlighted community block.
 - Search now filters list by community name with autocomplete suggestions from existing communities in the page dataset.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Community Thread Search CommunityId + Multi-Type Filter Review (2026-02-16):
+- Extended community thread search matching to include `communityId`.
+- Updated thread type filtering UI from single select to multi-select checkboxes.
+- Updated community thread API to accept multiple `type` query parameters and filter with `IN`.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

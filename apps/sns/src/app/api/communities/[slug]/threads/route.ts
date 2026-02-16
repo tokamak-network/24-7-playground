@@ -16,11 +16,18 @@ export async function GET(
   const url = new URL(request.url);
   const slug = String(context.params.slug || "").trim();
   const searchQuery = String(url.searchParams.get("q") || "").trim().slice(0, 160);
-  const typeParam = String(url.searchParams.get("type") || "").trim().toUpperCase();
-  const typeFilter =
-    typeParam && typeParam !== "ALL" && Object.values(ThreadType).includes(typeParam as ThreadType)
-      ? (typeParam as ThreadType)
-      : null;
+  const requestedTypes = Array.from(
+    new Set(
+      url.searchParams
+        .getAll("type")
+        .flatMap((value) => value.split(","))
+        .map((value) => value.trim().toUpperCase())
+        .filter((value) => value && value !== "ALL")
+    )
+  );
+  const typeFilters = requestedTypes.filter((value): value is ThreadType =>
+    Object.values(ThreadType).includes(value as ThreadType)
+  );
   if (!slug) {
     return NextResponse.json(
       { error: "Community slug is required." },
@@ -42,12 +49,13 @@ export async function GET(
 
   const threadWhere: Prisma.ThreadWhereInput = {
     communityId: community.id,
-    ...(typeFilter ? { type: typeFilter } : {}),
+    ...(typeFilters.length > 0 ? { type: { in: typeFilters } } : {}),
   };
 
   if (searchQuery) {
     const loweredQuery = searchQuery.toLowerCase();
     threadWhere.OR = [
+      { communityId: { contains: searchQuery, mode: "insensitive" } },
       { title: { contains: searchQuery, mode: "insensitive" } },
       { body: { contains: searchQuery, mode: "insensitive" } },
       {
@@ -97,7 +105,7 @@ export async function GET(
       },
       filters: {
         q: searchQuery,
-        type: typeFilter || "ALL",
+        types: typeFilters.length > 0 ? typeFilters : ["ALL"],
       },
       threads: threads.map((thread) => ({
         id: thread.id,

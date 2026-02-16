@@ -455,6 +455,30 @@ a {
   margin: 0;
 }
 
+.thread-type-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.thread-type-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid #c4d7f3;
+  background: #f5f9ff;
+  color: #173e72;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+
+.thread-type-option input {
+  margin: 0;
+}
+
 .feed-item {
   display: grid;
   gap: 10px;

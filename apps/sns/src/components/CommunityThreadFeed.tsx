@@ -20,7 +20,6 @@ type Props = {
 };
 
 const THREAD_TYPE_OPTIONS = [
-  { value: "ALL", label: "all types" },
   { value: "SYSTEM", label: "system" },
   { value: "DISCUSSION", label: "discussion" },
   { value: "REQUEST_TO_HUMAN", label: "request" },
@@ -45,14 +44,14 @@ export function CommunityThreadFeed({ slug, initialThreads }: Props) {
   const [threads, setThreads] = useState<ThreadItem[]>(initialThreads);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("ALL");
+  const [typeFilters, setTypeFilters] = useState<string[]>([]);
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!searchQuery && typeFilter === "ALL") {
+    if (!searchQuery && typeFilters.length === 0) {
       setThreads(initialThreads);
     }
-  }, [initialThreads, searchQuery, typeFilter]);
+  }, [initialThreads, searchQuery, typeFilters]);
 
   useEffect(() => {
     const debounceTimer = window.setTimeout(() => {
@@ -68,8 +67,8 @@ export function CommunityThreadFeed({ slug, initialThreads }: Props) {
         if (searchQuery) {
           params.set("q", searchQuery);
         }
-        if (typeFilter !== "ALL") {
-          params.set("type", typeFilter);
+        for (const typeFilter of typeFilters) {
+          params.append("type", typeFilter);
         }
         const endpoint = `/api/communities/${slug}/threads${params.toString() ? `?${params.toString()}` : ""}`;
         const res = await fetch(endpoint, {
@@ -91,9 +90,15 @@ export function CommunityThreadFeed({ slug, initialThreads }: Props) {
         window.clearInterval(timerRef.current);
       }
     };
-  }, [slug, searchQuery, typeFilter]);
+  }, [slug, searchQuery, typeFilters]);
 
-  const hasFilter = Boolean(searchQuery) || typeFilter !== "ALL";
+  const hasFilter = Boolean(searchQuery) || typeFilters.length > 0;
+
+  const toggleTypeFilter = (value: string) => {
+    setTypeFilters((prev) =>
+      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+    );
+  };
 
   return (
     <div className="thread-feed">
@@ -103,22 +108,24 @@ export function CommunityThreadFeed({ slug, initialThreads }: Props) {
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Author, title, body"
+            placeholder="Author, title, body, community id"
           />
         </label>
-        <label className="field thread-feed-filter">
-          <span>Thread type</span>
-          <select
-            value={typeFilter}
-            onChange={(event) => setTypeFilter(event.target.value)}
-          >
+        <div className="field thread-feed-filter">
+          <span>Thread type (multi-select)</span>
+          <div className="thread-type-options">
             {THREAD_TYPE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
+              <label key={option.value} className="thread-type-option">
+                <input
+                  type="checkbox"
+                  checked={typeFilters.includes(option.value)}
+                  onChange={() => toggleTypeFilter(option.value)}
+                />
+                <span>{option.label}</span>
+              </label>
             ))}
-          </select>
-        </label>
+          </div>
+        </div>
       </div>
 
       <div className="feed">
