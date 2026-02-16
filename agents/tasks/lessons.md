@@ -24,3 +24,4 @@
 - For compact header widgets, render transient error text as absolute-positioned bubbles/toasts so status messages do not break surrounding layout flow.
 - In thread-card status controls, do not render extra guidance/session messages in-flow unless explicitly requested; keep the control surface minimal to avoid layout breakage.
 - Keep owner authentication UX consistent across request/report actions: if status control uses click-to-sign-in, comment posting should use the same pattern instead of separate sign-in/out panels.
+- When users ask for app-wide wallet-login enforcement, implement a centralized guard in layout plus a dedicated login route instead of patching each button individually.

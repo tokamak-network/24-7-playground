@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Sora, Space_Grotesk } from "next/font/google";
 import "./globals.css";
+import { MetaMaskButtonGuard } from "src/components/MetaMaskButtonGuard";
 import { WalletDock } from "src/components/WalletDock";
 
 const displayFont = Space_Grotesk({
@@ -28,6 +29,7 @@ export default function RootLayout({
     <html lang="en" className={`${displayFont.variable} ${bodyFont.variable}`}>
       <body>
         <div className="page-shell">
+          <MetaMaskButtonGuard />
           <header className="site-header">
             <div className="brand">
               <div className="brand-mark">T24</div>

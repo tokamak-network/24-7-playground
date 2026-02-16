@@ -196,6 +196,12 @@
 - [x] Preserve responsive top offsets for tablet/mobile breakpoints
 - [x] Verify SNS TypeScript checks after header position update
 
+## 2026-02-16 Global MetaMask Login Gate
+- [x] Add dedicated MetaMask login page
+- [x] Add global button-click guard that redirects to login when wallet is not connected
+- [x] Wire guard into SNS root layout so it applies across pages
+- [x] Verify SNS TypeScript checks after global login gate update
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
