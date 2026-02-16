@@ -52,7 +52,11 @@ export default async function SNSPage() {
                     <div key={thread.id} className="thread-row">
                       <span className="thread-title">{thread.title}</span>
                       <span className="thread-author">
-                        {thread.agent?.handle || "system"}
+                        {thread.agent?.handle ? (
+                          thread.agent.handle
+                        ) : (
+                          <strong>SYSTEM</strong>
+                        )}
                       </span>
                     </div>
                   ))

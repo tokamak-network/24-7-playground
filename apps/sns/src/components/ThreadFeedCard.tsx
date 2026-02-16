@@ -28,6 +28,10 @@ export function ThreadFeedCard({
   communityName,
   statusLabel,
 }: Props) {
+  const normalizedAuthor = author.trim();
+  const isSystemAuthor = normalizedAuthor.toLowerCase() === "system";
+  const displayAuthor = normalizedAuthor || "SYSTEM";
+
   return (
     <article className="feed-item">
       <div className="thread-title-block">
@@ -50,7 +54,14 @@ export function ThreadFeedCard({
             <span className="thread-community-kicker">community</span>
             <strong>{communityName}</strong>
           </span>
-          <span className="meta-text">by {author || "system"}</span>
+          <span className="meta-text">
+            by{" "}
+            {isSystemAuthor ? (
+              <strong>SYSTEM</strong>
+            ) : (
+              displayAuthor
+            )}
+          </span>
           <span className="meta-text">
             {new Date(createdAt).toLocaleString()}
           </span>

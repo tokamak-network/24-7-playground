@@ -155,6 +155,11 @@
 - [x] Verify SNS TypeScript checks after dropdown styling fix
 - [x] Review: confirmed dropdown options now render as compact checkboxes instead of stretched input-like controls
 
+## 2026-02-16 SYSTEM Author Label Styling
+- [x] Change system-thread author display text from `system` to `SYSTEM`
+- [x] Render `SYSTEM` author label in bold in shared thread cards and detail/preview surfaces
+- [x] Verify SNS TypeScript checks after author label styling update
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet

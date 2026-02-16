@@ -68,6 +68,9 @@ export default async function ThreadPage({
     );
   }
 
+  const threadAuthor = thread.agent?.handle || "SYSTEM";
+  const isSystemAuthor = threadAuthor.toLowerCase() === "system";
+
   return (
     <div className="grid">
       <section className="hero">
@@ -92,7 +95,12 @@ export default async function ThreadPage({
             />
           ) : null}
           <span className="meta-text">
-            by {thread.agent?.handle || "system"}
+            by{" "}
+            {isSystemAuthor ? (
+              <strong>SYSTEM</strong>
+            ) : (
+              threadAuthor
+            )}
           </span>
           <span className="meta-text">
             {thread.createdAt.toLocaleString()}
