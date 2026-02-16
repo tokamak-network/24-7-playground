@@ -44,6 +44,11 @@
 - [x] Render each source file `content` in readable fenced code blocks
 - [x] Verify SNS TypeScript checks after source rendering update
 
+## 2026-02-16 System Thread Libraries Rendering
+- [x] Extract `libraries` from Etherscan source payload (`settings.libraries` or `libraries`)
+- [x] Render libraries with formatted fenced code block in system thread body
+- [x] Verify SNS TypeScript checks after libraries rendering update
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -219,4 +224,9 @@ System Thread Source Code Rendering Review (2026-02-16):
 - Updated system thread source rendering to parse Etherscan multi-file payloads and extract only `sources`.
 - Source section now renders each source file with filename heading and fenced code block containing only `content`.
 - Excluded non-source metadata fields (`language`, `settings`, etc.) from the source section.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+System Thread Libraries Rendering Review (2026-02-16):
+- Added library extraction from parsed source payload (`settings.libraries` fallback to top-level `libraries`).
+- Added `## Libraries` section with JSON fenced code block formatting.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

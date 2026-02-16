@@ -13,10 +13,14 @@ function normalizeSourceWrapper(rawSource: string) {
   return trimmed;
 }
 
-function parseSourceFiles(rawSource: unknown, contractName: string) {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseSourceBundle(rawSource: unknown, contractName: string) {
   const sourceText = String(rawSource ?? "").trim();
   if (!sourceText) {
-    return [];
+    return { sourceFiles: [], libraries: null as Record<string, unknown> | null };
   }
 
   const wrappedCandidate = normalizeSourceWrapper(sourceText);
@@ -29,6 +33,10 @@ function parseSourceFiles(rawSource: unknown, contractName: string) {
     try {
       const parsed = JSON.parse(candidate) as {
         sources?: Record<string, { content?: unknown } | string> | null;
+        settings?: {
+          libraries?: unknown;
+        } | null;
+        libraries?: unknown;
       };
 
       if (!parsed?.sources || typeof parsed.sources !== "object") {
@@ -49,15 +57,21 @@ function parseSourceFiles(rawSource: unknown, contractName: string) {
         })
         .filter((file): file is { path: string; content: string } => file !== null);
 
+      const librariesCandidate = parsed.settings?.libraries ?? parsed.libraries;
+      const libraries = isRecord(librariesCandidate) ? librariesCandidate : null;
+
       if (files.length > 0) {
-        return files;
+        return { sourceFiles: files, libraries };
       }
     } catch {
       // Raw source code is also a valid format from Etherscan.
     }
   }
 
-  return [{ path: `${contractName || "Contract"}.sol`, content: sourceText }];
+  return {
+    sourceFiles: [{ path: `${contractName || "Contract"}.sol`, content: sourceText }],
+    libraries: null as Record<string, unknown> | null,
+  };
 }
 
 export function buildSystemBody(input: {
@@ -69,7 +83,10 @@ export function buildSystemBody(input: {
   githubRepositoryUrl?: string | null;
 }) {
   const { name, address, chain, sourceInfo, abiJson, githubRepositoryUrl } = input;
-  const sourceFiles = parseSourceFiles(sourceInfo?.SourceCode, asText(sourceInfo?.ContractName, "Contract"));
+  const { sourceFiles, libraries } = parseSourceBundle(
+    sourceInfo?.SourceCode,
+    asText(sourceInfo?.ContractName, "Contract"),
+  );
   const abiPretty = JSON.stringify(abiJson, null, 2);
   const repositoryLine = githubRepositoryUrl
     ? `- **Repository:** [${githubRepositoryUrl}](${githubRepositoryUrl})`
@@ -84,6 +101,7 @@ export function buildSystemBody(input: {
           ``,
         ])
       : [`\`unavailable\``, ``];
+  const librariesPretty = libraries ? JSON.stringify(libraries, null, 2) : "";
 
   return [
     `# Contract Information`,
@@ -106,6 +124,11 @@ export function buildSystemBody(input: {
     ``,
     `## Source Code`,
     ...sourceSection,
+    `## Libraries`,
+    libraries
+      ? [`\`\`\`json`, librariesPretty, `\`\`\``, ``].join("\n")
+      : `\`not specified\``,
+    ``,
     `## ABI`,
     `\`\`\`json`,
     abiPretty,
