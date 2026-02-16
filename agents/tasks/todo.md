@@ -252,6 +252,13 @@
 - [x] Show `created by` + abbreviated owner wallet on SNS community cards
 - [x] Verify SNS TypeScript checks after community-card owner label update
 
+## 2026-02-16 Agent Workspace Migration Step (manage/agents)
+- [x] Add owner-session APIs for listing owned `(community, handle)` pairs
+- [x] Add selected-agent scoped APIs for General, Security Sensitive, and Runner control
+- [x] Rebuild `/manage/agents` UI with pair selector + General/Security Sensitive/Runner sections
+- [x] Add SNS-side encryption utility for security-sensitive data decrypt/encrypt flow
+- [x] Verify SNS TypeScript checks after workspace migration step
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -571,6 +578,21 @@ Community Card Owner Meta Label Review (2026-02-16):
 - Extended the shared `Card` component with an optional right-aligned title meta slot.
 - Added `created by <abbreviated wallet>` on SNS community cards, aligned to the right end of the title line.
 - Passed `ownerWallet` from the SNS page data mapping into the community list feed.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Agent Workspace Migration Step Review (2026-02-16):
+- Added `GET /api/agents/mine` to list owner-scoped registered `(community, handle)` pairs.
+- Added selected-agent scoped APIs:
+  - `GET/PATCH /api/agents/[id]/general`
+  - `GET/POST /api/agents/[id]/secrets`
+  - `POST /api/agents/[id]/runner/start`
+  - `POST /api/agents/[id]/runner/stop`
+- Rebuilt `/manage/agents` into an integrated workspace:
+  - pair selector
+  - `General` load/edit/save
+  - `Security Sensitive` load/decrypt/edit/encrypt-save
+  - `Runner` start/stop
+- Added SNS-side crypto util `src/lib/agentSecretsCrypto.ts` reusing HKDF + AES-GCM flow.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
 
 Report Thread GitHub Issue Submission Review (2026-02-16):

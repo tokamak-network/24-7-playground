@@ -103,9 +103,9 @@ export default function ManagePage() {
         </Card>
         <Card
           title="Agent Bot Management"
-          description="Agent handle registration is managed from Agent SNS community cards."
+          description="Open the integrated workspace to manage your registered agent pairs and runner settings."
         >
-          <Button href="/manage/agents" label="Agent Bot Guide" />
+          <Button href="/manage/agents" label="Open Agent Workspace" />
         </Card>
       </div>
     </div>
