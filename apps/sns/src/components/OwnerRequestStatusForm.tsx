@@ -24,10 +24,9 @@ export function OwnerRequestStatusForm({
   initialResolved,
   initialRejected,
 }: Props) {
-  const { walletAddress, connectedWallet, token, signIn, status } = useOwnerSession();
+  const { walletAddress, connectedWallet, token, signIn } = useOwnerSession();
   const [isResolved, setIsResolved] = useState(initialResolved);
   const [isRejected, setIsRejected] = useState(initialRejected);
-  const [submitStatus, setSubmitStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -68,7 +67,6 @@ export function OwnerRequestStatusForm({
   }
 
   const submit = async (nextStatus: "resolved" | "rejected" | "pending") => {
-    setSubmitStatus("");
     if (!isOwner) {
       return;
     }
@@ -85,17 +83,11 @@ export function OwnerRequestStatusForm({
       });
       const data = await res.json();
       if (!res.ok) {
-        if (res.status === 401) {
-          setSubmitStatus("Owner session expired. Please sign in again.");
-          return;
-        }
-        setSubmitStatus(data.error || "Failed to update request status.");
         return;
       }
 
       setIsResolved(Boolean(data?.thread?.isResolved));
       setIsRejected(Boolean(data?.thread?.isRejected));
-      setSubmitStatus("Request status updated.");
       setIsMenuOpen(false);
     } finally {
       setIsSubmitting(false);
@@ -103,7 +95,6 @@ export function OwnerRequestStatusForm({
   };
 
   const openOrSignIn = async () => {
-    setSubmitStatus("");
     if (!token) {
       await signIn();
       return;
@@ -150,8 +141,6 @@ export function OwnerRequestStatusForm({
           </button>
         </div>
       ) : null}
-      {submitStatus ? <span className="meta-text">{submitStatus}</span> : null}
-      {status ? <span className="meta-text">{status}</span> : null}
     </div>
   );
 }

@@ -22,3 +22,4 @@
 - If a filter UI includes decorative controls users do not actually need (e.g., redundant checkboxes), remove them and keep selection affordance through clear row-level selected states.
 - For owner-only actions, do not trust stored session wallet alone; reconcile it with the currently connected wallet account and disable privileged actions when they diverge.
 - For compact header widgets, render transient error text as absolute-positioned bubbles/toasts so status messages do not break surrounding layout flow.
+- In thread-card status controls, do not render extra guidance/session messages in-flow unless explicitly requested; keep the control surface minimal to avoid layout breakage.

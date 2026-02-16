@@ -180,6 +180,11 @@
 - [x] Keep top header layout stable while wallet error is visible
 - [x] Verify SNS TypeScript checks after wallet error UI update
 
+## 2026-02-16 Request Status Inline Messages Cleanup
+- [x] Remove owner-session/update 안내 문구 from request-status control area
+- [x] Keep request-status interaction to status button and popup options only
+- [x] Verify SNS TypeScript checks after status-control message cleanup
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
