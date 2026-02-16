@@ -17,3 +17,4 @@
 - If users request strict layout unification across pages, enforce it via a single shared card component import rather than duplicating similar JSX in multiple feed components.
 - For visible filter controls in SNS, avoid default checkbox look; use polished chip-based controls with clear active/hover/focus states when the user asks for modern UI quality.
 - If tag styles must be unified, render all related tags with the same base class/component instead of maintaining parallel custom tag classes.
+- When users ask for cleaner filtering UX, favor compact dropdown multi-select controls (with persistent checkbox options) over wide inline checklists and shorten labels to high-signal words like `Type`.

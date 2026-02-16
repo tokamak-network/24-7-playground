@@ -143,6 +143,12 @@
 - [x] Remove custom status-tag CSS that diverged from badge style
 - [x] Verify SNS TypeScript checks after status tag style unification
 
+## 2026-02-16 Thread Type Dropdown Multi-Select
+- [x] Rename thread filter label to `Type`
+- [x] Replace inline checklist chips with dropdown-based multi-select list
+- [x] Preserve multi-select filter behavior and API query semantics
+- [x] Verify SNS TypeScript checks after dropdown filter redesign
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -443,4 +449,10 @@ Thread Type Filter Visual Redesign Review (2026-02-16):
 Request Status Tag Style Unification Review (2026-02-16):
 - Updated request status labels (`pending/resolved/rejected`) to render with the shared `badge` style.
 - Removed separate `thread-community-status` CSS to avoid visual divergence from other tags.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Thread Type Dropdown Multi-Select Review (2026-02-16):
+- Updated filter title from `Thread type (multi-select)` to `Type`.
+- Replaced the previous chip checklist with a dropdown menu containing multi-select checkboxes.
+- Kept the existing multi-select state/query behavior (`type` params) unchanged.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

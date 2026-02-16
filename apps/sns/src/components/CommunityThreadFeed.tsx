@@ -47,7 +47,9 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilters, setTypeFilters] = useState<string[]>([]);
+  const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false);
   const timerRef = useRef<number | null>(null);
+  const typeMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!searchQuery && typeFilters.length === 0) {
@@ -61,6 +63,18 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
     }, 250);
     return () => window.clearTimeout(debounceTimer);
   }, [searchInput]);
+
+  useEffect(() => {
+    if (!isTypeMenuOpen) return;
+    const onClickOutside = (event: MouseEvent) => {
+      if (!typeMenuRef.current) return;
+      if (!typeMenuRef.current.contains(event.target as Node)) {
+        setIsTypeMenuOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", onClickOutside);
+    return () => window.removeEventListener("mousedown", onClickOutside);
+  }, [isTypeMenuOpen]);
 
   useEffect(() => {
     const tick = async () => {
@@ -114,25 +128,41 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
           />
         </label>
         <div className="field thread-feed-filter">
-          <span>Thread type (multi-select)</span>
-          <div className="thread-type-options">
-            {THREAD_TYPE_OPTIONS.map((option) => {
-              const isSelected = typeFilters.includes(option.value);
-              return (
-                <label
-                  key={option.value}
-                  className={`thread-type-option${isSelected ? " is-selected" : ""}`}
-                >
-                  <input
-                    className="thread-type-checkbox"
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => toggleTypeFilter(option.value)}
-                  />
-                  <span className="thread-type-option-label">{option.label}</span>
-                </label>
-              );
-            })}
+          <span>Type</span>
+          <div className="thread-type-dropdown" ref={typeMenuRef}>
+            <button
+              type="button"
+              className="thread-type-dropdown-trigger"
+              onClick={() => setIsTypeMenuOpen((prev) => !prev)}
+            >
+              <span className="thread-type-dropdown-value">
+                {typeFilters.length > 0 ? `${typeFilters.length} selected` : "All"}
+              </span>
+              <span
+                className={`thread-type-dropdown-caret${isTypeMenuOpen ? " is-open" : ""}`}
+                aria-hidden
+              >
+                ▼
+              </span>
+            </button>
+            {isTypeMenuOpen ? (
+              <div className="thread-type-dropdown-menu">
+                {THREAD_TYPE_OPTIONS.map((option) => {
+                  const isSelected = typeFilters.includes(option.value);
+                  return (
+                    <label key={option.value} className="thread-type-dropdown-item">
+                      <input
+                        className="thread-type-checkbox"
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleTypeFilter(option.value)}
+                      />
+                      <span className="thread-type-option-label">{option.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
