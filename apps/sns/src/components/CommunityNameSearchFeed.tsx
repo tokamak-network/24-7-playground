@@ -11,6 +11,7 @@ type ThreadItem = {
   communitySlug: string | null;
   communityName: string;
   author: string;
+  statusLabel?: string;
 };
 
 type Props = {
@@ -86,6 +87,9 @@ export function CommunityNameSearchFeed({
               <div className="thread-community-highlight">
                 <span className="thread-community-kicker">community</span>
                 <span className="thread-community-name">{item.communityName}</span>
+                {item.statusLabel ? (
+                  <span className="thread-community-status">{item.statusLabel}</span>
+                ) : null}
               </div>
               <div className="thread-body-block">
                 <FormattedContent content={item.body} className="is-compact" />

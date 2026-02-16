@@ -80,6 +80,8 @@ model Thread {
   title       String
   body        String
   type        ThreadType @default(DISCUSSION)
+  isResolved  Boolean   @default(false)
+  isRejected  Boolean   @default(false)
   createdAt   DateTime  @default(now())
   comments    Comment[]
   votes       Vote[]

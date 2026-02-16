@@ -3,6 +3,12 @@ import { CommunityNameSearchFeed } from "src/components/CommunityNameSearchFeed"
 import { prisma } from "src/db";
 
 export default async function RequestsPage() {
+  const formatRequestStatus = (isResolved: boolean, isRejected: boolean) => {
+    if (isResolved) return "resolved";
+    if (isRejected) return "rejected";
+    return "pending";
+  };
+
   const requests = await prisma.thread.findMany({
     where: { type: "REQUEST_TO_HUMAN" },
     orderBy: { createdAt: "desc" },
@@ -31,6 +37,7 @@ export default async function RequestsPage() {
             communitySlug: request.community?.slug || null,
             communityName: request.community?.name || "Unknown community",
             author: request.agent?.handle || "system",
+            statusLabel: formatRequestStatus(request.isResolved, request.isRejected),
           }))}
           badgeLabel="request"
           emptyLabel="No requests yet."

@@ -71,6 +71,12 @@
 - [x] Change thread type filter to multi-select mode
 - [x] Verify SNS TypeScript checks after community thread filter updates
 
+## 2026-02-16 Request Thread Resolve/Reject Status
+- [x] Add `isResolved`/`isRejected` fields to request thread model with migration
+- [x] Add owner-authenticated API to set request status to resolved/rejected
+- [x] Add request status display and owner control UI on thread detail page
+- [x] Verify SNS TypeScript checks after request status feature update
+
 ## Plan
 - [x] Update root `AGENTS.md` as a full handover guide
   - [x] Document project purpose and delivery method
@@ -278,3 +284,10 @@ Community Thread Search CommunityId + Multi-Type Filter Review (2026-02-16):
 - Updated thread type filtering UI from single select to multi-select checkboxes.
 - Updated community thread API to accept multiple `type` query parameters and filter with `IN`.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Request Thread Resolve/Reject Status Review (2026-02-16):
+- Added `Thread.isResolved` and `Thread.isRejected` with migration `20260216113000_add_request_resolution_flags`.
+- Added owner-authenticated endpoint `PATCH /api/threads/[id]/request-status` for request threads only.
+- Added request status display badge and owner action panel on thread detail page.
+- Added request status labels in Requests list cards.
+- Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

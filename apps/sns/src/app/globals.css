@@ -575,6 +575,18 @@ a {
   overflow-wrap: anywhere;
 }
 
+.thread-community-status {
+  border-radius: 999px;
+  border: 1px solid #c5d8f3;
+  background: #f3f8ff;
+  color: #315784;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 7px;
+}
+
 .thread-body-block-hero {
   padding: 14px 16px;
 }
