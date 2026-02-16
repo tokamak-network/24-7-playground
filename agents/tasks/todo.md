@@ -690,3 +690,29 @@ Local Runner Launcher CLI Review (2026-02-17):
   - `node --check apps/runner/src/utils.js`
   - `node apps/runner/src/index.js --help`
   - one-shot server boot + endpoint checks: `GET /health`, `GET /runner/status`
+
+## 2026-02-17 Manage Agents UX + Runner Launcher Controls
+- [x] Add SNS API key Show/Hide + Test controls in General
+- [x] Change LLM model selection to provider model-list loading flow using in-memory LLM API key
+- [x] Add key-specific Test buttons (SNS/LLM/Execution/Alchemy) with floating bubble results
+- [x] Prevent wheel-based numeric step changes in Runner inputs and keep Runner values local-only
+- [x] Add runner launcher port input, auto-detect list, and `Start Runner` action from `/manage/agents`
+- [x] Verify SNS TypeScript checks after UI/runner-control updates
+
+Manage Agents UX + Runner Launcher Controls Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - General:
+    - SNS API key now supports Show/Hide and Test.
+    - LLM model selection now follows model-list flow: with in-memory LLM API key (typed or decrypted), user loads models and selects one from a list.
+  - Security Sensitive:
+    - Added Test buttons for LLM API key, Execution Wallet private key, and Alchemy API key.
+  - Runner:
+    - Runner Interval and Comment Context Limit inputs now use keyboard-only numeric text entry (wheel step behavior removed).
+    - Values remain local-only (saved in browser localStorage per agent pair), not DB.
+    - Added Runner launcher localhost port input, detected-port select list, launcher port detection, and Start Runner button.
+    - Start Runner now posts configuration to local launcher `POST http://127.0.0.1:<port>/runner/start`.
+- Updated `apps/sns/src/app/globals.css`:
+  - Added reusable floating speech-bubble style for test/start results without layout reflow.
+  - Improved inline field wrapping for multi-button key controls.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

@@ -533,10 +533,63 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .manager-inline-field input {
   flex: 1;
+  min-width: 180px;
+}
+
+.floating-status-bubble {
+  position: fixed;
+  top: 92px;
+  right: 24px;
+  z-index: 120;
+  max-width: min(420px, calc(100vw - 28px));
+  border-radius: 12px;
+  border: 1px solid #ccdae8;
+  background: linear-gradient(165deg, rgba(27, 62, 112, 0.97), rgba(21, 45, 86, 0.99));
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.45;
+  padding: 9px 12px;
+  box-shadow: 0 14px 26px rgba(15, 33, 62, 0.35);
+}
+
+.floating-status-bubble::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 16px;
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid #ccdae8;
+  border-left: 1px solid #ccdae8;
+  background: rgba(24, 54, 100, 0.98);
+  transform: rotate(45deg);
+}
+
+.floating-status-bubble-success {
+  border-color: rgba(175, 238, 216, 0.92);
+  background: linear-gradient(165deg, rgba(10, 121, 88, 0.97), rgba(8, 97, 73, 0.99));
+}
+
+.floating-status-bubble-success::before {
+  border-top-color: rgba(175, 238, 216, 0.92);
+  border-left-color: rgba(175, 238, 216, 0.92);
+  background: rgba(10, 108, 82, 0.98);
+}
+
+.floating-status-bubble-error {
+  border-color: rgba(255, 205, 205, 0.92);
+  background: linear-gradient(165deg, rgba(178, 52, 52, 0.97), rgba(148, 36, 36, 0.99));
+}
+
+.floating-status-bubble-error::before {
+  border-top-color: rgba(255, 205, 205, 0.92);
+  border-left-color: rgba(255, 205, 205, 0.92);
+  background: rgba(160, 42, 42, 0.98);
 }
 
 .thread-community-search-field {

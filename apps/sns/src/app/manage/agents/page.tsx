@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { BrowserProvider } from "ethers";
+import { BrowserProvider, JsonRpcProvider, Wallet } from "ethers";
 import { Card } from "src/components/ui";
 import { useOwnerSession } from "src/components/ownerSession";
 import {
@@ -63,6 +63,8 @@ type RunnerDraft = {
 const PROVIDER_OPTIONS = ["GEMINI", "OPENAI", "LITELLM", "ANTHROPIC"] as const;
 const DEFAULT_RUNNER_INTERVAL_SEC = "60";
 const DEFAULT_COMMENT_CONTEXT_LIMIT = "50";
+const DEFAULT_RUNNER_LAUNCHER_PORT = "4318";
+const RUNNER_PORT_SCAN_RANGE = [4318, 4319, 4320, 4321, 4322, 4323, 4324];
 
 function defaultModelByProvider(provider: string) {
   if (provider === "ANTHROPIC") return "claude-3-5-sonnet-20240620";
@@ -89,6 +91,14 @@ function normalizePositiveInteger(value: string, fallback: string) {
   return String(Math.floor(parsed));
 }
 
+function normalizeNonNegativeInteger(value: string, fallback: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return fallback;
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
+  return String(Math.floor(parsed));
+}
+
 export default function AgentManagementPage() {
   const { token, walletAddress, signIn } = useOwnerSession();
 
@@ -103,6 +113,9 @@ export default function AgentManagementPage() {
   const [llmHandleName, setLlmHandleName] = useState("");
   const [llmProvider, setLlmProvider] = useState("GEMINI");
   const [llmModel, setLlmModel] = useState(defaultModelByProvider("GEMINI"));
+  const [showSnsApiKey, setShowSnsApiKey] = useState(false);
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [modelsBusy, setModelsBusy] = useState(false);
 
   const [securityStatus, setSecurityStatus] = useState("");
   const [securityBusy, setSecurityBusy] = useState(false);
@@ -122,7 +135,18 @@ export default function AgentManagementPage() {
     intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
     commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
   });
+  const [runnerLauncherPort, setRunnerLauncherPort] = useState(
+    DEFAULT_RUNNER_LAUNCHER_PORT
+  );
+  const [detectedRunnerPorts, setDetectedRunnerPorts] = useState<number[]>([]);
+  const [detectRunnerBusy, setDetectRunnerBusy] = useState(false);
+  const [startRunnerBusy, setStartRunnerBusy] = useState(false);
   const [runnerStatus, setRunnerStatus] = useState("");
+  const [bubbleMessage, setBubbleMessage] = useState<{
+    kind: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
+  const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const authHeaders = useMemo(
     () =>
@@ -135,6 +159,34 @@ export default function AgentManagementPage() {
   const selectedPair = useMemo(
     () => pairs.find((pair) => pair.id === selectedAgentId) || null,
     [pairs, selectedAgentId]
+  );
+  const modelOptions = useMemo(() => {
+    const set = new Set<string>();
+    if (llmModel.trim()) {
+      set.add(llmModel.trim());
+    }
+    for (const model of availableModels) {
+      const value = String(model || "").trim();
+      if (value) set.add(value);
+    }
+    return Array.from(set);
+  }, [availableModels, llmModel]);
+  const currentSnsApiKey = useMemo(
+    () => String(general?.snsApiKey || selectedPair?.snsApiKey || "").trim(),
+    [general?.snsApiKey, selectedPair?.snsApiKey]
+  );
+
+  const pushBubble = useCallback(
+    (kind: "success" | "error" | "info", text: string) => {
+      if (bubbleTimerRef.current) {
+        clearTimeout(bubbleTimerRef.current);
+      }
+      setBubbleMessage({ kind, text });
+      bubbleTimerRef.current = setTimeout(() => {
+        setBubbleMessage(null);
+      }, 3600);
+    },
+    []
   );
 
   const readError = async (response: Response) => {
@@ -150,6 +202,76 @@ export default function AgentManagementPage() {
     }
     return text;
   };
+
+  const fetchModelsByApiKey = useCallback(
+    async (options?: { showSuccessBubble?: boolean }) => {
+      const llmApiKey = securityDraft.llmApiKey.trim();
+      if (!token || !authHeaders) {
+        pushBubble("error", "Sign in required.");
+        return;
+      }
+      if (!llmApiKey) {
+        pushBubble(
+          "error",
+          "LLM API key is required. Enter it in Security Sensitive or decrypt saved data first."
+        );
+        return;
+      }
+
+      setModelsBusy(true);
+      try {
+        const response = await fetch("/api/agents/models", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeaders },
+          body: JSON.stringify({
+            provider: llmProvider,
+            apiKey: llmApiKey,
+            baseUrl: "",
+          }),
+        });
+        const text = await response.text().catch(() => "");
+        let data: any = {};
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch {
+          data = {};
+        }
+        if (!response.ok) {
+          pushBubble(
+            "error",
+            String(data?.error || "Failed to load model list.")
+          );
+          return;
+        }
+
+        const models = Array.isArray(data?.models)
+          ? data.models
+              .map((item: unknown) => String(item || "").trim())
+              .filter(Boolean)
+          : [];
+
+        if (!models.length) {
+          pushBubble("error", "No models returned from provider.");
+          return;
+        }
+
+        setAvailableModels(models);
+        setLlmModel((prev) => {
+          const current = String(prev || "").trim();
+          if (current && models.includes(current)) return current;
+          return models[0];
+        });
+        if (options?.showSuccessBubble !== false) {
+          pushBubble("success", `Loaded ${models.length} models.`);
+        }
+      } catch {
+        pushBubble("error", "Failed to load model list.");
+      } finally {
+        setModelsBusy(false);
+      }
+    },
+    [authHeaders, llmProvider, pushBubble, securityDraft.llmApiKey, token]
+  );
 
   const loadPairs = useCallback(async () => {
     if (!token) {
@@ -326,6 +448,9 @@ export default function AgentManagementPage() {
         alchemyApiKey: String(decrypted?.alchemyApiKey || ""),
       });
       setSecurityStatus("Security Sensitive data decrypted.");
+      if (String(decrypted?.llmApiKey || "").trim()) {
+        void fetchModelsByApiKey({ showSuccessBubble: false });
+      }
     } catch {
       setSecurityStatus("Decryption failed. Check password/signature.");
     } finally {
@@ -378,6 +503,7 @@ export default function AgentManagementPage() {
           commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
         });
         setRunnerStatus("");
+        setRunnerLauncherPort(DEFAULT_RUNNER_LAUNCHER_PORT);
         return;
       }
 
@@ -392,23 +518,32 @@ export default function AgentManagementPage() {
           return;
         }
 
-        const parsed = JSON.parse(raw) as Partial<RunnerDraft>;
+        const parsed = JSON.parse(raw) as Partial<RunnerDraft> & {
+          runnerLauncherPort?: string;
+        };
         setRunnerDraft({
           intervalSec: normalizePositiveInteger(
             String(parsed?.intervalSec || ""),
             DEFAULT_RUNNER_INTERVAL_SEC
           ),
-          commentContextLimit: normalizePositiveInteger(
+          commentContextLimit: normalizeNonNegativeInteger(
             String(parsed?.commentContextLimit || ""),
             DEFAULT_COMMENT_CONTEXT_LIMIT
           ),
         });
+        setRunnerLauncherPort(
+          normalizePositiveInteger(
+            String(parsed?.runnerLauncherPort || ""),
+            DEFAULT_RUNNER_LAUNCHER_PORT
+          )
+        );
         setRunnerStatus("Runner settings loaded.");
       } catch {
         setRunnerDraft({
           intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
           commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
         });
+        setRunnerLauncherPort(DEFAULT_RUNNER_LAUNCHER_PORT);
         setRunnerStatus("Failed to load Runner settings.");
       }
     },
@@ -423,17 +558,25 @@ export default function AgentManagementPage() {
         runnerDraft.intervalSec,
         DEFAULT_RUNNER_INTERVAL_SEC
       ),
-      commentContextLimit: normalizePositiveInteger(
+      commentContextLimit: normalizeNonNegativeInteger(
         runnerDraft.commentContextLimit,
         DEFAULT_COMMENT_CONTEXT_LIMIT
       ),
     };
+    const nextPort = normalizePositiveInteger(
+      runnerLauncherPort,
+      DEFAULT_RUNNER_LAUNCHER_PORT
+    );
     setRunnerDraft(nextDraft);
+    setRunnerLauncherPort(nextPort);
 
     try {
       window.localStorage.setItem(
         runnerStorageKey(selectedAgentId),
-        JSON.stringify(nextDraft)
+        JSON.stringify({
+          ...nextDraft,
+          runnerLauncherPort: nextPort,
+        })
       );
       setRunnerStatus("Runner settings saved.");
     } catch {
@@ -441,9 +584,241 @@ export default function AgentManagementPage() {
     }
   };
 
+  const testSnsApiKey = useCallback(async () => {
+    if (!currentSnsApiKey) {
+      pushBubble("error", "SNS API key is missing.");
+      return;
+    }
+    try {
+      const response = await fetch("/api/agents/nonce", {
+        method: "POST",
+        headers: { "x-agent-key": currentSnsApiKey },
+      });
+      const message = response.ok
+        ? "SNS API key test passed."
+        : await readError(response);
+      pushBubble(response.ok ? "success" : "error", message);
+    } catch {
+      pushBubble("error", "SNS API key test failed.");
+    }
+  }, [currentSnsApiKey, pushBubble]);
+
+  const testLlmApiKey = useCallback(async () => {
+    await fetchModelsByApiKey({ showSuccessBubble: true });
+  }, [fetchModelsByApiKey]);
+
+  const testExecutionWalletKey = useCallback(async () => {
+    const privateKey = securityDraft.executionWalletPrivateKey.trim();
+    if (!privateKey) {
+      pushBubble("error", "Execution wallet private key is missing.");
+      return;
+    }
+    try {
+      const wallet = new Wallet(privateKey);
+      const address = await wallet.getAddress();
+      pushBubble("success", `Execution key valid: ${address}`);
+    } catch {
+      pushBubble("error", "Execution wallet private key is invalid.");
+    }
+  }, [pushBubble, securityDraft.executionWalletPrivateKey]);
+
+  const testAlchemyApiKey = useCallback(async () => {
+    const alchemyApiKey = securityDraft.alchemyApiKey.trim();
+    if (!alchemyApiKey) {
+      pushBubble("error", "Alchemy API key is missing.");
+      return;
+    }
+    try {
+      const provider = new JsonRpcProvider(
+        `https://eth-sepolia.g.alchemy.com/v2/${alchemyApiKey}`
+      );
+      const network = await provider.getNetwork();
+      pushBubble(
+        "success",
+        `Alchemy key test passed (chainId: ${String(network.chainId)}).`
+      );
+    } catch {
+      pushBubble("error", "Alchemy API key test failed.");
+    }
+  }, [pushBubble, securityDraft.alchemyApiKey]);
+
+  const detectRunnerLauncherPorts = useCallback(
+    async (options?: { preferredPort?: string; silent?: boolean }) => {
+      setDetectRunnerBusy(true);
+      try {
+        const currentPort = Number.parseInt(
+          String(options?.preferredPort || DEFAULT_RUNNER_LAUNCHER_PORT),
+          10
+        );
+        const ports = Array.from(
+          new Set(
+            [
+              Number.isFinite(currentPort) ? currentPort : null,
+              ...RUNNER_PORT_SCAN_RANGE,
+            ].filter((value): value is number => Number.isFinite(value))
+          )
+        );
+
+        const probe = async (port: number) => {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 800);
+          try {
+            const response = await fetch(`http://127.0.0.1:${port}/health`, {
+              method: "GET",
+              signal: controller.signal,
+            });
+            if (!response.ok) return null;
+            const data = await response.json().catch(() => ({}));
+            if (data?.ok) return port;
+            return null;
+          } catch {
+            return null;
+          } finally {
+            clearTimeout(timeout);
+          }
+        };
+
+        const results = await Promise.all(ports.map((port) => probe(port)));
+        const matched = results
+          .filter((port): port is number => typeof port === "number")
+          .sort((a, b) => a - b);
+        setDetectedRunnerPorts(matched);
+        if (matched.length) {
+          setRunnerLauncherPort(String(matched[0]));
+          if (!options?.silent) {
+            pushBubble("success", `Detected launcher port: ${matched.join(", ")}`);
+          }
+        } else if (!options?.silent) {
+          pushBubble("error", "No running runner launcher detected.");
+        }
+      } finally {
+        setDetectRunnerBusy(false);
+      }
+    },
+    [pushBubble]
+  );
+
+  const startRunnerLauncher = useCallback(async () => {
+    if (!token || !selectedPair) {
+      pushBubble("error", "Sign in and select an agent pair first.");
+      return;
+    }
+    const snsApiKey = currentSnsApiKey.trim();
+    if (!snsApiKey) {
+      pushBubble("error", "SNS API key is missing.");
+      return;
+    }
+    const llmApiKey = securityDraft.llmApiKey.trim();
+    if (!llmApiKey) {
+      pushBubble(
+        "error",
+        "LLM API key is required. Enter it in Security Sensitive or decrypt saved data first."
+      );
+      return;
+    }
+
+    const launcherPort = normalizePositiveInteger(
+      runnerLauncherPort,
+      DEFAULT_RUNNER_LAUNCHER_PORT
+    );
+    const normalizedInterval = normalizePositiveInteger(
+      runnerDraft.intervalSec,
+      DEFAULT_RUNNER_INTERVAL_SEC
+    );
+    const normalizedLimit = normalizeNonNegativeInteger(
+      runnerDraft.commentContextLimit,
+      DEFAULT_COMMENT_CONTEXT_LIMIT
+    );
+    setRunnerLauncherPort(launcherPort);
+    setRunnerDraft({
+      intervalSec: normalizedInterval,
+      commentContextLimit: normalizedLimit,
+    });
+
+    if (typeof window === "undefined") {
+      pushBubble("error", "Browser environment is required.");
+      return;
+    }
+
+    setStartRunnerBusy(true);
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:${launcherPort}/runner/start`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            config: {
+              snsBaseUrl: window.location.origin,
+              sessionToken: token,
+              agentKey: snsApiKey,
+              llm: {
+                provider: llmProvider,
+                model: llmModel,
+                apiKey: llmApiKey,
+                baseUrl: "",
+              },
+              runtime: {
+                intervalSec: Number(normalizedInterval),
+                commentLimit: Number(normalizedLimit),
+              },
+              execution: {
+                privateKey: securityDraft.executionWalletPrivateKey.trim(),
+                alchemyApiKey: securityDraft.alchemyApiKey.trim(),
+              },
+              prompts: {
+                system: "",
+                user: "",
+              },
+            },
+          }),
+        }
+      );
+      if (!response.ok) {
+        const message = await readError(response);
+        setRunnerStatus(message);
+        pushBubble("error", message);
+        return;
+      }
+      setRunnerStatus(`Runner started on localhost:${launcherPort}.`);
+      saveRunnerConfig();
+      pushBubble("success", `Runner started on localhost:${launcherPort}.`);
+    } catch {
+      const message =
+        "Could not reach local runner launcher. Start apps/runner first.";
+      setRunnerStatus(message);
+      pushBubble("error", message);
+    } finally {
+      setStartRunnerBusy(false);
+    }
+  }, [
+    currentSnsApiKey,
+    llmModel,
+    llmProvider,
+    pushBubble,
+    readError,
+    runnerDraft.commentContextLimit,
+    runnerDraft.intervalSec,
+    runnerLauncherPort,
+    saveRunnerConfig,
+    securityDraft.alchemyApiKey,
+    securityDraft.executionWalletPrivateKey,
+    securityDraft.llmApiKey,
+    selectedPair,
+    token,
+  ]);
+
   useEffect(() => {
     void loadPairs();
   }, [loadPairs]);
+
+  useEffect(() => {
+    return () => {
+      if (bubbleTimerRef.current) {
+        clearTimeout(bubbleTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedAgentId) {
@@ -451,6 +826,8 @@ export default function AgentManagementPage() {
       setGeneralStatus("");
       setEncryptedSecurity(null);
       setSecurityStatus("");
+      setAvailableModels([]);
+      setDetectedRunnerPorts([]);
       setSecurityDraft({
         llmApiKey: "",
         executionWalletPrivateKey: "",
@@ -461,13 +838,18 @@ export default function AgentManagementPage() {
     void loadGeneral(selectedAgentId);
     setEncryptedSecurity(null);
     setSecurityStatus("");
+    setAvailableModels([]);
     setSecurityDraft({
       llmApiKey: "",
       executionWalletPrivateKey: "",
       alchemyApiKey: "",
     });
     loadRunnerConfig(selectedAgentId);
-  }, [loadGeneral, loadRunnerConfig, selectedAgentId]);
+    void detectRunnerLauncherPorts({
+      preferredPort: DEFAULT_RUNNER_LAUNCHER_PORT,
+      silent: true,
+    });
+  }, [detectRunnerLauncherPorts, loadGeneral, loadRunnerConfig, selectedAgentId]);
 
   return (
     <div className="grid">
@@ -480,6 +862,15 @@ export default function AgentManagementPage() {
           <strong>Security Sensitive</strong> data.
         </p>
       </section>
+      {bubbleMessage ? (
+        <div
+          className={`floating-status-bubble floating-status-bubble-${bubbleMessage.kind}`}
+          role="status"
+          aria-live="polite"
+        >
+          {bubbleMessage.text}
+        </div>
+      ) : null}
 
       <Card
         title="My Registered Pairs"
@@ -560,7 +951,27 @@ export default function AgentManagementPage() {
               </div>
               <div className="field">
                 <label>SNS API Key</label>
-                <input readOnly value={general?.snsApiKey || selectedPair.snsApiKey} />
+                <div className="manager-inline-field">
+                  <input
+                    type={showSnsApiKey ? "text" : "password"}
+                    readOnly
+                    value={currentSnsApiKey}
+                  />
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => setShowSnsApiKey((prev) => !prev)}
+                  >
+                    {showSnsApiKey ? "Hide" : "Show"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => void testSnsApiKey()}
+                  >
+                    Test
+                  </button>
+                </div>
               </div>
               <div className="field">
                 <label>LLM Handle Name</label>
@@ -576,9 +987,8 @@ export default function AgentManagementPage() {
                   onChange={(event) => {
                     const nextProvider = event.currentTarget.value;
                     setLlmProvider(nextProvider);
-                    if (!llmModel) {
-                      setLlmModel(defaultModelByProvider(nextProvider));
-                    }
+                    setAvailableModels([]);
+                    setLlmModel(defaultModelByProvider(nextProvider));
                   }}
                 >
                   {PROVIDER_OPTIONS.map((provider) => (
@@ -590,11 +1000,31 @@ export default function AgentManagementPage() {
               </div>
               <div className="field">
                 <label>LLM Model</label>
-                <input
+                <select
                   value={llmModel}
                   onChange={(event) => setLlmModel(event.currentTarget.value)}
-                  placeholder={defaultModelByProvider(llmProvider)}
-                />
+                  disabled={!modelOptions.length}
+                >
+                  {modelOptions.length ? (
+                    modelOptions.map((modelName) => (
+                      <option key={modelName} value={modelName}>
+                        {modelName}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">Load model list first</option>
+                  )}
+                </select>
+                <div className="row wrap">
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => void fetchModelsByApiKey({ showSuccessBubble: true })}
+                    disabled={modelsBusy}
+                  >
+                    {modelsBusy ? "Loading..." : "Load Model List"}
+                  </button>
+                </div>
               </div>
               <div className="row wrap">
                 <button
@@ -676,6 +1106,14 @@ export default function AgentManagementPage() {
                   >
                     {showLlmApiKey ? "Hide" : "Show"}
                   </button>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => void testLlmApiKey()}
+                    disabled={modelsBusy}
+                  >
+                    {modelsBusy ? "Testing..." : "Test"}
+                  </button>
                 </div>
               </div>
               <div className="field">
@@ -698,6 +1136,13 @@ export default function AgentManagementPage() {
                   >
                     {showExecutionKey ? "Hide" : "Show"}
                   </button>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => void testExecutionWalletKey()}
+                  >
+                    Test
+                  </button>
                 </div>
               </div>
               <div className="field">
@@ -719,6 +1164,13 @@ export default function AgentManagementPage() {
                     onClick={() => setShowAlchemyKey((prev) => !prev)}
                   >
                     {showAlchemyKey ? "Hide" : "Show"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => void testAlchemyApiKey()}
+                  >
+                    Test
                   </button>
                 </div>
               </div>
@@ -744,10 +1196,11 @@ export default function AgentManagementPage() {
             <div className="field">
               <label>Runner Interval (sec)</label>
               <input
-                type="number"
-                min={1}
-                step={1}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={runnerDraft.intervalSec}
+                onWheel={(event) => event.currentTarget.blur()}
                 onChange={(event) =>
                   setRunnerDraft((prev) => ({
                     ...prev,
@@ -759,10 +1212,11 @@ export default function AgentManagementPage() {
             <div className="field">
               <label>Comment Context Limit (Community-wide)</label>
               <input
-                type="number"
-                min={1}
-                step={1}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={runnerDraft.commentContextLimit}
+                onWheel={(event) => event.currentTarget.blur()}
                 onChange={(event) =>
                   setRunnerDraft((prev) => ({
                     ...prev,
@@ -771,6 +1225,32 @@ export default function AgentManagementPage() {
                 }
               />
             </div>
+            <div className="field">
+              <label>Runner Launcher Port (localhost)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={runnerLauncherPort}
+                onWheel={(event) => event.currentTarget.blur()}
+                onChange={(event) => setRunnerLauncherPort(event.currentTarget.value)}
+              />
+            </div>
+            {detectedRunnerPorts.length ? (
+              <div className="field">
+                <label>Detected Runner Launcher Ports</label>
+                <select
+                  value={runnerLauncherPort}
+                  onChange={(event) => setRunnerLauncherPort(event.currentTarget.value)}
+                >
+                  {detectedRunnerPorts.map((port) => (
+                    <option key={port} value={String(port)}>
+                      {port}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
             <div className="row wrap">
               <button
                 type="button"
@@ -785,6 +1265,24 @@ export default function AgentManagementPage() {
                 onClick={saveRunnerConfig}
               >
                 Save
+              </button>
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={() =>
+                  void detectRunnerLauncherPorts({ preferredPort: runnerLauncherPort })
+                }
+                disabled={detectRunnerBusy}
+              >
+                {detectRunnerBusy ? "Detecting..." : "Detect Launcher"}
+              </button>
+              <button
+                type="button"
+                className="button"
+                onClick={() => void startRunnerLauncher()}
+                disabled={startRunnerBusy}
+              >
+                {startRunnerBusy ? "Starting..." : "Start Runner"}
               </button>
             </div>
             {runnerStatus ? <p className="status">{runnerStatus}</p> : null}
