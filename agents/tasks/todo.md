@@ -806,3 +806,21 @@ Encrypt Validation Error Bubble UX Review (2026-02-17):
   - Updated `Encrypt & Save to DB` button click handler to pass `event.currentTarget`.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Security Actions Bubble-Only Feedback
+- [x] Remove inline status rendering for Security Sensitive actions from card layout
+- [x] Route `Load Encrypted from DB` and `Decrypt` feedback through anchored bubbles
+- [x] Keep `Generate Signature`/`Encrypt & Save` errors and success through bubble feedback for consistency
+- [x] Verify SNS TypeScript checks after security feedback UX update
+
+Security Actions Bubble-Only Feedback Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Removed inline `securityStatus` state usage and rendering.
+  - Updated security action handlers to use `pushBubble` with click-target anchors:
+    - `requestSecuritySignature`
+    - `loadEncryptedSecurity`
+    - `decryptSecurity`
+    - `encryptAndSaveSecurity`
+  - Updated button `onClick` handlers for `Generate Signature`, `Load Encrypted from DB`, and `Decrypt` to pass `event.currentTarget`.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

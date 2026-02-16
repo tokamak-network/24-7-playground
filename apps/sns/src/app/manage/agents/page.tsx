@@ -128,7 +128,6 @@ export default function AgentManagementPage() {
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [modelsBusy, setModelsBusy] = useState(false);
 
-  const [securityStatus, setSecurityStatus] = useState("");
   const [securityBusy, setSecurityBusy] = useState(false);
   const [encryptedSecurity, setEncryptedSecurity] =
     useState<EncryptedSecurity | null>(null);
@@ -413,63 +412,71 @@ export default function AgentManagementPage() {
     }
   };
 
-  const loadEncryptedSecurity = async () => {
-    if (!token || !selectedAgentId) return;
+  const loadEncryptedSecurity = async (anchorEl?: HTMLElement | null) => {
+    if (!token || !selectedAgentId) {
+      pushBubble("error", "Sign in and select an agent pair first.", anchorEl);
+      return;
+    }
     setSecurityBusy(true);
-    setSecurityStatus("Loading encrypted Security Sensitive data...");
     try {
       const response = await fetch(`/api/agents/${selectedAgentId}/secrets`, {
         headers: authHeaders,
       });
       if (!response.ok) {
-        setSecurityStatus(await readError(response));
+        pushBubble("error", await readError(response), anchorEl);
         setEncryptedSecurity(null);
         return;
       }
       const data = await response.json();
       const encrypted = data?.securitySensitive as EncryptedSecurity | null;
       setEncryptedSecurity(encrypted || null);
-      setSecurityStatus(
+      pushBubble(
+        encrypted ? "success" : "error",
         encrypted
           ? "Encrypted Security Sensitive data loaded."
-          : "No encrypted Security Sensitive data found."
+          : "No encrypted Security Sensitive data found.",
+        anchorEl
       );
     } catch {
       setEncryptedSecurity(null);
-      setSecurityStatus("Failed to load encrypted Security Sensitive data.");
+      pushBubble("error", "Failed to load encrypted Security Sensitive data.", anchorEl);
     } finally {
       setSecurityBusy(false);
     }
   };
 
-  const requestSecuritySignature = async () => {
+  const requestSecuritySignature = async (anchorEl?: HTMLElement | null) => {
     const ethereum = (window as any).ethereum;
     if (!ethereum) {
-      setSecurityStatus("MetaMask not detected.");
+      pushBubble("error", "MetaMask not detected.", anchorEl);
       return;
     }
-    const provider = new BrowserProvider(ethereum);
-    const signer = await provider.getSigner();
-    const message = "24-7-playground-security";
-    const signature = await signer.signMessage(message);
-    setSecuritySignature(signature);
+    try {
+      const provider = new BrowserProvider(ethereum);
+      const signer = await provider.getSigner();
+      const message = "24-7-playground-security";
+      const signature = await signer.signMessage(message);
+      setSecuritySignature(signature);
+      pushBubble("success", "Signature generated.", anchorEl);
+    } catch {
+      pushBubble("error", "Failed to generate signature.", anchorEl);
+    }
   };
 
-  const decryptSecurity = async () => {
+  const decryptSecurity = async (anchorEl?: HTMLElement | null) => {
     if (!encryptedSecurity) {
-      setSecurityStatus("Load encrypted Security Sensitive data first.");
+      pushBubble("error", "Load encrypted Security Sensitive data first.", anchorEl);
       return;
     }
     if (!securityPassword) {
-      setSecurityStatus("Password is required to decrypt.");
+      pushBubble("error", "Password is required to decrypt.", anchorEl);
       return;
     }
     if (!securitySignature) {
-      setSecurityStatus("Generate a signature first.");
+      pushBubble("error", "Generate a signature first.", anchorEl);
       return;
     }
     setSecurityBusy(true);
-    setSecurityStatus("Decrypting Security Sensitive data...");
     try {
       const decrypted = (await decryptAgentSecrets(
         securitySignature,
@@ -483,30 +490,31 @@ export default function AgentManagementPage() {
         ),
         alchemyApiKey: String(decrypted?.alchemyApiKey || ""),
       });
-      setSecurityStatus("Security Sensitive data decrypted.");
+      pushBubble("success", "Security Sensitive data decrypted.", anchorEl);
       if (String(decrypted?.llmApiKey || "").trim()) {
         void fetchModelsByApiKey({ showSuccessBubble: false });
       }
     } catch {
-      setSecurityStatus("Decryption failed. Check password/signature.");
+      pushBubble("error", "Decryption failed. Check password/signature.", anchorEl);
     } finally {
       setSecurityBusy(false);
     }
   };
 
   const encryptAndSaveSecurity = async (anchorEl?: HTMLElement | null) => {
-    if (!token || !selectedAgentId) return;
+    if (!token || !selectedAgentId) {
+      pushBubble("error", "Sign in and select an agent pair first.", anchorEl);
+      return;
+    }
     if (!securityPassword) {
-      setSecurityStatus("");
       pushBubble("error", "Password is required to encrypt.", anchorEl);
       return;
     }
     if (!securitySignature) {
-      setSecurityStatus("Generate a signature first.");
+      pushBubble("error", "Generate a signature first.", anchorEl);
       return;
     }
     setSecurityBusy(true);
-    setSecurityStatus("Encrypting and saving Security Sensitive data...");
     try {
       const encrypted = await encryptAgentSecrets(
         securitySignature,
@@ -519,14 +527,14 @@ export default function AgentManagementPage() {
         body: JSON.stringify({ securitySensitive: encrypted }),
       });
       if (!response.ok) {
-        setSecurityStatus(await readError(response));
+        pushBubble("error", await readError(response), anchorEl);
         return;
       }
       setEncryptedSecurity(encrypted);
-      setSecurityStatus("Security Sensitive data saved.");
+      pushBubble("success", "Security Sensitive data saved.", anchorEl);
       await loadPairs();
     } catch {
-      setSecurityStatus("Failed to encrypt/save Security Sensitive data.");
+      pushBubble("error", "Failed to encrypt/save Security Sensitive data.", anchorEl);
     } finally {
       setSecurityBusy(false);
     }
@@ -876,7 +884,6 @@ export default function AgentManagementPage() {
       setGeneral(null);
       setGeneralStatus("");
       setEncryptedSecurity(null);
-      setSecurityStatus("");
       setAvailableModels([]);
       setDetectedRunnerPorts([]);
       setSecurityDraft({
@@ -888,7 +895,6 @@ export default function AgentManagementPage() {
     }
     void loadGeneral(selectedAgentId);
     setEncryptedSecurity(null);
-    setSecurityStatus("");
     setAvailableModels([]);
     setSecurityDraft({
       llmApiKey: "",
@@ -1124,7 +1130,9 @@ export default function AgentManagementPage() {
                 <button
                   type="button"
                   className="button button-secondary"
-                  onClick={() => void requestSecuritySignature()}
+                  onClick={(event) =>
+                    void requestSecuritySignature(event.currentTarget)
+                  }
                   data-auth-exempt="true"
                 >
                   Generate Signature
@@ -1132,7 +1140,9 @@ export default function AgentManagementPage() {
                 <button
                   type="button"
                   className="button button-secondary"
-                  onClick={() => void loadEncryptedSecurity()}
+                  onClick={(event) =>
+                    void loadEncryptedSecurity(event.currentTarget)
+                  }
                   disabled={securityBusy}
                 >
                   {securityBusy ? "Loading..." : "Load Encrypted from DB"}
@@ -1140,7 +1150,7 @@ export default function AgentManagementPage() {
                 <button
                   type="button"
                   className="button button-secondary"
-                  onClick={() => void decryptSecurity()}
+                  onClick={(event) => void decryptSecurity(event.currentTarget)}
                   disabled={securityBusy}
                 >
                   {securityBusy ? "Decrypting..." : "Decrypt"}
@@ -1247,7 +1257,6 @@ export default function AgentManagementPage() {
               >
                 {securityBusy ? "Saving..." : "Encrypt & Save to DB"}
               </button>
-              {securityStatus ? <p className="status">{securityStatus}</p> : null}
             </Card>
           </div>
           <Card
