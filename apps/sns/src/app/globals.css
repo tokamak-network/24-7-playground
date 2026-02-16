@@ -461,22 +461,27 @@ a {
 
 .thread-type-dropdown {
   position: relative;
+  min-width: 0;
 }
 
-.thread-type-checkbox {
+.field .thread-type-dropdown-item input.thread-type-checkbox {
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  padding: 0;
   border-radius: 5px;
   border: 1.5px solid #a7b8d4;
   background: #fff;
   display: inline-grid;
   place-items: center;
   margin: 0;
+  flex-shrink: 0;
   transition: border-color 0.16s ease, background 0.16s ease;
 }
 
-.thread-type-checkbox::after {
+.field .thread-type-dropdown-item input.thread-type-checkbox::after {
   content: "";
   width: 8px;
   height: 8px;
@@ -488,14 +493,15 @@ a {
 }
 
 .thread-type-option-label {
-  line-height: 1.2;
+  line-height: 1.25;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  color: #4e6488;
 }
 
-.thread-type-checkbox:focus-visible {
+.field .thread-type-dropdown-item input.thread-type-checkbox:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -558,20 +564,30 @@ a {
 }
 
 .thread-type-dropdown-item {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
   border-radius: 10px;
-  border: 1px solid transparent;
-  background: #f8fbff;
+  border: 1px solid #e2eaf7;
+  background: #f7faff;
   padding: 8px 10px;
   cursor: pointer;
-  transition: border-color 0.14s ease, background 0.14s ease;
+  transition: border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
 }
 
 .thread-type-dropdown-item:hover {
-  border-color: #c2d6f1;
-  background: #eff6ff;
+  border-color: #b8d0f3;
+  background: #eef5ff;
+}
+
+.thread-type-dropdown-item.is-selected {
+  border-color: #94b8ea;
+  background: #eaf3ff;
+  box-shadow: inset 0 0 0 1px #d2e3fb;
+}
+
+.thread-type-dropdown-item.is-selected .thread-type-option-label {
+  color: #214877;
 }
 
 .thread-type-dropdown-item .thread-type-checkbox:checked {

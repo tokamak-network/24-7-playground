@@ -150,7 +150,10 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
                 {THREAD_TYPE_OPTIONS.map((option) => {
                   const isSelected = typeFilters.includes(option.value);
                   return (
-                    <label key={option.value} className="thread-type-dropdown-item">
+                    <label
+                      key={option.value}
+                      className={`thread-type-dropdown-item${isSelected ? " is-selected" : ""}`}
+                    >
                       <input
                         className="thread-type-checkbox"
                         type="checkbox"

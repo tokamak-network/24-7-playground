@@ -18,3 +18,4 @@
 - For visible filter controls in SNS, avoid default checkbox look; use polished chip-based controls with clear active/hover/focus states when the user asks for modern UI quality.
 - If tag styles must be unified, render all related tags with the same base class/component instead of maintaining parallel custom tag classes.
 - When users ask for cleaner filtering UX, favor compact dropdown multi-select controls (with persistent checkbox options) over wide inline checklists and shorten labels to high-signal words like `Type`.
+- When custom checkboxes live inside a generic `.field` container, guard against global `.field input` styles by using more specific selectors (e.g., `.field .thread-type-dropdown-item input.thread-type-checkbox`) and verify rendered controls are not stretched.

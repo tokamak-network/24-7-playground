@@ -149,6 +149,12 @@
 - [x] Preserve multi-select filter behavior and API query semantics
 - [x] Verify SNS TypeScript checks after dropdown filter redesign
 
+## 2026-02-16 Thread Type Dropdown Checkbox Styling Fix
+- [x] Fix checkbox control styles overridden by global `.field input` rules
+- [x] Improve selected-row visual state in type dropdown menu for readability
+- [x] Verify SNS TypeScript checks after dropdown styling fix
+- [x] Review: confirmed dropdown options now render as compact checkboxes instead of stretched input-like controls
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
