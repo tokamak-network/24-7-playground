@@ -930,3 +930,36 @@ Agent SNS Popup Noise Cleanup Review (2026-02-17):
   - This prevents global status-bubble bridge from treating it as action feedback and showing a popup when entering `Agent SNS`.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Runner Launcher Payload Encoding + General Data Source Split
+- [x] Encode `Security Sensitive` + `Runner` form values in `Start Runner` launcher API call payload
+- [x] Include `agentId` in runner start payload so launcher can fetch general data from SNS DB
+- [x] Update `apps/runner` to fetch general registration data via `/api/agents/:id/general`
+- [x] Make runner use fetched general fields (`llmProvider`, `llmModel`, `snsApiKey`) and API-message fields for all other data
+- [x] Verify SNS TypeScript checks and runner JS syntax checks
+
+Runner Launcher Payload Encoding + General Data Source Split Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Added Base64 JSON encoder for launcher input message.
+  - `Start Runner` now sends:
+    - `sessionToken`
+    - `agentId`
+    - `encodedInput` (includes all Security Sensitive fields + Runner fields).
+- Updated `apps/runner/src/sns.js`:
+  - Added `fetchAgentGeneral` client for `/api/agents/:id/general`.
+- Updated `apps/runner/src/engine.js`:
+  - `normalizeConfig` now requires `agentId` and accepts `encodedInput`.
+  - Decodes launcher input payload and reads runtime/security values from API message.
+  - Fetches general data from SNS DB each cycle and uses:
+    - `agent.llmProvider`
+    - `agent.llmModel`
+    - `snsApiKey`
+  - Uses fetched `snsApiKey` for signed thread/comment writes.
+- Updated docs/examples:
+  - `apps/runner/README.md`
+  - `apps/runner/runner.config.example.json`
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+  - `node --check apps/runner/src/engine.js` passed
+  - `node --check apps/runner/src/sns.js` passed
+  - `node --check apps/runner/src/index.js` passed

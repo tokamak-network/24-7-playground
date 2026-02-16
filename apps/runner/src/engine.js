@@ -1,6 +1,12 @@
 const { Contract, JsonRpcProvider, Wallet } = require("ethers");
 const { callLlm, defaultModelForProvider, normalizeProvider } = require("./llm");
-const { createComment, createThread, fetchContext, normalizeBaseUrl } = require("./sns");
+const {
+  createComment,
+  createThread,
+  fetchAgentGeneral,
+  fetchContext,
+  normalizeBaseUrl,
+} = require("./sns");
 const { extractJsonPayload, toErrorMessage, toJsonSafe } = require("./utils");
 
 const DEFAULT_INTERVAL_SEC = 60;
@@ -44,10 +50,43 @@ function parseDecision(output) {
   return [parsed];
 }
 
+function decodeEncodedInput(value) {
+  const encoded = String(value || "").trim();
+  if (!encoded) return null;
+  try {
+    const raw = Buffer.from(encoded, "base64").toString("utf8");
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") {
+      throw new Error("encodedInput must decode to a JSON object");
+    }
+    return parsed;
+  } catch {
+    throw new Error("encodedInput is invalid");
+  }
+}
+
 function normalizeConfig(input) {
   if (!input || typeof input !== "object") {
     throw new Error("Runner config is required");
   }
+  const decodedInput = decodeEncodedInput(input.encodedInput);
+  const securityFromEncoded =
+    decodedInput &&
+    decodedInput.securitySensitive &&
+    typeof decodedInput.securitySensitive === "object"
+      ? decodedInput.securitySensitive
+      : {};
+  const runnerFromEncoded =
+    decodedInput &&
+    decodedInput.runner &&
+    typeof decodedInput.runner === "object"
+      ? decodedInput.runner
+      : {};
+
+  const securityInput =
+    input.securitySensitive && typeof input.securitySensitive === "object"
+      ? { ...securityFromEncoded, ...input.securitySensitive }
+      : securityFromEncoded;
   const llmInput = input.llm && typeof input.llm === "object" ? input.llm : {};
   const runtimeInput =
     input.runtime && typeof input.runtime === "object" ? input.runtime : {};
@@ -56,44 +95,57 @@ function normalizeConfig(input) {
   const promptInput =
     input.prompts && typeof input.prompts === "object" ? input.prompts : {};
 
-  const provider = normalizeProvider(llmInput.provider);
-  const model = String(llmInput.model || defaultModelForProvider(provider)).trim();
-  const apiKey = String(llmInput.apiKey || "").trim();
-  if (!apiKey) {
-    throw new Error("llm.apiKey is required");
-  }
   const sessionToken = String(input.sessionToken || "").trim();
   if (!sessionToken) {
     throw new Error("sessionToken is required");
   }
-  const agentKey = String(input.agentKey || "").trim();
-  if (!agentKey) {
-    throw new Error("agentKey is required");
+  const agentId = String(input.agentId || "").trim();
+  if (!agentId) {
+    throw new Error("agentId is required");
+  }
+
+  const llmApiKey = String(
+    securityInput.llmApiKey || llmInput.apiKey || ""
+  ).trim();
+  if (!llmApiKey) {
+    throw new Error("securitySensitive.llmApiKey is required");
   }
 
   return {
     snsBaseUrl: normalizeBaseUrl(input.snsBaseUrl),
     sessionToken,
-    agentKey,
+    agentId,
+    encodedInput: String(input.encodedInput || "").trim(),
     llm: {
-      provider,
-      model,
-      apiKey,
+      apiKey: llmApiKey,
       baseUrl: String(llmInput.baseUrl || "").trim(),
     },
     runtime: {
       intervalSec: normalizePositiveInt(
-        runtimeInput.intervalSec,
+        runnerFromEncoded.intervalSec ?? runtimeInput.intervalSec,
         DEFAULT_INTERVAL_SEC
       ),
       commentLimit: normalizeNonNegativeInt(
-        runtimeInput.commentLimit,
+        runnerFromEncoded.commentContextLimit ??
+          runnerFromEncoded.commentLimit ??
+          runtimeInput.commentLimit,
         DEFAULT_COMMENT_LIMIT
+      ),
+      runnerLauncherPort: normalizePositiveInt(
+        runnerFromEncoded.runnerLauncherPort,
+        0
       ),
     },
     execution: {
-      privateKey: String(executionInput.privateKey || "").trim(),
-      alchemyApiKey: String(executionInput.alchemyApiKey || "").trim(),
+      privateKey: String(
+        securityInput.executionWalletPrivateKey || executionInput.privateKey || ""
+      ).trim(),
+      alchemyApiKey: String(
+        securityInput.alchemyApiKey || executionInput.alchemyApiKey || ""
+      ).trim(),
+    },
+    securitySensitive: {
+      password: String(securityInput.password || "").trim(),
     },
     prompts: {
       system: String(promptInput.system || "").trim(),
@@ -106,19 +158,25 @@ function redactConfig(config) {
   if (!config) return null;
   return {
     snsBaseUrl: config.snsBaseUrl,
+    agentId: config.agentId,
     llm: {
-      provider: config.llm.provider,
-      model: config.llm.model,
       baseUrl: config.llm.baseUrl || null,
       hasApiKey: Boolean(config.llm.apiKey),
     },
     runtime: {
       intervalSec: config.runtime.intervalSec,
       commentLimit: config.runtime.commentLimit,
+      runnerLauncherPort: config.runtime.runnerLauncherPort || null,
     },
     execution: {
       hasPrivateKey: Boolean(config.execution.privateKey),
       hasAlchemyApiKey: Boolean(config.execution.alchemyApiKey),
+    },
+    securitySensitive: {
+      hasPassword: Boolean(
+        config.securitySensitive && config.securitySensitive.password
+      ),
+      encodedInput: Boolean(config.encodedInput),
     },
     prompts: {
       hasSystemPrompt: Boolean(config.prompts.system),
@@ -126,7 +184,7 @@ function redactConfig(config) {
     },
     auth: {
       hasSessionToken: Boolean(config.sessionToken),
-      hasAgentKey: Boolean(config.agentKey),
+      hasAgentId: Boolean(config.agentId),
     },
   };
 }
@@ -195,6 +253,10 @@ class RunnerEngine {
       llm: { ...this.config.llm, ...(patchInput.llm || {}) },
       runtime: { ...this.config.runtime, ...(patchInput.runtime || {}) },
       execution: { ...this.config.execution, ...(patchInput.execution || {}) },
+      securitySensitive: {
+        ...this.config.securitySensitive,
+        ...(patchInput.securitySensitive || {}),
+      },
       prompts: { ...this.config.prompts, ...(patchInput.prompts || {}) },
     };
     this.config = normalizeConfig(merged);
@@ -235,18 +297,62 @@ class RunnerEngine {
     this.state.lastRunAt = new Date().toISOString();
 
     try {
+      const generalData = await fetchAgentGeneral({
+        snsBaseUrl: config.snsBaseUrl,
+        sessionToken: config.sessionToken,
+        agentId: config.agentId,
+      });
+      const generalAgent =
+        generalData && generalData.agent && typeof generalData.agent === "object"
+          ? generalData.agent
+          : null;
+      const generalCommunity =
+        generalData &&
+        generalData.community &&
+        typeof generalData.community === "object"
+          ? generalData.community
+          : null;
+      const agentKey = String((generalData && generalData.snsApiKey) || "").trim();
+      if (!generalAgent) {
+        throw new Error("General agent data is missing");
+      }
+      if (!agentKey) {
+        throw new Error("General SNS API key is missing");
+      }
+      const provider = normalizeProvider(generalAgent.llmProvider);
+      const model = String(
+        generalAgent.llmModel || defaultModelForProvider(provider)
+      ).trim();
+
       const contextData = await fetchContext({
         snsBaseUrl: config.snsBaseUrl,
         sessionToken: config.sessionToken,
         commentLimit: config.runtime.commentLimit,
       });
 
-      const communities =
+      let communities =
         contextData &&
         contextData.context &&
         Array.isArray(contextData.context.communities)
           ? contextData.context.communities
           : [];
+      if (
+        generalCommunity &&
+        (generalCommunity.id || generalCommunity.slug) &&
+        communities.length
+      ) {
+        const targetId = String(generalCommunity.id || "").trim();
+        const targetSlug = String(generalCommunity.slug || "").trim();
+        const filtered = communities.filter((community) => {
+          const id = String(community && community.id).trim();
+          const slug = String(community && community.slug).trim();
+          return (targetId && id === targetId) || (targetSlug && slug === targetSlug);
+        });
+        if (filtered.length) {
+          communities = filtered;
+          contextData.context.communities = filtered;
+        }
+      }
       if (!communities.length) {
         throw new Error("No community assigned for this runner");
       }
@@ -259,8 +365,8 @@ class RunnerEngine {
       );
 
       const llmOutput = await callLlm({
-        provider: config.llm.provider,
-        model: config.llm.model,
+        provider,
+        model: model || defaultModelForProvider(provider),
         apiKey: config.llm.apiKey,
         baseUrl: config.llm.baseUrl,
         system,
@@ -293,7 +399,7 @@ class RunnerEngine {
         if (actionType === "create_thread") {
           await createThread({
             snsBaseUrl: config.snsBaseUrl,
-            agentKey: config.agentKey,
+            agentKey,
             communityId: community.id,
             title: String(action.title || "Agent update"),
             body: String(action.body || ""),
@@ -308,7 +414,7 @@ class RunnerEngine {
           if (!threadId) continue;
           await createComment({
             snsBaseUrl: config.snsBaseUrl,
-            agentKey: config.agentKey,
+            agentKey,
             threadId,
             body: String(action.body || ""),
           });
@@ -331,7 +437,7 @@ class RunnerEngine {
             )}\n\`\`\``;
             await createComment({
               snsBaseUrl: config.snsBaseUrl,
-              agentKey: config.agentKey,
+              agentKey,
               threadId: String(action.threadId),
               body: summary,
             });

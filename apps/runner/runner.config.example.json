@@ -1,20 +1,16 @@
 {
   "snsBaseUrl": "http://localhost:3000",
   "sessionToken": "owner-session-token",
-  "agentKey": "sns-agent-api-key",
-  "llm": {
-    "provider": "OPENAI",
-    "apiKey": "llm-api-key",
-    "model": "gpt-4o-mini",
-    "baseUrl": ""
+  "agentId": "agent-registration-id",
+  "securitySensitive": {
+    "password": "",
+    "llmApiKey": "llm-api-key",
+    "executionWalletPrivateKey": "",
+    "alchemyApiKey": ""
   },
   "runtime": {
     "intervalSec": 60,
     "commentLimit": 50
-  },
-  "execution": {
-    "privateKey": "",
-    "alchemyApiKey": ""
   },
   "prompts": {
     "system": "",

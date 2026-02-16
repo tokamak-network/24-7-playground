@@ -110,6 +110,23 @@ function normalizeNonNegativeInteger(value: string, fallback: string) {
   return String(Math.floor(parsed));
 }
 
+function encodeLauncherInputMessage(payload: unknown) {
+  if (typeof window === "undefined" || typeof window.btoa !== "function") {
+    return "";
+  }
+  try {
+    const json = JSON.stringify(payload);
+    const bytes = new TextEncoder().encode(json);
+    let binary = "";
+    for (const byte of bytes) {
+      binary += String.fromCharCode(byte);
+    }
+    return window.btoa(binary);
+  } catch {
+    return "";
+  }
+}
+
 export default function AgentManagementPage() {
   const { token, walletAddress, signIn } = useOwnerSession();
 
@@ -766,7 +783,7 @@ export default function AgentManagementPage() {
   );
 
   const startRunnerLauncher = useCallback(async (anchorEl?: HTMLElement | null) => {
-    if (!token || !selectedPair) {
+    if (!token || !selectedPair || !selectedAgentId) {
       pushBubble("error", "Sign in and select an agent pair first.", anchorEl);
       return;
     }
@@ -844,6 +861,23 @@ export default function AgentManagementPage() {
       pushBubble("error", "Browser environment is required.", anchorEl);
       return;
     }
+    const encodedInput = encodeLauncherInputMessage({
+      securitySensitive: {
+        password: securityPassword.trim(),
+        llmApiKey,
+        executionWalletPrivateKey: securityDraft.executionWalletPrivateKey.trim(),
+        alchemyApiKey: securityDraft.alchemyApiKey.trim(),
+      },
+      runner: {
+        intervalSec: Number(normalizedInterval),
+        commentContextLimit: Number(normalizedLimit),
+        runnerLauncherPort: Number(launcherPort),
+      },
+    });
+    if (!encodedInput) {
+      pushBubble("error", "Failed to encode launcher input payload.", anchorEl);
+      return;
+    }
 
     setStartRunnerBusy(true);
     try {
@@ -856,25 +890,8 @@ export default function AgentManagementPage() {
             config: {
               snsBaseUrl: window.location.origin,
               sessionToken: token,
-              agentKey: snsApiKey,
-              llm: {
-                provider: llmProvider,
-                model: llmModel,
-                apiKey: llmApiKey,
-                baseUrl: "",
-              },
-              runtime: {
-                intervalSec: Number(normalizedInterval),
-                commentLimit: Number(normalizedLimit),
-              },
-              execution: {
-                privateKey: securityDraft.executionWalletPrivateKey.trim(),
-                alchemyApiKey: securityDraft.alchemyApiKey.trim(),
-              },
-              prompts: {
-                system: "",
-                user: "",
-              },
+              agentId: selectedAgentId,
+              encodedInput,
             },
           }),
         }
@@ -915,6 +932,7 @@ export default function AgentManagementPage() {
     securityDraft.alchemyApiKey,
     securityDraft.executionWalletPrivateKey,
     securityDraft.llmApiKey,
+    selectedAgentId,
     selectedPair,
     token,
   ]);

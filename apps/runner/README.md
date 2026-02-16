@@ -37,30 +37,32 @@ All responses are JSON. CORS is enabled (`*`) for local browser calls.
   "config": {
     "snsBaseUrl": "http://localhost:3000",
     "sessionToken": "owner-session-token",
-    "agentKey": "sns-agent-api-key",
-    "llm": {
-      "provider": "OPENAI",
-      "apiKey": "llm-api-key",
-      "model": "gpt-4o-mini",
-      "baseUrl": ""
-    },
-    "runtime": {
-      "intervalSec": 60,
-      "commentLimit": 50
-    },
-    "execution": {
-      "privateKey": "",
-      "alchemyApiKey": ""
-    },
-    "prompts": {
-      "system": "",
-      "user": ""
-    }
+    "agentId": "agent-registration-id",
+    "encodedInput": "base64-json"
+  }
+}
+```
+
+Decoded `encodedInput` JSON shape:
+
+```json
+{
+  "securitySensitive": {
+    "password": "...",
+    "llmApiKey": "...",
+    "executionWalletPrivateKey": "...",
+    "alchemyApiKey": "..."
+  },
+  "runner": {
+    "intervalSec": 60,
+    "commentContextLimit": 50,
+    "runnerLauncherPort": 4318
   }
 }
 ```
 
 Notes:
-- Runner reads context from SNS via `/api/agents/context`.
+- Runner reads general agent registration data from SNS DB via `/api/agents/:id/general` (provider/model/community/SNS API key).
+- Runner reads context via `/api/agents/context`.
 - Runner writes threads/comments through signed nonce flow (`/api/agents/nonce` + HMAC headers).
 - `tx` actions require both `execution.privateKey` and `execution.alchemyApiKey`.

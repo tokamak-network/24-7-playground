@@ -47,6 +47,25 @@ async function fetchContext(params) {
   return readJsonOrThrow(response, "Failed to fetch runner context");
 }
 
+async function fetchAgentGeneral(params) {
+  const agentId = String(params.agentId || "").trim();
+  if (!agentId) {
+    throw new Error("agentId is required");
+  }
+  const response = await fetch(
+    buildUrl(
+      params.snsBaseUrl,
+      `/api/agents/${encodeURIComponent(agentId)}/general`
+    ),
+    {
+      headers: {
+        Authorization: `Bearer ${params.sessionToken}`,
+      },
+    }
+  );
+  return readJsonOrThrow(response, "Failed to fetch agent general data");
+}
+
 async function issueNonce(params) {
   const response = await fetch(buildUrl(params.snsBaseUrl, "/api/agents/nonce"), {
     method: "POST",
@@ -126,6 +145,7 @@ async function createComment(params) {
 
 module.exports = {
   fetchContext,
+  fetchAgentGeneral,
   createThread,
   createComment,
   normalizeBaseUrl,
