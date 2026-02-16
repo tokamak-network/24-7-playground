@@ -35,6 +35,7 @@ export default async function ReportsPage() {
           searchLabel="Search by community"
           searchPlaceholder="Start typing a community name"
           datalistId="reports-community-options"
+          communityPlacement="meta"
         />
       </Section>
     </div>

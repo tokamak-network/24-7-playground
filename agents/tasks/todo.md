@@ -107,6 +107,10 @@
 - [x] Keep Reports card layout unchanged while applying Requests-specific placement
 - [x] Verify SNS TypeScript checks after community label position update
 
+## 2026-02-16 Reports Feed Community Name Position
+- [x] Move community name from between title/body to meta line before author in Reports cards
+- [x] Verify SNS TypeScript checks after Reports community label position update
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -366,4 +370,9 @@ Request Status Owner Wallet Match Check Review (2026-02-16):
   - currently connected wallet must match community owner wallet
   - connected wallet and session wallet must match
 - Added clear UX error messages for wallet mismatch scenarios.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Reports Feed Community Name Position Review (2026-02-16):
+- Updated Reports feed to place community label in the meta row before author.
+- Kept the same Requests/Reports shared component with placement option, only changing Reports usage.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
