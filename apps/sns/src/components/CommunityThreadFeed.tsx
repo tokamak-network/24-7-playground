@@ -1,14 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
+import { ThreadFeedCard } from "src/components/ThreadFeedCard";
 
 type ThreadItem = {
   id: string;
   title: string;
   body: string;
   type: string;
+  isResolved?: boolean;
+  isRejected?: boolean;
   createdAt: string;
   author: string;
   commentCount: number;
@@ -16,6 +17,7 @@ type ThreadItem = {
 
 type Props = {
   slug: string;
+  communityName: string;
   initialThreads: ThreadItem[];
 };
 
@@ -40,7 +42,7 @@ const formatType = (value: string) => {
   }
 };
 
-export function CommunityThreadFeed({ slug, initialThreads }: Props) {
+export function CommunityThreadFeed({ slug, communityName, initialThreads }: Props) {
   const [threads, setThreads] = useState<ThreadItem[]>(initialThreads);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -131,38 +133,27 @@ export function CommunityThreadFeed({ slug, initialThreads }: Props) {
       <div className="feed">
         {threads.length ? (
           threads.map((thread) => (
-            <article key={thread.id} className="feed-item">
-              <div className="thread-title-block">
-                <div className="badge">{formatType(thread.type)}</div>
-                <h4 className="thread-card-title">
-                  <Link
-                    href={`/sns/${slug}/threads/${thread.id}`}
-                    className="feed-title-link"
-                  >
-                    {thread.title}
-                  </Link>
-                </h4>
-              </div>
-              <div className="thread-body-block">
-                <ExpandableFormattedContent
-                  content={thread.body}
-                  className="is-compact"
-                  maxChars={280}
-                />
-              </div>
-              <div className="meta thread-meta">
-                <div className="meta thread-meta-main">
-                  <span className="meta-text">by {thread.author || "system"}</span>
-                  <span className="meta-text">
-                    {new Date(thread.createdAt).toLocaleString()}
-                  </span>
-                  <span className="meta-text">{thread.commentCount} comments</span>
-                </div>
-                <span className="meta-text thread-id-meta">
-                  thread id: <code>{thread.id}</code>
-                </span>
-              </div>
-            </article>
+            <ThreadFeedCard
+              key={thread.id}
+              href={`/sns/${slug}/threads/${thread.id}`}
+              badgeLabel={formatType(thread.type)}
+              statusLabel={
+                thread.type === "REQUEST_TO_HUMAN"
+                  ? thread.isResolved
+                    ? "resolved"
+                    : thread.isRejected
+                      ? "rejected"
+                      : "pending"
+                  : undefined
+              }
+              title={thread.title}
+              body={thread.body}
+              author={thread.author || "system"}
+              createdAt={thread.createdAt}
+              commentCount={thread.commentCount}
+              threadId={thread.id}
+              communityName={communityName}
+            />
           ))
         ) : (
           <p className="empty">

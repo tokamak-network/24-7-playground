@@ -1,8 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
+import { ThreadFeedCard } from "src/components/ThreadFeedCard";
 
 type ThreadItem = {
   id: string;
@@ -23,7 +22,6 @@ type Props = {
   searchLabel: string;
   searchPlaceholder: string;
   datalistId: string;
-  communityPlacement?: "between" | "meta";
 };
 
 export function CommunityNameSearchFeed({
@@ -33,7 +31,6 @@ export function CommunityNameSearchFeed({
   searchLabel,
   searchPlaceholder,
   datalistId,
-  communityPlacement = "between",
 }: Props) {
   const [communityQuery, setCommunityQuery] = useState("");
   const normalizedQuery = communityQuery.trim().toLowerCase();
@@ -80,51 +77,21 @@ export function CommunityNameSearchFeed({
               : "/sns";
 
             return (
-            <article className="feed-item" key={item.id}>
-              <div className="thread-title-block">
-                <div className="badge">{badgeLabel}</div>
-                {item.statusLabel ? (
-                  <span className="thread-community-status">{item.statusLabel}</span>
-                ) : null}
-                <h4 className="thread-card-title">
-                  <Link href={threadHref} className="feed-title-link">
-                    {item.title}
-                  </Link>
-                </h4>
-              </div>
-              {communityPlacement === "between" ? (
-                <div className="thread-community-highlight">
-                  <span className="thread-community-kicker">community</span>
-                  <span className="thread-community-name">{item.communityName}</span>
-                </div>
-              ) : null}
-              <div className="thread-body-block">
-                <ExpandableFormattedContent
-                  content={item.body}
-                  className="is-compact"
-                  maxChars={280}
-                />
-              </div>
-              <div className="meta thread-meta">
-                <div className="meta thread-meta-main">
-                  {communityPlacement === "meta" ? (
-                    <span className="meta-text thread-community-inline">
-                      <span className="thread-community-kicker">community</span>
-                      <strong>{item.communityName}</strong>
-                    </span>
-                  ) : null}
-                  <span className="meta-text">by {item.author || "system"}</span>
-                  <span className="meta-text">
-                    {new Date(item.createdAt).toLocaleString()}
-                  </span>
-                  <span className="meta-text">{item.commentCount} comments</span>
-                </div>
-                <span className="meta-text thread-id-meta">
-                  thread id: <code>{item.id}</code>
-                </span>
-              </div>
-            </article>
-          )})
+              <ThreadFeedCard
+                key={item.id}
+                href={threadHref}
+                badgeLabel={badgeLabel}
+                statusLabel={item.statusLabel}
+                title={item.title}
+                body={item.body}
+                author={item.author || "system"}
+                createdAt={item.createdAt}
+                commentCount={item.commentCount}
+                threadId={item.id}
+                communityName={item.communityName}
+              />
+            );
+          })
         ) : (
           <p className="empty">
             {normalizedQuery ? "No matching communities." : emptyLabel}

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, Section } from "src/components/ui";
+import { Section } from "src/components/ui";
 import { CommunityThreadFeed } from "src/components/CommunityThreadFeed";
 import { prisma } from "src/db";
 import { cleanupExpiredCommunities } from "src/lib/community";
@@ -56,11 +56,14 @@ export default async function CommunityPage({
       <Section title="Threads" description="Latest threads from agents.">
         <CommunityThreadFeed
           slug={community.slug}
+          communityName={community.name}
           initialThreads={community.threads.map((thread) => ({
             id: thread.id,
             title: thread.title,
             body: thread.body,
             type: thread.type,
+            isResolved: thread.isResolved,
+            isRejected: thread.isRejected,
             createdAt: thread.createdAt.toISOString(),
             author: thread.agent?.handle || "system",
             commentCount: thread.comments.length,

@@ -127,6 +127,12 @@
 - [x] Align Requests/Reports card layout structure with community thread cards
 - [x] Verify SNS TypeScript checks after card layout merge
 
+## 2026-02-16 Unified Thread Card Component Across SNS Pages
+- [x] Create one shared thread-card component and make feeds import it
+- [x] Use the shared thread-card component in community, requests, and reports listings
+- [x] Ensure community name is rendered on community page thread cards too
+- [x] Verify SNS TypeScript checks after card component unification
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -409,4 +415,11 @@ Requests/Reports Metadata + Card Layout Merge Review (2026-02-16):
 - Added created time, comment count, and thread id metadata rendering to Requests/Reports cards.
 - Updated Requests/Reports Prisma queries to include `_count.comments`.
 - Unified Requests/Reports card structure with community thread cards (title block, body block, shared meta layout).
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Unified Thread Card Component Across SNS Pages Review (2026-02-16):
+- Added shared `ThreadFeedCard` component and moved card markup there.
+- Updated `CommunityThreadFeed` and `CommunityNameSearchFeed` to import and use the same `ThreadFeedCard`.
+- Updated community page thread feed data mapping to provide community name and request status flags.
+- Result: community, requests, and reports listings now use the same card component and render community label consistently.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
