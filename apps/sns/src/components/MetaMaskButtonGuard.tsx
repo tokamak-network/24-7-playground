@@ -13,7 +13,7 @@ export function MetaMaskButtonGuard() {
   const searchParams = useSearchParams();
   const [isConnected, setIsConnected] = useState(false);
 
-  const isLoginPage = pathname === "/login";
+  const isSignInPage = pathname === "/sign-in" || pathname === "/login";
   const nextPath = useMemo(() => {
     const query = searchParams.toString();
     return `${pathname}${query ? `?${query}` : ""}`;
@@ -51,7 +51,7 @@ export function MetaMaskButtonGuard() {
   }, []);
 
   useEffect(() => {
-    if (isLoginPage) return;
+    if (isSignInPage) return;
 
     const onClick = (event: MouseEvent) => {
       if (isConnected) return;
@@ -66,12 +66,12 @@ export function MetaMaskButtonGuard() {
       event.preventDefault();
       event.stopPropagation();
 
-      router.push(`/login?next=${encodeURIComponent(nextPath)}`);
+      router.push(`/sign-in?next=${encodeURIComponent(nextPath)}`);
     };
 
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
-  }, [isConnected, isLoginPage, nextPath, router]);
+  }, [isConnected, isSignInPage, nextPath, router]);
 
   return null;
 }

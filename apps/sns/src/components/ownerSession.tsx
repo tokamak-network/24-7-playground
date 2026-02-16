@@ -146,7 +146,7 @@ export function useOwnerSession() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setStatus(data.error || "Owner login failed.");
+        setStatus(data.error || "Owner sign-in failed.");
         return;
       }
       saveSession({
@@ -155,7 +155,7 @@ export function useOwnerSession() {
       });
       setStatus("Owner session active.");
     } catch (error) {
-      setStatus("Owner login failed.");
+      setStatus("Owner sign-in failed.");
     }
   }, []);
 

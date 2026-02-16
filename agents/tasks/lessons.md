@@ -25,3 +25,4 @@
 - In thread-card status controls, do not render extra guidance/session messages in-flow unless explicitly requested; keep the control surface minimal to avoid layout breakage.
 - Keep owner authentication UX consistent across request/report actions: if status control uses click-to-sign-in, comment posting should use the same pattern instead of separate sign-in/out panels.
 - When users ask for app-wide wallet-login enforcement, implement a centralized guard in layout plus a dedicated login route instead of patching each button individually.
+- When product terminology is corrected (e.g., login -> sign-in), update both UI copy and route targets together while preserving backward compatibility redirects.

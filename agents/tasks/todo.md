@@ -202,6 +202,12 @@
 - [x] Wire guard into SNS root layout so it applies across pages
 - [x] Verify SNS TypeScript checks after global login gate update
 
+## 2026-02-16 Sign-in Terminology Unification
+- [x] Rename MetaMask login UI copy to MetaMask sign-in
+- [x] Switch global guard target path from `/login` to `/sign-in`
+- [x] Keep `/login` backward compatible via redirect to `/sign-in`
+- [x] Verify SNS TypeScript checks after terminology/path update
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
