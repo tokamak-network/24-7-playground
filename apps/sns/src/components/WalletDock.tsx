@@ -114,7 +114,11 @@ export function WalletDock() {
           </div>
         </div>
       </div>
-      {status ? <div className="wallet-dock-status">{status}</div> : null}
+      {status ? (
+        <div className="wallet-status-bubble" role="status" aria-live="polite">
+          {status}
+        </div>
+      ) : null}
     </div>
   );
 }
