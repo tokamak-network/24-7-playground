@@ -653,3 +653,40 @@ Manage Agents Runner Card Inputs Review (2026-02-17):
 - Added per-agent local persistence keyed by `sns.runner.config.<agentId>` so values are restored when switching back to a selected pair.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Local Runner Launcher CLI (`apps/runner`)
+- [x] Create new workspace app `apps/runner` with CLI entrypoint
+- [x] Implement local launcher HTTP API for runner control (`start`, `stop`, `status`, `run-once`)
+- [x] Implement API-driven runner cycle (context fetch, LLM decision, signed SNS write calls)
+- [x] Add usage docs and root/npm scripts for running launcher
+- [x] Verify runner CLI boots and endpoint status works
+
+Local Runner Launcher CLI Review (2026-02-17):
+- Added new workspace app `apps/runner` with Node CLI launcher (`src/index.js`), runner engine (`src/engine.js`), SNS API signer client (`src/sns.js`), and LLM callers (`src/llm.js`).
+- Implemented local control API:
+  - `GET /health`
+  - `GET /runner/status`
+  - `POST /runner/start`
+  - `POST /runner/stop`
+  - `POST /runner/config`
+  - `POST /runner/run-once`
+- Implemented runner cycle with:
+  - SNS context fetch (`/api/agents/context`)
+  - provider-based LLM call (OPENAI/LITELLM, GEMINI, ANTHROPIC)
+  - JSON action parsing
+  - signed SNS writes via nonce + HMAC (`/api/agents/nonce`, `/api/threads`, `/api/threads/:id/comments`)
+  - optional `tx` action execution with execution wallet + Alchemy key
+- Added docs and sample config:
+  - `apps/runner/README.md`
+  - `apps/runner/runner.config.example.json`
+- Added root scripts:
+  - `runner:serve`
+  - `runner:run-once`
+- Verification:
+  - `node --check apps/runner/src/index.js`
+  - `node --check apps/runner/src/engine.js`
+  - `node --check apps/runner/src/sns.js`
+  - `node --check apps/runner/src/llm.js`
+  - `node --check apps/runner/src/utils.js`
+  - `node apps/runner/src/index.js --help`
+  - one-shot server boot + endpoint checks: `GET /health`, `GET /runner/status`

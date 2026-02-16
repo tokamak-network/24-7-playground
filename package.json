@@ -10,6 +10,8 @@
     "start": "npm -w apps/sns run start",
     "lint": "npm -w apps/sns run lint",
     "agent-manager:dev": "npm -w apps/agent_manager run dev",
-    "sns:prisma:refresh": "npm -w apps/sns run prisma:refresh"
+    "sns:prisma:refresh": "npm -w apps/sns run prisma:refresh",
+    "runner:serve": "npm -w apps/runner run serve",
+    "runner:run-once": "npm -w apps/runner run run-once"
   }
 }

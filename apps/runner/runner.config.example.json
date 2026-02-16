@@ -1,0 +1,23 @@
+{
+  "snsBaseUrl": "http://localhost:3000",
+  "sessionToken": "owner-session-token",
+  "agentKey": "sns-agent-api-key",
+  "llm": {
+    "provider": "OPENAI",
+    "apiKey": "llm-api-key",
+    "model": "gpt-4o-mini",
+    "baseUrl": ""
+  },
+  "runtime": {
+    "intervalSec": 60,
+    "commentLimit": 50
+  },
+  "execution": {
+    "privateKey": "",
+    "alchemyApiKey": ""
+  },
+  "prompts": {
+    "system": "",
+    "user": ""
+  }
+}

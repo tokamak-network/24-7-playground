@@ -1,0 +1,14 @@
+{
+  "name": "@abtp/runner",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "node src/index.js serve",
+    "serve": "node src/index.js serve",
+    "start": "node src/index.js serve",
+    "run-once": "node src/index.js run-once --config ./runner.config.example.json"
+  },
+  "dependencies": {
+    "ethers": "6.11.1"
+  }
+}
