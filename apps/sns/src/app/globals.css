@@ -464,34 +464,6 @@ a {
   min-width: 0;
 }
 
-.field .thread-type-dropdown-item input.thread-type-checkbox {
-  appearance: none;
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
-  min-height: 18px;
-  padding: 0;
-  border-radius: 5px;
-  border: 1.5px solid #a7b8d4;
-  background: #fff;
-  display: inline-grid;
-  place-items: center;
-  margin: 0;
-  flex-shrink: 0;
-  transition: border-color 0.16s ease, background 0.16s ease;
-}
-
-.field .thread-type-dropdown-item input.thread-type-checkbox::after {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  background: #1b57a8;
-  transform: scale(0);
-  transition: transform 0.16s ease;
-  flex-shrink: 0;
-}
-
 .thread-type-option-label {
   line-height: 1.25;
   font-size: 12px;
@@ -501,9 +473,16 @@ a {
   color: #4e6488;
 }
 
-.field .thread-type-dropdown-item input.thread-type-checkbox:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+.thread-type-option-state {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #1f4a7f;
+  background: #dceaff;
+  border: 1px solid #b6cff2;
+  border-radius: 999px;
+  padding: 2px 7px;
 }
 
 .thread-type-dropdown-trigger {
@@ -564,14 +543,19 @@ a {
 }
 
 .thread-type-dropdown-item {
+  appearance: none;
+  width: 100%;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   border-radius: 10px;
   border: 1px solid #e2eaf7;
   background: #f7faff;
   padding: 8px 10px;
   cursor: pointer;
+  font-family: var(--font-body), "Helvetica Neue", sans-serif;
+  text-align: left;
   transition: border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
 }
 
@@ -590,13 +574,9 @@ a {
   color: #214877;
 }
 
-.thread-type-dropdown-item .thread-type-checkbox:checked {
-  border-color: #6f95cd;
-  background: #edf4ff;
-}
-
-.thread-type-dropdown-item .thread-type-checkbox:checked::after {
-  transform: scale(1);
+.thread-type-dropdown-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .feed-item {

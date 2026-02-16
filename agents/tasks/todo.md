@@ -165,6 +165,11 @@
 - [x] Apply the shared search component to SNS community list with autocomplete filtering
 - [x] Verify SNS TypeScript checks after SNS community search integration
 
+## 2026-02-16 Thread Type Dropdown Checkbox Removal
+- [x] Remove checkbox controls from thread-type dropdown options
+- [x] Keep multi-select behavior via option-row click interactions
+- [x] Verify SNS TypeScript checks after type-dropdown interaction update
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet

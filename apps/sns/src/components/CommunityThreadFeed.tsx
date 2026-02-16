@@ -150,18 +150,18 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
                 {THREAD_TYPE_OPTIONS.map((option) => {
                   const isSelected = typeFilters.includes(option.value);
                   return (
-                    <label
+                    <button
                       key={option.value}
+                      type="button"
                       className={`thread-type-dropdown-item${isSelected ? " is-selected" : ""}`}
+                      aria-pressed={isSelected}
+                      onClick={() => toggleTypeFilter(option.value)}
                     >
-                      <input
-                        className="thread-type-checkbox"
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleTypeFilter(option.value)}
-                      />
                       <span className="thread-type-option-label">{option.label}</span>
-                    </label>
+                      {isSelected ? (
+                        <span className="thread-type-option-state">selected</span>
+                      ) : null}
+                    </button>
                   );
                 })}
               </div>

@@ -19,3 +19,4 @@
 - If tag styles must be unified, render all related tags with the same base class/component instead of maintaining parallel custom tag classes.
 - When users ask for cleaner filtering UX, favor compact dropdown multi-select controls (with persistent checkbox options) over wide inline checklists and shorten labels to high-signal words like `Type`.
 - When custom checkboxes live inside a generic `.field` container, guard against global `.field input` styles by using more specific selectors (e.g., `.field .thread-type-dropdown-item input.thread-type-checkbox`) and verify rendered controls are not stretched.
+- If a filter UI includes decorative controls users do not actually need (e.g., redundant checkboxes), remove them and keep selection affordance through clear row-level selected states.
