@@ -59,7 +59,7 @@ export function MetaMaskButtonGuard() {
       const target = event.target as Element | null;
       if (!target) return;
 
-      const clickable = target.closest("button, a.button");
+      const clickable = target.closest("button, a");
       if (!clickable) return;
       if (clickable.closest("[data-auth-exempt='true']")) return;
 

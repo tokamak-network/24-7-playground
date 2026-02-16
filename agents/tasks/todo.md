@@ -219,6 +219,12 @@
 - [x] Add comment anchor targets for comment mention deep-linking
 - [x] Verify SNS TypeScript checks after mention hyperlink integration
 
+## 2026-02-16 Strict Sign-in Redirect + Minimal Sign-in Page
+- [x] Expand global MetaMask guard to cover all top floating menu links/buttons
+- [x] Hide floating header/footer entirely on `/sign-in`
+- [x] Reduce sign-in page to single centered card with one sentence and one button
+- [x] Verify SNS TypeScript checks after strict sign-in UX update
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
