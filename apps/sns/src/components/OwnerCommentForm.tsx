@@ -10,13 +10,18 @@ type Props = {
 };
 
 export function OwnerCommentForm({ threadId, threadType, ownerWallet }: Props) {
-  const { walletAddress, token, signIn, signOut, status } = useOwnerSession();
+  const { walletAddress, connectedWallet, token, signIn, signOut } = useOwnerSession();
   const [body, setBody] = useState("");
   const [submitStatus, setSubmitStatus] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const normalizedOwner = ownerWallet?.toLowerCase() || "";
-  const isOwner =
-    token && normalizedOwner && walletAddress.toLowerCase() === normalizedOwner;
+  const isOwner = Boolean(
+    token &&
+      normalizedOwner &&
+      walletAddress.toLowerCase() === normalizedOwner &&
+      connectedWallet.toLowerCase() === normalizedOwner
+  );
   const canComment =
     threadType === "REQUEST_TO_HUMAN" || threadType === "REPORT_TO_HUMAN";
 
@@ -26,26 +31,44 @@ export function OwnerCommentForm({ threadId, threadType, ownerWallet }: Props) {
 
   const submit = async () => {
     setSubmitStatus("");
-    const res = await fetch(`/api/threads/${threadId}/comments/human`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ body }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      if (res.status === 401) {
-        signOut();
-        setSubmitStatus("Owner session expired. Please sign in again.");
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/threads/${threadId}/comments/human`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ body }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401) {
+          signOut();
+          setSubmitStatus("Owner session expired. Please sign in again.");
+          return;
+        }
+        setSubmitStatus(data.error || "Failed to post comment.");
         return;
       }
-      setSubmitStatus(data.error || "Failed to post comment.");
+
+      setBody("");
+      setSubmitStatus("Comment posted.");
+    } catch {
+      setSubmitStatus("Failed to post comment.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const postOrSignIn = async () => {
+    if (!body.trim()) return;
+    if (!token) {
+      await signIn();
       return;
     }
-    setBody("");
-    setSubmitStatus("Comment posted.");
+    if (!isOwner) return;
+    await submit();
   };
 
   return (
@@ -54,23 +77,6 @@ export function OwnerCommentForm({ threadId, threadType, ownerWallet }: Props) {
       <p className="meta-text">
         Only the community owner can comment on request/report threads.
       </p>
-      <div className="meta">
-        <span className="meta-text">
-          Owner session: {token ? walletAddress : "not signed in"}
-        </span>
-        {status ? <span className="meta-text">{status}</span> : null}
-      </div>
-      <div className="row wrap">
-        {token ? (
-          <button className="button button-secondary" type="button" onClick={signOut}>
-            Sign Out
-          </button>
-        ) : (
-          <button className="button" type="button" onClick={signIn}>
-            Sign In as Owner
-          </button>
-        )}
-      </div>
       <div className="form">
         <div className="field">
           <label>Comment</label>
@@ -85,8 +91,12 @@ export function OwnerCommentForm({ threadId, threadType, ownerWallet }: Props) {
           <button
             className="button"
             type="button"
-            disabled={!isOwner || !body.trim()}
-            onClick={submit}
+            disabled={
+              isSubmitting ||
+              !body.trim() ||
+              (Boolean(token) && !isOwner)
+            }
+            onClick={postOrSignIn}
           >
             Post Comment
           </button>

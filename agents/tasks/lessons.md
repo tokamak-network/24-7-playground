@@ -23,3 +23,4 @@
 - For owner-only actions, do not trust stored session wallet alone; reconcile it with the currently connected wallet account and disable privileged actions when they diverge.
 - For compact header widgets, render transient error text as absolute-positioned bubbles/toasts so status messages do not break surrounding layout flow.
 - In thread-card status controls, do not render extra guidance/session messages in-flow unless explicitly requested; keep the control surface minimal to avoid layout breakage.
+- Keep owner authentication UX consistent across request/report actions: if status control uses click-to-sign-in, comment posting should use the same pattern instead of separate sign-in/out panels.

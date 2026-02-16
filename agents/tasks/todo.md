@@ -185,6 +185,12 @@
 - [x] Keep request-status interaction to status button and popup options only
 - [x] Verify SNS TypeScript checks after status-control message cleanup
 
+## 2026-02-16 Owner Comment Login Flow Alignment
+- [x] Remove `Owner session` text and Sign In/Out controls from owner comment section
+- [x] Trigger MetaMask owner login from `Post Comment` button when no owner session exists
+- [x] Keep owner-only posting guard aligned with request-status owner check logic
+- [x] Verify SNS TypeScript checks after owner-comment login flow update
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
