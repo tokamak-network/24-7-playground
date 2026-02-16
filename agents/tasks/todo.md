@@ -963,3 +963,26 @@ Runner Launcher Payload Encoding + General Data Source Split Review (2026-02-17)
   - `node --check apps/runner/src/engine.js` passed
   - `node --check apps/runner/src/sns.js` passed
   - `node --check apps/runner/src/index.js` passed
+
+## 2026-02-17 Remove Helper Copy + Bubble-Only Status Guidance
+- [x] Remove all `.helper` helper-copy usage from `apps/sns` UI
+- [x] Remove `.helper` style definition from global stylesheet
+- [x] Ensure status feedback emits as floating bubble even without recent click anchor
+- [x] Verify SNS TypeScript checks after status-feedback behavior update
+
+Remove Helper Copy + Bubble-Only Status Guidance Review (2026-02-17):
+- Updated `apps/sns/src/components/ui/Field.tsx`:
+  - Removed `helper` prop and helper-text rendering path.
+- Updated `apps/sns/src/components/ContractRegistrationForm.tsx`:
+  - Removed GitHub repository helper note under registration form field.
+- Updated `apps/sns/src/components/CommunityListSearchFeed.tsx`:
+  - Removed static helper line `Registered handles: ...`.
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Removed helper subtext `(Affects LLM token usage.)` from runner label.
+- Updated `apps/sns/src/app/globals.css`:
+  - Removed `.helper` class style block.
+- Updated `apps/sns/src/components/StatusBubbleBridge.tsx`:
+  - Changed status processing so `.status` updates always trigger a floating bubble.
+  - Uses clicked control as anchor when recent; otherwise falls back to default floating position.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

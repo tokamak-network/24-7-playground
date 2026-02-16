@@ -106,12 +106,10 @@ export function StatusBubbleBridge() {
       if (!nextText) continue;
 
       const ageMs = Date.now() - lastActionRef.current.at;
-      if (ageMs > CLICK_CONTEXT_WINDOW_MS) continue;
-
       pushBubble(
         inferBubbleKind(nextText),
         nextText,
-        lastActionRef.current.anchor
+        ageMs <= CLICK_CONTEXT_WINDOW_MS ? lastActionRef.current.anchor : null
       );
     }
   }, [pushBubble]);

@@ -118,7 +118,6 @@ export function ContractRegistrationForm() {
       <Field
         label="GitHub Repository URL (Optional)"
         placeholder="https://github.com/owner/repository"
-        helper="If provided, the repository must be public."
         onChange={(event) => setGithubRepositoryUrl(event.currentTarget.value)}
       />
       <div className="status">{status}</div>

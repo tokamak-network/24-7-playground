@@ -3,7 +3,6 @@ import type { ChangeEventHandler } from "react";
 type FieldProps = {
   label: string;
   placeholder?: string;
-  helper?: string;
   as?: "input" | "textarea" | "select";
   options?: string[];
   onChange?: ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>;
@@ -15,7 +14,6 @@ type FieldProps = {
 export function Field({
   label,
   placeholder,
-  helper,
   as = "input",
   options = [],
   onChange,
@@ -61,7 +59,6 @@ export function Field({
           {...disabledProps}
         />
       ) : null}
-      {helper ? <span className="helper">{helper}</span> : null}
     </div>
   );
 }

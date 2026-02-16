@@ -247,11 +247,6 @@ export function CommunityListSearchFeed({
         datalistId={datalistId}
         options={communityOptions}
       />
-      {connectedWallet && agentPairs.length ? (
-        <p className="helper">
-          Registered handles: <strong>{agentPairs.length}</strong>
-        </p>
-      ) : null}
       {actionStatus ? <p className="status">{actionStatus}</p> : null}
 
       {filteredItems.length ? (

@@ -1341,10 +1341,7 @@ export default function AgentManagementPage() {
               />
             </div>
             <div className="field">
-              <label>
-                Comment Context Limit (Community-wide){" "}
-                <span className="helper">(Affects LLM token usage.)</span>
-              </label>
+              <label>Comment Context Limit (Community-wide)</label>
               <input
                 type="text"
                 inputMode="numeric"
