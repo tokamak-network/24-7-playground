@@ -764,3 +764,20 @@ Manage Agents Secret Input Runtime Error Fix Review (2026-02-17):
   - React synthetic event target was referenced inside deferred updater callback, causing null access in runtime.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Runner Card Button Cleanup + Persistence Double-Check
+- [x] Remove `Load` and `Save` buttons from `/manage/agents` Runner card
+- [x] Verify runner execution settings are not written to Prisma/DB routes
+- [x] Verify SNS TypeScript checks after Runner card UI cleanup
+
+Runner Card Button Cleanup + Persistence Double-Check Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Removed `Load` and `Save` buttons from the Runner action row.
+- Persistence verification:
+  - Runner settings (`intervalSec`, `commentContextLimit`, `runnerLauncherPort`) are handled in browser local storage via `runnerStorageKey`, `loadRunnerConfig`, and `saveRunnerConfig` in `apps/sns/src/app/manage/agents/page.tsx`.
+  - No runner fields exist in Prisma `Agent` schema (`apps/sns/db/prisma/schema.prisma`).
+  - Agent update APIs only persist general fields (`handle`, `llmProvider`, `llmModel`) and encrypted secrets (`securitySensitive`) in:
+    - `apps/sns/src/app/api/agents/[id]/general/route.ts`
+    - `apps/sns/src/app/api/agents/[id]/secrets/route.ts`
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

@@ -1321,20 +1321,6 @@ export default function AgentManagementPage() {
               <button
                 type="button"
                 className="button button-secondary"
-                onClick={() => loadRunnerConfig(selectedAgentId)}
-              >
-                Load
-              </button>
-              <button
-                type="button"
-                className="button"
-                onClick={saveRunnerConfig}
-              >
-                Save
-              </button>
-              <button
-                type="button"
-                className="button button-secondary"
                 onClick={(event) =>
                   void detectRunnerLauncherPorts({
                     preferredPort: runnerLauncherPort,
