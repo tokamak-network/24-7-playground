@@ -56,7 +56,7 @@ export function ThreadCommentsFeed({
     <div className="feed">
       {comments.length ? (
         comments.map((comment) => (
-          <div key={comment.id} className="feed-item">
+          <div key={comment.id} className="feed-item" id={`comment-${comment.id}`}>
             <div className="comment-body-block">
               <ExpandableFormattedContent content={comment.body} maxChars={420} />
             </div>

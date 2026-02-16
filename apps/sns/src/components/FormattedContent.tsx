@@ -1,11 +1,66 @@
 import type { ReactNode } from "react";
 
+export type MentionLink = {
+  type: "thread" | "comment";
+  href: string;
+};
+
+const MENTION_ID_PATTERN =
+  /\b(c[a-z0-9]{24}|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})\b/g;
+
 type Props = {
   content: string;
   className?: string;
+  mentionLinks?: Record<string, MentionLink>;
 };
 
-function renderInline(text: string, keyPrefix: string): ReactNode[] {
+function renderTextWithMentions(
+  text: string,
+  keyPrefix: string,
+  mentionLinks?: Record<string, MentionLink>
+): ReactNode[] {
+  if (!mentionLinks || Object.keys(mentionLinks).length === 0) {
+    return [text];
+  }
+
+  const nodes: ReactNode[] = [];
+  let cursor = 0;
+  let tokenIndex = 0;
+  let match: RegExpExecArray | null;
+  MENTION_ID_PATTERN.lastIndex = 0;
+
+  while ((match = MENTION_ID_PATTERN.exec(text)) !== null) {
+    const rawId = match[1];
+    const mentionLink = mentionLinks[rawId];
+    if (!mentionLink) {
+      continue;
+    }
+
+    if (match.index > cursor) {
+      nodes.push(text.slice(cursor, match.index));
+    }
+
+    nodes.push(
+      <a key={`${keyPrefix}-mention-${tokenIndex}`} href={mentionLink.href}>
+        {rawId}
+      </a>
+    );
+    tokenIndex += 1;
+    cursor = match.index + rawId.length;
+  }
+
+  if (cursor < text.length) {
+    nodes.push(text.slice(cursor));
+  }
+
+  return nodes.length ? nodes : [text];
+}
+
+function renderInline(
+  text: string,
+  keyPrefix: string,
+  mentionLinks?: Record<string, MentionLink>
+): ReactNode[] {
   const nodes: ReactNode[] = [];
   const pattern = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|`[^`]+`|\*\*[^*]+\*\*)/g;
   let cursor = 0;
@@ -14,7 +69,13 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
 
   while ((match = pattern.exec(text)) !== null) {
     if (match.index > cursor) {
-      nodes.push(text.slice(cursor, match.index));
+      nodes.push(
+        ...renderTextWithMentions(
+          text.slice(cursor, match.index),
+          `${keyPrefix}-text-${tokenIndex}`,
+          mentionLinks
+        )
+      );
     }
 
     const token = match[0];
@@ -49,13 +110,19 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
   }
 
   if (cursor < text.length) {
-    nodes.push(text.slice(cursor));
+    nodes.push(
+      ...renderTextWithMentions(
+        text.slice(cursor),
+        `${keyPrefix}-tail`,
+        mentionLinks
+      )
+    );
   }
 
   return nodes;
 }
 
-export function FormattedContent({ content, className }: Props) {
+export function FormattedContent({ content, className, mentionLinks }: Props) {
   const lines = String(content || "").replace(/\r\n/g, "\n").split("\n");
   const blocks: ReactNode[] = [];
 
@@ -74,7 +141,7 @@ export function FormattedContent({ content, className }: Props) {
       return;
     }
     const key = `p-${blocks.length}`;
-    blocks.push(<p key={key}>{renderInline(text, key)}</p>);
+    blocks.push(<p key={key}>{renderInline(text, key, mentionLinks)}</p>);
     paragraphLines = [];
   };
 
@@ -82,7 +149,7 @@ export function FormattedContent({ content, className }: Props) {
     if (!listType || listItems.length === 0) return;
     const key = `${listType}-${blocks.length}`;
     const items = listItems.map((item, index) => (
-      <li key={`${key}-${index}`}>{renderInline(item, `${key}-${index}`)}</li>
+      <li key={`${key}-${index}`}>{renderInline(item, `${key}-${index}`, mentionLinks)}</li>
     ));
     if (listType === "ul") {
       blocks.push(<ul key={key}>{items}</ul>);
@@ -141,9 +208,9 @@ export function FormattedContent({ content, className }: Props) {
       const text = headingMatch[2].trim();
       const key = `h-${blocks.length}`;
       if (level <= 2) {
-        blocks.push(<h3 key={key}>{renderInline(text, key)}</h3>);
+        blocks.push(<h3 key={key}>{renderInline(text, key, mentionLinks)}</h3>);
       } else {
-        blocks.push(<h4 key={key}>{renderInline(text, key)}</h4>);
+        blocks.push(<h4 key={key}>{renderInline(text, key, mentionLinks)}</h4>);
       }
       continue;
     }
@@ -155,7 +222,7 @@ export function FormattedContent({ content, className }: Props) {
       const key = `q-${blocks.length}`;
       blocks.push(
         <blockquote key={key}>
-          {renderInline(quoteMatch[1].trim(), key)}
+          {renderInline(quoteMatch[1].trim(), key, mentionLinks)}
         </blockquote>
       );
       continue;

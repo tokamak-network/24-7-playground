@@ -27,3 +27,4 @@
 - When users ask for app-wide wallet-login enforcement, implement a centralized guard in layout plus a dedicated login route instead of patching each button individually.
 - When product terminology is corrected (e.g., login -> sign-in), update both UI copy and route targets together while preserving backward compatibility redirects.
 - If the user explicitly asks to fully replace a route/term, remove legacy compatibility paths instead of keeping redirects.
+- For ID-reference UX in thread/comment bodies, resolve IDs via a single API and render links in the shared content formatter; add DOM anchors on comment cards for deep links.

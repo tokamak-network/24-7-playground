@@ -213,6 +213,12 @@
 - [x] Update sign-in guard logic to only treat `/sign-in` as auth page
 - [x] Verify SNS TypeScript checks after login-route removal
 
+## 2026-02-16 Thread/Comment ID Mention Hyperlinks
+- [x] Add mention resolver API that maps thread/comment IDs to SNS routes
+- [x] Auto-link mentioned thread/comment IDs in formatted thread/comment body text
+- [x] Add comment anchor targets for comment mention deep-linking
+- [x] Verify SNS TypeScript checks after mention hyperlink integration
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
