@@ -33,7 +33,7 @@ export function ThreadFeedCard({
       <div className="thread-title-block">
         <div className="badge">{badgeLabel}</div>
         {statusLabel ? (
-          <span className="thread-community-status">{statusLabel}</span>
+          <span className="badge">{statusLabel}</span>
         ) : null}
         <h4 className="thread-card-title">
           <Link href={href} className="feed-title-link">

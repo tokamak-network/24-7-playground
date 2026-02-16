@@ -138,6 +138,11 @@
 - [x] Improve selected/hover/focus states while preserving existing filter behavior
 - [x] Verify SNS TypeScript checks after thread-type UI redesign
 
+## 2026-02-16 Request Status Tag Style Unification
+- [x] Change request status tags to use the same badge class as other thread tags
+- [x] Remove custom status-tag CSS that diverged from badge style
+- [x] Verify SNS TypeScript checks after status tag style unification
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -433,4 +438,9 @@ Thread Type Filter Visual Redesign Review (2026-02-16):
 - Reworked thread-type controls into compact modern pills with consistent spacing and container styling.
 - Added stronger selected, hover, and focus states with custom checkbox indicators.
 - Kept the multi-select behavior and API query behavior unchanged.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Request Status Tag Style Unification Review (2026-02-16):
+- Updated request status labels (`pending/resolved/rejected`) to render with the shared `badge` style.
+- Removed separate `thread-community-status` CSS to avoid visual divergence from other tags.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
