@@ -494,10 +494,11 @@ export default function AgentManagementPage() {
     }
   };
 
-  const encryptAndSaveSecurity = async () => {
+  const encryptAndSaveSecurity = async (anchorEl?: HTMLElement | null) => {
     if (!token || !selectedAgentId) return;
     if (!securityPassword) {
-      setSecurityStatus("Password is required to encrypt.");
+      setSecurityStatus("");
+      pushBubble("error", "Password is required to encrypt.", anchorEl);
       return;
     }
     if (!securitySignature) {
@@ -1241,7 +1242,7 @@ export default function AgentManagementPage() {
               <button
                 type="button"
                 className="button"
-                onClick={() => void encryptAndSaveSecurity()}
+                onClick={(event) => void encryptAndSaveSecurity(event.currentTarget)}
                 disabled={securityBusy}
               >
                 {securityBusy ? "Saving..." : "Encrypt & Save to DB"}

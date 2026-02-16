@@ -37,3 +37,4 @@
 - For button-triggered transient status bubbles, always anchor position to the clicked element (`event.currentTarget`) instead of fixed viewport coordinates, and verify every button path passes the anchor.
 - In React `onChange` handlers, do not read `event.currentTarget.value` inside functional state updaters; capture `const { value } = event.currentTarget` first, then use `value` in `setState(prev => ...)`.
 - Do not expose internal/security state banners by default (e.g., signature readiness/encrypted loaded) unless explicitly requested; keep UX focused on actionable controls and result feedback.
+- For validation errors triggered by a specific action button (e.g., missing password on encrypt), use anchored bubble/toast feedback at the button instead of inline status text that shifts card layout.

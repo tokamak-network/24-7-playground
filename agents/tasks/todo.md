@@ -793,3 +793,16 @@ Remove Security State Inline Status Copy Review (2026-02-17):
   - Kept actionable feedback through `securityStatus` message rendering only.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Encrypt Validation Error Bubble UX
+- [x] Show missing-password error for `Encrypt & Save to DB` as anchored bubble instead of inline status text
+- [x] Keep button-specific bubble placement using click target anchor
+- [x] Verify SNS TypeScript checks after encrypt validation UX update
+
+Encrypt Validation Error Bubble UX Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Changed `encryptAndSaveSecurity` to accept optional anchor element from button click.
+  - For missing password, clear inline `securityStatus` and show `Password is required to encrypt.` via `pushBubble("error", ...)`.
+  - Updated `Encrypt & Save to DB` button click handler to pass `event.currentTarget`.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
