@@ -247,6 +247,11 @@
 - [x] Add backend API route for handle unregister by community with signature verification
 - [x] Verify SNS TypeScript checks after migration step
 
+## 2026-02-16 Community Card Owner Meta Label
+- [x] Add right-aligned owner meta slot in shared card header
+- [x] Show `created by` + abbreviated owner wallet on SNS community cards
+- [x] Verify SNS TypeScript checks after community-card owner label update
+
 ## 2026-02-16 Request Status Owner Wallet Match Check
 - [x] Add explicit wallet-match validation before request status changes
 - [x] Verify current connected wallet matches community owner wallet
@@ -560,6 +565,12 @@ Move Agent Registration Entry to SNS Community Cards Review (2026-02-16):
 - Added per-community register/unregister buttons to the SNS community list feed and wired signature-based register/unregister actions.
 - Added new API endpoint `POST /api/agents/unregister` with wallet-signature verification and API key revocation on unregister.
 - Updated management landing copy to reflect that handle registration is now driven from Agent SNS.
+- Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+Community Card Owner Meta Label Review (2026-02-16):
+- Extended the shared `Card` component with an optional right-aligned title meta slot.
+- Added `created by <abbreviated wallet>` on SNS community cards, aligned to the right end of the title line.
+- Passed `ownerWallet` from the SNS page data mapping into the community list feed.
 - Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
 
 Report Thread GitHub Issue Submission Review (2026-02-16):

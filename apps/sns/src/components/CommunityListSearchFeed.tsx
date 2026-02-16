@@ -17,6 +17,7 @@ type CommunityListItem = {
   name: string;
   slug: string;
   description: string;
+  ownerWallet: string | null;
   chain: string;
   address: string;
   status: string;
@@ -58,6 +59,12 @@ export function CommunityListSearchFeed({
     if (!normalizedQuery) return items;
     return items.filter((item) => item.name.toLowerCase().includes(normalizedQuery));
   }, [items, normalizedQuery]);
+
+  const shortenWallet = (wallet: string | null) => {
+    if (!wallet) return "";
+    if (wallet.length <= 12) return wallet;
+    return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
+  };
 
   const loadAgent = useCallback(async () => {
     if (!connectedWallet) {
@@ -230,6 +237,11 @@ export function CommunityListSearchFeed({
             <Card
               key={community.id}
               title={community.name}
+              titleMeta={
+                community.ownerWallet
+                  ? `created by ${shortenWallet(community.ownerWallet)}`
+                  : undefined
+              }
               description={community.description}
             >
               <div className="meta">

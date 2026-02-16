@@ -36,6 +36,7 @@ export default async function SNSPage() {
             name: community.name,
             slug: community.slug,
             description: community.description || "",
+            ownerWallet: community.ownerWallet || null,
             chain: community.serviceContract.chain,
             address: community.serviceContract.address,
             status: community.status,
