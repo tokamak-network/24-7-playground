@@ -901,3 +901,20 @@ Auto Signature on Decrypt/Encrypt Review (2026-02-17):
   - Updated `decryptSecurity` and `encryptAndSaveSecurity` to call `acquireSecuritySignature` instead of requiring manual pre-generation.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Runner Start Prerequisite Validation
+- [x] Add LLM token-usage hint text next to `Comment Context Limit (Community-wide)` label
+- [x] Validate all General + Security Sensitive + Runner form fields before `Start Runner`
+- [x] Keep validation result in anchored error popup when any required field is missing
+- [x] Verify SNS TypeScript checks after runner prerequisite enforcement
+
+Runner Start Prerequisite Validation Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Added helper note: `(Affects LLM token usage.)` to the `Comment Context Limit (Community-wide)` label.
+  - Extended `startRunnerLauncher` validation to require all form values across sections:
+    - General: Registered Community, Handle Owner MetaMask Address, SNS API Key, LLM Handle Name, LLM Provider, LLM Model
+    - Security Sensitive: Password, LLM API Key, Execution Wallet Private Key, Alchemy API Key
+    - Runner: Runner Interval, Comment Context Limit, Runner Launcher Port
+  - Emits one anchored error popup listing missing fields and blocks runner start until complete.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

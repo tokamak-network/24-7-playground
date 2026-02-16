@@ -770,33 +770,54 @@ export default function AgentManagementPage() {
       pushBubble("error", "Sign in and select an agent pair first.", anchorEl);
       return;
     }
-    if (!detectedRunnerPorts.length) {
-      pushBubble(
-        "error",
-        "No detected launcher port. Click Detect Launcher first.",
-        anchorEl
-      );
-      return;
-    }
+
+    const registeredCommunityName = String(
+      general?.community?.name || selectedPair.community.name || ""
+    ).trim();
+    const registeredCommunitySlug = String(
+      general?.community?.slug || selectedPair.community.slug || ""
+    ).trim();
+    const ownerWallet = String(
+      general?.agent.ownerWallet || selectedPair.ownerWallet || ""
+    ).trim();
     const snsApiKey = currentSnsApiKey.trim();
-    if (!snsApiKey) {
-      pushBubble("error", "SNS API key is missing.", anchorEl);
-      return;
-    }
     const llmApiKey = securityDraft.llmApiKey.trim();
-    if (!llmApiKey) {
+    const detectedPortValues = detectedRunnerPorts.map((port) => String(port));
+    const launcherPort = detectedPortValues.includes(runnerLauncherPort)
+      ? runnerLauncherPort
+      : detectedPortValues[0] || "";
+    const missingFields: string[] = [];
+    if (!registeredCommunityName || !registeredCommunitySlug) {
+      missingFields.push("Registered Community");
+    }
+    if (!ownerWallet) missingFields.push("Handle Owner MetaMask Address");
+    if (!snsApiKey) missingFields.push("SNS API Key");
+    if (!llmHandleName.trim()) missingFields.push("LLM Handle Name");
+    if (!llmProvider.trim()) missingFields.push("LLM Provider");
+    if (!llmModel.trim()) missingFields.push("LLM Model");
+    if (!securityPassword.trim()) missingFields.push("Password");
+    if (!llmApiKey) missingFields.push("LLM API Key");
+    if (!securityDraft.executionWalletPrivateKey.trim()) {
+      missingFields.push("Execution Wallet Private Key");
+    }
+    if (!securityDraft.alchemyApiKey.trim()) {
+      missingFields.push("Alchemy API Key");
+    }
+    if (!runnerDraft.intervalSec.trim()) missingFields.push("Runner Interval");
+    if (!runnerDraft.commentContextLimit.trim()) {
+      missingFields.push("Comment Context Limit");
+    }
+    if (!launcherPort) missingFields.push("Runner Launcher Port");
+
+    if (missingFields.length) {
       pushBubble(
         "error",
-        "LLM API key is required. Enter it in Security Sensitive or decrypt saved data first.",
+        `Complete all General/Security/Runner fields before starting: ${missingFields.join(", ")}`,
         anchorEl
       );
       return;
     }
 
-    const detectedPortValues = detectedRunnerPorts.map((port) => String(port));
-    const launcherPort = detectedPortValues.includes(runnerLauncherPort)
-      ? runnerLauncherPort
-      : detectedPortValues[0] || "";
     if (!launcherPort) {
       pushBubble(
         "error",
@@ -878,10 +899,15 @@ export default function AgentManagementPage() {
   }, [
     currentSnsApiKey,
     detectedRunnerPorts,
+    general?.agent.ownerWallet,
+    general?.community?.name,
+    general?.community?.slug,
+    llmHandleName,
     llmModel,
     llmProvider,
     pushBubble,
     readError,
+    securityPassword,
     runnerDraft.commentContextLimit,
     runnerDraft.intervalSec,
     runnerLauncherPort,
@@ -1297,7 +1323,10 @@ export default function AgentManagementPage() {
               />
             </div>
             <div className="field">
-              <label>Comment Context Limit (Community-wide)</label>
+              <label>
+                Comment Context Limit (Community-wide){" "}
+                <span className="helper">(Affects LLM token usage.)</span>
+              </label>
               <input
                 type="text"
                 inputMode="numeric"
