@@ -143,6 +143,7 @@ export default function AgentManagementPage() {
   const [llmHandleName, setLlmHandleName] = useState("");
   const [llmProvider, setLlmProvider] = useState("GEMINI");
   const [llmModel, setLlmModel] = useState(defaultModelByProvider("GEMINI"));
+  const [liteLlmBaseUrl, setLiteLlmBaseUrl] = useState("");
   const [showSnsApiKey, setShowSnsApiKey] = useState(false);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [modelsBusy, setModelsBusy] = useState(false);
@@ -273,6 +274,7 @@ export default function AgentManagementPage() {
       anchorEl?: HTMLElement | null;
     }) => {
       const llmApiKey = securityDraft.llmApiKey.trim();
+      const baseUrl = liteLlmBaseUrl.trim();
       if (!token || !authHeaders) {
         pushBubble("error", "Sign-in is required.", options?.anchorEl);
         return;
@@ -285,6 +287,10 @@ export default function AgentManagementPage() {
         );
         return;
       }
+      if (llmProvider === "LITELLM" && !baseUrl) {
+        pushBubble("error", "Base URL is required for LiteLLM.", options?.anchorEl);
+        return;
+      }
 
       setModelsBusy(true);
       try {
@@ -294,7 +300,7 @@ export default function AgentManagementPage() {
           body: JSON.stringify({
             provider: llmProvider,
             apiKey: llmApiKey,
-            baseUrl: "",
+            baseUrl: llmProvider === "LITELLM" ? baseUrl : "",
           }),
         });
         const text = await response.text().catch(() => "");
@@ -339,7 +345,14 @@ export default function AgentManagementPage() {
         setModelsBusy(false);
       }
     },
-    [authHeaders, llmProvider, pushBubble, securityDraft.llmApiKey, token]
+    [
+      authHeaders,
+      liteLlmBaseUrl,
+      llmProvider,
+      pushBubble,
+      securityDraft.llmApiKey,
+      token,
+    ]
   );
 
   const loadPairs = useCallback(async () => {
@@ -406,8 +419,12 @@ export default function AgentManagementPage() {
         const data = (await response.json()) as GeneralPayload;
         setGeneral(data);
         setLlmHandleName(data.agent.handle);
-        setLlmProvider(data.agent.llmProvider || "GEMINI");
+        const nextProvider = data.agent.llmProvider || "GEMINI";
+        setLlmProvider(nextProvider);
         setLlmModel(data.agent.llmModel || defaultModelByProvider("GEMINI"));
+        if (nextProvider !== "LITELLM") {
+          setLiteLlmBaseUrl("");
+        }
         if (!silent) {
           setGeneralStatus("General data is loaded");
         }
@@ -444,8 +461,12 @@ export default function AgentManagementPage() {
       const data = (await response.json()) as GeneralPayload;
       setGeneral(data);
       setLlmHandleName(data.agent.handle);
-      setLlmProvider(data.agent.llmProvider || "GEMINI");
+      const nextProvider = data.agent.llmProvider || "GEMINI";
+      setLlmProvider(nextProvider);
       setLlmModel(data.agent.llmModel || defaultModelByProvider("GEMINI"));
+      if (nextProvider !== "LITELLM") {
+        setLiteLlmBaseUrl("");
+      }
       setGeneralStatus("General data is saved");
       await loadPairs();
     } catch {
@@ -985,6 +1006,7 @@ export default function AgentManagementPage() {
       setGeneralStatus("");
       setEncryptedSecurity(null);
       setAvailableModels([]);
+      setLiteLlmBaseUrl("");
       setSecurityPasswordMode("none");
       setSecurityPassword("");
       setDetectedRunnerPorts([]);
@@ -998,6 +1020,7 @@ export default function AgentManagementPage() {
     void loadGeneral(selectedAgentId, { silent: true });
     setEncryptedSecurity(null);
     setAvailableModels([]);
+    setLiteLlmBaseUrl("");
     setSecurityPasswordMode("none");
     setSecurityPassword("");
     setSecurityDraft({
@@ -1175,24 +1198,60 @@ export default function AgentManagementPage() {
                   onChange={(event) => setLlmHandleName(event.currentTarget.value)}
                 />
               </div>
-              <div className="field">
-                <label>LLM Provider</label>
-                <select
-                  value={llmProvider}
-                  onChange={(event) => {
-                    const nextProvider = event.currentTarget.value;
-                    setLlmProvider(nextProvider);
-                    setAvailableModels([]);
-                    setLlmModel(defaultModelByProvider(nextProvider));
-                  }}
-                >
-                  {PROVIDER_OPTIONS.map((provider) => (
-                    <option key={provider} value={provider}>
-                      {provider}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {llmProvider === "LITELLM" ? (
+                <div className="manager-provider-row">
+                  <div className="field">
+                    <label>LLM Provider</label>
+                    <select
+                      value={llmProvider}
+                      onChange={(event) => {
+                        const nextProvider = event.currentTarget.value;
+                        setLlmProvider(nextProvider);
+                        setAvailableModels([]);
+                        setLlmModel(defaultModelByProvider(nextProvider));
+                        if (nextProvider !== "LITELLM") {
+                          setLiteLlmBaseUrl("");
+                        }
+                      }}
+                    >
+                      {PROVIDER_OPTIONS.map((provider) => (
+                        <option key={provider} value={provider}>
+                          {provider}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label>Base URL</label>
+                    <input
+                      value={liteLlmBaseUrl}
+                      onChange={(event) =>
+                        setLiteLlmBaseUrl(event.currentTarget.value)
+                      }
+                      placeholder="https://your-litellm-endpoint/v1"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="field">
+                  <label>LLM Provider</label>
+                  <select
+                    value={llmProvider}
+                    onChange={(event) => {
+                      const nextProvider = event.currentTarget.value;
+                      setLlmProvider(nextProvider);
+                      setAvailableModels([]);
+                      setLlmModel(defaultModelByProvider(nextProvider));
+                    }}
+                  >
+                    {PROVIDER_OPTIONS.map((provider) => (
+                      <option key={provider} value={provider}>
+                        {provider}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="field">
                 <label>LLM Model</label>
                 <div className="manager-inline-field">

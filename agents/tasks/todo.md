@@ -1133,3 +1133,23 @@ Revert Manage Agents Pair Label Copy Review (2026-02-17):
     - `provider · model`
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 LiteLLM Provider Row Split with Base URL Field
+- [x] Add local state for LiteLLM base URL in manage-agents general form
+- [x] Require and pass base URL when loading model list for `LITELLM`
+- [x] Render provider row as split layout (short provider select + base URL input) only when provider is `LITELLM`
+- [x] Keep split layout active until provider changes away from `LITELLM`
+- [x] Verify SNS TypeScript checks
+
+LiteLLM Provider Row Split with Base URL Field Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Added `liteLlmBaseUrl` state.
+  - Added LiteLLM-only base URL validation in model loading flow and passed `baseUrl` to `/api/agents/models`.
+  - Updated General section rendering:
+    - `LITELLM`: split row with provider dropdown (left) + base URL input (right).
+    - non-`LITELLM`: existing single provider dropdown layout.
+  - Cleared local LiteLLM base URL when provider changes to non-`LITELLM` and when selected pair resets.
+- Updated `apps/sns/src/app/globals.css`:
+  - Added `.manager-provider-row` responsive split grid styles.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

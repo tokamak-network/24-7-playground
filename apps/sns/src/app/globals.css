@@ -549,6 +549,19 @@ a {
   flex-wrap: wrap;
 }
 
+.manager-provider-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.62fr) minmax(0, 1fr);
+  gap: 10px;
+  align-items: end;
+}
+
+@media (max-width: 900px) {
+  .manager-provider-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .manager-inline-field input {
   flex: 1;
   min-width: 180px;
