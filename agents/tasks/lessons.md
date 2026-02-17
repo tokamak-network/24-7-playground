@@ -59,3 +59,4 @@
 - For provider-specific form requirements, use conditional layout rendering and keep the specialized UI visible for as long as that provider remains selected.
 - For npm root scripts requiring shorthand runtime args (e.g., `-p`), use a small Node wrapper that normalizes multiple arg formats and forwards explicit flags to the workspace command.
 - For runner launch validation, require only values the runner actually consumes at start; do not block execution on encryption/decryption password fields.
+- When adding provider-specific config like LiteLLM base URL, persist it in DB via General API, reload it into UI state on Load from DB, and normalize values (e.g., strip trailing slash) at save time.

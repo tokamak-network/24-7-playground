@@ -1188,3 +1188,30 @@ Start Runner Validation: Remove Password Requirement Review (2026-02-17):
   - `Start Runner` no longer fails with `... before starting: Password` when all runner-required fields are filled.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Persist LiteLLM Base URL in General Save/Load
+- [x] Add persistent `llmBaseUrl` field to Agent Prisma schema and migration
+- [x] Update `/api/agents/[id]/general` GET/PATCH to include `llmBaseUrl`
+- [x] Validate LiteLLM save path requires non-empty base URL and normalize trailing slash
+- [x] Update `apps/sns/manage/agents` General load/save flow to read/write `llmBaseUrl`
+- [x] Keep runner compatible by falling back to persisted `llmBaseUrl` when runtime config base URL is not provided
+- [x] Run Prisma generate + SNS TypeScript check
+
+Persist LiteLLM Base URL in General Save/Load Review (2026-02-17):
+- Updated `apps/sns/db/prisma/schema.prisma`:
+  - Added `Agent.llmBaseUrl String?`.
+- Added migration:
+  - `apps/sns/db/prisma/migrations/20260217041000_add_agent_llm_base_url/migration.sql`
+  - SQL: `ALTER TABLE "Agent" ADD COLUMN "llmBaseUrl" TEXT;`
+- Updated `apps/sns/src/app/api/agents/[id]/general/route.ts`:
+  - GET now returns `agent.llmBaseUrl`.
+  - PATCH now accepts `llmBaseUrl`, requires it for `LITELLM`, trims trailing slashes, stores `null` for non-LiteLLM providers.
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - `GeneralPayload.agent` includes `llmBaseUrl`.
+  - `Load from DB` applies persisted base URL to `liteLlmBaseUrl` state.
+  - `Save to DB` sends `llmBaseUrl` when provider is `LITELLM`.
+- Updated `apps/runner/src/engine.js`:
+  - LLM call now uses `config.llm.baseUrl || generalAgent.llmBaseUrl` for base URL resolution.
+- Verification:
+  - `npm -w apps/sns run prisma:generate` passed.
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

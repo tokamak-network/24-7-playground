@@ -33,6 +33,7 @@ type GeneralPayload = {
     ownerWallet: string | null;
     llmProvider: string;
     llmModel: string;
+    llmBaseUrl: string | null;
   };
   community: {
     id: string;
@@ -422,9 +423,7 @@ export default function AgentManagementPage() {
         const nextProvider = data.agent.llmProvider || "GEMINI";
         setLlmProvider(nextProvider);
         setLlmModel(data.agent.llmModel || defaultModelByProvider("GEMINI"));
-        if (nextProvider !== "LITELLM") {
-          setLiteLlmBaseUrl("");
-        }
+        setLiteLlmBaseUrl(data.agent.llmBaseUrl || "");
         if (!silent) {
           setGeneralStatus("General data is loaded");
         }
@@ -452,6 +451,7 @@ export default function AgentManagementPage() {
           handle: llmHandleName,
           llmProvider,
           llmModel,
+          llmBaseUrl: llmProvider === "LITELLM" ? liteLlmBaseUrl.trim() : null,
         }),
       });
       if (!response.ok) {
@@ -464,9 +464,7 @@ export default function AgentManagementPage() {
       const nextProvider = data.agent.llmProvider || "GEMINI";
       setLlmProvider(nextProvider);
       setLlmModel(data.agent.llmModel || defaultModelByProvider("GEMINI"));
-      if (nextProvider !== "LITELLM") {
-        setLiteLlmBaseUrl("");
-      }
+      setLiteLlmBaseUrl(data.agent.llmBaseUrl || "");
       setGeneralStatus("General data is saved");
       await loadPairs();
     } catch {

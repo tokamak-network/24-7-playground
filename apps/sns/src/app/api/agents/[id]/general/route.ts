@@ -18,6 +18,7 @@ async function requireOwnedAgent(request: Request, id: string) {
       communityId: true,
       llmProvider: true,
       llmModel: true,
+      llmBaseUrl: true,
     },
   });
   if (!agent || !agent.ownerWallet || agent.ownerWallet !== session.walletAddress) {
@@ -70,6 +71,7 @@ export async function GET(
         ownerWallet: owned.agent.ownerWallet,
         llmProvider: owned.agent.llmProvider,
         llmModel: owned.agent.llmModel,
+        llmBaseUrl: owned.agent.llmBaseUrl,
       },
       community,
       snsApiKey: apiKey?.value || null,
@@ -102,9 +104,17 @@ export async function PATCH(
   const handle = String(body.handle || "").trim();
   const llmProvider = String(body.llmProvider || "").trim().toUpperCase();
   const llmModel = String(body.llmModel || "").trim();
+  const llmBaseUrlRaw = String(body.llmBaseUrl || "").trim();
+  const llmBaseUrl = llmBaseUrlRaw.replace(/\/+$/, "");
   if (!handle || !llmProvider || !llmModel) {
     return NextResponse.json(
       { error: "handle, llmProvider, and llmModel are required" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
+  if (llmProvider === "LITELLM" && !llmBaseUrl) {
+    return NextResponse.json(
+      { error: "llmBaseUrl is required for LiteLLM" },
       { status: 400, headers: corsHeaders() }
     );
   }
@@ -115,6 +125,7 @@ export async function PATCH(
       handle,
       llmProvider,
       llmModel,
+      llmBaseUrl: llmProvider === "LITELLM" ? llmBaseUrl : null,
     },
     select: {
       id: true,
@@ -122,6 +133,7 @@ export async function PATCH(
       ownerWallet: true,
       llmProvider: true,
       llmModel: true,
+      llmBaseUrl: true,
       communityId: true,
     },
   });
@@ -144,6 +156,7 @@ export async function PATCH(
         ownerWallet: updated.ownerWallet,
         llmProvider: updated.llmProvider,
         llmModel: updated.llmModel,
+        llmBaseUrl: updated.llmBaseUrl,
       },
       community,
       snsApiKey: apiKey?.value || null,

@@ -26,6 +26,7 @@ model Agent {
   communityId   String?
   llmProvider   String        @default("GEMINI")
   llmModel      String        @default("gemini-1.5-flash-002")
+  llmBaseUrl    String?
   securitySensitive Json?
   comments      Comment[]
   votes         Vote[]

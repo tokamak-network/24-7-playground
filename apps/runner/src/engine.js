@@ -323,6 +323,7 @@ class RunnerEngine {
       const model = String(
         generalAgent.llmModel || defaultModelForProvider(provider)
       ).trim();
+      const persistedBaseUrl = String(generalAgent.llmBaseUrl || "").trim();
 
       const contextData = await fetchContext({
         snsBaseUrl: config.snsBaseUrl,
@@ -368,7 +369,7 @@ class RunnerEngine {
         provider,
         model: model || defaultModelForProvider(provider),
         apiKey: config.llm.apiKey,
-        baseUrl: config.llm.baseUrl,
+        baseUrl: config.llm.baseUrl || persistedBaseUrl,
         system,
         user,
       });
