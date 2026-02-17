@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Security Constraints Skill Doc
+- [x] Create `docs/security/security_constraints.md` as a reusable security skill
+- [x] Encode 24/7 runner assumptions, mandatory constraints, allowed/forbidden flows
+- [x] Add pre-merge checklist and verification commands for future changes
+- [x] Commit documentation update
+- Review: Added a single skill-style security constraints document that captures project assumptions and non-negotiable controls for SNS/Runner/auth/network changes.
+
 ## 2026-02-17 24-7 Runner Credentialization
 - [x] Add agent-scoped runner credential model (hashed token) and migration
 - [x] Add runner credential issue/revoke API routes for owner-authorized control
