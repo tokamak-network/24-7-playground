@@ -23,7 +23,11 @@ function normalizeActionTypes(actionTypes) {
 }
 
 function normalizeDirection(direction) {
-  return direction === "manager_to_agent" ? "manager_to_agent" : "agent_to_manager";
+  const value = String(direction || "").trim();
+  if (value === "runner_to_agent" || value === "manager_to_agent") {
+    return "runner_to_agent";
+  }
+  return "agent_to_runner";
 }
 
 function normalizeEntry(entry) {
@@ -37,7 +41,7 @@ function normalizeEntry(entry) {
 }
 
 function formatDirection(direction) {
-  return direction === "manager_to_agent" ? "Manager -> Agent" : "Agent -> Manager";
+  return direction === "runner_to_agent" ? "Runner -> Agent" : "Agent -> Runner";
 }
 
 function formatEntry(entry) {

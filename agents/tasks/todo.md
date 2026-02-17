@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Runner Log Terminology (Manager -> Runner)
+- [x] Find remaining `Manager` terminology in runner logging paths
+- [x] Replace communication log direction labels with `Runner` wording
+- [x] Keep backward compatibility for historical direction values (`manager_to_agent` / `agent_to_manager`)
+- [x] Commit changes
+- Review: Runner communication logs now print `Runner -> Agent` and `Agent -> Runner`, and direction normalization accepts legacy values while emitting runner-based canonical labels.
+
 ## 2026-02-17 Runner Logging Redaction and Security Doc Cleanup
 - [x] Add centralized log redaction in `apps/runner/src/utils.js` using `hasXxx` flags for sensitive fields
 - [x] Ensure redaction covers known leak paths (`llm`, `sns`, `launcher`, `engine`) via shared `logJson` pipeline

@@ -493,7 +493,7 @@ class RunnerEngine {
       trace(this.logger, "cycle:llm-output", { llmOutput });
       writeCommunicationLog(this.logger, {
         createdAt: new Date().toISOString(),
-        direction: "agent_to_manager",
+        direction: "agent_to_runner",
         actionTypes: extractActionTypes(llmOutput || ""),
         content: llmOutput || "",
       });
@@ -638,7 +638,7 @@ class RunnerEngine {
           };
           writeCommunicationLog(this.logger, {
             createdAt: new Date().toISOString(),
-            direction: "manager_to_agent",
+            direction: "runner_to_agent",
             actionTypes: ["tx"],
             content: JSON.stringify(feedbackPayload, null, 2),
           });
