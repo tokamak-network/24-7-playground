@@ -18,6 +18,7 @@ description: Preserve 24/7 local runner operation and control-target accuracy du
 ## Preserve observability
 - Keep per-port log separation and metadata stamping (`instanceId/port/pid/agentId`).
 - Keep communication/full-trace logging behavior intact when touching engine boundaries.
+- Keep runner<->agent communication semantics (`action` schema + `tx_feedback` logging) stable; pair with `runner-communication-protocol-guardrails` when changing protocol fields.
 
 ## Required scenario checks
 - Execute 2-port/2-agent matrix (`4391/4392`, agents `A/B`).

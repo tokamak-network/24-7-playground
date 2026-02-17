@@ -9,10 +9,12 @@ description: Keep SNS and runner API contracts stable and safe during upgrades. 
 - Identify all producers and consumers for the route.
 - Mark whether the change is additive, behavior-changing, or breaking.
 - Prefer additive shape changes when backward compatibility is required.
+- If runner<->agent action JSON or runner<->SNS API/auth flow is touched, apply `runner-communication-protocol-guardrails` together.
 
 ## Required constraints
 - Do not add secret-bearing fields to SNS API responses.
 - Keep auth headers and signing semantics explicit and validated.
+- Keep runner signed-write contract stable (`x-runner-token`, `x-agent-id`, nonce/timestamp/signature headers and signing payload shape).
 - Keep error shape predictable and actionable.
 
 ## Implementation checks

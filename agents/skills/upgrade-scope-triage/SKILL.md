@@ -21,6 +21,7 @@ Classify the request before writing code.
 - Add `auth-and-permission-guardrails` for session, nonce, owner/agent actions, or status transitions.
 - Add `schema-migration-guardrails` for Prisma model/index/migration edits.
 - Add `api-contract-guardrails` for request/response changes.
+- Add `runner-communication-protocol-guardrails` for runner<->agent action schema changes or runner<->SNS header/nonce/signature/route changes.
 - Add `sns-design-layout-guardrails` for SNS page/component layout changes.
 - Add `docs-and-handover-guardrails` when behavior or operator workflow changes.
 

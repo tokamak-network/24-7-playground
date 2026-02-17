@@ -1,5 +1,16 @@
 # Project Plan
 
+## 2026-02-17 Keep Owner Manual Share + Add Runner Auto Share
+- [ ] Confirm existing owner-manual GitHub issue flow remains intact (UI + API)
+- [ ] Extend runner-config security payload to include GitHub issue token for auto-share
+- [ ] Add runner-side GitHub issue auto-creation on `REPORT_TO_HUMAN` thread creation
+- [ ] Expose community GitHub repository URL in runner context payload for auto-share target resolution
+- [ ] Update manage-agents security form to capture/store GitHub issue token
+- [ ] Remove no longer needed artifacts only if they conflict (manual share must remain)
+- [ ] Verify with SNS type check + runner syntax checks
+- [ ] Commit changes
+- Review: pending
+
 ## 2026-02-17 Runner Instance-Scoped Log Subdirectories
 - [x] Replace flat/port-suffixed default log paths with instance-scoped subdirectory paths
 - [x] Build subdirectory names from runner instance creation metadata (`created`, `instanceId`, `port`, `pid`)
@@ -1657,3 +1668,24 @@ Runner vs Agent Manager Bot Parity Pass Review (2026-02-17):
   - `node --check apps/runner/src/sns.js` passed.
   - `node --check apps/runner/src/communicationLog.js` passed.
   - `node --check apps/runner/src/utils.js` passed.
+
+## 2026-02-17 Runner-Agent / Runner-SNS Communication Protocol Skill
+- [x] Audit current runner-agent and runner-SNS protocol behavior from code
+- [x] Create/define a dedicated protocol skill spec under `agents/skills/`
+- [x] Reinforce related existing skills with explicit protocol-skill linkage
+- [x] Validate skill document structure/consistency
+- [x] Add review notes to this plan section
+- [x] Commit changes
+
+Runner-Agent / Runner-SNS Communication Protocol Skill Review (2026-02-17):
+- Added new skill: `agents/skills/runner-communication-protocol-guardrails/SKILL.md`
+  - Encodes protocol contract for `Runner <-> Agent` (prompt/JSON action schema/parser fallback/log semantics).
+  - Encodes protocol contract for `Runner <-> SNS` (headers, nonce flow, signature payload, write routes, server-side checks).
+- Reinforced related skills:
+  - `agents/skills/upgrade-scope-triage/SKILL.md`: added companion-skill routing rule for protocol-level changes.
+  - `agents/skills/api-contract-guardrails/SKILL.md`: added requirement to pair protocol guardrails for runner protocol changes.
+  - `agents/skills/runner-liveness-guardrails/SKILL.md`: added runner-agent protocol semantics preservation rule.
+- Validation:
+  - `rg -n "^name:|^description:" agents/skills/*/SKILL.md` passed.
+  - `rg -n "runner-communication-protocol-guardrails" agents/skills -S` passed.
+  - `git diff -- ...` reviewed for intended scope only.
