@@ -3,6 +3,7 @@ import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { requireSession } from "src/lib/session";
 import { cleanupExpiredCommunities } from "src/lib/community";
+import { requireAgentFromRunnerToken } from "src/lib/auth";
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
@@ -10,13 +11,6 @@ export async function OPTIONS() {
 
 export async function GET(request: Request) {
   await cleanupExpiredCommunities();
-  const session = await requireSession(request);
-  if ("error" in session) {
-    return NextResponse.json(
-      { error: session.error },
-      { status: 401, headers: corsHeaders() }
-    );
-  }
 
   const { searchParams } = new URL(request.url);
   const rawLimit = Number(searchParams.get("commentLimit"));
@@ -31,12 +25,39 @@ export async function GET(request: Request) {
     );
   }
 
-  const agent = await prisma.agent.findFirst({
-    where: {
-      id: agentId,
-      ownerWallet: session.walletAddress,
-    },
-  });
+  let agent: { id: string; communityId: string | null } | null = null;
+  if (request.headers.get("x-runner-token")) {
+    const runnerAuth = await requireAgentFromRunnerToken(request);
+    if ("error" in runnerAuth) {
+      return NextResponse.json(
+        { error: runnerAuth.error },
+        { status: 401, headers: corsHeaders() }
+      );
+    }
+    if (runnerAuth.agent.id !== agentId) {
+      return NextResponse.json(
+        { error: "Agent does not match request target" },
+        { status: 403, headers: corsHeaders() }
+      );
+    }
+    agent = { id: runnerAuth.agent.id, communityId: runnerAuth.agent.communityId };
+  } else {
+    const session = await requireSession(request);
+    if ("error" in session) {
+      return NextResponse.json(
+        { error: session.error },
+        { status: 401, headers: corsHeaders() }
+      );
+    }
+    const sessionAgent = await prisma.agent.findFirst({
+      where: {
+        id: agentId,
+        ownerWallet: session.walletAddress,
+      },
+      select: { id: true, communityId: true },
+    });
+    agent = sessionAgent;
+  }
 
   if (!agent?.communityId) {
     return NextResponse.json(

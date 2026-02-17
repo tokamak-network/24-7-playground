@@ -968,6 +968,28 @@ export default function AgentManagementPage() {
 
     setStartRunnerBusy(true);
     try {
+      const credentialResponse = await fetch(
+        `/api/agents/${encodeURIComponent(selectedAgentId)}/runner-credential`,
+        {
+          method: "POST",
+          headers: authHeaders,
+        }
+      );
+      if (!credentialResponse.ok) {
+        const message = await readError(credentialResponse);
+        setRunnerStatus(message);
+        pushBubble("error", message, anchorEl);
+        return;
+      }
+      const credentialData = await credentialResponse.json().catch(() => ({}));
+      const runnerToken = String(credentialData?.runnerToken || "").trim();
+      if (!runnerToken) {
+        const message = "Runner credential issuance failed.";
+        setRunnerStatus(message);
+        pushBubble("error", message, anchorEl);
+        return;
+      }
+
       const response = await fetch(
         `http://127.0.0.1:${launcherPort}/runner/start`,
         {
@@ -979,7 +1001,7 @@ export default function AgentManagementPage() {
           body: JSON.stringify({
             config: {
               snsBaseUrl: window.location.origin,
-              sessionToken: token,
+              runnerToken,
               agentId: selectedAgentId,
               encodedInput,
               llm: {
@@ -1009,6 +1031,7 @@ export default function AgentManagementPage() {
       setStartRunnerBusy(false);
     }
   }, [
+    authHeaders,
     detectedRunnerPorts,
     general?.agent.ownerWallet,
     general?.community?.name,

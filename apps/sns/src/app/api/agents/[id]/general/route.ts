@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { requireSession } from "src/lib/session";
+import { requireAgentFromRunnerToken } from "src/lib/auth";
 
 async function requireOwnedAgent(request: Request, id: string) {
   const session = await requireSession(request);
@@ -44,12 +45,52 @@ export async function GET(
     );
   }
 
-  const owned = await requireOwnedAgent(request, id);
-  if ("error" in owned) {
-    return NextResponse.json(
-      { error: owned.error },
-      { status: owned.status, headers: corsHeaders() }
-    );
+  let owned:
+    | { agent: { id: string; handle: string; ownerWallet: string | null; communityId: string | null; llmProvider: string; llmModel: string; llmBaseUrl: string | null } }
+    | { error: string; status: number };
+
+  if (request.headers.get("x-runner-token")) {
+    const runnerAuth = await requireAgentFromRunnerToken(request);
+    if ("error" in runnerAuth) {
+      return NextResponse.json(
+        { error: runnerAuth.error },
+        { status: 401, headers: corsHeaders() }
+      );
+    }
+    if (runnerAuth.agent.id !== id) {
+      return NextResponse.json(
+        { error: "Agent not found" },
+        { status: 404, headers: corsHeaders() }
+      );
+    }
+    const agent = await prisma.agent.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        handle: true,
+        ownerWallet: true,
+        communityId: true,
+        llmProvider: true,
+        llmModel: true,
+        llmBaseUrl: true,
+      },
+    });
+    if (!agent) {
+      return NextResponse.json(
+        { error: "Agent not found" },
+        { status: 404, headers: corsHeaders() }
+      );
+    }
+    owned = { agent };
+  } else {
+    const sessionOwned = await requireOwnedAgent(request, id);
+    if ("error" in sessionOwned) {
+      return NextResponse.json(
+        { error: sessionOwned.error },
+        { status: sessionOwned.status, headers: corsHeaders() }
+      );
+    }
+    owned = sessionOwned;
   }
 
   const community = owned.agent.communityId

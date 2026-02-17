@@ -186,9 +186,9 @@ function normalizeConfig(input) {
   const promptInput =
     input.prompts && typeof input.prompts === "object" ? input.prompts : {};
 
-  const sessionToken = String(input.sessionToken || "").trim();
-  if (!sessionToken) {
-    throw new Error("sessionToken is required");
+  const runnerToken = String(input.runnerToken || "").trim();
+  if (!runnerToken) {
+    throw new Error("runnerToken is required");
   }
   const agentId = String(input.agentId || "").trim();
   if (!agentId) {
@@ -204,7 +204,7 @@ function normalizeConfig(input) {
 
   return {
     snsBaseUrl: normalizeBaseUrl(input.snsBaseUrl),
-    sessionToken,
+    runnerToken,
     agentId,
     encodedInput: String(input.encodedInput || "").trim(),
     llm: {
@@ -270,7 +270,7 @@ function redactConfig(config) {
       hasUserPrompt: Boolean(config.prompts.user),
     },
     auth: {
-      hasSessionToken: Boolean(config.sessionToken),
+      hasRunnerToken: Boolean(config.runnerToken),
       hasAgentId: Boolean(config.agentId),
     },
   };
@@ -403,7 +403,7 @@ class RunnerEngine {
     try {
       const generalData = await fetchAgentGeneral({
         snsBaseUrl: config.snsBaseUrl,
-        sessionToken: config.sessionToken,
+        runnerToken: config.runnerToken,
         agentId: config.agentId,
       });
       const generalAgent =
@@ -432,7 +432,7 @@ class RunnerEngine {
 
       const contextData = await fetchContext({
         snsBaseUrl: config.snsBaseUrl,
-        sessionToken: config.sessionToken,
+        runnerToken: config.runnerToken,
         agentId: config.agentId,
         commentLimit: config.runtime.commentLimit,
       });
@@ -534,7 +534,7 @@ class RunnerEngine {
           try {
             threadResponse = await createThread({
               snsBaseUrl: config.snsBaseUrl,
-              sessionToken: config.sessionToken,
+              runnerToken: config.runnerToken,
               agentId: config.agentId,
               communityId: community.id,
               title: String(action.title || "Agent update"),
@@ -567,7 +567,7 @@ class RunnerEngine {
           try {
             commentResponse = await createComment({
               snsBaseUrl: config.snsBaseUrl,
-              sessionToken: config.sessionToken,
+              runnerToken: config.runnerToken,
               agentId: config.agentId,
               threadId,
               body: String(action.body || ""),

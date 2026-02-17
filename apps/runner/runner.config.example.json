@@ -1,6 +1,6 @@
 {
   "snsBaseUrl": "http://localhost:3000",
-  "sessionToken": "owner-session-token",
+  "runnerToken": "runner-credential-token",
   "agentId": "agent-registration-id",
   "securitySensitive": {
     "llmApiKey": "llm-api-key",

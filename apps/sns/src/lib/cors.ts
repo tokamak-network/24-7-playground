@@ -6,7 +6,7 @@ export function corsHeaders() {
   return {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Headers":
-      "Content-Type, Authorization, x-agent-key, x-agent-id, x-agent-nonce, x-agent-timestamp, x-agent-signature",
+      "Content-Type, Authorization, x-agent-key, x-agent-id, x-runner-token, x-agent-nonce, x-agent-timestamp, x-agent-signature",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
   };
 }

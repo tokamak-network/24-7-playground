@@ -1,6 +1,5 @@
 import crypto from "node:crypto";
 import { prisma } from "src/db";
-import { requireSession } from "src/lib/session";
 
 const NONCE_TTL_MS = 2 * 60 * 1000;
 
@@ -39,6 +38,10 @@ function signNonce(
     .digest("hex");
 }
 
+function hashRunnerToken(token: string) {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
+
 export async function requireAgentFromKey(request: Request) {
   const key = request.headers.get("x-agent-key");
   if (!key) {
@@ -59,36 +62,30 @@ export async function requireAgentFromKey(request: Request) {
   return { agent: apiKey.agent, apiKey } as const;
 }
 
-export async function requireAgentFromSession(request: Request) {
-  const session = await requireSession(request);
-  if ("error" in session) {
-    return { error: session.error } as const;
-  }
-
+export async function requireAgentFromRunnerToken(request: Request) {
+  const token = String(request.headers.get("x-runner-token") || "").trim();
   const agentId = String(request.headers.get("x-agent-id") || "").trim();
+  if (!token) {
+    return { error: "Missing x-runner-token" } as const;
+  }
   if (!agentId) {
     return { error: "Missing x-agent-id" } as const;
   }
 
-  const agent = await prisma.agent.findFirst({
+  const tokenHash = hashRunnerToken(token);
+  const credential = await prisma.runnerCredential.findFirst({
     where: {
-      id: agentId,
-      ownerWallet: session.walletAddress,
+      agentId,
+      tokenHash,
+      revokedAt: null,
     },
+    include: { agent: true },
   });
-  if (!agent) {
-    return { error: "Agent not found" } as const;
+  if (!credential || !credential.agent || credential.agent.id !== agentId) {
+    return { error: "Invalid or revoked runner credential" } as const;
   }
 
-  const authHeader = request.headers.get("authorization") || "";
-  const token = authHeader.startsWith("Bearer ")
-    ? authHeader.slice("Bearer ".length).trim()
-    : "";
-  if (!token) {
-    return { error: "Missing session" } as const;
-  }
-
-  return { agent, sessionToken: token } as const;
+  return { agent: credential.agent, runnerToken: token } as const;
 }
 
 export async function requireAgentWriteAuth(
@@ -104,9 +101,11 @@ export async function requireAgentWriteAuth(
   }
 
   const key = request.headers.get("x-agent-key");
+  const runnerToken = request.headers.get("x-runner-token");
   const keyBase = key ? await requireAgentFromKey(request) : null;
-  const sessionBase = key ? null : await requireAgentFromSession(request);
-  const base = keyBase || sessionBase;
+  const runnerBase =
+    key || !runnerToken ? null : await requireAgentFromRunnerToken(request);
+  const base = keyBase || runnerBase;
   if (!base || "error" in base) {
     return base || ({ error: "Unauthorized" } as const);
   }
@@ -139,11 +138,11 @@ export async function requireAgentWriteAuth(
   if (key) {
     expected = signNonce(key, nonce, timestamp, bodyHash);
   } else {
-    if (!("sessionToken" in base)) {
-      return { error: "Missing session" } as const;
+    if (!("runnerToken" in base)) {
+      return { error: "Missing runner credential" } as const;
     }
     expected = signNonce(
-      base.sessionToken,
+      base.runnerToken,
       nonce,
       timestamp,
       bodyHash,

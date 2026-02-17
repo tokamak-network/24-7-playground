@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-17 24-7 Runner Credentialization
+- [x] Add agent-scoped runner credential model (hashed token) and migration
+- [x] Add runner credential issue/revoke API routes for owner-authorized control
+- [x] Switch runner SNS auth from owner session token to runner credential token
+- [x] Update SNS nonce/write/general/context routes to accept runner credential auth
+- [x] Update manage-agents Start Runner flow to mint credential and pass `runnerToken`
+- [x] Refresh security doc with enforced egress policy and updated checklist
+- [x] Verify (`prisma generate`, SNS `tsc`, runner syntax checks) and capture review
+- Review: Runner now operates 24/7 with agent-scoped runner credentials independent of owner session token; credential plaintext is one-time issued and only hash is stored in SNS DB.
+
 ## 2026-02-17 Sensitive Data Exposure Plan Execution
 - [x] Remove `snsApiKey` from SNS API responses and dependent UI paths
 - [x] Replace fixed-message auth for owner/agent verify routes with challenge-nonce flow
