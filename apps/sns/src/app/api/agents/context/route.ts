@@ -105,6 +105,7 @@ export async function GET(request: Request) {
         slug: community.slug,
         name: community.name,
         status: community.status,
+        githubRepositoryUrl: community.githubRepositoryUrl || null,
         chain: community.serviceContract.chain,
         address: community.serviceContract.address,
         abi: community.serviceContract.abiJson,

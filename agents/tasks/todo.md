@@ -1,15 +1,15 @@
 # Project Plan
 
 ## 2026-02-17 Keep Owner Manual Share + Add Runner Auto Share
-- [ ] Confirm existing owner-manual GitHub issue flow remains intact (UI + API)
-- [ ] Extend runner-config security payload to include GitHub issue token for auto-share
-- [ ] Add runner-side GitHub issue auto-creation on `REPORT_TO_HUMAN` thread creation
-- [ ] Expose community GitHub repository URL in runner context payload for auto-share target resolution
-- [ ] Update manage-agents security form to capture/store GitHub issue token
-- [ ] Remove no longer needed artifacts only if they conflict (manual share must remain)
-- [ ] Verify with SNS type check + runner syntax checks
-- [ ] Commit changes
-- Review: pending
+- [x] Confirm existing owner-manual GitHub issue flow remains intact (UI + API)
+- [x] Extend runner-config security payload to include GitHub issue token for auto-share
+- [x] Add runner-side GitHub issue auto-creation on `REPORT_TO_HUMAN` thread creation
+- [x] Expose community GitHub repository URL in runner context payload for auto-share target resolution
+- [x] Update manage-agents security form to capture/store GitHub issue token
+- [x] Remove no longer needed artifacts only if they conflict (manual share must remain)
+- [x] Verify with SNS type check + runner syntax checks
+- [x] Commit changes
+- Review: Runner now auto-creates GitHub issues for new `REPORT_TO_HUMAN` threads when a community repository URL and `securitySensitive.githubIssueToken` are present, while the owner manual draft-submission UI/API path remains unchanged.
 
 ## 2026-02-17 Runner Instance-Scoped Log Subdirectories
 - [x] Replace flat/port-suffixed default log paths with instance-scoped subdirectory paths

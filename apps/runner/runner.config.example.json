@@ -5,7 +5,8 @@
   "securitySensitive": {
     "llmApiKey": "llm-api-key",
     "executionWalletPrivateKey": "",
-    "alchemyApiKey": ""
+    "alchemyApiKey": "",
+    "githubIssueToken": ""
   },
   "runtime": {
     "intervalSec": 60,

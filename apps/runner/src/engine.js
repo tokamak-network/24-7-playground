@@ -4,6 +4,11 @@ const path = require("node:path");
 const { callLlm, defaultModelForProvider, normalizeProvider } = require("./llm");
 const { writeCommunicationLog } = require("./communicationLog");
 const {
+  buildReportIssueBody,
+  buildReportIssueTitle,
+  createGithubIssue,
+} = require("./github");
+const {
   createComment,
   createThread,
   fetchAgentGeneral,
@@ -184,6 +189,10 @@ function normalizeConfig(input) {
     input.runtime && typeof input.runtime === "object" ? input.runtime : {};
   const executionInput =
     input.execution && typeof input.execution === "object" ? input.execution : {};
+  const integrationInput =
+    input.integrations && typeof input.integrations === "object"
+      ? input.integrations
+      : {};
   const promptInput =
     input.prompts && typeof input.prompts === "object" ? input.prompts : {};
 
@@ -239,6 +248,11 @@ function normalizeConfig(input) {
         securityInput.alchemyApiKey || executionInput.alchemyApiKey || ""
       ).trim(),
     },
+    integrations: {
+      githubIssueToken: String(
+        securityInput.githubIssueToken || integrationInput.githubIssueToken || ""
+      ).trim(),
+    },
     prompts: {
       system: String(promptInput.system || "").trim(),
       user: String(promptInput.user || "").trim(),
@@ -264,6 +278,11 @@ function redactConfig(config) {
     execution: {
       hasPrivateKey: Boolean(config.execution.privateKey),
       hasAlchemyApiKey: Boolean(config.execution.alchemyApiKey),
+    },
+    integrations: {
+      hasGithubIssueToken: Boolean(
+        config.integrations && config.integrations.githubIssueToken
+      ),
     },
     encodedInput: Boolean(config.encodedInput),
     prompts: {
@@ -535,6 +554,7 @@ class RunnerEngine {
         const actionType = String(action.action || "").trim();
         if (actionType === "create_thread") {
           let threadResponse = null;
+          let autoShare = null;
           try {
             threadResponse = await createThread({
               snsBaseUrl: config.snsBaseUrl,
@@ -548,10 +568,34 @@ class RunnerEngine {
           } catch (error) {
             threadResponse = { error: toErrorMessage(error, "Failed to create thread") };
           }
+          const requestedThreadType = String(action.threadType || "")
+            .trim()
+            .toUpperCase();
+          if (requestedThreadType === "REPORT_TO_HUMAN") {
+            autoShare = await this.#autoShareReportToGithub({
+              config,
+              community,
+              action,
+              generalAgent,
+              threadResponse,
+            });
+          }
           trace(this.logger, "cycle:action:create-thread:result", {
             action,
             threadResponse,
+            autoShare,
           });
+          if (autoShare && autoShare.ok) {
+            logSummary(
+              this.logger,
+              `report auto-share completed (community=${community.slug}, threadId=${autoShare.threadId || "-"})`
+            );
+          } else if (autoShare && autoShare.error) {
+            logSummary(
+              this.logger,
+              `report auto-share failed (community=${community.slug}, reason=${autoShare.error})`
+            );
+          }
           logSummary(
             this.logger,
             `action create_thread completed (community=${community.slug})`
@@ -560,6 +604,7 @@ class RunnerEngine {
             action: "create_thread",
             community: community.slug,
             result: toJsonSafe(threadResponse),
+            autoShare: toJsonSafe(autoShare),
           });
           continue;
         }
@@ -729,6 +774,83 @@ class RunnerEngine {
       return { ok: false, error: message };
     } finally {
       this.inFlight = false;
+    }
+  }
+
+  async #autoShareReportToGithub(params) {
+    const thread = params.threadResponse && params.threadResponse.thread;
+    if (!thread || !thread.id) {
+      return {
+        ok: false,
+        skipped: true,
+        error: "Report thread not available for auto-share.",
+      };
+    }
+
+    const repositoryUrl = String(params.community.githubRepositoryUrl || "").trim();
+    if (!repositoryUrl) {
+      return {
+        ok: false,
+        skipped: true,
+        threadId: String(thread.id),
+        error: "Community GitHub repository is not configured.",
+      };
+    }
+
+    const issueToken = String(
+      params.config &&
+        params.config.integrations &&
+        params.config.integrations.githubIssueToken
+        ? params.config.integrations.githubIssueToken
+        : ""
+    ).trim();
+    if (!issueToken) {
+      return {
+        ok: false,
+        skipped: true,
+        threadId: String(thread.id),
+        error: "GitHub issue token is not configured in runner securitySensitive.",
+      };
+    }
+
+    const threadId = String(thread.id || "").trim();
+    const threadSlug = String(params.community.slug || "").trim();
+    const threadUrl = `${params.config.snsBaseUrl}/sns/${threadSlug}/threads/${threadId}`;
+    const rawCreatedAt = String(thread.createdAt || "").trim();
+    const parsedCreatedAt = new Date(rawCreatedAt);
+    const createdAtIso = Number.isFinite(parsedCreatedAt.getTime())
+      ? parsedCreatedAt.toISOString()
+      : new Date().toISOString();
+    const title = buildReportIssueTitle(thread.title || params.action.title);
+    const body = buildReportIssueBody({
+      communityName: params.community.name,
+      threadId,
+      threadUrl,
+      author: params.generalAgent && params.generalAgent.handle,
+      createdAtIso,
+      threadBody: thread.body || params.action.body,
+    });
+
+    try {
+      const issue = await createGithubIssue({
+        repositoryUrl,
+        issueToken,
+        title,
+        body,
+      });
+      return {
+        ok: true,
+        threadId,
+        repositoryUrl: issue.repositoryUrl,
+        issueNumber: issue.issueNumber,
+        issueUrl: issue.issueUrl,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        threadId,
+        error: toErrorMessage(error, "GitHub issue auto-share failed"),
+      };
     }
   }
 

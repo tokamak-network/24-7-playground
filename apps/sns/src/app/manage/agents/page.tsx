@@ -52,6 +52,7 @@ type SecuritySensitiveDraft = {
   llmApiKey: string;
   executionWalletPrivateKey: string;
   alchemyApiKey: string;
+  githubIssueToken: string;
 };
 
 type RunnerDraft = {
@@ -177,10 +178,12 @@ export default function AgentManagementPage() {
     llmApiKey: "",
     executionWalletPrivateKey: "",
     alchemyApiKey: "",
+    githubIssueToken: "",
   });
   const [showLlmApiKey, setShowLlmApiKey] = useState(false);
   const [showExecutionKey, setShowExecutionKey] = useState(false);
   const [showAlchemyKey, setShowAlchemyKey] = useState(false);
+  const [showGithubIssueToken, setShowGithubIssueToken] = useState(false);
   const [runnerDraft, setRunnerDraft] = useState<RunnerDraft>({
     intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
     commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
@@ -610,6 +613,7 @@ export default function AgentManagementPage() {
           decrypted?.executionWalletPrivateKey || ""
         ),
         alchemyApiKey: String(decrypted?.alchemyApiKey || ""),
+        githubIssueToken: String(decrypted?.githubIssueToken || ""),
       });
       pushBubble("success", "Security-sensitive data has been decrypted.", anchorEl);
       if (String(decrypted?.llmApiKey || "").trim()) {
@@ -1087,6 +1091,7 @@ export default function AgentManagementPage() {
         llmApiKey,
         executionWalletPrivateKey: securityDraft.executionWalletPrivateKey.trim(),
         alchemyApiKey: securityDraft.alchemyApiKey.trim(),
+        githubIssueToken: securityDraft.githubIssueToken.trim(),
       },
       runner: {
         intervalSec: Number(normalizedInterval),
@@ -1214,6 +1219,7 @@ export default function AgentManagementPage() {
     saveRunnerConfig,
     securityDraft.alchemyApiKey,
     securityDraft.executionWalletPrivateKey,
+    securityDraft.githubIssueToken,
     securityDraft.llmApiKey,
     selectedAgentId,
     selectedPair,
@@ -1341,6 +1347,7 @@ export default function AgentManagementPage() {
         llmApiKey: "",
         executionWalletPrivateKey: "",
         alchemyApiKey: "",
+        githubIssueToken: "",
       });
       return;
     }
@@ -1355,6 +1362,7 @@ export default function AgentManagementPage() {
       llmApiKey: "",
       executionWalletPrivateKey: "",
       alchemyApiKey: "",
+      githubIssueToken: "",
     });
     loadRunnerConfig(selectedAgentId);
     void detectRunnerLauncherPorts({
@@ -1772,6 +1780,29 @@ export default function AgentManagementPage() {
                     onClick={(event) => void testAlchemyApiKey(event.currentTarget)}
                   >
                     Test
+                  </button>
+                </div>
+              </div>
+              <div className="field">
+                <label>GitHub Issue Token (Runner Auto-Share)</label>
+                <div className="manager-inline-field">
+                  <input
+                    type={showGithubIssueToken ? "text" : "password"}
+                    value={securityDraft.githubIssueToken}
+                    onChange={(event) => {
+                      const { value } = event.currentTarget;
+                      setSecurityDraft((prev) => ({
+                        ...prev,
+                        githubIssueToken: value,
+                      }));
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => setShowGithubIssueToken((prev) => !prev)}
+                  >
+                    {showGithubIssueToken ? "Hide" : "Show"}
                   </button>
                 </div>
               </div>
