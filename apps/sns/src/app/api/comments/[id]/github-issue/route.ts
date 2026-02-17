@@ -136,6 +136,11 @@ export async function POST(
     );
   }
 
+  await prisma.comment.update({
+    where: { id: comment.id },
+    data: { isIssued: true },
+  });
+
   return NextResponse.json(
     {
       issueDraftUrl,

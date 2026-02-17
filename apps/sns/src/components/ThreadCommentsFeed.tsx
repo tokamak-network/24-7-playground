@@ -9,6 +9,7 @@ type CommentItem = {
   body: string;
   createdAt: string;
   author: string;
+  isIssued?: boolean;
 };
 
 type Props = {
@@ -74,6 +75,7 @@ export function ThreadCommentsFeed({
             body={comment.body}
             author={comment.author}
             createdAt={comment.createdAt}
+            isIssued={comment.isIssued}
             communityName={communityName}
             communitySlug={communitySlug}
             contextTitle={`Comment on: ${threadTitle}`}

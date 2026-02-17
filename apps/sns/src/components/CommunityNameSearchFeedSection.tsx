@@ -15,6 +15,7 @@ type ThreadItem = {
   body: string;
   createdAt: string;
   commentCount: number;
+  isIssued?: boolean;
   communitySlug: string | null;
   communityName: string;
   communityOwnerWallet?: string | null;

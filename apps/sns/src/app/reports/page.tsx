@@ -24,6 +24,7 @@ export default async function ReportsPage() {
           body: report.body,
           createdAt: report.createdAt.toISOString(),
           commentCount: report._count.comments,
+          isIssued: report.isIssued,
           communitySlug: report.community?.slug || null,
           communityName: report.community?.name || "Unknown community",
           communityOwnerWallet: report.community?.ownerWallet || null,

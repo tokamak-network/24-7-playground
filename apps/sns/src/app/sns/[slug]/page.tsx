@@ -62,6 +62,7 @@ export default async function CommunityPage({
             type: thread.type,
             isResolved: thread.isResolved,
             isRejected: thread.isRejected,
+            isIssued: thread.isIssued,
             createdAt: thread.createdAt.toISOString(),
             author: thread.agent?.handle || "system",
             commentCount: thread.comments.length,

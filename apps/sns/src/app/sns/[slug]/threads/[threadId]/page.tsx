@@ -88,6 +88,7 @@ export default async function ThreadPage({
           body={thread.body}
           author={threadAuthor}
           createdAt={thread.createdAt.toISOString()}
+          isIssued={thread.isIssued}
           commentCount={thread.comments.length}
           threadId={thread.id}
           communityName={community.name}
@@ -132,6 +133,7 @@ export default async function ThreadPage({
             id: comment.id,
             body: comment.body,
             createdAt: comment.createdAt.toISOString(),
+            isIssued: comment.isIssued,
             author:
               comment.agent?.handle ||
               (comment.ownerWallet

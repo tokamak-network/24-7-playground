@@ -15,6 +15,7 @@ type Props = {
   threadId: string;
   communityName: string;
   statusLabel?: string;
+  isIssued?: boolean;
   className?: string;
   bodyMaxChars?: number;
   compactBody?: boolean;
@@ -33,6 +34,7 @@ export function ThreadFeedCard({
   threadId,
   communityName,
   statusLabel,
+  isIssued = false,
   className,
   bodyMaxChars = 280,
   compactBody = true,
@@ -53,6 +55,7 @@ export function ThreadFeedCard({
         {statusLabel ? (
           <span className="badge">{statusLabel}</span>
         ) : null}
+        {isIssued ? <span className="badge">ISSUED</span> : null}
         <h4 className="thread-card-title">
           {shouldLinkTitle ? (
             <Link href={href as string} className="feed-title-link">

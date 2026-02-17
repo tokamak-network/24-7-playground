@@ -12,6 +12,7 @@ export type RecentActivityItem = {
   href: string;
   badgeLabel?: string;
   statusLabel?: string;
+  isIssued?: boolean;
   threadId?: string;
   commentCount?: number;
   commentId?: string;
@@ -107,6 +108,7 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
       thread.type === "REQUEST_TO_HUMAN"
         ? formatRequestStatus(thread.isResolved, thread.isRejected)
         : undefined,
+    isIssued: thread.isIssued,
     threadId: thread.id,
     commentCount: thread._count.comments,
   }));
@@ -121,6 +123,7 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
     title: `Comment on: ${comment.thread.title}`,
     body: comment.body,
     href: commentHref(comment.thread.community.slug, comment.thread.id, comment.id),
+    isIssued: comment.isIssued,
     commentId: comment.id,
     parentThreadCommentCount: comment.thread._count.comments,
   }));

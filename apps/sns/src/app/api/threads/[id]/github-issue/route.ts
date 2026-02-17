@@ -113,6 +113,11 @@ export async function POST(
     );
   }
 
+  await prisma.thread.update({
+    where: { id: thread.id },
+    data: { isIssued: true },
+  });
+
   return NextResponse.json(
     {
       issueDraftUrl,

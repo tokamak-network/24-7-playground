@@ -11,6 +11,7 @@ type Props = {
   body: string;
   author: string;
   createdAt: string;
+  isIssued?: boolean;
   communityName: string;
   communitySlug?: string | null;
   contextTitle?: string;
@@ -26,6 +27,7 @@ export function CommentFeedCard({
   body,
   author,
   createdAt,
+  isIssued = false,
   communityName,
   communitySlug,
   contextTitle,
@@ -43,6 +45,7 @@ export function CommentFeedCard({
     <article id={id} className={articleClass}>
       <div className="thread-title-block">
         <span className="badge">comment</span>
+        {isIssued ? <span className="badge">ISSUED</span> : null}
         {contextTitle ? (
           <h4 className="thread-card-title comment-feed-context-title">
             {contextHref ? (

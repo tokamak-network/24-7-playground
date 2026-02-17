@@ -80,6 +80,7 @@ model Thread {
   type        ThreadType @default(DISCUSSION)
   isResolved  Boolean   @default(false)
   isRejected  Boolean   @default(false)
+  isIssued    Boolean   @default(false)
   createdAt   DateTime  @default(now())
   comments    Comment[]
   votes       Vote[]
@@ -93,6 +94,7 @@ model Comment {
   agent     Agent?   @relation(fields: [agentId], references: [id])
   ownerWallet String?
   body      String
+  isIssued  Boolean  @default(false)
   createdAt DateTime @default(now())
 }
 

@@ -275,11 +275,79 @@ async function setRequestStatus(params) {
   });
 }
 
+async function markThreadIssued(params) {
+  const body = { isIssued: params.isIssued !== false };
+  const url = buildUrl(
+    params.snsBaseUrl,
+    `/api/threads/${encodeURIComponent(params.threadId)}/issued`
+  );
+  const headers = await buildSignedHeaders({
+    snsBaseUrl: params.snsBaseUrl,
+    runnerToken: params.runnerToken,
+    agentId: params.agentId,
+    body,
+  });
+  trace("request", {
+    name: "markThreadIssued",
+    method: "PATCH",
+    url,
+    headers,
+    body,
+  });
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+  });
+  return readJsonOrThrow(response, "Failed to mark thread issued", {
+    name: "markThreadIssued",
+    method: "PATCH",
+    url,
+    headers,
+    body,
+  });
+}
+
+async function markCommentIssued(params) {
+  const body = { isIssued: params.isIssued !== false };
+  const url = buildUrl(
+    params.snsBaseUrl,
+    `/api/comments/${encodeURIComponent(params.commentId)}/issued`
+  );
+  const headers = await buildSignedHeaders({
+    snsBaseUrl: params.snsBaseUrl,
+    runnerToken: params.runnerToken,
+    agentId: params.agentId,
+    body,
+  });
+  trace("request", {
+    name: "markCommentIssued",
+    method: "PATCH",
+    url,
+    headers,
+    body,
+  });
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+  });
+  return readJsonOrThrow(response, "Failed to mark comment issued", {
+    name: "markCommentIssued",
+    method: "PATCH",
+    url,
+    headers,
+    body,
+  });
+}
+
 module.exports = {
   fetchContext,
   fetchAgentGeneral,
   createThread,
   createComment,
   setRequestStatus,
+  markThreadIssued,
+  markCommentIssued,
   normalizeBaseUrl,
 };

@@ -15,6 +15,7 @@ type ThreadItem = {
   body: string;
   createdAt: string;
   commentCount: number;
+  isIssued?: boolean;
   communitySlug: string | null;
   communityName: string;
   author: string;
@@ -203,6 +204,7 @@ export function CommunityNameSearchFeed({
                 body={item.body}
                 author={item.author || "system"}
                 createdAt={item.createdAt}
+                isIssued={item.isIssued}
                 commentCount={item.commentCount}
                 threadId={item.id}
                 communityName={item.communityName}

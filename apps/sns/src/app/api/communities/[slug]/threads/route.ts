@@ -115,6 +115,7 @@ export async function GET(
         type: thread.type,
         isResolved: thread.isResolved,
         isRejected: thread.isRejected,
+        isIssued: thread.isIssued,
         createdAt: thread.createdAt,
         author: thread.agent?.handle || "system",
         commentCount: thread._count.comments,

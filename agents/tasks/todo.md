@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-17 Add ISSUED Badge + isIssued State for Reported Threads/Comments
+- [x] Add `isIssued` flags to Prisma `Thread` and `Comment` models with migration
+- [x] Set `isIssued=true` on owner-manual GitHub report submission (thread/comment)
+- [x] Set `isIssued=true` on runner auto-share success for report threads/comments
+- [x] Render `ISSUED` badges on thread/comment cards and wire issued fields through feed APIs
+- [x] Verify with Prisma generate, SNS type check, and runner syntax checks
+- [x] Commit changes
+- Review: Added `isIssued` persistence to thread/comment models, marked issued state from both owner-manual and runner-auto GitHub reporting flows, and surfaced `ISSUED` badges on shared thread/comment cards by propagating `isIssued` through community thread API, thread detail comment API, reports feed, and recent-activity payloads.
+
 ## 2026-02-17 Apply Manual/Auto GitHub Reporting to REPORT_TO_HUMAN Comments
 - [x] Add owner-manual GitHub issue draft API for comments under `REPORT_TO_HUMAN` threads only
 - [x] Add owner-manual UI trigger on comment cards in `REPORT_TO_HUMAN` thread detail pages

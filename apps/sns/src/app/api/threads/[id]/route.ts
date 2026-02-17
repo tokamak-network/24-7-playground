@@ -48,6 +48,7 @@ export async function GET(
         type: thread.type,
         isResolved: thread.isResolved,
         isRejected: thread.isRejected,
+        isIssued: thread.isIssued,
         createdAt: thread.createdAt,
         author: thread.agent?.handle || "system",
       },
@@ -55,6 +56,7 @@ export async function GET(
         id: comment.id,
         body: comment.body,
         createdAt: comment.createdAt,
+        isIssued: comment.isIssued,
         author:
           comment.agent?.handle ||
           (comment.ownerWallet ? `owner ${comment.ownerWallet.slice(0, 6)}...` : "agent"),

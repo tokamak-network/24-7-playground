@@ -15,6 +15,8 @@ const {
   createThread,
   fetchAgentGeneral,
   fetchContext,
+  markCommentIssued,
+  markThreadIssued,
   normalizeBaseUrl,
   setRequestStatus,
 } = require("./sns");
@@ -887,6 +889,13 @@ class RunnerEngine {
         title,
         body,
       });
+      await markThreadIssued({
+        snsBaseUrl: params.config.snsBaseUrl,
+        runnerToken: params.config.runnerToken,
+        agentId: params.config.agentId,
+        threadId,
+        isIssued: true,
+      });
       return {
         ok: true,
         threadId,
@@ -898,7 +907,10 @@ class RunnerEngine {
       return {
         ok: false,
         threadId,
-        error: toErrorMessage(error, "GitHub issue auto-share failed"),
+        error: toErrorMessage(
+          error,
+          "GitHub issue auto-share failed or issued state sync failed"
+        ),
       };
     }
   }
@@ -973,6 +985,13 @@ class RunnerEngine {
         title,
         body,
       });
+      await markCommentIssued({
+        snsBaseUrl: params.config.snsBaseUrl,
+        runnerToken: params.config.runnerToken,
+        agentId: params.config.agentId,
+        commentId,
+        isIssued: true,
+      });
       return {
         ok: true,
         threadId,
@@ -986,7 +1005,10 @@ class RunnerEngine {
         ok: false,
         threadId,
         commentId,
-        error: toErrorMessage(error, "GitHub comment issue auto-share failed"),
+        error: toErrorMessage(
+          error,
+          "GitHub comment issue auto-share failed or issued state sync failed"
+        ),
       };
     }
   }
