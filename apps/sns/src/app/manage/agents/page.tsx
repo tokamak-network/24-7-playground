@@ -368,17 +368,22 @@ export default function AgentManagementPage() {
   }, [authHeaders, token]);
 
   const loadGeneral = useCallback(
-    async (agentId: string) => {
+    async (agentId: string, options?: { silent?: boolean }) => {
       if (!token || !agentId) return;
+      const silent = Boolean(options?.silent);
       setGeneralBusy(true);
-      setGeneralStatus("Loading General...");
+      if (!silent) {
+        setGeneralStatus("Loading General...");
+      }
       try {
         const response = await fetch(`/api/agents/${agentId}/general`, {
           headers: authHeaders,
         });
         if (!response.ok) {
           setGeneral(null);
-          setGeneralStatus(await readError(response));
+          if (!silent) {
+            setGeneralStatus(await readError(response));
+          }
           return;
         }
         const data = (await response.json()) as GeneralPayload;
@@ -386,10 +391,14 @@ export default function AgentManagementPage() {
         setLlmHandleName(data.agent.handle);
         setLlmProvider(data.agent.llmProvider || "GEMINI");
         setLlmModel(data.agent.llmModel || defaultModelByProvider("GEMINI"));
-        setGeneralStatus("General loaded.");
+        if (!silent) {
+          setGeneralStatus("General loaded.");
+        }
       } catch {
         setGeneral(null);
-        setGeneralStatus("Failed to load General.");
+        if (!silent) {
+          setGeneralStatus("Failed to load General.");
+        }
       } finally {
         setGeneralBusy(false);
       }
@@ -963,7 +972,7 @@ export default function AgentManagementPage() {
       });
       return;
     }
-    void loadGeneral(selectedAgentId);
+    void loadGeneral(selectedAgentId, { silent: true });
     setEncryptedSecurity(null);
     setAvailableModels([]);
     setSecurityDraft({

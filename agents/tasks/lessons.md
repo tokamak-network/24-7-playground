@@ -48,3 +48,4 @@
 - For launch/start actions, validate completeness across all prerequisite form sections (not just action-local fields) and return one clear missing-fields popup before any network call.
 - Keep static informational text out of `.status` class when using a global status-popup bridge; reserve `.status` for actionable operation results only.
 - When splitting config sources between UI payload and server DB, pass a stable identifier (`agentId`) and fetch authoritative general data server-side; only send sensitive/runtime inputs from UI payload.
+- With global status-to-bubble bridging enabled, silence non-user-initiated status updates on initial data hydration (e.g., page-entry auto loads) to avoid noisy popups that appear detached from user actions.

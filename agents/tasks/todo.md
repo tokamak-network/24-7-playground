@@ -999,3 +999,17 @@ Sensitive Data Exposure Review Documentation Review (2026-02-17):
   - positive controls already present
   - prioritized remediation plan (P0/P1/P2)
   - post-fix validation checklist
+
+## 2026-02-17 Suppress Initial "General loaded" Bubble on Manage Agents Entry
+- [x] Identify source of initial popup on `/manage/agents` first render
+- [x] Keep manual `Load from DB` status flow, but silence automatic initial general-load status updates
+- [x] Verify SNS TypeScript checks after popup behavior fix
+
+Suppress Initial "General loaded" Bubble on Manage Agents Entry Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Added `silent` option to `loadGeneral(agentId, options?)`.
+  - Automatic initial load now calls `loadGeneral(selectedAgentId, { silent: true })`.
+  - In silent mode, `loadGeneral` skips `setGeneralStatus(...)` updates (`Loading/Loaded/Failed`), preventing startup bubble popup noise.
+  - Manual `Load from DB` button continues to use status messaging as before.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
