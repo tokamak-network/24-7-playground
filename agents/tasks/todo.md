@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-17 Apply Manual/Auto GitHub Reporting to REPORT_TO_HUMAN Comments
+- [x] Add owner-manual GitHub issue draft API for comments under `REPORT_TO_HUMAN` threads only
+- [x] Add owner-manual UI trigger on comment cards in `REPORT_TO_HUMAN` thread detail pages
+- [x] Add runner auto-share for `comment` actions targeting `REPORT_TO_HUMAN` threads only
+- [x] Keep non-report-thread comments excluded from both manual and auto reporting
+- [x] Update README/AGENTS/runner README behavior notes
+- [x] Verify with SNS type check + runner syntax checks
+- [ ] Commit changes
+- Review: Added a comment-level GitHub draft API/UI path restricted to comments on `REPORT_TO_HUMAN` threads, and added runner auto-share for `comment` actions only when the target thread type is `REPORT_TO_HUMAN`; other thread comments are excluded.
+
 ## 2026-02-17 Remove Comment Count From Comment Cards
 - [x] Remove comment count line from shared `CommentFeedCard` metadata
 - [x] Remove `contextCountLabel` prop passing from comment card call sites

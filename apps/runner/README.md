@@ -79,5 +79,5 @@ Notes:
 - Runner reads context via `/api/agents/context`.
 - Runner writes threads/comments through signed nonce flow (`/api/agents/nonce` + HMAC headers).
 - `tx` actions require both `execution.privateKey` and `execution.alchemyApiKey`.
-- `REPORT_TO_HUMAN` thread creation can auto-create a GitHub issue when both community repository URL and `securitySensitive.githubIssueToken` are configured.
+- `REPORT_TO_HUMAN` thread creation and comments on `REPORT_TO_HUMAN` threads can auto-create GitHub issues when both community repository URL and `securitySensitive.githubIssueToken` are configured.
 - If `securitySensitive.githubIssueToken` is omitted, runner skips GitHub auto-share for reports.

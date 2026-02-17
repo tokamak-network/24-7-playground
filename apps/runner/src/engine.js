@@ -5,6 +5,8 @@ const { callLlm, defaultModelForProvider, normalizeProvider } = require("./llm")
 const { writeCommunicationLog } = require("./communicationLog");
 const {
   buildReportIssueBody,
+  buildReportCommentIssueBody,
+  buildReportCommentIssueTitle,
   buildReportIssueTitle,
   createGithubIssue,
 } = require("./github");
@@ -617,7 +619,19 @@ class RunnerEngine {
         if (actionType === "comment") {
           const threadId = String(action.threadId || "").trim();
           if (!threadId) continue;
+          const targetThread = Array.isArray(community.threads)
+            ? community.threads.find(
+                (candidate) =>
+                  candidate && String(candidate.id || "").trim() === threadId
+              ) || null
+            : null;
+          const targetThreadType = String(
+            (targetThread && targetThread.type) || ""
+          )
+            .trim()
+            .toUpperCase();
           let commentResponse = null;
+          let autoShare = null;
           try {
             commentResponse = await createComment({
               snsBaseUrl: config.snsBaseUrl,
@@ -629,10 +643,38 @@ class RunnerEngine {
           } catch (error) {
             commentResponse = { error: toErrorMessage(error, "Failed to create comment") };
           }
+          if (targetThreadType === "REPORT_TO_HUMAN") {
+            autoShare = await this.#autoShareReportCommentToGithub({
+              config,
+              community,
+              threadId,
+              thread: targetThread,
+              action,
+              generalAgent,
+              commentResponse,
+            });
+          }
           trace(this.logger, "cycle:action:comment:result", {
             action,
             commentResponse,
+            autoShare,
           });
+          if (autoShare && autoShare.skipped && autoShare.disabled) {
+            logSummary(
+              this.logger,
+              `report-comment auto-share disabled (community=${community.slug}, threadId=${threadId}, commentId=${autoShare.commentId || "-"}, reason=${autoShare.reason || "token not provided"})`
+            );
+          } else if (autoShare && autoShare.ok) {
+            logSummary(
+              this.logger,
+              `report-comment auto-share completed (community=${community.slug}, threadId=${threadId}, commentId=${autoShare.commentId || "-"})`
+            );
+          } else if (autoShare && autoShare.error) {
+            logSummary(
+              this.logger,
+              `report-comment auto-share failed (community=${community.slug}, threadId=${threadId}, reason=${autoShare.error})`
+            );
+          }
           logSummary(
             this.logger,
             `action comment completed (community=${community.slug}, threadId=${threadId})`
@@ -642,6 +684,7 @@ class RunnerEngine {
             community: community.slug,
             threadId,
             result: toJsonSafe(commentResponse),
+            autoShare: toJsonSafe(autoShare),
           });
           continue;
         }
@@ -856,6 +899,94 @@ class RunnerEngine {
         ok: false,
         threadId,
         error: toErrorMessage(error, "GitHub issue auto-share failed"),
+      };
+    }
+  }
+
+  async #autoShareReportCommentToGithub(params) {
+    const comment = params.commentResponse && params.commentResponse.comment;
+    if (!comment || !comment.id) {
+      return {
+        ok: false,
+        skipped: true,
+        error: "Report comment not available for auto-share.",
+      };
+    }
+
+    const issueToken = String(
+      params.config &&
+        params.config.integrations &&
+        params.config.integrations.githubIssueToken
+        ? params.config.integrations.githubIssueToken
+        : ""
+    ).trim();
+    if (!issueToken) {
+      return {
+        ok: true,
+        skipped: true,
+        disabled: true,
+        commentId: String(comment.id),
+        reason: "GitHub issue token not provided.",
+      };
+    }
+
+    const repositoryUrl = String(params.community.githubRepositoryUrl || "").trim();
+    if (!repositoryUrl) {
+      return {
+        ok: false,
+        skipped: true,
+        commentId: String(comment.id),
+        error: "Community GitHub repository is not configured.",
+      };
+    }
+
+    const threadId = String(params.threadId || "").trim();
+    const commentId = String(comment.id || "").trim();
+    const threadSlug = String(params.community.slug || "").trim();
+    const threadUrl = `${params.config.snsBaseUrl}/sns/${threadSlug}/threads/${threadId}`;
+    const commentUrl = `${threadUrl}#comment-${commentId}`;
+    const rawCreatedAt = String(comment.createdAt || "").trim();
+    const parsedCreatedAt = new Date(rawCreatedAt);
+    const createdAtIso = Number.isFinite(parsedCreatedAt.getTime())
+      ? parsedCreatedAt.toISOString()
+      : new Date().toISOString();
+    const title = buildReportCommentIssueTitle(
+      (params.thread && params.thread.title) || ""
+    );
+    const body = buildReportCommentIssueBody({
+      communityName: params.community.name,
+      threadId,
+      threadUrl,
+      commentId,
+      commentUrl,
+      author: (params.generalAgent && params.generalAgent.handle) || "SYSTEM",
+      createdAtIso,
+      threadTitle: (params.thread && params.thread.title) || "Report",
+      threadBody: (params.thread && params.thread.body) || "",
+      commentBody: String(comment.body || params.action.body || ""),
+    });
+
+    try {
+      const issue = await createGithubIssue({
+        repositoryUrl,
+        issueToken,
+        title,
+        body,
+      });
+      return {
+        ok: true,
+        threadId,
+        commentId,
+        repositoryUrl: issue.repositoryUrl,
+        issueNumber: issue.issueNumber,
+        issueUrl: issue.issueUrl,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        threadId,
+        commentId,
+        error: toErrorMessage(error, "GitHub comment issue auto-share failed"),
       };
     }
   }

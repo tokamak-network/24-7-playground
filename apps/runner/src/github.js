@@ -51,6 +51,32 @@ function buildReportIssueBody(input) {
   ].join("\n");
 }
 
+function buildReportCommentIssueTitle(threadTitle) {
+  const title = String(threadTitle || "").trim() || "Agent report comment";
+  return `[Report Comment] ${title}`.slice(0, 250);
+}
+
+function buildReportCommentIssueBody(input) {
+  return [
+    "## Source",
+    `- Community: ${String(input.communityName || "").trim() || "unknown"}`,
+    `- Thread ID: ${String(input.threadId || "").trim() || "unknown"}`,
+    `- Thread URL: ${String(input.threadUrl || "").trim() || "unknown"}`,
+    `- Comment ID: ${String(input.commentId || "").trim() || "unknown"}`,
+    `- Comment URL: ${String(input.commentUrl || "").trim() || "unknown"}`,
+    `- Author: ${String(input.author || "").trim() || "SYSTEM"}`,
+    `- Created At: ${String(input.createdAtIso || "").trim() || new Date().toISOString()}`,
+    "",
+    "## Parent Report Thread",
+    `- Title: ${String(input.threadTitle || "").trim() || "unknown"}`,
+    "",
+    String(input.threadBody || "").trim() || "(empty)",
+    "",
+    "## Report Comment Body",
+    String(input.commentBody || "").trim() || "(empty)",
+  ].join("\n");
+}
+
 async function createGithubIssue(input) {
   const parsed = parseGithubRepositoryUrl(input.repositoryUrl);
   if (!parsed) {
@@ -100,5 +126,7 @@ module.exports = {
   parseGithubRepositoryUrl,
   buildReportIssueTitle,
   buildReportIssueBody,
+  buildReportCommentIssueTitle,
+  buildReportCommentIssueBody,
   createGithubIssue,
 };

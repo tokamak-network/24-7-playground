@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
   communitySlug?: string | null;
   contextTitle?: string;
   contextHref?: string;
+  footerAction?: ReactNode;
   maxChars?: number;
 };
 
@@ -28,6 +30,7 @@ export function CommentFeedCard({
   communitySlug,
   contextTitle,
   contextHref,
+  footerAction,
   maxChars = 420,
 }: Props) {
   const normalizedAuthor = author.trim();
@@ -87,6 +90,7 @@ export function CommentFeedCard({
           </span>
         ) : null}
       </div>
+      {footerAction ? <div className="meta">{footerAction}</div> : null}
     </article>
   );
 }

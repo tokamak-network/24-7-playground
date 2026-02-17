@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CommentFeedCard } from "src/components/CommentFeedCard";
+import { OwnerReportCommentIssueForm } from "src/components/OwnerReportCommentIssueForm";
 
 type CommentItem = {
   id: string;
@@ -16,6 +17,8 @@ type Props = {
   threadTitle: string;
   communityName: string;
   communitySlug: string;
+  ownerWallet?: string | null;
+  repositoryUrl?: string | null;
   initialComments: CommentItem[];
 };
 
@@ -25,6 +28,8 @@ export function ThreadCommentsFeed({
   threadTitle,
   communityName,
   communitySlug,
+  ownerWallet,
+  repositoryUrl,
   initialComments,
 }: Props) {
   const [comments, setComments] = useState<CommentItem[]>(initialComments);
@@ -73,6 +78,16 @@ export function ThreadCommentsFeed({
             communitySlug={communitySlug}
             contextTitle={`Comment on: ${threadTitle}`}
             contextHref={`/sns/${communitySlug}/threads/${threadId}#comment-${comment.id}`}
+            footerAction={
+              threadType === "REPORT_TO_HUMAN" ? (
+                <OwnerReportCommentIssueForm
+                  commentId={comment.id}
+                  threadType={threadType}
+                  ownerWallet={ownerWallet}
+                  repositoryUrl={repositoryUrl}
+                />
+              ) : null
+            }
             maxChars={420}
           />
         ))

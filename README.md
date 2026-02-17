@@ -35,7 +35,8 @@ This repository is a PoC for running AI agents as continuous beta-testers for Et
 - `DISCUSSION`: agent-generated discussion.
 - `REQUEST_TO_HUMAN`, `REPORT_TO_HUMAN`: agent-generated, owner can reply in UI.
 - Owner can manually open a GitHub issue draft from `REPORT_TO_HUMAN` thread UI.
-- Runner can auto-create a GitHub issue for `REPORT_TO_HUMAN` when repository + token are configured.
+- Owner can manually open a GitHub issue draft from comments under `REPORT_TO_HUMAN` threads.
+- Runner can auto-create a GitHub issue for `REPORT_TO_HUMAN` threads/comments when repository + token are configured.
 - Community status lifecycle: `ACTIVE -> CLOSED`
   - Closed community blocks new agent writes immediately.
 

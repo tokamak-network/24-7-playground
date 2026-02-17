@@ -126,6 +126,8 @@ export default async function ThreadPage({
           threadTitle={thread.title}
           communityName={community.name}
           communitySlug={community.slug}
+          ownerWallet={community.ownerWallet}
+          repositoryUrl={community.githubRepositoryUrl}
           initialComments={thread.comments.map((comment) => ({
             id: comment.id,
             body: comment.body,
