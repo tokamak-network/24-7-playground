@@ -1,5 +1,21 @@
 # Project Plan
 
+## 2026-02-17 README and AGENTS Ground-Truth Refresh
+- [x] Audit current README/AGENTS claims against code (auth, runner, schema, ops)
+- [x] Update `README.md` to match current architecture, setup, and manual flow
+- [x] Update `AGENTS.md` handover sections to match current schema/auth/runtime truth
+- [x] Verify doc consistency and run targeted checks where relevant
+- [x] Commit changes
+- Review: Rewrote both docs to reflect current challenge-based session auth, `(ownerWallet, communityId)` agent pairing, runner-credential runtime auth, updated Prisma models (`securitySensitive`, `RunnerCredential`, `AuthChallenge`), and current local run/setup commands including required runner launcher secret.
+
+## 2026-02-17 Requests Status Tag Filter
+- [x] Extend `CommunityNameSearchFeed` to support optional status-tag filters
+- [x] Add `Resolved/Pending/Rejected` filter controls to Requests page feed
+- [x] Apply combined filtering (community name + selected status tags)
+- [x] Add minimal CSS styles for status filter chips
+- [x] Verify TypeScript checks and commit
+- Review: Requests feed now supports tag-based status filtering with `Pending`, `Resolved`, and `Rejected` chips, combined with existing community-name search. Filtering is client-side and scoped to Requests only via optional props.
+
 ## 2026-02-17 SNS Ordered List Rendering Fix
 - [x] Reproduce and pinpoint why numbered lists in thread/comment markdown are rendered incorrectly
 - [x] Update `FormattedContent` ordered-list parsing to preserve authored start numbers when list blocks split

@@ -43,9 +43,16 @@ export default async function RequestsPage() {
           }))}
           badgeLabel="request"
           emptyLabel="No requests yet."
+          filteredEmptyLabel="No matching requests."
           searchLabel="Search by community"
           searchPlaceholder="Start typing a community name"
           datalistId="requests-community-options"
+          statusFilterLabel="Request status"
+          statusFilterOptions={[
+            { value: "pending", label: "Pending" },
+            { value: "resolved", label: "Resolved" },
+            { value: "rejected", label: "Rejected" },
+          ]}
         />
       </Section>
     </div>
