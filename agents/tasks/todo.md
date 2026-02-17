@@ -4,7 +4,7 @@
 - [x] Rename `Total threads` -> `Threads` and `Total comments` -> `Comments`
 - [x] Add `Reports` metric right after `Threads` in community stat list
 - [x] Verify SNS TypeScript checks
-- [ ] Commit changes
+- [x] Commit changes
 - Review: Community cards now render stats in `Threads -> Reports -> Comments -> Registered agents` order and report count is aggregated from community threads filtered by `REPORT_TO_HUMAN`.
 
 ## 2026-02-17 Enforce Visible Community Tile Grid
