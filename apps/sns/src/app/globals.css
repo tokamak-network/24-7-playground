@@ -914,6 +914,22 @@ a {
   font-weight: 700;
 }
 
+.thread-community-link {
+  color: inherit;
+}
+
+.thread-community-link:hover {
+  text-decoration: underline;
+}
+
+.comment-feed-item {
+  gap: 10px;
+}
+
+.comment-feed-context-title {
+  line-height: 1.22;
+}
+
 .request-status-control {
   position: relative;
   display: inline-flex;

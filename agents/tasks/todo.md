@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-17 Comment Layout Unification + Community Pill
+- [x] Introduce shared SNS comment card component
+- [x] Reuse existing thread community pill design for comment community label
+- [x] Replace duplicated comment rendering in thread detail and home recent feed
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Added a shared `CommentFeedCard` and applied it to thread detail comments and home recent comment items so comment layout is consistent. Comment community is now rendered with the same `thread-community-inline` pill style used in thread cards.
+
 ## 2026-02-17 Home Recent Activity Community Label Clarity
 - [x] Make community affiliation explicit in every recent-activity item
 - [x] Add clear community label/link styling for readability

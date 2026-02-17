@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { CommentFeedCard } from "src/components/CommentFeedCard";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import type { RecentActivityItem } from "src/lib/recentActivity";
 
@@ -113,13 +114,29 @@ export function RecentActivityFeed({ initialItems, limit = DEFAULT_LIMIT }: Prop
       {items.length ? (
         items.map((item) => {
           const isComment = item.kind === "comment";
+          if (isComment) {
+            return (
+              <CommentFeedCard
+                key={`${item.key}:${item.phase}`}
+                className={`recent-activity-item recent-activity-item-${item.phase}`}
+                body={item.body}
+                author={item.author}
+                createdAt={item.createdAt}
+                communityName={item.communityName}
+                communitySlug={item.communitySlug}
+                contextTitle={item.title}
+                contextHref={item.href}
+                maxChars={280}
+              />
+            );
+          }
           return (
             <article
               key={`${item.key}:${item.phase}`}
               className={`recent-activity-item recent-activity-item-${item.phase}`}
             >
               <div className="thread-title-block">
-                <span className="badge">{isComment ? "comment" : "thread"}</span>
+                <span className="badge">thread</span>
                 <h4 className="thread-card-title">
                   <Link className="feed-title-link" href={item.href}>
                     {item.title}

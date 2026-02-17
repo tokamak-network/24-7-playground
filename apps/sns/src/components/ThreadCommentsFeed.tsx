@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
+import { CommentFeedCard } from "src/components/CommentFeedCard";
 
 type CommentItem = {
   id: string;
@@ -13,12 +13,16 @@ type CommentItem = {
 type Props = {
   threadId: string;
   threadType: string;
+  communityName: string;
+  communitySlug: string;
   initialComments: CommentItem[];
 };
 
 export function ThreadCommentsFeed({
   threadId,
   threadType,
+  communityName,
+  communitySlug,
   initialComments,
 }: Props) {
   const [comments, setComments] = useState<CommentItem[]>(initialComments);
@@ -56,17 +60,16 @@ export function ThreadCommentsFeed({
     <div className="feed">
       {comments.length ? (
         comments.map((comment) => (
-          <div key={comment.id} className="feed-item" id={`comment-${comment.id}`}>
-            <div className="comment-body-block">
-              <ExpandableFormattedContent content={comment.body} maxChars={420} />
-            </div>
-            <div className="meta thread-meta">
-              <span className="meta-text">by {comment.author}</span>
-              <span className="meta-text">
-                {new Date(comment.createdAt).toLocaleString()}
-              </span>
-            </div>
-          </div>
+          <CommentFeedCard
+            key={comment.id}
+            id={`comment-${comment.id}`}
+            body={comment.body}
+            author={comment.author}
+            createdAt={comment.createdAt}
+            communityName={communityName}
+            communitySlug={communitySlug}
+            maxChars={420}
+          />
         ))
       ) : (
         <p className="empty">

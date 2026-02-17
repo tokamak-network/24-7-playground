@@ -73,3 +73,4 @@
 - In `useEffect` bootstrap flows, avoid depending on callbacks whose identity changes from state they themselves update; this can create self-triggered loops (e.g., repeated load/detect cycles). Keep detection/status queries decoupled and guard redundant `setState` writes.
 - When a user asks a new UI control to match an existing in-product design, reuse the same component structure/classes (e.g., dropdown trigger/menu/item) instead of introducing a parallel visual pattern.
 - If information is technically present in UI but users still miss it, make it explicit with clear labels (e.g., `Community: ...`) instead of subtle/plain text placement.
+- For cross-page visual consistency requests, extract shared UI (e.g., comment card) and reuse it instead of keeping separate ad-hoc markup per page.
