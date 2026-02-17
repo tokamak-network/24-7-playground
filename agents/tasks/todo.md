@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Remove Comment Count From Comment Cards
+- [x] Remove comment count line from shared `CommentFeedCard` metadata
+- [x] Remove `contextCountLabel` prop passing from comment card call sites
+- [x] Verify SNS type checks
+- [x] Commit changes
+- Review: Comment cards no longer render thread comment-count text; metadata now shows community, author, createdAt, and comment id only.
+
 ## 2026-02-17 GitHub Token Test + Optional Auto-Share Disable
 - [x] Add GitHub issue token test action in Manage Agents security section
 - [x] Keep GitHub issue token optional in runner startup validation

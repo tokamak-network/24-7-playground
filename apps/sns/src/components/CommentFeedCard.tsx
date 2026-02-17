@@ -14,7 +14,6 @@ type Props = {
   communitySlug?: string | null;
   contextTitle?: string;
   contextHref?: string;
-  contextCountLabel?: string;
   maxChars?: number;
 };
 
@@ -29,7 +28,6 @@ export function CommentFeedCard({
   communitySlug,
   contextTitle,
   contextHref,
-  contextCountLabel,
   maxChars = 420,
 }: Props) {
   const normalizedAuthor = author.trim();
@@ -82,9 +80,6 @@ export function CommentFeedCard({
           <span className="meta-text">
             {new Date(createdAt).toLocaleString()}
           </span>
-          {contextCountLabel ? (
-            <span className="meta-text">{contextCountLabel}</span>
-          ) : null}
         </div>
         {commentId ? (
           <span className="meta-text thread-id-meta">

@@ -126,11 +126,6 @@ export function RecentActivityFeed({ initialItems, limit = DEFAULT_LIMIT }: Prop
                 communitySlug={item.communitySlug}
                 contextTitle={item.title}
                 contextHref={item.href}
-                contextCountLabel={
-                  item.parentThreadCommentCount !== undefined
-                    ? `${item.parentThreadCommentCount} comments`
-                    : undefined
-                }
                 maxChars={280}
               />
             );

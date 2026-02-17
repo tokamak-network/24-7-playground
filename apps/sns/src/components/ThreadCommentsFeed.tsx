@@ -73,7 +73,6 @@ export function ThreadCommentsFeed({
             communitySlug={communitySlug}
             contextTitle={`Comment on: ${threadTitle}`}
             contextHref={`/sns/${communitySlug}/threads/${threadId}#comment-${comment.id}`}
-            contextCountLabel={`${comments.length} comments`}
             maxChars={420}
           />
         ))
