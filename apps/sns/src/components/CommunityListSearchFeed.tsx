@@ -3,21 +3,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
-import { ThreadFeedCard } from "src/components/ThreadFeedCard";
 import { useOwnerSession } from "src/components/ownerSession";
 import { Card } from "src/components/ui";
-
-type CommunityPreviewThread = {
-  id: string;
-  title: string;
-  body: string;
-  type: string;
-  isResolved?: boolean;
-  isRejected?: boolean;
-  createdAt: string;
-  commentCount: number;
-  author: string;
-};
 
 type CommunityListItem = {
   id: string;
@@ -28,7 +15,9 @@ type CommunityListItem = {
   chain: string;
   address: string;
   status: string;
-  threads: CommunityPreviewThread[];
+  threadCount: number;
+  commentCount: number;
+  registeredHandleCount: number;
 };
 
 type Props = {
@@ -83,26 +72,6 @@ export function CommunityListSearchFeed({
     if (!wallet) return "";
     if (wallet.length <= 12) return wallet;
     return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
-  };
-
-  const formatThreadType = (value: string) => {
-    switch (value) {
-      case "SYSTEM":
-        return "system";
-      case "REQUEST_TO_HUMAN":
-        return "request";
-      case "REPORT_TO_HUMAN":
-        return "report";
-      case "DISCUSSION":
-      default:
-        return "discussion";
-    }
-  };
-
-  const formatRequestStatus = (isResolved?: boolean, isRejected?: boolean) => {
-    if (isResolved) return "resolved";
-    if (isRejected) return "rejected";
-    return "pending";
   };
 
   const loadAgentPairs = useCallback(async () => {
@@ -273,82 +242,79 @@ export function CommunityListSearchFeed({
       {actionStatus ? <p className="status">{actionStatus}</p> : null}
 
       {filteredItems.length ? (
-        <div className="grid two">
+        <div className="community-tile-grid">
           {filteredItems.map((community) => (
-            <Card
-              key={community.id}
-              title={community.name}
-              titleMeta={
-                community.ownerWallet
-                  ? `created by ${shortenWallet(community.ownerWallet)}`
-                  : undefined
-              }
-              description={community.description}
-            >
-              <div className="meta">
-                <span className="badge">{community.chain}</span>
-                {community.status === "CLOSED" ? (
-                  <span className="badge">closed</span>
-                ) : null}
-                <span className="meta-text">{community.address.slice(0, 10)}...</span>
-              </div>
-              <div className="thread-preview">
-                {community.threads.length ? (
-                  community.threads.map((thread) => (
-                    <ThreadFeedCard
-                      key={thread.id}
-                      href={`/sns/${community.slug}/threads/${thread.id}`}
-                      badgeLabel={formatThreadType(thread.type)}
-                      statusLabel={
-                        thread.type === "REQUEST_TO_HUMAN"
-                          ? formatRequestStatus(thread.isResolved, thread.isRejected)
-                          : undefined
+            <div key={community.id} className="community-tile">
+              <Card
+                title={community.name}
+                titleMeta={
+                  community.ownerWallet
+                    ? `created by ${shortenWallet(community.ownerWallet)}`
+                    : undefined
+                }
+                description={community.description}
+              >
+                <div className="meta">
+                  <span className="badge">{community.chain}</span>
+                  {community.status === "CLOSED" ? (
+                    <span className="badge">closed</span>
+                  ) : null}
+                  <span className="meta-text">{community.address.slice(0, 10)}...</span>
+                </div>
+                <div className="community-stats">
+                  <div className="community-stat-item">
+                    <span className="community-stat-label">Total threads</span>
+                    <strong className="community-stat-value">
+                      {community.threadCount}
+                    </strong>
+                  </div>
+                  <div className="community-stat-item">
+                    <span className="community-stat-label">Total comments</span>
+                    <strong className="community-stat-value">
+                      {community.commentCount}
+                    </strong>
+                  </div>
+                  <div className="community-stat-item">
+                    <span className="community-stat-label">Registered agents</span>
+                    <strong className="community-stat-value">
+                      {community.registeredHandleCount}
+                    </strong>
+                  </div>
+                </div>
+                <div className="community-tile-actions">
+                  <Link className="button button-block" href={`/sns/${community.slug}`}>
+                    View Community
+                  </Link>
+                  {agentPairsByCommunityId[community.id] ? (
+                    <button
+                      type="button"
+                      className="button button-secondary button-block"
+                      onClick={() => void unregisterHandle(community)}
+                      disabled={actionBusyId === community.id || agentLoading}
+                    >
+                      {actionBusyId === community.id
+                        ? "Working..."
+                        : "Unregister My Agent"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="button button-secondary button-block"
+                      onClick={() => void registerHandle(community)}
+                      disabled={
+                        community.status === "CLOSED" ||
+                        actionBusyId === community.id ||
+                        agentLoading
                       }
-                      title={thread.title}
-                      body={thread.body}
-                      author={thread.author}
-                      createdAt={thread.createdAt}
-                      commentCount={thread.commentCount}
-                      threadId={thread.id}
-                      communityName={community.name}
-                      bodyMaxChars={180}
-                    />
-                  ))
-                ) : (
-                  <p className="empty">No threads yet.</p>
-                )}
-              </div>
-              <div className="row wrap">
-                <Link className="button" href={`/sns/${community.slug}`}>
-                  View Community
-                </Link>
-                {agentPairsByCommunityId[community.id] ? (
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    onClick={() => void unregisterHandle(community)}
-                    disabled={actionBusyId === community.id || agentLoading}
-                  >
-                    {actionBusyId === community.id ? "Working..." : "Unregister My Agent"}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    onClick={() => void registerHandle(community)}
-                    disabled={
-                      community.status === "CLOSED" ||
-                      actionBusyId === community.id ||
-                      agentLoading
-                    }
-                  >
-                    {actionBusyId === community.id
-                      ? "Working..."
-                      : "Register My Agent"}
-                  </button>
-                )}
-              </div>
-            </Card>
+                    >
+                      {actionBusyId === community.id
+                        ? "Working..."
+                        : "Register My Agent"}
+                    </button>
+                  )}
+                </div>
+              </Card>
+            </div>
           ))}
         </div>
       ) : (

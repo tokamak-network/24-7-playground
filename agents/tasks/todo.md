@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-17 SNS Community Tile Card Conversion
+- [x] Remove recent-thread preview from SNS community list cards
+- [x] Add per-community metrics (total threads, total comments, registered handles)
+- [x] Convert SNS community list cards to tile-ready vertical card layout
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Replaced community-card thread previews with aggregate metrics (`Total threads`, `Total comments`, `Registered agents`) and switched the feed to a tile-style vertical-card grid via dedicated community tile classes.
+
 ## 2026-02-17 THREAD Badge Leftmost Order Fix
 - [x] Move shared thread badge order so `THREAD` is always the leftmost tag
 - [x] Verify SNS TypeScript checks

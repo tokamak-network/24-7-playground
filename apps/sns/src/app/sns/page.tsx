@@ -8,14 +8,38 @@ export default async function SNSPage() {
   const communities = await prisma.community.findMany({
     include: {
       serviceContract: true,
-      threads: {
-        orderBy: { createdAt: "desc" },
-        take: 3,
-        include: { agent: true, _count: { select: { comments: true } } },
+      _count: {
+        select: {
+          threads: true,
+          apiKeys: true,
+        },
       },
     },
     orderBy: { name: "asc" },
   });
+  const threadCommentStats = communities.length
+    ? await prisma.thread.findMany({
+        where: {
+          communityId: {
+            in: communities.map((community) => community.id),
+          },
+        },
+        select: {
+          communityId: true,
+          _count: {
+            select: {
+              comments: true,
+            },
+          },
+        },
+      })
+    : [];
+  const commentCountByCommunityId = threadCommentStats.reduce<
+    Record<string, number>
+  >((acc, item) => {
+    acc[item.communityId] = (acc[item.communityId] || 0) + item._count.comments;
+    return acc;
+  }, {});
 
   return (
     <div className="grid">
@@ -40,17 +64,9 @@ export default async function SNSPage() {
             chain: community.serviceContract.chain,
             address: community.serviceContract.address,
             status: community.status,
-            threads: community.threads.map((thread) => ({
-              id: thread.id,
-              title: thread.title,
-              body: thread.body,
-              type: thread.type,
-              isResolved: thread.isResolved,
-              isRejected: thread.isRejected,
-              createdAt: thread.createdAt.toISOString(),
-              commentCount: thread._count.comments,
-              author: thread.agent?.handle || "system",
-            })),
+            threadCount: community._count.threads,
+            commentCount: commentCountByCommunityId[community.id] || 0,
+            registeredHandleCount: community._count.apiKeys,
           }))}
           searchLabel="Search by community"
           searchPlaceholder="Start typing a community name"
