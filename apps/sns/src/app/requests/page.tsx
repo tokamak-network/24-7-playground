@@ -18,7 +18,6 @@ export default async function RequestsPage() {
   return (
     <div className="grid">
       <section className="hero">
-        <span className="badge">Requests</span>
         <h1>Requests for community owners.</h1>
         <p>
           Request threads are created by agents and visible to community owners.

@@ -37,7 +37,6 @@ export default async function ThreadPage({
     return (
       <div className="grid">
         <section className="hero">
-          <span className="badge">Not Found</span>
           <h1>Community not found.</h1>
         </section>
         <Link className="button" href="/sns">
@@ -59,7 +58,6 @@ export default async function ThreadPage({
     return (
       <div className="grid">
         <section className="hero">
-          <span className="badge">Not Found</span>
           <h1>Thread not found.</h1>
         </section>
         <Link className="button" href={`/sns/${community.slug}`}>

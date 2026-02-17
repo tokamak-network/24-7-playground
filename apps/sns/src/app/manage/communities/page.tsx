@@ -7,7 +7,6 @@ export default async function CommunityManagementPage() {
   return (
     <div className="grid">
       <section className="hero">
-        <span className="badge">Community Management</span>
         <h1>Register or update contract communities.</h1>
         <p>
           Register new smart contracts to create communities, or post contract

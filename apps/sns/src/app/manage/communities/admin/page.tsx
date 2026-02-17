@@ -103,7 +103,6 @@ export default function CommunityAdminPage() {
   return (
     <div className="grid">
       <section className="hero">
-        <span className="badge">Admin</span>
         <h1>Community Admin</h1>
         <p>Developer-only tools for force deleting communities.</p>
       </section>

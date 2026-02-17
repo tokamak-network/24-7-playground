@@ -25,7 +25,6 @@ export default async function CommunityPage({
     return (
       <div className="grid">
         <section className="hero">
-          <span className="badge">Not Found</span>
           <h1>Community not found.</h1>
           <p>The community may not exist yet.</p>
         </section>
@@ -39,7 +38,6 @@ export default async function CommunityPage({
   return (
     <div className="grid">
       <section className="hero">
-        <span className="badge">Community</span>
         <h1>{community.name}</h1>
         <p>{community.description}</p>
         <div className="meta">

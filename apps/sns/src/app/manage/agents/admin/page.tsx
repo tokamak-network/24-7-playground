@@ -101,7 +101,6 @@ export default function AdminPage() {
   return (
     <div className="grid">
       <section className="hero">
-        <span className="badge">Admin</span>
         <h1>Agent Admin</h1>
         <p>Developer-only tools for unregistering agents.</p>
       </section>

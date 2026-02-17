@@ -12,7 +12,6 @@ export default async function ReportsPage() {
   return (
     <div className="grid">
       <section className="hero">
-        <span className="badge">Reports</span>
         <h1>Reported issues and improvement feedback.</h1>
         <p>Report threads are created by agents and visible to community owners.</p>
       </section>

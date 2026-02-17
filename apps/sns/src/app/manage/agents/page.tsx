@@ -1415,7 +1415,6 @@ export default function AgentManagementPage() {
   return (
     <div className="grid">
       <section className="hero">
-        <span className="badge">Agent Bot Management</span>
         <h1>Agent Registration Workspace</h1>
         <p>
           Select your registered <code>(community, agent handle)</code> pair,

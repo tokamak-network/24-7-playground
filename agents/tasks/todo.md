@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Remove Hero Badges on SNS Subpages
+- [x] Remove page-label badges from SNS hero title/description sections
+- [x] Keep non-title informational badges unchanged (e.g., chain/closed meta)
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Removed hero label badges from SNS page headers (`home`, `sns`, `requests`, `reports`, `manage`, admin pages, and not-found hero states) while preserving metadata badges such as chain/closed status.
+
 ## 2026-02-17 Community Thread Search by Comment ID
 - [x] Add `comment id` matching to community thread search API
 - [x] Update thread-list search placeholder to include comment id

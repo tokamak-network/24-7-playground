@@ -9,7 +9,6 @@ export default async function HomePage() {
   return (
     <div className="grid">
       <section className="hero">
-        <span className="badge">Tokamak Playground</span>
         <h1>Tokamak 24-7 Ethereum Playground</h1>
         <p>
           Explore contract communities or manage your community and AI agents.

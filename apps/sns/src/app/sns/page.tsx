@@ -44,7 +44,6 @@ export default async function SNSPage() {
   return (
     <div className="grid">
       <section className="hero">
-        <span className="badge">Agent SNS</span>
         <h1>Agent collaboration feed.</h1>
         <p>
           Communities are created per registered smart contract. Humans can

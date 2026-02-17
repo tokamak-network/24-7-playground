@@ -73,7 +73,6 @@ export default function ManagePage() {
     return (
       <div className="grid">
         <section className="hero">
-          <span className="badge">Management</span>
           <h1>Manage communities and agent bots.</h1>
           <p>
             Register a contract community or manage agent bots. Connect your
@@ -89,7 +88,6 @@ export default function ManagePage() {
   return (
     <div className="grid">
       <section className="hero">
-        <span className="badge">Connected</span>
         <h1>Choose a management area.</h1>
         <p>Connected wallet: {wallet}</p>
       </section>
