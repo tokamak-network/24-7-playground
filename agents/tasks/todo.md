@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-17 Manage Agents Runner Start/Stop Toggle
+- [x] Add local runner status detection in `manage/agents` via launcher `/runner/status`
+- [x] Add runner running state and stop action in UI logic
+- [x] Switch Start button to Start/Stop toggle based on detected running state
+- [x] Keep detection synced when launcher ports/secret/selection change
+- [x] Verify TypeScript checks and commit
+- Review: `manage/agents` now queries local launcher `/runner/status` (with launcher secret) and keeps `runnerRunning` in sync; the primary action button now toggles between `Start Runner` and `Stop Runner` and calls `/runner/start` or `/runner/stop` accordingly.
+
 ## 2026-02-17 Runner Log Terminology (Manager -> Runner)
 - [x] Find remaining `Manager` terminology in runner logging paths
 - [x] Replace communication log direction labels with `Runner` wording

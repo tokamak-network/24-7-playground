@@ -179,6 +179,8 @@ export default function AgentManagementPage() {
   const [detectedRunnerPorts, setDetectedRunnerPorts] = useState<number[]>([]);
   const [detectRunnerBusy, setDetectRunnerBusy] = useState(false);
   const [startRunnerBusy, setStartRunnerBusy] = useState(false);
+  const [stopRunnerBusy, setStopRunnerBusy] = useState(false);
+  const [runnerRunning, setRunnerRunning] = useState(false);
   const [runnerStatus, setRunnerStatus] = useState("");
   const [bubbleMessage, setBubbleMessage] = useState<BubbleMessage | null>(null);
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -254,7 +256,7 @@ export default function AgentManagementPage() {
     []
   );
 
-  const readError = async (response: Response) => {
+  const readError = useCallback(async (response: Response) => {
     const text = await response.text().catch(() => "");
     if (!text) return "Request failed.";
     try {
@@ -266,7 +268,7 @@ export default function AgentManagementPage() {
       // keep raw text
     }
     return text;
-  };
+  }, []);
 
   const fetchModelsByApiKey = useCallback(
     async (options?: {
@@ -791,6 +793,80 @@ export default function AgentManagementPage() {
     }
   }, [pushBubble, securityDraft.alchemyApiKey]);
 
+  const resolveRunnerLauncherPort = useCallback(
+    (preferredPort?: string) => {
+      const detectedPortValues = detectedRunnerPorts.map((port) => String(port));
+      const preferred = String(preferredPort || runnerLauncherPort).trim();
+      if (detectedPortValues.includes(preferred)) {
+        return preferred;
+      }
+      return detectedPortValues[0] || "";
+    },
+    [detectedRunnerPorts, runnerLauncherPort]
+  );
+
+  const fetchRunnerStatus = useCallback(
+    async (options?: {
+      preferredPort?: string;
+      silent?: boolean;
+      anchorEl?: HTMLElement | null;
+    }) => {
+      const launcherPort = resolveRunnerLauncherPort(options?.preferredPort);
+      if (!launcherPort) {
+        setRunnerRunning(false);
+        if (!options?.silent) {
+          pushBubble(
+            "error",
+            "No detected launcher port. Click Detect Launcher first.",
+            options?.anchorEl
+          );
+        }
+        return null;
+      }
+      const launcherSecret = runnerLauncherSecret.trim();
+      if (!launcherSecret) {
+        setRunnerRunning(false);
+        if (!options?.silent) {
+          pushBubble("error", "Runner Launcher Secret is required.", options?.anchorEl);
+        }
+        return null;
+      }
+
+      try {
+        const response = await fetch(`http://127.0.0.1:${launcherPort}/runner/status`, {
+          method: "GET",
+          headers: { "x-runner-secret": launcherSecret },
+        });
+        if (!response.ok) {
+          const message = await readError(response);
+          setRunnerRunning(false);
+          setRunnerStatus(message);
+          if (!options?.silent) {
+            pushBubble("error", message, options?.anchorEl);
+          }
+          return null;
+        }
+        const data = await response.json().catch(() => ({}));
+        const running = Boolean(data?.status?.running);
+        setRunnerRunning(running);
+        setRunnerStatus(
+          `Runner is ${running ? "running" : "stopped"} on localhost:${launcherPort}.`
+        );
+        return running;
+      } catch {
+        setRunnerRunning(false);
+        const message =
+          "Could not reach local runner launcher. Start apps/runner first.";
+        setRunnerStatus(message);
+        if (!options?.silent) {
+          pushBubble("error", message, options?.anchorEl);
+        }
+        return null;
+      }
+    },
+    [pushBubble, readError, resolveRunnerLauncherPort, runnerLauncherSecret]
+  );
+
   const detectRunnerLauncherPorts = useCallback(
     async (options?: {
       preferredPort?: string;
@@ -838,6 +914,10 @@ export default function AgentManagementPage() {
         setDetectedRunnerPorts(matched);
         if (matched.length) {
           setRunnerLauncherPort(String(matched[0]));
+          void fetchRunnerStatus({
+            preferredPort: String(matched[0]),
+            silent: true,
+          });
           if (!options?.silent) {
             pushBubble(
               "success",
@@ -847,6 +927,7 @@ export default function AgentManagementPage() {
           }
         } else if (!options?.silent) {
           setRunnerLauncherPort("");
+          setRunnerRunning(false);
           pushBubble(
             "error",
             "No running runner launcher detected.",
@@ -854,12 +935,13 @@ export default function AgentManagementPage() {
           );
         } else {
           setRunnerLauncherPort("");
+          setRunnerRunning(false);
         }
       } finally {
         setDetectRunnerBusy(false);
       }
     },
-    [pushBubble]
+    [fetchRunnerStatus, pushBubble]
   );
 
   const startRunnerLauncher = useCallback(async (anchorEl?: HTMLElement | null) => {
@@ -878,10 +960,7 @@ export default function AgentManagementPage() {
       general?.agent.ownerWallet || selectedPair.ownerWallet || ""
     ).trim();
     const llmApiKey = securityDraft.llmApiKey.trim();
-    const detectedPortValues = detectedRunnerPorts.map((port) => String(port));
-    const launcherPort = detectedPortValues.includes(runnerLauncherPort)
-      ? runnerLauncherPort
-      : detectedPortValues[0] || "";
+    const launcherPort = resolveRunnerLauncherPort();
     const missingFields: string[] = [];
     if (!registeredCommunityName || !registeredCommunitySlug) {
       missingFields.push("Registered Community");
@@ -1026,6 +1105,7 @@ export default function AgentManagementPage() {
         return;
       }
       setRunnerStatus(`Runner started on localhost:${launcherPort}.`);
+      setRunnerRunning(true);
       saveRunnerConfig();
       pushBubble("success", `Runner started on localhost:${launcherPort}.`, anchorEl);
     } catch {
@@ -1048,10 +1128,10 @@ export default function AgentManagementPage() {
     liteLlmBaseUrl,
     pushBubble,
     readError,
+    resolveRunnerLauncherPort,
     runnerDraft.commentContextLimit,
     runnerDraft.intervalSec,
     runnerDraft.maxTokens,
-    runnerLauncherPort,
     runnerLauncherSecret,
     saveRunnerConfig,
     securityDraft.alchemyApiKey,
@@ -1061,6 +1141,61 @@ export default function AgentManagementPage() {
     selectedPair,
     token,
   ]);
+
+  const stopRunnerLauncher = useCallback(
+    async (anchorEl?: HTMLElement | null) => {
+      const launcherPort = resolveRunnerLauncherPort();
+      if (!launcherPort) {
+        pushBubble(
+          "error",
+          "No detected launcher port. Click Detect Launcher first.",
+          anchorEl
+        );
+        return;
+      }
+      const launcherSecret = runnerLauncherSecret.trim();
+      if (!launcherSecret) {
+        pushBubble("error", "Runner Launcher Secret is required.", anchorEl);
+        return;
+      }
+
+      setStopRunnerBusy(true);
+      try {
+        const response = await fetch(`http://127.0.0.1:${launcherPort}/runner/stop`, {
+          method: "POST",
+          headers: { "x-runner-secret": launcherSecret },
+        });
+        if (!response.ok) {
+          const message = await readError(response);
+          setRunnerStatus(message);
+          pushBubble("error", message, anchorEl);
+          return;
+        }
+        setRunnerRunning(false);
+        setRunnerStatus(`Runner stopped on localhost:${launcherPort}.`);
+        pushBubble("success", `Runner stopped on localhost:${launcherPort}.`, anchorEl);
+      } catch {
+        const message =
+          "Could not reach local runner launcher. Start apps/runner first.";
+        setRunnerStatus(message);
+        pushBubble("error", message, anchorEl);
+      } finally {
+        setStopRunnerBusy(false);
+      }
+    },
+    [pushBubble, readError, resolveRunnerLauncherPort, runnerLauncherSecret]
+  );
+
+  const toggleRunnerLauncher = useCallback(
+    async (anchorEl?: HTMLElement | null) => {
+      if (runnerRunning) {
+        await stopRunnerLauncher(anchorEl);
+        return;
+      }
+      await startRunnerLauncher(anchorEl);
+    },
+    [runnerRunning, startRunnerLauncher, stopRunnerLauncher]
+  );
 
   useEffect(() => {
     void loadPairs();
@@ -1097,6 +1232,7 @@ export default function AgentManagementPage() {
     setLiteLlmBaseUrl("");
     setSecurityPasswordMode("none");
     setSecurityPassword("");
+    setRunnerRunning(false);
     setSecurityDraft({
       llmApiKey: "",
       executionWalletPrivateKey: "",
@@ -1108,6 +1244,26 @@ export default function AgentManagementPage() {
       silent: true,
     });
   }, [detectRunnerLauncherPorts, loadGeneral, loadRunnerConfig, selectedAgentId]);
+
+  useEffect(() => {
+    if (!detectedRunnerPorts.length) {
+      setRunnerRunning(false);
+      return;
+    }
+    if (!runnerLauncherSecret.trim()) {
+      setRunnerRunning(false);
+      return;
+    }
+    void fetchRunnerStatus({
+      preferredPort: runnerLauncherPort,
+      silent: true,
+    });
+  }, [
+    detectedRunnerPorts,
+    fetchRunnerStatus,
+    runnerLauncherPort,
+    runnerLauncherSecret,
+  ]);
 
   useEffect(() => {
     if (securityPasswordMode === "none") return;
@@ -1645,10 +1801,16 @@ export default function AgentManagementPage() {
               <button
                 type="button"
                 className="button"
-                onClick={(event) => void startRunnerLauncher(event.currentTarget)}
-                disabled={startRunnerBusy}
+                onClick={(event) => void toggleRunnerLauncher(event.currentTarget)}
+                disabled={startRunnerBusy || stopRunnerBusy}
               >
-                {startRunnerBusy ? "Starting..." : "Start Runner"}
+                {startRunnerBusy
+                  ? "Starting..."
+                  : stopRunnerBusy
+                    ? "Stopping..."
+                    : runnerRunning
+                      ? "Stop Runner"
+                      : "Start Runner"}
               </button>
             </div>
             {runnerStatus ? <p className="status">{runnerStatus}</p> : null}
