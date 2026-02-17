@@ -257,7 +257,7 @@ export default function AgentManagementPage() {
     }) => {
       const llmApiKey = securityDraft.llmApiKey.trim();
       if (!token || !authHeaders) {
-        pushBubble("error", "Sign in required.", options?.anchorEl);
+        pushBubble("error", "Sign-in is required.", options?.anchorEl);
         return;
       }
       if (!llmApiKey) {
@@ -352,7 +352,7 @@ export default function AgentManagementPage() {
       setPairsStatus(
         nextPairs.length
           ? ""
-          : "No registered (community, handle) pairs were found."
+          : "No registered community-handle pairs were found."
       );
       setSelectedAgentId((prev) => {
         if (prev && nextPairs.some((pair) => pair.id === prev)) return prev;
@@ -373,7 +373,7 @@ export default function AgentManagementPage() {
       const silent = Boolean(options?.silent);
       setGeneralBusy(true);
       if (!silent) {
-        setGeneralStatus("Loading General...");
+        setGeneralStatus("Loading general data...");
       }
       try {
         const response = await fetch(`/api/agents/${agentId}/general`, {
@@ -392,12 +392,12 @@ export default function AgentManagementPage() {
         setLlmProvider(data.agent.llmProvider || "GEMINI");
         setLlmModel(data.agent.llmModel || defaultModelByProvider("GEMINI"));
         if (!silent) {
-          setGeneralStatus("General loaded.");
+          setGeneralStatus("General data is loaded");
         }
       } catch {
         setGeneral(null);
         if (!silent) {
-          setGeneralStatus("Failed to load General.");
+          setGeneralStatus("Failed to load general data.");
         }
       } finally {
         setGeneralBusy(false);
@@ -409,7 +409,7 @@ export default function AgentManagementPage() {
   const saveGeneral = async () => {
     if (!token || !selectedAgentId) return;
     setGeneralBusy(true);
-    setGeneralStatus("Saving General...");
+    setGeneralStatus("Saving general data...");
     try {
       const response = await fetch(`/api/agents/${selectedAgentId}/general`, {
         method: "PATCH",
@@ -429,10 +429,10 @@ export default function AgentManagementPage() {
       setLlmHandleName(data.agent.handle);
       setLlmProvider(data.agent.llmProvider || "GEMINI");
       setLlmModel(data.agent.llmModel || defaultModelByProvider("GEMINI"));
-      setGeneralStatus("General saved.");
+      setGeneralStatus("General data is saved");
       await loadPairs();
     } catch {
-      setGeneralStatus("Failed to save General.");
+      setGeneralStatus("Failed to save general data.");
     } finally {
       setGeneralBusy(false);
     }
@@ -459,13 +459,13 @@ export default function AgentManagementPage() {
       pushBubble(
         encrypted ? "success" : "error",
         encrypted
-          ? "Encrypted Security Sensitive data loaded."
-          : "No encrypted Security Sensitive data found.",
+          ? "Encrypted security-sensitive data has been loaded."
+          : "No encrypted security-sensitive data was found.",
         anchorEl
       );
     } catch {
       setEncryptedSecurity(null);
-      pushBubble("error", "Failed to load encrypted Security Sensitive data.", anchorEl);
+      pushBubble("error", "Failed to load encrypted security-sensitive data.", anchorEl);
     } finally {
       setSecurityBusy(false);
     }
@@ -497,7 +497,7 @@ export default function AgentManagementPage() {
 
   const decryptSecurity = async (anchorEl?: HTMLElement | null) => {
     if (!encryptedSecurity) {
-      pushBubble("error", "Load encrypted Security Sensitive data first.", anchorEl);
+      pushBubble("error", "Load encrypted security-sensitive data first.", anchorEl);
       return;
     }
     if (!securityPassword) {
@@ -522,7 +522,7 @@ export default function AgentManagementPage() {
         ),
         alchemyApiKey: String(decrypted?.alchemyApiKey || ""),
       });
-      pushBubble("success", "Security Sensitive data decrypted.", anchorEl);
+      pushBubble("success", "Security-sensitive data has been decrypted.", anchorEl);
       if (String(decrypted?.llmApiKey || "").trim()) {
         void fetchModelsByApiKey({ showSuccessBubble: false });
       }
@@ -563,10 +563,10 @@ export default function AgentManagementPage() {
         return;
       }
       setEncryptedSecurity(encrypted);
-      pushBubble("success", "Security Sensitive data saved.", anchorEl);
+      pushBubble("success", "Security-sensitive data has been saved.", anchorEl);
       await loadPairs();
     } catch {
-      pushBubble("error", "Failed to encrypt/save Security Sensitive data.", anchorEl);
+      pushBubble("error", "Failed to encrypt and save security-sensitive data.", anchorEl);
     } finally {
       setSecurityBusy(false);
     }
@@ -591,7 +591,7 @@ export default function AgentManagementPage() {
             intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
             commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
           });
-          setRunnerStatus("Using default Runner settings.");
+          setRunnerStatus("Using default runner settings.");
           return;
         }
 
@@ -621,7 +621,7 @@ export default function AgentManagementPage() {
           commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
         });
         setRunnerLauncherPort(DEFAULT_RUNNER_LAUNCHER_PORT);
-        setRunnerStatus("Failed to load Runner settings.");
+        setRunnerStatus("Failed to load runner settings.");
       }
     },
     []
@@ -657,7 +657,7 @@ export default function AgentManagementPage() {
       );
       setRunnerStatus("Runner settings saved.");
     } catch {
-      setRunnerStatus("Failed to save Runner settings.");
+      setRunnerStatus("Failed to save runner settings.");
     }
   };
 

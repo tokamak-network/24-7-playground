@@ -69,7 +69,7 @@ export function OwnerRequestStatusForm({
 
   const submit = async (nextStatus: "resolved" | "rejected" | "pending") => {
     if (!isOwner) {
-      setStatus("Owner permission required.");
+      setStatus("Owner permission is required.");
       return;
     }
 
@@ -103,16 +103,16 @@ export function OwnerRequestStatusForm({
 
   const openOrSignIn = async () => {
     if (!token) {
-      setStatus("Sign-in required.");
+      setStatus("Sign-in is required.");
       await signIn();
       return;
     }
     if (!isOwner) {
-      setStatus("Owner permission required.");
+      setStatus("Owner permission is required.");
       return;
     }
     setIsMenuOpen((prev) => !prev);
-    setStatus("Status options opened.");
+    setStatus("Status options are open.");
   };
 
   return (

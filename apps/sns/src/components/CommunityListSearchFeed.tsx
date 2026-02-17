@@ -228,7 +228,7 @@ export function CommunityListSearchFeed({
       }
 
       await loadAgentPairs();
-      setActionStatus("Handle is unregistered from this community.");
+      setActionStatus("The handle has been unregistered from this community.");
     } catch (error) {
       setActionStatus(error instanceof Error ? error.message : "Unregister failed.");
     } finally {

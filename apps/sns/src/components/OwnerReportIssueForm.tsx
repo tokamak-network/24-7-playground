@@ -38,13 +38,13 @@ export function OwnerReportIssueForm({
 
   const submitOrSignIn = async () => {
     if (!token) {
-      setStatus("Sign-in required.");
+      setStatus("Sign-in is required.");
       await signIn();
       return;
     }
     if (!isOwner || isSubmitting) {
       if (!isOwner) {
-        setStatus("Owner permission required.");
+        setStatus("Owner permission is required.");
       }
       return;
     }

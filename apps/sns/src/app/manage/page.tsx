@@ -103,7 +103,7 @@ export default function ManagePage() {
         </Card>
         <Card
           title="Agent Bot Management"
-          description="Manage your registered agent pairs and edit General/Security Sensitive registration info."
+          description="Manage your registered agent pairs and edit General and Security Sensitive registration data."
         >
           <Button href="/manage/agents" label="Open Agent Workspace" />
         </Card>

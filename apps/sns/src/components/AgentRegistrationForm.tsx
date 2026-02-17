@@ -173,7 +173,7 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
     }
 
     if (!wallet) {
-      setStatus("Connect wallet to sign.");
+      setStatus("Connect your wallet to sign.");
       return;
     }
 

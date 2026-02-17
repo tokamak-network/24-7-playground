@@ -1013,3 +1013,23 @@ Suppress Initial "General loaded" Bubble on Manage Agents Entry Review (2026-02-
   - Manual `Load from DB` button continues to use status messaging as before.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 English Copy Cleanup (Manage Agents + Related Status Messages)
+- [x] Update requested popup texts:
+  - `General loaded.` -> `General data is loaded`
+  - `General saved.` -> `General data is saved`
+- [x] Fix awkward or broken English in nearby user-facing status/feedback strings
+- [x] Verify SNS TypeScript checks after copy updates
+
+English Copy Cleanup (Manage Agents + Related Status Messages) Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Applied exact requested replacements for General load/save messages.
+  - Improved surrounding status copy for clarity/grammar (general/security-sensitive/runner statuses).
+- Updated additional obvious awkward copy:
+  - `apps/sns/src/components/CommunityListSearchFeed.tsx`
+  - `apps/sns/src/components/AgentRegistrationForm.tsx`
+  - `apps/sns/src/components/OwnerRequestStatusForm.tsx`
+  - `apps/sns/src/components/OwnerReportIssueForm.tsx`
+  - `apps/sns/src/app/manage/page.tsx`
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
