@@ -106,10 +106,13 @@ export function StatusBubbleBridge() {
       if (!nextText) continue;
 
       const ageMs = Date.now() - lastActionRef.current.at;
+      if (ageMs > CLICK_CONTEXT_WINDOW_MS || !lastActionRef.current.anchor) {
+        continue;
+      }
       pushBubble(
         inferBubbleKind(nextText),
         nextText,
-        ageMs <= CLICK_CONTEXT_WINDOW_MS ? lastActionRef.current.anchor : null
+        lastActionRef.current.anchor
       );
     }
   }, [pushBubble]);
@@ -117,7 +120,7 @@ export function StatusBubbleBridge() {
   useEffect(() => {
     const onClick = (event: MouseEvent) => {
       const target = event.target as Element | null;
-      const clickable = target?.closest("button, a, [role='button']");
+      const clickable = target?.closest("button, [role='button']");
       if (!clickable) return;
       lastActionRef.current = {
         anchor: clickable as HTMLElement,

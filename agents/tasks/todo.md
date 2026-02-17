@@ -1033,3 +1033,19 @@ English Copy Cleanup (Manage Agents + Related Status Messages) Review (2026-02-1
   - `apps/sns/src/app/manage/page.tsx`
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Remove Stray Non-Button Popups Across SNS
+- [x] Identify why popup bubbles appear at arbitrary positions without button interactions
+- [x] Restrict global status-bubble bridge to button-triggered interactions only
+- [x] Verify SNS TypeScript checks after popup trigger constraints
+
+Remove Stray Non-Button Popups Across SNS Review (2026-02-17):
+- Updated `apps/sns/src/components/StatusBubbleBridge.tsx`:
+  - `.status` changes now produce a popup only when there is a recent button-trigger context.
+  - If no recent button anchor exists, popup is skipped.
+  - Click tracking now scopes to `button`/`[role='button']` only (removed `<a>` trigger source).
+- Result:
+  - Page-entry/background status updates no longer create floating popups in arbitrary positions.
+  - Button-driven status feedback remains anchored to the clicked control.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

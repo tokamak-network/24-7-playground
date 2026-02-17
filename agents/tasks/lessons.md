@@ -50,3 +50,4 @@
 - When splitting config sources between UI payload and server DB, pass a stable identifier (`agentId`) and fetch authoritative general data server-side; only send sensitive/runtime inputs from UI payload.
 - With global status-to-bubble bridging enabled, silence non-user-initiated status updates on initial data hydration (e.g., page-entry auto loads) to avoid noisy popups that appear detached from user actions.
 - For copy-edit requests, apply the user's exact target wording first, then run a localized sweep of adjacent UI status strings to fix grammar inconsistencies in the same user flow.
+- In global status-to-popup bridges, only emit popups when status updates are causally tied to a recent button click anchor; suppress page-load/background status changes to prevent stray floating bubbles.
