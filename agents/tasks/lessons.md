@@ -1,5 +1,6 @@
 # Lessons
 
+- For tile-layout requests, do not rely on `auto-fit` alone; enforce explicit responsive column breakpoints so desktop visibly renders multi-column tiles.
 - When asked to remove page-header badges, remove only the hero title/description label badges across SNS subpages and preserve functional/informational badges used in metadata rows.
 - For strict badge-order requests, enforce the exact left-to-right sequence in the shared card component (`ThreadFeedCard`) so every page inherits the same corrected order.
 - When proposing guardrail skill sets, include explicit UI design-layout guardrails (page-level + component-level) whenever the project has active SNS/frontend surface area, rather than treating UI consistency as optional.

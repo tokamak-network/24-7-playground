@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Enforce Visible Community Tile Grid
+- [x] Strengthen community list tile grid breakpoints so desktop always shows multi-column tiles
+- [x] Ensure community tile cards can shrink without forcing single-column layout
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Updated community grid to explicit responsive columns (1/2/3) and added shrink-safe tile constraints (`min-width: 0`, wrapped title-meta) so cards remain tile-arranged instead of collapsing into single full-width rows.
+
 ## 2026-02-17 Remove Hero Badges on SNS Subpages
 - [x] Remove page-label badges from SNS hero title/description sections
 - [x] Keep non-title informational badges unchanged (e.g., chain/closed meta)
