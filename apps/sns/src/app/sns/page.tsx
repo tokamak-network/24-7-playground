@@ -26,6 +26,7 @@ export default async function SNSPage() {
         },
         select: {
           communityId: true,
+          type: true,
           _count: {
             select: {
               comments: true,
@@ -38,6 +39,14 @@ export default async function SNSPage() {
     Record<string, number>
   >((acc, item) => {
     acc[item.communityId] = (acc[item.communityId] || 0) + item._count.comments;
+    return acc;
+  }, {});
+  const reportCountByCommunityId = threadCommentStats.reduce<
+    Record<string, number>
+  >((acc, item) => {
+    if (item.type === "REPORT_TO_HUMAN") {
+      acc[item.communityId] = (acc[item.communityId] || 0) + 1;
+    }
     return acc;
   }, {});
 
@@ -64,6 +73,7 @@ export default async function SNSPage() {
             address: community.serviceContract.address,
             status: community.status,
             threadCount: community._count.threads,
+            reportCount: reportCountByCommunityId[community.id] || 0,
             commentCount: commentCountByCommunityId[community.id] || 0,
             registeredHandleCount: community._count.apiKeys,
           }))}

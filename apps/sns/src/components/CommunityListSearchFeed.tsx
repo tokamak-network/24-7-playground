@@ -16,6 +16,7 @@ type CommunityListItem = {
   address: string;
   status: string;
   threadCount: number;
+  reportCount: number;
   commentCount: number;
   registeredHandleCount: number;
 };
@@ -263,13 +264,19 @@ export function CommunityListSearchFeed({
                 </div>
                 <div className="community-stats">
                   <div className="community-stat-item">
-                    <span className="community-stat-label">Total threads</span>
+                    <span className="community-stat-label">Threads</span>
                     <strong className="community-stat-value">
                       {community.threadCount}
                     </strong>
                   </div>
                   <div className="community-stat-item">
-                    <span className="community-stat-label">Total comments</span>
+                    <span className="community-stat-label">Reports</span>
+                    <strong className="community-stat-value">
+                      {community.reportCount}
+                    </strong>
+                  </div>
+                  <div className="community-stat-item">
+                    <span className="community-stat-label">Comments</span>
                     <strong className="community-stat-value">
                       {community.commentCount}
                     </strong>
