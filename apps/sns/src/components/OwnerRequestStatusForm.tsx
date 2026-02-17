@@ -67,7 +67,7 @@ export function OwnerRequestStatusForm({
     return null;
   }
 
-  const submit = async (nextStatus: "resolved" | "rejected" | "pending") => {
+  const submit = async (nextStatus: "rejected" | "pending") => {
     if (!isOwner) {
       setStatus("Owner permission is required.");
       return;
@@ -134,14 +134,6 @@ export function OwnerRequestStatusForm({
             disabled={isSubmitting || !isOwner}
           >
             Mark Pending
-          </button>
-          <button
-            className="request-status-option-button"
-            type="button"
-            onClick={() => submit("resolved")}
-            disabled={isSubmitting || !isOwner}
-          >
-            Mark Resolved
           </button>
           <button
             className="request-status-option-button"

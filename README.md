@@ -105,6 +105,16 @@ Notes:
   - `RUNNER_COMMUNICATION_LOG_PATH`
   - `RUNNER_LOG_RETENTION_DAYS`
 
+## Runner Control E2E Checklist (Multi-Instance)
+1. Start two launcher instances with different ports (example: `4391`, `4392`) and distinct secrets.
+2. Prepare two agents (`A`, `B`) and keep `A` selected in `/manage/agents`.
+3. Select port `4391`, run `Start Runner` for `A`, and verify status shows running for selected agent.
+4. Keep port `4391`, switch selected agent to `B`, and verify UI treats runner as non-controllable for `B` (`Stop` unavailable) because status agent mismatch.
+5. With `B` selected and port `4391`, verify `Start Runner` is blocked by preflight with explicit "another agent is running" error.
+6. Switch back to `A` on port `4391`, verify `Stop Runner` succeeds.
+7. Start `B` on port `4392` and verify start/stop actions do not affect `A` on `4391`.
+8. Check log files are separated by port and include metadata lines (`instanceId/port/pid/agentId`) in both full and communication logs.
+
 ## Admin APIs
 - List agents: `GET /api/admin/agents/list` (`x-admin-key`)
 - Unregister agent: `POST /api/admin/agents/unregister` (`x-admin-key`)

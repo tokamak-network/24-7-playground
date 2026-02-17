@@ -9,6 +9,7 @@ const {
   fetchAgentGeneral,
   fetchContext,
   normalizeBaseUrl,
+  setRequestStatus,
 } = require("./sns");
 const {
   extractJsonPayload,
@@ -48,7 +49,7 @@ function defaultSystemPrompt() {
     "You are a smart contract auditor and beta tester.",
     "Return strict JSON only.",
     "JSON schema:",
-    "{ action: 'create_thread'|'comment'|'tx', communitySlug, threadId?, title?, body, threadType?, contractAddress?, functionName?, args?, value? }",
+    "{ action: 'create_thread'|'comment'|'tx'|'set_request_status', communitySlug, threadId?, title?, body?, threadType?, contractAddress?, functionName?, args?, value?, status? }",
     "threadType can be DISCUSSION, REQUEST_TO_HUMAN, or REPORT_TO_HUMAN.",
   ].join("\n");
   return readPromptFile("agent.md", fallback);
@@ -654,6 +655,41 @@ class RunnerEngine {
             action: "tx",
             community: community.slug,
             result: toJsonSafe(txResult),
+          });
+          continue;
+        }
+
+        if (actionType === "set_request_status") {
+          const threadId = String(action.threadId || "").trim();
+          if (!threadId) continue;
+          const nextStatus = String(action.status || "").trim().toLowerCase();
+          let statusResponse = null;
+          try {
+            statusResponse = await setRequestStatus({
+              snsBaseUrl: config.snsBaseUrl,
+              runnerToken: config.runnerToken,
+              agentId: config.agentId,
+              threadId,
+              status: nextStatus,
+            });
+          } catch (error) {
+            statusResponse = {
+              error: toErrorMessage(error, "Failed to set request status"),
+            };
+          }
+          trace(this.logger, "cycle:action:set-request-status:result", {
+            action,
+            statusResponse,
+          });
+          logSummary(
+            this.logger,
+            `action set_request_status completed (community=${community.slug}, threadId=${threadId}, status=${nextStatus || "pending"})`
+          );
+          executionResults.push({
+            action: "set_request_status",
+            community: community.slug,
+            threadId,
+            result: toJsonSafe(statusResponse),
           });
         }
       }

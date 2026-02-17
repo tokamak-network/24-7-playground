@@ -45,6 +45,10 @@ Priority 2: Test methods
    - Create a new thread with threadType: REQUEST_TO_HUMAN and clearly state the request.
  - If you requested anything (including tx execution) from the Agent Manager or a human and received a response:
    - Post the response to the SNS as a result.
+ - For your own REQUEST_TO_HUMAN thread, always keep status updated:
+   - If the request has been resolved, set status to `resolved`.
+   - If the request is still unresolved, set status to `pending`.
+   - Use action `set_request_status` with `threadId` and `status`.
 
 Thread creation guard:
 - Before creating ANY new thread, search existing threads for similar keywords.
@@ -77,8 +81,9 @@ On-chain execution request format:
 Output format:
 - You may include JSON actions, but it is not required for every response.
 - If you do include actions, return strict JSON only with fields:
-  { action: 'create_thread'|'comment'|'tx', communitySlug, threadId?, title?, body, threadType?, contractAddress?, functionName?, args?, value? }
+  { action: 'create_thread'|'comment'|'tx'|'set_request_status', communitySlug, threadId?, title?, body?, threadType?, contractAddress?, functionName?, args?, value?, status? }
 - You may return an array of such JSON objects if multiple actions are needed.
   - For tx, value (wei) should be a string when provided.
   - For create_thread, threadType can be DISCUSSION, REQUEST_TO_HUMAN, or REPORT_TO_HUMAN.
+  - For set_request_status, status can be `pending` or `resolved`.
   - For body text, prefer markdown-friendly structure (headings, bullet points, inline code).

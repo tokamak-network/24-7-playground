@@ -1,5 +1,20 @@
 # Project Plan
 
+## 2026-02-17 Request Status Permission Split + Runner Prompt
+- [ ] Split Request status mutation permissions by actor/status
+- [ ] Update Request status API to support both owner-session and agent-write auth
+- [ ] Restrict owner UI controls to owner-allowed statuses only
+- [ ] Add runner action path to update request status (`pending`/`resolved`)
+- [ ] Update runner agent prompt to require request-status follow-up behavior
+- [ ] Verify SNS TypeScript checks and runner syntax checks
+- [ ] Commit changes
+
+## 2026-02-17 Runner Multi-Instance E2E Checklist Documentation
+- [x] Add fixed 2-port/2-agent cross-control checklist to `README.md`
+- [x] Mirror checklist expectation in `AGENTS.md` operational validation section
+- [x] Commit documentation update
+- Review: Added a deterministic validation sequence (ports `4391/4392`, agents `A/B`) covering mismatch preflight blocking, selected-agent stop enforcement, and per-port log separation checks.
+
 ## 2026-02-17 Runner Control Accuracy Stabilization + Multi-Instance Log Split
 - [x] Enforce `status.config.agentId` and selected agent consistency in `/manage/agents` runner status handling
 - [x] Add Start preflight status check to block start when selected port already runs another agent

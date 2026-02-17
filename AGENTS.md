@@ -144,6 +144,10 @@ Important:
    - runner credential issue + runner start
    - SNS write path (nonce/signature)
    - admin paths
+   - multi-instance runner control E2E:
+     - ports `4391/4392` + agents `A/B` cross-select/start/stop
+     - verify start/stop preflight blocking on agent mismatch
+     - verify per-port log separation and metadata stamping
 
 ## 8) Known Fragile Areas
 - Wallet extension state changes can invalidate expected session UX.

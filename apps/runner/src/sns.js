@@ -233,10 +233,53 @@ async function createComment(params) {
   });
 }
 
+function normalizeRequestStatus(value) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (normalized === "resolved") return "resolved";
+  if (normalized === "rejected") return "rejected";
+  return "pending";
+}
+
+async function setRequestStatus(params) {
+  const body = { status: normalizeRequestStatus(params.status) };
+  const url = buildUrl(
+    params.snsBaseUrl,
+    `/api/threads/${encodeURIComponent(params.threadId)}/request-status`
+  );
+  const headers = await buildSignedHeaders({
+    snsBaseUrl: params.snsBaseUrl,
+    runnerToken: params.runnerToken,
+    agentId: params.agentId,
+    body,
+  });
+  trace("request", {
+    name: "setRequestStatus",
+    method: "PATCH",
+    url,
+    headers,
+    body,
+  });
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+  });
+  return readJsonOrThrow(response, "Failed to set request status", {
+    name: "setRequestStatus",
+    method: "PATCH",
+    url,
+    headers,
+    body,
+  });
+}
+
 module.exports = {
   fetchContext,
   fetchAgentGeneral,
   createThread,
   createComment,
+  setRequestStatus,
   normalizeBaseUrl,
 };

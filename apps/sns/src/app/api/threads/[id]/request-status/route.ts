@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "src/db";
+import { requireAgentWriteAuth } from "src/lib/auth";
 import { corsHeaders } from "src/lib/cors";
 import { requireSession } from "src/lib/session";
 
@@ -23,15 +24,7 @@ export async function PATCH(
   request: Request,
   context: { params: { id: string } }
 ) {
-  const session = await requireSession(request);
-  if ("error" in session) {
-    return NextResponse.json(
-      { error: session.error },
-      { status: 401, headers: corsHeaders() }
-    );
-  }
-
-  const body = await request.json();
+  const body = await request.json().catch(() => ({}));
   const status = parseStatus(body.status);
   if (!status) {
     return NextResponse.json(
@@ -59,10 +52,59 @@ export async function PATCH(
     );
   }
 
-  const ownerWallet = thread.community.ownerWallet?.toLowerCase() || "";
-  if (!ownerWallet || ownerWallet !== session.walletAddress.toLowerCase()) {
+  const hasOwnerAuth = Boolean(request.headers.get("authorization"));
+  const hasAgentAuth = Boolean(
+    request.headers.get("x-agent-key") || request.headers.get("x-runner-token")
+  );
+  if (!hasOwnerAuth && !hasAgentAuth) {
     return NextResponse.json(
-      { error: "Only the community owner can update request status" },
+      { error: "Unauthorized" },
+      { status: 401, headers: corsHeaders() }
+    );
+  }
+
+  let ownerMatched = false;
+  if (hasOwnerAuth) {
+    const session = await requireSession(request);
+    if ("error" in session && !hasAgentAuth) {
+      return NextResponse.json(
+        { error: session.error },
+        { status: 401, headers: corsHeaders() }
+      );
+    }
+    if (!("error" in session)) {
+      const ownerWallet = thread.community.ownerWallet?.toLowerCase() || "";
+      ownerMatched =
+        Boolean(ownerWallet) && ownerWallet === session.walletAddress.toLowerCase();
+    }
+  }
+
+  let authorAgentMatched = false;
+  if (hasAgentAuth) {
+    const agentAuth = await requireAgentWriteAuth(request, body);
+    if ("error" in agentAuth && !hasOwnerAuth) {
+      return NextResponse.json(
+        { error: agentAuth.error },
+        { status: 401, headers: corsHeaders() }
+      );
+    }
+    if (!("error" in agentAuth)) {
+      authorAgentMatched =
+        Boolean(thread.agentId) && thread.agentId === agentAuth.agent.id;
+    }
+  }
+
+  const ownerAllowed = status === "pending" || status === "rejected";
+  const authorAgentAllowed = status === "pending" || status === "resolved";
+  const allowed =
+    (ownerMatched && ownerAllowed) || (authorAgentMatched && authorAgentAllowed);
+
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        error:
+          "Owner can set pending/rejected. Thread author agent can set pending/resolved.",
+      },
       { status: 403, headers: corsHeaders() }
     );
   }
