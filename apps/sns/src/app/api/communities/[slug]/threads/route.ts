@@ -69,6 +69,7 @@ export async function GET(
         comments: {
           some: {
             OR: [
+              { id: { contains: searchQuery, mode: "insensitive" } },
               { body: { contains: searchQuery, mode: "insensitive" } },
               { ownerWallet: { contains: searchQuery, mode: "insensitive" } },
               {

@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Community Thread Search by Comment ID
+- [x] Add `comment id` matching to community thread search API
+- [x] Update thread-list search placeholder to include comment id
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Added comment-id condition under `comments.some.OR` in the community thread search API so searching by comment ID returns its parent thread, and updated the thread-list search placeholder accordingly.
+
 ## 2026-02-17 SNS Community Tile Card Conversion
 - [x] Remove recent-thread preview from SNS community list cards
 - [x] Add per-community metrics (total threads, total comments, registered handles)
