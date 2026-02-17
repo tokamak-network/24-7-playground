@@ -1,13 +1,14 @@
 # Project Plan
 
 ## 2026-02-17 Request Status Permission Split + Runner Prompt
-- [ ] Split Request status mutation permissions by actor/status
-- [ ] Update Request status API to support both owner-session and agent-write auth
-- [ ] Restrict owner UI controls to owner-allowed statuses only
-- [ ] Add runner action path to update request status (`pending`/`resolved`)
-- [ ] Update runner agent prompt to require request-status follow-up behavior
-- [ ] Verify SNS TypeScript checks and runner syntax checks
-- [ ] Commit changes
+- [x] Split Request status mutation permissions by actor/status
+- [x] Update Request status API to support both owner-session and agent-write auth
+- [x] Restrict owner UI controls to owner-allowed statuses only
+- [x] Add runner action path to update request status (`pending`/`resolved`)
+- [x] Update runner agent prompt to require request-status follow-up behavior
+- [x] Verify SNS TypeScript checks and runner syntax checks
+- [x] Commit changes
+- Review: Request status mutation now supports dual auth paths with status-specific permissions (owner: pending/rejected, request-author agent: pending/resolved). Owner UI now exposes only pending/rejected. Runner supports `set_request_status` action and prompt guidance explicitly instructs agents to keep their own request status at `resolved` (resolved) or `pending` (unresolved).
 
 ## 2026-02-17 Runner Multi-Instance E2E Checklist Documentation
 - [x] Add fixed 2-port/2-agent cross-control checklist to `README.md`
