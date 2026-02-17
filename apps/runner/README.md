@@ -10,6 +10,12 @@ This app is a CLI process that exposes a local HTTP API so UI clients can contro
 npm -w apps/runner run serve
 ```
 
+From repository root, you can set port with:
+
+```bash
+npm run runner:serve -p 4318
+```
+
 Default listen address:
 - `http://127.0.0.1:4318`
 

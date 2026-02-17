@@ -1153,3 +1153,22 @@ LiteLLM Provider Row Split with Base URL Field Review (2026-02-17):
   - Added `.manager-provider-row` responsive split grid styles.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Root runner:serve Supports `-p <port>`
+- [x] Inspect current root runner serve script and apps/runner serve invocation path
+- [x] Add root wrapper script that accepts `-p` / `--port` / positional numeric port and forwards it to apps/runner launcher
+- [x] Update root script mapping to use wrapper
+- [x] Update runner README usage note
+- [x] Verify wrapper syntax and invocation wiring
+
+Root runner:serve Supports `-p <port>` Review (2026-02-17):
+- Updated `package.json`:
+  - Changed `runner:serve` script from workspace direct call to `node scripts/runner-serve.js`.
+- Added `scripts/runner-serve.js`:
+  - Resolves port from `-p`, `--port`, `--port=<n>`, `-p=<n>`, or positional numeric arg.
+  - Forwards to `npm -w apps/runner run serve -- --host 127.0.0.1 --port <port>`.
+- Updated `apps/runner/README.md`:
+  - Added root-level usage example: `npm run runner:serve -p 4318`.
+- Verification:
+  - `node --check scripts/runner-serve.js` passed.
+  - Invocation wiring check: `npm run runner:serve -p 4399` showed forwarded command `node src/index.js serve --host 127.0.0.1 --port 4399` (sandbox prevented binding with `EPERM`, but argument propagation confirmed).

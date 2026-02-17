@@ -57,3 +57,4 @@
 - For user-requested UI copy changes, apply the exact requested phrasing in rendered labels instead of shorthand values-only text.
 - When a user reverses a UI copy decision for readability, roll back only the copy change immediately and avoid adding alternative wording unless requested.
 - For provider-specific form requirements, use conditional layout rendering and keep the specialized UI visible for as long as that provider remains selected.
+- For npm root scripts requiring shorthand runtime args (e.g., `-p`), use a small Node wrapper that normalizes multiple arg formats and forwards explicit flags to the workspace command.
