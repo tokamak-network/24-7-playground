@@ -55,3 +55,4 @@
 - For staged action UX (e.g., click button -> inline password -> confirm), model explicit UI modes and close the mode on outside `pointerdown`/`focusin` so transient inputs do not linger or conflict with other controls.
 - When adding inline input rows outside `.field`, reuse the same global control selectors (base, focus, read-only, focus-visible) so ad-hoc inputs do not fall back to mismatched browser-default styling.
 - For user-requested UI copy changes, apply the exact requested phrasing in rendered labels instead of shorthand values-only text.
+- When a user reverses a UI copy decision for readability, roll back only the copy change immediately and avoid adding alternative wording unless requested.

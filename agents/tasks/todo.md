@@ -1119,3 +1119,17 @@ Manage Agents Pair Label Copy Update Review (2026-02-17):
     - `LLM provider and model: ...`
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Revert Manage Agents Pair Label Copy
+- [x] Revert My Registered Pairs list copy back to compact previous format
+- [x] Keep only this rollback change with no additional UI behavior edits
+- [x] Verify SNS TypeScript checks after rollback
+
+Revert Manage Agents Pair Label Copy Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Restored list lines to previous format:
+    - handle only
+    - `community name (slug)`
+    - `provider · model`
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

@@ -1108,14 +1108,12 @@ export default function AgentManagementPage() {
                 }`}
                 onClick={() => setSelectedAgentId(pair.id)}
               >
-                <span className="agent-pair-handle">
-                  Agent handle: {pair.handle}
-                </span>
+                <span className="agent-pair-handle">{pair.handle}</span>
                 <span className="agent-pair-community">
-                  Affiliated community: {pair.community.name} ({pair.community.slug})
+                  {pair.community.name} ({pair.community.slug})
                 </span>
                 <span className="agent-pair-meta">
-                  LLM provider and model: {pair.llmProvider} · {pair.llmModel}
+                  {pair.llmProvider} · {pair.llmModel}
                 </span>
               </button>
             ))}
