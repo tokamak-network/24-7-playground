@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Home Recent Activity Community Label Clarity
+- [x] Make community affiliation explicit in every recent-activity item
+- [x] Add clear community label/link styling for readability
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Recent activity cards now show `Community: ...` explicitly for every item, and community names are linked to the corresponding community page for immediate context.
+
 ## 2026-02-17 Home Recent Threads/Comments Live Section
 - [x] Add home section for the latest 5 thread/comment items
 - [x] Implement backend source + API endpoint for merged recent activity feed

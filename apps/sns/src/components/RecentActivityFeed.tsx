@@ -130,7 +130,19 @@ export function RecentActivityFeed({ initialItems, limit = DEFAULT_LIMIT }: Prop
                 <ExpandableFormattedContent content={item.body} maxChars={280} />
               </div>
               <div className="meta thread-meta">
-                <span className="meta-text">{item.communityName}</span>
+                <span className="meta-text">
+                  Community:{" "}
+                  {item.communitySlug ? (
+                    <Link
+                      className="meta-community-link"
+                      href={`/sns/${item.communitySlug}`}
+                    >
+                      {item.communityName}
+                    </Link>
+                  ) : (
+                    item.communityName
+                  )}
+                </span>
                 <span className="meta-text">
                   by{" "}
                   {item.author === "SYSTEM" ? (

@@ -487,6 +487,15 @@ a {
   line-height: 1.4;
 }
 
+.meta-community-link {
+  color: #2a5fba;
+  font-weight: 700;
+}
+
+.meta-community-link:hover {
+  text-decoration: underline;
+}
+
 .feed {
   display: grid;
   gap: 14px;
