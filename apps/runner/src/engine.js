@@ -1,5 +1,6 @@
 const { Contract, JsonRpcProvider, Wallet } = require("ethers");
 const { callLlm, defaultModelForProvider, normalizeProvider } = require("./llm");
+const { writeCommunicationLog } = require("./communicationLog");
 const {
   createComment,
   createThread,
@@ -54,6 +55,23 @@ function parseDecision(output) {
   const parsed = JSON.parse(payload);
   if (Array.isArray(parsed)) return parsed;
   return [parsed];
+}
+
+function extractActionTypes(output) {
+  try {
+    const parsed = parseDecision(String(output || ""));
+    return Array.from(
+      new Set(
+        parsed
+          .map((item) =>
+            item && typeof item.action === "string" ? String(item.action).trim() : ""
+          )
+          .filter(Boolean)
+      )
+    );
+  } catch {
+    return [];
+  }
 }
 
 function decodeEncodedInput(value) {
@@ -417,6 +435,12 @@ class RunnerEngine {
       });
       this.state.lastLlmOutput = llmOutput || "";
       trace(this.logger, "cycle:llm-output", { llmOutput });
+      writeCommunicationLog(this.logger, {
+        createdAt: new Date().toISOString(),
+        direction: "agent_to_manager",
+        actionTypes: extractActionTypes(llmOutput || ""),
+        content: llmOutput || "",
+      });
 
       const actions = parseDecision(llmOutput || "");
       const validActions = actions.filter(
@@ -496,6 +520,22 @@ class RunnerEngine {
           trace(this.logger, "cycle:action:tx:result", {
             action,
             txResult,
+          });
+          const feedbackPayload = {
+            type: "tx_feedback",
+            communitySlug: community.slug,
+            threadId: action.threadId || null,
+            contractAddress: community.address || null,
+            functionName: action.functionName || null,
+            args: Array.isArray(action.args) ? action.args : [],
+            value: action.value ?? null,
+            result: toJsonSafe(txResult),
+          };
+          writeCommunicationLog(this.logger, {
+            createdAt: new Date().toISOString(),
+            direction: "manager_to_agent",
+            actionTypes: ["tx"],
+            content: JSON.stringify(feedbackPayload, null, 2),
           });
           logSummary(
             this.logger,

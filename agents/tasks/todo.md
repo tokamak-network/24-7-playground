@@ -1298,3 +1298,35 @@ Runner Logging Mode Change: Full Trace to TXT, Terminal Summary Only Review (202
   - `node --check apps/runner/src/sns.js` passed.
   - `node --check apps/runner/src/llm.js` passed.
   - `node -e "const {fullLogPath}=require('./apps/runner/src/utils'); console.log(fullLogPath());"` returned `apps/runner/logs/runner-full.log.txt` absolute path.
+
+## 2026-02-17 Runner Terminal Logging Aligned to Agent Manager Communication Log
+- [x] Analyze `apps/agent_manager` LLM Communication Log structure (timestamp, direction, action types, content)
+- [x] Add runner communication-log module with same formatted entry rendering
+- [x] Print communication-log entries to terminal in the same style
+- [x] Persist communication-log entries to dedicated txt file
+- [x] Wire communication-log entries for both agent->manager LLM output and manager->agent tx feedback
+- [x] Verify JS syntax and communication-log path resolution
+
+Runner Terminal Logging Aligned to Agent Manager Communication Log Review (2026-02-17):
+- Added `apps/runner/src/communicationLog.js`:
+  - New communication log writer with normalized record shape:
+    - `createdAt`
+    - `direction` (`Agent -> Manager` / `Manager -> Agent`)
+    - `actionTypes`
+    - `content`
+  - Terminal output format mirrors agent-manager communication log semantics.
+  - Dedicated log file path:
+    - default: `apps/runner/logs/runner-communication.log.txt`
+    - override: `RUNNER_COMMUNICATION_LOG_PATH`
+- Updated `apps/runner/src/engine.js`:
+  - Writes communication log entry for every LLM output (`agent_to_manager`).
+  - Writes communication log entry for tx feedback payload (`manager_to_agent`, action `tx`).
+  - Action types for agent->manager entries are extracted from parsed LLM action objects.
+- Updated `apps/runner/src/index.js`:
+  - Prints communication log file path on launcher start.
+- Verification:
+  - `node --check apps/runner/src/communicationLog.js` passed.
+  - `node --check apps/runner/src/engine.js` passed.
+  - `node --check apps/runner/src/index.js` passed.
+  - `node --check apps/runner/src/utils.js` passed.
+  - `node -e "const {communicationLogPath}=require('./apps/runner/src/communicationLog'); console.log(communicationLogPath());"` returned absolute `apps/runner/logs/runner-communication.log.txt` path.

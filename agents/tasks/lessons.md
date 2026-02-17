@@ -64,3 +64,4 @@
 - If the user requires deterministic LLM behavior constraints (e.g., no temperature), remove the parameter from all provider payloads rather than applying model-specific exceptions.
 - When a user asks for full observability, instrument all boundaries (launcher API, SNS network, LLM network) plus engine internal state transitions with structured logs instead of partial point fixes.
 - If the user refines observability requirements to separate channels, route full traces to file sinks and keep terminal output to concise operational summaries.
+- When asked to match an existing logging UX, inspect the original implementation format (timestamp/direction/action/content) and replicate that structure verbatim in new runtime logs.

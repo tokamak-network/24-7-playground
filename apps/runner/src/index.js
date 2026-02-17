@@ -5,6 +5,7 @@ const http = require("node:http");
 const path = require("node:path");
 const { RunnerEngine } = require("./engine");
 const { toErrorMessage, logJson, logSummary, fullLogPath } = require("./utils");
+const { communicationLogPath } = require("./communicationLog");
 
 function parseArgs(argv) {
   const [, , command = "serve", ...rest] = argv;
@@ -226,6 +227,9 @@ async function startServer(options) {
   });
   console.log(`[runner-launcher] listening on http://${host}:${port}`);
   console.log(`[runner-launcher] full trace log: ${fullLogPath()}`);
+  console.log(
+    `[runner-launcher] communication log: ${communicationLogPath()}`
+  );
 }
 
 async function runOnceWithConfig(options) {
