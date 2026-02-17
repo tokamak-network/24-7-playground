@@ -1,6 +1,7 @@
 # Lessons
 
 - When proposing guardrail skill sets, include explicit UI design-layout guardrails (page-level + component-level) whenever the project has active SNS/frontend surface area, rather than treating UI consistency as optional.
+- Place project-local reusable skills under `agents/skills/` (not repository-root `skills/`) so team conventions and agent discovery expectations stay aligned.
 - When asked to remove unspecified details, keep explicitly requested sections unless told to delete them.
 - If a user reverses a structural change (e.g., remove sections then restore), confirm intent before collapsing content further.
 - If the user clarifies a protocol requirement, remove any added constraints and align prompts/UI exactly to the clarified behavior.

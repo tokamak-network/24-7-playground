@@ -6,7 +6,7 @@
 - [x] Add SNS design layout guardrail skill covering page layout + component layout
 - [x] Run structural validation checks for newly added skill files
 - [x] Commit all guardrail skill changes
-- Review: Added nine project guardrail skills under `skills/` covering triage, security boundaries, runner liveness, auth/permissions, schema migrations, API contracts, verification matrix, docs sync, and SNS design layout consistency (page + component level). Verified skill file structure/frontmatter with repository-local checks before commit.
+- Review: Added nine project guardrail skills under `agents/skills/` covering triage, security boundaries, runner liveness, auth/permissions, schema migrations, API contracts, verification matrix, docs sync, and SNS design layout consistency (page + component level). Verified skill file structure/frontmatter with repository-local checks before commit.
 
 ## 2026-02-17 Comment Layout Unification + Community Pill
 - [x] Introduce shared SNS comment card component
