@@ -72,6 +72,49 @@ function parseDecision(output) {
   return [parsed];
 }
 
+function sanitizeJsonPayload(input) {
+  const normalized = String(input || "")
+    .replace(/[“”]/g, "\"")
+    .replace(/[‘’]/g, "'")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "")
+    .replace(/,\s*([}\]])/g, "$1");
+  let output = "";
+  let inString = false;
+  let escape = false;
+  for (let i = 0; i < normalized.length; i += 1) {
+    const ch = normalized[i];
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (ch === "\\") {
+        escape = true;
+      } else if (ch === "\"") {
+        inString = false;
+      } else if (ch === "\n") {
+        output += "\\n";
+        continue;
+      } else if (ch === "\r") {
+        continue;
+      }
+    } else if (ch === "\"") {
+      inString = true;
+    }
+    output += ch;
+  }
+  return output;
+}
+
+function parseDecisionWithFallback(output) {
+  try {
+    return parseDecision(output);
+  } catch {
+    const sanitized = sanitizeJsonPayload(extractJsonPayload(output));
+    const parsed = JSON.parse(sanitized);
+    return Array.isArray(parsed) ? parsed : [parsed];
+  }
+}
+
 function extractActionTypes(output) {
   try {
     const parsed = parseDecision(String(output || ""));
@@ -457,7 +500,7 @@ class RunnerEngine {
         content: llmOutput || "",
       });
 
-      const actions = parseDecision(llmOutput || "");
+      const actions = parseDecisionWithFallback(llmOutput || "");
       const validActions = actions.filter(
         (item) =>
           item &&
@@ -489,14 +532,19 @@ class RunnerEngine {
 
         const actionType = String(action.action || "").trim();
         if (actionType === "create_thread") {
-          const threadResponse = await createThread({
-            snsBaseUrl: config.snsBaseUrl,
-            agentKey,
-            communityId: community.id,
-            title: String(action.title || "Agent update"),
-            body: String(action.body || ""),
-            threadType: action.threadType,
-          });
+          let threadResponse = null;
+          try {
+            threadResponse = await createThread({
+              snsBaseUrl: config.snsBaseUrl,
+              agentKey,
+              communityId: community.id,
+              title: String(action.title || "Agent update"),
+              body: String(action.body || ""),
+              threadType: action.threadType,
+            });
+          } catch (error) {
+            threadResponse = { error: toErrorMessage(error, "Failed to create thread") };
+          }
           trace(this.logger, "cycle:action:create-thread:result", {
             action,
             threadResponse,
@@ -505,19 +553,28 @@ class RunnerEngine {
             this.logger,
             `action create_thread completed (community=${community.slug})`
           );
-          executionResults.push({ action: "create_thread", community: community.slug });
+          executionResults.push({
+            action: "create_thread",
+            community: community.slug,
+            result: toJsonSafe(threadResponse),
+          });
           continue;
         }
 
         if (actionType === "comment") {
           const threadId = String(action.threadId || "").trim();
           if (!threadId) continue;
-          const commentResponse = await createComment({
-            snsBaseUrl: config.snsBaseUrl,
-            agentKey,
-            threadId,
-            body: String(action.body || ""),
-          });
+          let commentResponse = null;
+          try {
+            commentResponse = await createComment({
+              snsBaseUrl: config.snsBaseUrl,
+              agentKey,
+              threadId,
+              body: String(action.body || ""),
+            });
+          } catch (error) {
+            commentResponse = { error: toErrorMessage(error, "Failed to create comment") };
+          }
           trace(this.logger, "cycle:action:comment:result", {
             action,
             commentResponse,
@@ -526,12 +583,45 @@ class RunnerEngine {
             this.logger,
             `action comment completed (community=${community.slug}, threadId=${threadId})`
           );
-          executionResults.push({ action: "comment", community: community.slug, threadId });
+          executionResults.push({
+            action: "comment",
+            community: community.slug,
+            threadId,
+            result: toJsonSafe(commentResponse),
+          });
           continue;
         }
 
         if (actionType === "tx") {
-          const txResult = await this.#executeTxAction(config, community, action);
+          const requestedAddress = String(action.contractAddress || "").trim();
+          const communityAddress = String(community.address || "").trim();
+          const functionName = String(action.functionName || "").trim();
+          const allowedFunction = Array.isArray(community.abiFunctions)
+            ? community.abiFunctions.some(
+                (fn) => fn && String(fn.name || "") === functionName
+              )
+            : false;
+
+          let txResult;
+          if (!config.execution.privateKey || !config.execution.alchemyApiKey) {
+            txResult = { error: "Execution wallet or Alchemy key missing." };
+          } else if (!Array.isArray(community.abi) || !community.abi.length) {
+            txResult = { error: "Contract ABI not available." };
+          } else if (
+            requestedAddress &&
+            communityAddress &&
+            requestedAddress.toLowerCase() !== communityAddress.toLowerCase()
+          ) {
+            txResult = { error: "Contract address not allowed." };
+          } else if (!functionName || !allowedFunction) {
+            txResult = { error: "Function not allowed." };
+          } else {
+            try {
+              txResult = await this.#executeTxAction(config, community, action);
+            } catch (error) {
+              txResult = { error: toErrorMessage(error, "Tx failed") };
+            }
+          }
           trace(this.logger, "cycle:action:tx:result", {
             action,
             txResult,
@@ -561,23 +651,6 @@ class RunnerEngine {
             community: community.slug,
             result: toJsonSafe(txResult),
           });
-          if (action.threadId && txResult) {
-            const summary = `TX result for ${String(action.functionName || "")}\n\n\`\`\`json\n${JSON.stringify(
-              toJsonSafe(txResult),
-              null,
-              2
-            )}\n\`\`\``;
-            const txCommentResponse = await createComment({
-              snsBaseUrl: config.snsBaseUrl,
-              agentKey,
-              threadId: String(action.threadId),
-              body: summary,
-            });
-            trace(this.logger, "cycle:action:tx:comment-result", {
-              action,
-              txCommentResponse,
-            });
-          }
         }
       }
 

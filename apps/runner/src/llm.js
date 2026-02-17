@@ -10,6 +10,12 @@ function defaultModelForProvider(provider) {
   return "gpt-4o-mini";
 }
 
+function normalizeOpenAiBaseUrl(input) {
+  const trimmed = String(input || "").trim().replace(/\/+$/, "");
+  if (!trimmed) return "";
+  return trimmed.endsWith("/v1") ? trimmed : `${trimmed}/v1`;
+}
+
 function trace(label, payload) {
   logJson(console, `[runner][llm] ${label}`, payload);
 }
@@ -91,7 +97,7 @@ async function callAnthropic(params) {
   };
   const body = {
     model: params.model,
-    max_tokens: 1200,
+    max_tokens: 700,
     system: params.system,
     messages: [{ role: "user", content: params.user }],
   };
@@ -130,65 +136,89 @@ async function callAnthropic(params) {
 
 async function callGemini(params) {
   const model = String(params.model || "gemini-1.5-flash-002");
-  const endpoint =
-    params.baseUrl && String(params.baseUrl).trim()
-      ? String(params.baseUrl)
-      : `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
-          model
-        )}:generateContent?key=${encodeURIComponent(params.apiKey)}`;
-  const headers = { "Content-Type": "application/json" };
-  const body = {
-    contents: [{ role: "user", parts: [{ text: `${params.system}\n\n${params.user}` }] }],
-    generationConfig: {
-      maxOutputTokens: 1200,
-    },
+  const callGeminiModel = async (modelName) => {
+    const endpoint =
+      params.baseUrl && String(params.baseUrl).trim()
+        ? String(params.baseUrl)
+        : `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
+            modelName
+          )}:generateContent?key=${encodeURIComponent(params.apiKey)}`;
+    const headers = { "Content-Type": "application/json" };
+    const body = {
+      contents: [{ role: "user", parts: [{ text: `${params.system}\n\n${params.user}` }] }],
+    };
+    trace("request", {
+      provider: "GEMINI",
+      method: "POST",
+      url: endpoint,
+      headers,
+      body,
+    });
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+    const data = await parseJsonResponse(response);
+    trace("response", {
+      provider: "GEMINI",
+      method: "POST",
+      url: endpoint,
+      status: response.status,
+      ok: response.ok,
+      body: data,
+    });
+    if (!response.ok) {
+      const message =
+        data && data.error && data.error.message
+          ? data.error.message
+          : JSON.stringify(data || {});
+      throw new Error(`Gemini error ${response.status}: ${message}`);
+    }
+    const candidate =
+      data &&
+      Array.isArray(data.candidates) &&
+      data.candidates[0] &&
+      data.candidates[0].content &&
+      Array.isArray(data.candidates[0].content.parts)
+        ? data.candidates[0].content.parts[0]
+        : null;
+    return candidate && typeof candidate.text === "string" ? candidate.text : "";
   };
-  trace("request", {
-    provider: "GEMINI",
-    method: "POST",
-    url: endpoint,
-    headers,
-    body,
-  });
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-  });
-  const data = await parseJsonResponse(response);
-  trace("response", {
-    provider: "GEMINI",
-    method: "POST",
-    url: endpoint,
-    status: response.status,
-    ok: response.ok,
-    body: data,
-  });
-  if (!response.ok) {
-    throw new Error(
-      data.error && data.error.message
-        ? data.error.message
-        : `LLM request failed (${response.status})`
-    );
+
+  try {
+    return await callGeminiModel(model);
+  } catch (error) {
+    const message = String(error && error.message ? error.message : "");
+    if (
+      message.includes("404") &&
+      (String(model).endsWith("-002") || String(model).endsWith("-001"))
+    ) {
+      const fallbackModel = String(model).replace(/-(002|001)$/, "");
+      trace("gemini-fallback", {
+        model,
+        fallbackModel,
+      });
+      return callGeminiModel(fallbackModel);
+    }
+    throw error;
   }
-  const candidate =
-    data &&
-    Array.isArray(data.candidates) &&
-    data.candidates[0] &&
-    data.candidates[0].content &&
-    Array.isArray(data.candidates[0].content.parts)
-      ? data.candidates[0].content.parts[0]
-      : null;
-  return candidate && typeof candidate.text === "string" ? candidate.text : "";
 }
 
 async function callLlm(params) {
   const provider = normalizeProvider(params.provider);
   const model = String(params.model || defaultModelForProvider(provider));
+  let baseUrl = String(params.baseUrl || "");
+  if (provider === "LITELLM") {
+    baseUrl = normalizeOpenAiBaseUrl(params.baseUrl);
+    if (!baseUrl) {
+      throw new Error("LiteLLM base URL missing.");
+    }
+  }
   trace("call", {
     provider,
     model,
-    baseUrl: String(params.baseUrl || ""),
+    baseUrl,
     apiKey: String(params.apiKey || ""),
     system: String(params.system || ""),
     user: String(params.user || ""),
@@ -204,7 +234,12 @@ async function callLlm(params) {
     if (provider === "ANTHROPIC") {
       return await callAnthropic({ ...params, provider, model });
     }
-    return await callOpenAiCompatible({ ...params, provider, model });
+    return await callOpenAiCompatible({
+      ...params,
+      provider,
+      model,
+      baseUrl: provider === "LITELLM" ? baseUrl : params.baseUrl,
+    });
   } catch (error) {
     trace("error", {
       provider,

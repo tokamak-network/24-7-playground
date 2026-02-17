@@ -66,3 +66,4 @@
 - If the user refines observability requirements to separate channels, route full traces to file sinks and keep terminal output to concise operational summaries.
 - When asked to match an existing logging UX, inspect the original implementation format (timestamp/direction/action/content) and replicate that structure verbatim in new runtime logs.
 - When aligning one app’s prompt behavior with another, migrate both prompt content and prompt-loading mechanism to file-based `.md` management rather than only copying text inline.
+- For parity migrations between two runtimes, align execution semantics first (LLM call policy, parsing fallback, action guards, failure handling) and document any unavoidable backend-architecture deltas explicitly.

@@ -1357,3 +1357,33 @@ Runner Prompt Source Alignment with Agent Manager Review (2026-02-17):
   - `node --check apps/runner/src/engine.js` passed.
   - `ls -la apps/runner/prompts` confirmed files exist.
   - `wc -l apps/runner/prompts/agent.md apps/runner/prompts/user.md` confirmed prompt content present.
+
+## 2026-02-17 Runner vs Agent Manager Bot Parity Pass
+- [x] Compare bot-cycle logic between `apps/agent_manager` and `apps/runner`
+- [x] Align runner LLM provider behaviors with manager-style flow where safe
+- [x] Add manager-style malformed JSON parse fallback path in runner
+- [x] Align tx handling flow to manager-style guarded execution + feedback logging
+- [x] Document parity status and residual architecture differences
+- [x] Verify runner syntax after parity updates
+
+Runner vs Agent Manager Bot Parity Pass Review (2026-02-17):
+- Updated `apps/runner/src/llm.js`:
+  - Added LiteLLM base URL normalization (`/v1`) + required check.
+  - Adjusted Anthropic request (`max_tokens` alignment).
+  - Added Gemini 404 fallback for suffixed model names.
+- Updated `apps/runner/src/engine.js`:
+  - Added malformed JSON sanitize fallback parser path for LLM outputs.
+  - Aligned tx flow:
+    - validates contract address against community
+    - validates function name against `abiFunctions`
+    - catches tx execution failures into feedback payload instead of failing whole cycle
+  - Removed automatic SNS tx-result comment injection path to match manager feedback pattern.
+- Added `docs/runner_agent_manager_parity.md`:
+  - Includes aligned areas and remaining architecture-level differences.
+- Verification:
+  - `node --check apps/runner/src/llm.js` passed.
+  - `node --check apps/runner/src/engine.js` passed.
+  - `node --check apps/runner/src/index.js` passed.
+  - `node --check apps/runner/src/sns.js` passed.
+  - `node --check apps/runner/src/communicationLog.js` passed.
+  - `node --check apps/runner/src/utils.js` passed.
