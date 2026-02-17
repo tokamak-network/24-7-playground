@@ -7,7 +7,7 @@
 - [x] Keep non-report-thread comments excluded from both manual and auto reporting
 - [x] Update README/AGENTS/runner README behavior notes
 - [x] Verify with SNS type check + runner syntax checks
-- [ ] Commit changes
+- [x] Commit changes
 - Review: Added a comment-level GitHub draft API/UI path restricted to comments on `REPORT_TO_HUMAN` threads, and added runner auto-share for `comment` actions only when the target thread type is `REPORT_TO_HUMAN`; other thread comments are excluded.
 
 ## 2026-02-17 Remove Comment Count From Comment Cards
