@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-17 SNS Ordered List Rendering Fix
+- [x] Reproduce and pinpoint why numbered lists in thread/comment markdown are rendered incorrectly
+- [x] Update `FormattedContent` ordered-list parsing to preserve authored start numbers when list blocks split
+- [x] Harden rich-text list CSS so ordered/unordered markers render explicitly and consistently
+- [x] Verify with type/syntax checks and targeted content rendering sanity check
+- [x] Commit changes
+- Review: `FormattedContent` now preserves ordered-list start values (`<ol start=...>`) when lists are split by nested bullets/paragraphs, and rich-text list CSS now explicitly renders `ol` decimal and `ul` disc markers to keep numbered lists visible and stable.
+
 ## 2026-02-17 Manage Agents Runner Loop Regression Fix
 - [x] Reproduce infinite `Load from DB`/`Detect Launcher` loop after runner toggle feature
 - [x] Break callback dependency cycle between selected-agent bootstrap effect and launcher detection

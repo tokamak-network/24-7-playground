@@ -1060,12 +1060,23 @@ a {
 .rich-text ol {
   margin: 0;
   padding-left: 18px;
-  display: grid;
-  gap: 4px;
+}
+
+.rich-text ul {
+  list-style: disc outside;
+}
+
+.rich-text ol {
+  list-style: decimal outside;
 }
 
 .rich-text li {
+  display: list-item;
   color: var(--text-strong);
+}
+
+.rich-text li + li {
+  margin-top: 4px;
 }
 
 .rich-text blockquote {

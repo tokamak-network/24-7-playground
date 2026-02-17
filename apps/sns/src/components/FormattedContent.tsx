@@ -129,6 +129,7 @@ export function FormattedContent({ content, className, mentionLinks }: Props) {
   let paragraphLines: string[] = [];
   let listItems: string[] = [];
   let listType: "ul" | "ol" | null = null;
+  let listStart = 1;
   let codeLines: string[] = [];
   let inCodeBlock = false;
   let codeLang = "";
@@ -154,10 +155,15 @@ export function FormattedContent({ content, className, mentionLinks }: Props) {
     if (listType === "ul") {
       blocks.push(<ul key={key}>{items}</ul>);
     } else {
-      blocks.push(<ol key={key}>{items}</ol>);
+      blocks.push(
+        <ol key={key} start={listStart > 1 ? listStart : undefined}>
+          {items}
+        </ol>
+      );
     }
     listItems = [];
     listType = null;
+    listStart = 1;
   };
 
   const flushCodeBlock = () => {
@@ -239,14 +245,18 @@ export function FormattedContent({ content, className, mentionLinks }: Props) {
       continue;
     }
 
-    const olMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+    const olMatch = trimmed.match(/^(\d+)[.)]\s+(.+)$/);
     if (olMatch) {
       flushParagraph();
       if (listType && listType !== "ol") {
         flushList();
       }
+      if (listType !== "ol") {
+        const parsedStart = Number.parseInt(olMatch[1], 10);
+        listStart = Number.isFinite(parsedStart) && parsedStart > 0 ? parsedStart : 1;
+      }
       listType = "ol";
-      listItems.push(olMatch[1].trim());
+      listItems.push(olMatch[2].trim());
       continue;
     }
 
