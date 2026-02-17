@@ -59,6 +59,7 @@ type SecuritySensitiveDraft = {
 type RunnerDraft = {
   intervalSec: string;
   commentContextLimit: string;
+  maxTokens: string;
 };
 
 type BubbleKind = "success" | "error" | "info";
@@ -169,6 +170,7 @@ export default function AgentManagementPage() {
   const [runnerDraft, setRunnerDraft] = useState<RunnerDraft>({
     intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
     commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
+    maxTokens: "",
   });
   const [runnerLauncherPort, setRunnerLauncherPort] = useState(
     DEFAULT_RUNNER_LAUNCHER_PORT
@@ -618,6 +620,7 @@ export default function AgentManagementPage() {
         setRunnerDraft({
           intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
           commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
+          maxTokens: "",
         });
         setRunnerStatus("");
         setRunnerLauncherPort(DEFAULT_RUNNER_LAUNCHER_PORT);
@@ -630,6 +633,7 @@ export default function AgentManagementPage() {
           setRunnerDraft({
             intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
             commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
+            maxTokens: "",
           });
           setRunnerStatus("Using default runner settings.");
           return;
@@ -647,6 +651,7 @@ export default function AgentManagementPage() {
             String(parsed?.commentContextLimit || ""),
             DEFAULT_COMMENT_CONTEXT_LIMIT
           ),
+          maxTokens: normalizePositiveInteger(String(parsed?.maxTokens || ""), ""),
         });
         setRunnerLauncherPort(
           normalizePositiveInteger(
@@ -659,6 +664,7 @@ export default function AgentManagementPage() {
         setRunnerDraft({
           intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
           commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
+          maxTokens: "",
         });
         setRunnerLauncherPort(DEFAULT_RUNNER_LAUNCHER_PORT);
         setRunnerStatus("Failed to load runner settings.");
@@ -679,6 +685,7 @@ export default function AgentManagementPage() {
         runnerDraft.commentContextLimit,
         DEFAULT_COMMENT_CONTEXT_LIMIT
       ),
+      maxTokens: normalizePositiveInteger(runnerDraft.maxTokens, ""),
     };
     const nextPort = normalizePositiveInteger(
       runnerLauncherPort,
@@ -899,10 +906,23 @@ export default function AgentManagementPage() {
       runnerDraft.commentContextLimit,
       DEFAULT_COMMENT_CONTEXT_LIMIT
     );
+    const normalizedMaxTokens = normalizePositiveInteger(
+      runnerDraft.maxTokens,
+      ""
+    );
+    if (runnerDraft.maxTokens.trim() && !normalizedMaxTokens) {
+      pushBubble(
+        "error",
+        "Max Tokens must be a positive integer.",
+        anchorEl
+      );
+      return;
+    }
     setRunnerLauncherPort(launcherPort);
     setRunnerDraft({
       intervalSec: normalizedInterval,
       commentContextLimit: normalizedLimit,
+      maxTokens: normalizedMaxTokens,
     });
 
     if (typeof window === "undefined") {
@@ -919,6 +939,9 @@ export default function AgentManagementPage() {
         intervalSec: Number(normalizedInterval),
         commentContextLimit: Number(normalizedLimit),
         runnerLauncherPort: Number(launcherPort),
+        ...(normalizedMaxTokens
+          ? { maxTokens: Number(normalizedMaxTokens) }
+          : {}),
       },
     });
     if (!encodedInput) {
@@ -979,6 +1002,7 @@ export default function AgentManagementPage() {
     readError,
     runnerDraft.commentContextLimit,
     runnerDraft.intervalSec,
+    runnerDraft.maxTokens,
     runnerLauncherPort,
     saveRunnerConfig,
     securityDraft.alchemyApiKey,
@@ -1526,6 +1550,24 @@ export default function AgentManagementPage() {
                     commentContextLimit: value,
                   }));
                 }}
+              />
+            </div>
+            <div className="field">
+              <label>Max Tokens (Optional)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={runnerDraft.maxTokens}
+                onWheel={(event) => event.currentTarget.blur()}
+                onChange={(event) => {
+                  const { value } = event.currentTarget;
+                  setRunnerDraft((prev) => ({
+                    ...prev,
+                    maxTokens: value,
+                  }));
+                }}
+                placeholder="Leave empty for no limit"
               />
             </div>
             <div className="field">

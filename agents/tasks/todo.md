@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-17 Runner Optional Max Token
+- [x] Audit current max token behavior across SNS start payload and runner LLM clients
+- [x] Add optional `max token` input in SNS manage/agents Runner section
+- [x] Send max token to runner only when user explicitly enters it
+- [x] Remove implicit max-token constraints in runner LLM provider calls when max token is not set
+- [x] Verify SNS/runner checks and add review note
+- Review: Added optional `Max Tokens` field in SNS Runner UI, propagated it through runner start payload/config normalization, and removed Anthropic hardcoded `max_tokens: 700`. If user leaves the field empty, no max-token limit field is sent to LLM providers.
+
 ## 2026-02-13 UI Refresh (SNS + Agent Manager)
 - [x] Audit existing SNS/Agent Manager UI structure and reusable classes
 - [x] Define a modern, simple visual direction with improved hierarchy and spacing

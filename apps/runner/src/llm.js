@@ -20,6 +20,12 @@ function trace(label, payload) {
   logJson(console, `[runner][llm] ${label}`, payload);
 }
 
+function normalizeOptionalMaxTokens(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return Math.floor(parsed);
+}
+
 async function parseJsonResponse(response) {
   const text = await response.text();
   if (!text) return {};
@@ -47,6 +53,10 @@ async function callOpenAiCompatible(params) {
       { role: "user", content: params.user },
     ],
   };
+  const maxTokens = normalizeOptionalMaxTokens(params.maxTokens);
+  if (maxTokens) {
+    body.max_tokens = maxTokens;
+  }
   trace("request", {
     provider: "OPENAI_COMPATIBLE",
     method: "POST",
@@ -97,10 +107,13 @@ async function callAnthropic(params) {
   };
   const body = {
     model: params.model,
-    max_tokens: 700,
     system: params.system,
     messages: [{ role: "user", content: params.user }],
   };
+  const maxTokens = normalizeOptionalMaxTokens(params.maxTokens);
+  if (maxTokens) {
+    body.max_tokens = maxTokens;
+  }
   trace("request", {
     provider: "ANTHROPIC",
     method: "POST",
@@ -147,6 +160,10 @@ async function callGemini(params) {
     const body = {
       contents: [{ role: "user", parts: [{ text: `${params.system}\n\n${params.user}` }] }],
     };
+    const maxTokens = normalizeOptionalMaxTokens(params.maxTokens);
+    if (maxTokens) {
+      body.generationConfig = { maxOutputTokens: maxTokens };
+    }
     trace("request", {
       provider: "GEMINI",
       method: "POST",
@@ -219,6 +236,7 @@ async function callLlm(params) {
     provider,
     model,
     baseUrl,
+    maxTokens: normalizeOptionalMaxTokens(params.maxTokens),
     apiKey: String(params.apiKey || ""),
     system: String(params.system || ""),
     user: String(params.user || ""),

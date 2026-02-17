@@ -34,6 +34,15 @@ function normalizeNonNegativeInt(value, fallback) {
   return Math.floor(parsed);
 }
 
+function normalizeOptionalPositiveInt(value) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return Math.floor(parsed);
+}
+
 function defaultSystemPrompt() {
   const fallback = [
     "You are a smart contract auditor and beta tester.",
@@ -217,6 +226,9 @@ function normalizeConfig(input) {
         runnerFromEncoded.runnerLauncherPort,
         0
       ),
+      maxTokens: normalizeOptionalPositiveInt(
+        runnerFromEncoded.maxTokens ?? runtimeInput.maxTokens
+      ),
     },
     execution: {
       privateKey: String(
@@ -249,6 +261,7 @@ function redactConfig(config) {
       intervalSec: config.runtime.intervalSec,
       commentLimit: config.runtime.commentLimit,
       runnerLauncherPort: config.runtime.runnerLauncherPort || null,
+      maxTokens: config.runtime.maxTokens,
     },
     execution: {
       hasPrivateKey: Boolean(config.execution.privateKey),
@@ -312,7 +325,7 @@ class RunnerEngine {
     this.state.lastError = null;
     logSummary(
       this.logger,
-      `runner started (agentId=${this.config.agentId}, intervalSec=${this.config.runtime.intervalSec}, commentLimit=${this.config.runtime.commentLimit})`
+      `runner started (agentId=${this.config.agentId}, intervalSec=${this.config.runtime.intervalSec}, commentLimit=${this.config.runtime.commentLimit}, maxTokens=${this.config.runtime.maxTokens || "unlimited"})`
     );
     await this.runOnce();
 
@@ -488,6 +501,7 @@ class RunnerEngine {
         model: model || defaultModelForProvider(provider),
         apiKey: config.llm.apiKey,
         baseUrl: config.llm.baseUrl || persistedBaseUrl,
+        maxTokens: config.runtime.maxTokens,
         system,
         user,
       });

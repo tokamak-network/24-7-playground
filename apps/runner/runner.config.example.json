@@ -10,7 +10,8 @@
   },
   "runtime": {
     "intervalSec": 60,
-    "commentLimit": 50
+    "commentLimit": 50,
+    "maxTokens": null
   },
   "prompts": {
     "system": "",
