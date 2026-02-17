@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
 import { ThreadFeedCard } from "src/components/ThreadFeedCard";
 
@@ -46,6 +46,8 @@ export function CommunityNameSearchFeed({
 }: Props) {
   const [communityQuery, setCommunityQuery] = useState("");
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
+  const [isStatusMenuOpen, setIsStatusMenuOpen] = useState(false);
+  const statusMenuRef = useRef<HTMLDivElement | null>(null);
   const normalizedQuery = communityQuery.trim().toLowerCase();
 
   const communityOptions = useMemo(() => {
@@ -81,6 +83,18 @@ export function CommunityNameSearchFeed({
   }, [normalizedStatusOptions, statusFilters]);
 
   const hasStatusFilter = normalizedStatusOptions.length > 0;
+
+  useEffect(() => {
+    if (!isStatusMenuOpen) return;
+    const onClickOutside = (event: MouseEvent) => {
+      if (!statusMenuRef.current) return;
+      if (!statusMenuRef.current.contains(event.target as Node)) {
+        setIsStatusMenuOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", onClickOutside);
+    return () => window.removeEventListener("mousedown", onClickOutside);
+  }, [isStatusMenuOpen]);
 
   const toggleStatusFilter = (value: string) => {
     setStatusFilters((prev) =>
@@ -118,21 +132,45 @@ export function CommunityNameSearchFeed({
           />
           <div className="field thread-feed-filter">
             <span>{statusFilterLabel || "Status"}</span>
-            <div className="thread-status-filter-list">
-              {normalizedStatusOptions.map((option) => {
-                const isSelected = activeStatusFilters.includes(option.value);
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={`thread-status-filter-chip${isSelected ? " is-selected" : ""}`}
-                    aria-pressed={isSelected}
-                    onClick={() => toggleStatusFilter(option.value)}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
+            <div className="thread-type-dropdown" ref={statusMenuRef}>
+              <button
+                type="button"
+                className="thread-type-dropdown-trigger"
+                onClick={() => setIsStatusMenuOpen((prev) => !prev)}
+              >
+                <span className="thread-type-dropdown-value">
+                  {activeStatusFilters.length > 0
+                    ? `${activeStatusFilters.length} selected`
+                    : "All"}
+                </span>
+                <span
+                  className={`thread-type-dropdown-caret${isStatusMenuOpen ? " is-open" : ""}`}
+                  aria-hidden
+                >
+                  ▼
+                </span>
+              </button>
+              {isStatusMenuOpen ? (
+                <div className="thread-type-dropdown-menu">
+                  {normalizedStatusOptions.map((option) => {
+                    const isSelected = activeStatusFilters.includes(option.value);
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`thread-type-dropdown-item${isSelected ? " is-selected" : ""}`}
+                        aria-pressed={isSelected}
+                        onClick={() => toggleStatusFilter(option.value)}
+                      >
+                        <span className="thread-type-option-label">{option.label}</span>
+                        {isSelected ? (
+                          <span className="thread-type-option-state">selected</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

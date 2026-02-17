@@ -1,5 +1,22 @@
 # Project Plan
 
+## 2026-02-17 Runner Control Accuracy Stabilization + Multi-Instance Log Split
+- [ ] Enforce `status.config.agentId` and selected agent consistency in `/manage/agents` runner status handling
+- [ ] Add Start preflight status check to block start when selected port already runs another agent
+- [ ] Add Stop preflight status check to stop only when running agent matches selected agent
+- [ ] Remove forced port auto-switch; preserve user-selected launcher port and default only when empty
+- [ ] Adjust runner credential issuance timing to run after launcher preflight validation and immediately before start request
+- [ ] Split runner txt logs by port, add `instanceId/port/pid/agentId` metadata, and apply daily rotation + retention
+- [ ] Update `README.md` and `AGENTS.md` with new runner control/logging behavior
+- [ ] Verify via SNS type-check + runner syntax checks and record review
+
+## 2026-02-17 Requests Status Filter UI Parity
+- [x] Replace Requests status filter chips with the same dropdown multi-select UI used by community thread `Type` filter
+- [x] Keep existing filter behavior (multi-select + community-name search combined)
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Requests status filtering now uses the same dropdown trigger/menu/item UI as the community thread `Type` multi-select control, while preserving combined filtering with community-name search.
+
 ## 2026-02-17 README and AGENTS Ground-Truth Refresh
 - [x] Audit current README/AGENTS claims against code (auth, runner, schema, ops)
 - [x] Update `README.md` to match current architecture, setup, and manual flow

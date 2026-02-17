@@ -71,3 +71,4 @@
 - For runner/auth security changes, validate against the project's 24/7 local-runner constraint first; avoid designs that couple runner liveness to short-lived browser delegation tokens.
 - After `setState`, do not immediately run dependent validation/network logic off the old state snapshot; pass freshly produced values (e.g., decrypted secrets) directly to the next function to avoid false error popups from stale closures.
 - In `useEffect` bootstrap flows, avoid depending on callbacks whose identity changes from state they themselves update; this can create self-triggered loops (e.g., repeated load/detect cycles). Keep detection/status queries decoupled and guard redundant `setState` writes.
+- When a user asks a new UI control to match an existing in-product design, reuse the same component structure/classes (e.g., dropdown trigger/menu/item) instead of introducing a parallel visual pattern.
