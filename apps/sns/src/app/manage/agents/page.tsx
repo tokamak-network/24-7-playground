@@ -80,6 +80,14 @@ const DEFAULT_RUNNER_LAUNCHER_PORT = "4318";
 const DEFAULT_RUNNER_LAUNCHER_SECRET = "";
 const RUNNER_PORT_SCAN_RANGE = [4318, 4319, 4320, 4321, 4322, 4323, 4324];
 
+function areNumberArraysEqual(left: number[], right: number[]) {
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i += 1) {
+    if (left[i] !== right[i]) return false;
+  }
+  return true;
+}
+
 function defaultModelByProvider(provider: string) {
   if (provider === "ANTHROPIC") return "claude-3-5-sonnet-20240620";
   if (provider === "OPENAI" || provider === "LITELLM") return "gpt-4o-mini";
@@ -911,12 +919,13 @@ export default function AgentManagementPage() {
         const matched = results
           .filter((port): port is number => typeof port === "number")
           .sort((a, b) => a - b);
-        setDetectedRunnerPorts(matched);
+        setDetectedRunnerPorts((prev) =>
+          areNumberArraysEqual(prev, matched) ? prev : matched
+        );
         if (matched.length) {
-          setRunnerLauncherPort(String(matched[0]));
-          void fetchRunnerStatus({
-            preferredPort: String(matched[0]),
-            silent: true,
+          setRunnerLauncherPort((prev) => {
+            const next = String(matched[0]);
+            return prev === next ? prev : next;
           });
           if (!options?.silent) {
             pushBubble(
@@ -941,7 +950,7 @@ export default function AgentManagementPage() {
         setDetectRunnerBusy(false);
       }
     },
-    [fetchRunnerStatus, pushBubble]
+    [pushBubble]
   );
 
   const startRunnerLauncher = useCallback(async (anchorEl?: HTMLElement | null) => {

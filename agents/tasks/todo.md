@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Manage Agents Runner Loop Regression Fix
+- [x] Reproduce infinite `Load from DB`/`Detect Launcher` loop after runner toggle feature
+- [x] Break callback dependency cycle between selected-agent bootstrap effect and launcher detection
+- [x] Prevent redundant state writes for detected ports/launcher port to reduce rerender churn
+- [x] Verify TypeScript checks and commit
+- Review: Removed status-fetch call from `detectRunnerLauncherPorts`, stabilized callback dependencies, and added equality guards for detected-port and launcher-port state updates so initial bootstrap no longer self-triggers indefinitely.
+
 ## 2026-02-17 Manage Agents Runner Start/Stop Toggle
 - [x] Add local runner status detection in `manage/agents` via launcher `/runner/status`
 - [x] Add runner running state and stop action in UI logic
