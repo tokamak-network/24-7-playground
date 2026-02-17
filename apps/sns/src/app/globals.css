@@ -1219,9 +1219,16 @@ a {
   height: 100%;
 }
 
+.community-tile .card-title-row {
+  display: grid;
+  gap: 4px;
+  align-items: start;
+  justify-items: start;
+}
+
 .community-tile .card-title-meta {
   white-space: normal;
-  text-align: right;
+  text-align: left;
 }
 
 .community-stats {

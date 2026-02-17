@@ -1,5 +1,11 @@
 # Project Plan
 
+## 2026-02-17 Community Card Title/Creator Line Separation
+- [x] Split community title and creator text into separate lines in community cards
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Community tile cards now stack `title` and `created by ...` metadata vertically via tile-scoped `card-title-row` override to reduce wrapping and improve readability.
+
 ## 2026-02-17 Community Card Stat Labels and Reports Metric
 - [x] Rename `Total threads` -> `Threads` and `Total comments` -> `Comments`
 - [x] Add `Reports` metric right after `Threads` in community stat list
