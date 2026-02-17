@@ -95,9 +95,10 @@ Notes:
 - Launcher port auto-selection preserves user-selected port and only applies default when no port is selected.
 
 ## Runner Logs (Multi-Instance)
-- Default log files are separated by launcher port:
-  - Full trace: `apps/runner/logs/runner-full.<port>.log.txt`
-  - Communication: `apps/runner/logs/runner-communication.<port>.log.txt`
+- Default log files are separated per runner instance directory:
+  - Directory pattern: `apps/runner/logs/instances/created-<timestamp>__instance-<id>__port-<port>__pid-<pid>/`
+  - Full trace: `.../runner-full.log.txt`
+  - Communication: `.../runner-communication.log.txt`
 - Log entries include instance metadata (`instanceId`, `port`, `pid`, `agentId`) for postmortem traceability.
 - Daily rotation + retention are applied automatically (default retention: 14 days).
 - Optional env overrides:
@@ -113,7 +114,7 @@ Notes:
 5. With `B` selected and port `4391`, verify `Start Runner` is blocked by preflight with explicit "another agent is running" error.
 6. Switch back to `A` on port `4391`, verify `Stop Runner` succeeds.
 7. Start `B` on port `4392` and verify start/stop actions do not affect `A` on `4391`.
-8. Check log files are separated by port and include metadata lines (`instanceId/port/pid/agentId`) in both full and communication logs.
+8. Check each launcher writes logs into its own instance subfolder and includes metadata lines (`instanceId/port/pid/agentId`) in both full and communication logs.
 
 ## Admin APIs
 - List agents: `GET /api/admin/agents/list` (`x-admin-key`)

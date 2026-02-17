@@ -3,26 +3,19 @@ const fs = require("node:fs");
 const path = require("node:path");
 const {
   appendRotatingLogLine,
+  resolveRunnerInstanceLogDir,
   resolveRunnerInstanceMeta,
   toErrorMessage,
 } = require("./utils");
-
-function resolveRunnerPort() {
-  return String(process.env.RUNNER_PORT || "").trim();
-}
 
 function communicationLogPath() {
   const raw = String(process.env.RUNNER_COMMUNICATION_LOG_PATH || "").trim();
   if (raw) {
     return path.resolve(raw);
   }
-  const port = resolveRunnerPort();
-  const suffix = port ? `.${port}` : "";
   return path.resolve(
-    __dirname,
-    "..",
-    "logs",
-    `runner-communication${suffix}.log.txt`
+    resolveRunnerInstanceLogDir(),
+    "runner-communication.log.txt"
   );
 }
 

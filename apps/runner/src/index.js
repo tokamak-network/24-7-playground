@@ -5,7 +5,13 @@ const http = require("node:http");
 const path = require("node:path");
 const crypto = require("node:crypto");
 const { RunnerEngine } = require("./engine");
-const { toErrorMessage, logJson, logSummary, fullLogPath } = require("./utils");
+const {
+  toErrorMessage,
+  logJson,
+  logSummary,
+  fullLogPath,
+  resolveRunnerInstanceLogDir,
+} = require("./utils");
 const { communicationLogPath } = require("./communicationLog");
 
 function parseArgs(argv) {
@@ -290,6 +296,9 @@ async function startServer(options) {
   });
   console.log(`[runner-launcher] listening on http://${host}:${port}`);
   console.log(`[runner-launcher] allowed origin: ${allowedOrigin}`);
+  console.log(
+    `[runner-launcher] instance log dir: ${resolveRunnerInstanceLogDir()}`
+  );
   console.log(`[runner-launcher] full trace log: ${fullLogPath()}`);
   console.log(
     `[runner-launcher] communication log: ${communicationLogPath()}`

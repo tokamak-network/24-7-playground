@@ -216,6 +216,7 @@ const DEFAULT_LOG_RETENTION_DAYS = 14;
 const GENERATED_RUNNER_INSTANCE_ID = `runner-${process.pid}-${crypto
   .randomBytes(4)
   .toString("hex")}`;
+const GENERATED_RUNNER_INSTANCE_CREATED_AT = new Date().toISOString();
 
 function normalizePositiveInteger(value, fallback) {
   const parsed = Number(value);
@@ -321,10 +322,18 @@ function findNestedAgentId(value, depth = 0) {
 
 function resolveRunnerInstanceMeta(options = {}) {
   const payloadAgentId = findNestedAgentId(options.payload);
+  const rawCreatedAt = String(
+    process.env.RUNNER_INSTANCE_CREATED_AT || GENERATED_RUNNER_INSTANCE_CREATED_AT
+  ).trim();
+  const createdAtDate = new Date(rawCreatedAt);
+  const createdAt = Number.isFinite(createdAtDate.getTime())
+    ? createdAtDate.toISOString()
+    : GENERATED_RUNNER_INSTANCE_CREATED_AT;
   return {
     instanceId:
       String(process.env.RUNNER_INSTANCE_ID || "").trim() ||
       GENERATED_RUNNER_INSTANCE_ID,
+    createdAt,
     port: String(options.port || resolveRunnerPort()).trim(),
     pid: process.pid,
     agentId:
@@ -334,14 +343,43 @@ function resolveRunnerInstanceMeta(options = {}) {
   };
 }
 
+function sanitizePathSegment(value, fallback) {
+  const text = String(value || "")
+    .trim()
+    .replace(/[^a-zA-Z0-9._-]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  if (text) return text;
+  return String(fallback || "unknown");
+}
+
+function formatCreatedAtSegment(createdAt) {
+  const parsed = new Date(String(createdAt || "").trim());
+  if (!Number.isFinite(parsed.getTime())) {
+    return "unknown-time";
+  }
+  return parsed
+    .toISOString()
+    .replace(/[:-]/g, "")
+    .replace(/\.\d{3}Z$/, "Z");
+}
+
+function resolveRunnerInstanceLogDir(options = {}) {
+  const meta = resolveRunnerInstanceMeta(options);
+  const dirName = [
+    `created-${formatCreatedAtSegment(meta.createdAt)}`,
+    `instance-${sanitizePathSegment(meta.instanceId, "unknown-instance")}`,
+    `port-${sanitizePathSegment(meta.port || "unknown", "unknown-port")}`,
+    `pid-${sanitizePathSegment(meta.pid, "unknown-pid")}`,
+  ].join("__");
+  return path.resolve(__dirname, "..", "logs", "instances", dirName);
+}
+
 function fullLogPath() {
   const raw = String(process.env.RUNNER_FULL_LOG_PATH || "").trim();
   if (raw) {
     return path.resolve(raw);
   }
-  const port = resolveRunnerPort();
-  const suffix = port ? `.${port}` : "";
-  return path.resolve(__dirname, "..", "logs", `runner-full${suffix}.log.txt`);
+  return path.resolve(resolveRunnerInstanceLogDir(), "runner-full.log.txt");
 }
 
 function appendFullLogLine(line) {
@@ -388,4 +426,5 @@ module.exports = {
   fullLogPath,
   appendRotatingLogLine,
   resolveRunnerInstanceMeta,
+  resolveRunnerInstanceLogDir,
 };

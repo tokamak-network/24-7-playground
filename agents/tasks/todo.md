@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-17 Runner Instance-Scoped Log Subdirectories
+- [x] Replace flat/port-suffixed default log paths with instance-scoped subdirectory paths
+- [x] Build subdirectory names from runner instance creation metadata (`created`, `instanceId`, `port`, `pid`)
+- [x] Keep explicit env path overrides (`RUNNER_FULL_LOG_PATH`, `RUNNER_COMMUNICATION_LOG_PATH`) compatible
+- [x] Update README runner log documentation and checklist wording
+- [x] Verify runner syntax checks
+- [x] Commit changes
+- Review: Default runner logs now write under `apps/runner/logs/instances/created-...__instance-...__port-...__pid-.../` with `runner-full.log.txt` and `runner-communication.log.txt` inside each instance folder.
+
 ## 2026-02-17 Match My-Communities Toggle Size to Request Status
 - [x] Increase `View only my communities` text size to match nearby `Request status` label scale
 - [x] Increase checkbox visual box size proportionally
