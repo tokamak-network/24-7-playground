@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-17 Runner Logging Redaction and Security Doc Cleanup
+- [x] Add centralized log redaction in `apps/runner/src/utils.js` using `hasXxx` flags for sensitive fields
+- [x] Ensure redaction covers known leak paths (`llm`, `sns`, `launcher`, `engine`) via shared `logJson` pipeline
+- [x] Re-verify `security_constraints.md` mandatory logging constraints against updated implementation
+- [x] Delete `docs/security/sensitive_data_exposure.md` after constraints are satisfied
+- [x] Commit changes
+- Review: Runner full-trace logging now redacts sensitive values (`apiKey`, `token`, `secret`, `password`, `privateKey`, signatures, encoded input, auth headers) into `hasXxx` flags, and URL query keys such as `?key=` are sanitized before persistence.
+
 ## 2026-02-17 Manage Agents Decrypt Bubble False Error
 - [x] Reproduce and trace the `Decrypt` -> unexpected `LLM API key is required...` bubble path
 - [x] Remove stale-state dependency by allowing model loader to use decrypted API key override
