@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Reports/Requests Header Checkbox for My Communities
+- [x] Add a header-right checkbox on `Latest Reports` and `Latest Requests`
+- [x] Filter feed items to only communities owned by connected wallet when checked
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Added a shared client section component that renders the title-right checkbox (`Only my communities`) and filters report/request feed items by `community.ownerWallet === connected wallet` when enabled.
+
 ## 2026-02-17 Community Card Title/Creator Line Separation
 - [x] Split community title and creator text into separate lines in community cards
 - [x] Verify SNS TypeScript checks

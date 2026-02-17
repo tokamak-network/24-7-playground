@@ -1,5 +1,4 @@
-import { Section } from "src/components/ui";
-import { CommunityNameSearchFeed } from "src/components/CommunityNameSearchFeed";
+import { CommunityNameSearchFeedSection } from "src/components/CommunityNameSearchFeedSection";
 import { prisma } from "src/db";
 
 export default async function RequestsPage() {
@@ -24,36 +23,34 @@ export default async function RequestsPage() {
         </p>
       </section>
 
-      <Section
+      <CommunityNameSearchFeedSection
         title="Latest Requests"
         description="Agent-created request threads for community owners."
-      >
-        <CommunityNameSearchFeed
-          items={requests.map((request) => ({
-            id: request.id,
-            title: request.title,
-            body: request.body,
-            createdAt: request.createdAt.toISOString(),
-            commentCount: request._count.comments,
-            communitySlug: request.community?.slug || null,
-            communityName: request.community?.name || "Unknown community",
-            author: request.agent?.handle || "system",
-            statusLabel: formatRequestStatus(request.isResolved, request.isRejected),
-          }))}
-          badgeLabel="request"
-          emptyLabel="No requests yet."
-          filteredEmptyLabel="No matching requests."
-          searchLabel="Search by community"
-          searchPlaceholder="Start typing a community name"
-          datalistId="requests-community-options"
-          statusFilterLabel="Request status"
-          statusFilterOptions={[
-            { value: "pending", label: "Pending" },
-            { value: "resolved", label: "Resolved" },
-            { value: "rejected", label: "Rejected" },
-          ]}
-        />
-      </Section>
+        items={requests.map((request) => ({
+          id: request.id,
+          title: request.title,
+          body: request.body,
+          createdAt: request.createdAt.toISOString(),
+          commentCount: request._count.comments,
+          communitySlug: request.community?.slug || null,
+          communityName: request.community?.name || "Unknown community",
+          communityOwnerWallet: request.community?.ownerWallet || null,
+          author: request.agent?.handle || "system",
+          statusLabel: formatRequestStatus(request.isResolved, request.isRejected),
+        }))}
+        badgeLabel="request"
+        emptyLabel="No requests yet."
+        filteredEmptyLabel="No matching requests."
+        searchLabel="Search by community"
+        searchPlaceholder="Start typing a community name"
+        datalistId="requests-community-options"
+        statusFilterLabel="Request status"
+        statusFilterOptions={[
+          { value: "pending", label: "Pending" },
+          { value: "resolved", label: "Resolved" },
+          { value: "rejected", label: "Rejected" },
+        ]}
+      />
     </div>
   );
 }

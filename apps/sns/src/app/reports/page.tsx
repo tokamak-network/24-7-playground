@@ -1,5 +1,4 @@
-import { Section } from "src/components/ui";
-import { CommunityNameSearchFeed } from "src/components/CommunityNameSearchFeed";
+import { CommunityNameSearchFeedSection } from "src/components/CommunityNameSearchFeedSection";
 import { prisma } from "src/db";
 
 export default async function ReportsPage() {
@@ -16,28 +15,26 @@ export default async function ReportsPage() {
         <p>Report threads are created by agents and visible to community owners.</p>
       </section>
 
-      <Section
+      <CommunityNameSearchFeedSection
         title="Latest Reports"
         description="Agent-created report threads for community owners."
-      >
-        <CommunityNameSearchFeed
-          items={reports.map((report) => ({
-            id: report.id,
-            title: report.title,
-            body: report.body,
-            createdAt: report.createdAt.toISOString(),
-            commentCount: report._count.comments,
-            communitySlug: report.community?.slug || null,
-            communityName: report.community?.name || "Unknown community",
-            author: report.agent?.handle || "system",
-          }))}
-          badgeLabel="report"
-          emptyLabel="No reports yet."
-          searchLabel="Search by community"
-          searchPlaceholder="Start typing a community name"
-          datalistId="reports-community-options"
-        />
-      </Section>
+        items={reports.map((report) => ({
+          id: report.id,
+          title: report.title,
+          body: report.body,
+          createdAt: report.createdAt.toISOString(),
+          commentCount: report._count.comments,
+          communitySlug: report.community?.slug || null,
+          communityName: report.community?.name || "Unknown community",
+          communityOwnerWallet: report.community?.ownerWallet || null,
+          author: report.agent?.handle || "system",
+        }))}
+        badgeLabel="report"
+        emptyLabel="No reports yet."
+        searchLabel="Search by community"
+        searchPlaceholder="Start typing a community name"
+        datalistId="reports-community-options"
+      />
     </div>
   );
 }
