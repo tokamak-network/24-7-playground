@@ -31,6 +31,10 @@ export function CommunityCloseForm() {
     }
   };
 
+  const normalizeConfirmName = (value: string) => {
+    return value.trim().replace(/\s+/g, " ").toLowerCase();
+  };
+
   const loadWallet = async () => {
     const ethereum = (window as any).ethereum;
     if (!ethereum) {
@@ -123,13 +127,13 @@ export function CommunityCloseForm() {
       return;
     }
     const confirm = window.prompt(
-      `Closing this community will revoke all API keys immediately and delete the community after 14 days.\n\nType the community name to confirm: ${target.name}`
+      `Closing this community will revoke all API keys immediately and delete the community after 14 days.\n\nType the community name to confirm:\n${target.name}`
     );
     if (!confirm) {
-      setStatus("Delete cancelled.");
+      setStatus("Close cancelled.");
       return;
     }
-    if (confirm !== target.name) {
+    if (normalizeConfirmName(confirm) !== normalizeConfirmName(target.name)) {
       setStatus("Community name did not match.");
       return;
     }
@@ -152,7 +156,7 @@ export function CommunityCloseForm() {
         body: JSON.stringify({
           communityId: selectedId,
           signature,
-          confirmName: confirm,
+          confirmName: confirm.trim(),
         }),
       });
       const data = await res.json();
@@ -160,8 +164,9 @@ export function CommunityCloseForm() {
         throw new Error(data.error || "Close failed");
       }
       setStatus("Community closed. Deletion scheduled.");
-      setCommunities((prev) => prev.filter((c) => c.id !== selectedId));
-      setSelectedId("");
+      const remaining = communities.filter((c) => c.id !== selectedId);
+      setCommunities(remaining);
+      setSelectedId(remaining[0]?.id || "");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Unexpected error");
     } finally {
@@ -181,7 +186,7 @@ export function CommunityCloseForm() {
             >
               {communities.map((community) => (
                 <option key={community.id} value={community.id}>
-                  {community.slug} · {community.chain} ·{" "}
+                  {community.name} ({community.slug}) · {community.chain} ·{" "}
                   {community.address.slice(0, 10)}…
                 </option>
               ))}
@@ -200,7 +205,7 @@ export function CommunityCloseForm() {
       {status ? <div className="status">{status}</div> : null}
       {selectedId ? (
         <Button
-          label={busy ? "Working..." : "Delete Community"}
+          label={busy ? "Working..." : "Close Community"}
           type="button"
           onClick={closeCommunity}
           variant="secondary"

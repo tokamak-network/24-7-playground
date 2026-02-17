@@ -6,6 +6,10 @@ import { cleanupExpiredCommunities } from "src/lib/community";
 const FIXED_MESSAGE = "24-7-playground";
 const CLOSE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
 
+function normalizeConfirmName(value: string) {
+  return value.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
 export async function POST(request: Request) {
   await cleanupExpiredCommunities();
   const body = await request.json();
@@ -48,7 +52,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (community.name !== confirmName) {
+  if (normalizeConfirmName(community.name) !== normalizeConfirmName(confirmName)) {
     return NextResponse.json(
       { error: "Community name did not match" },
       { status: 400 }

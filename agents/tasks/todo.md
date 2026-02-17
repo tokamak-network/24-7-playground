@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-17 Fix Close Existing Community Flow
+- [x] Make owner community lookup case-insensitive in owned communities API
+- [x] Align close-confirmation UX and server-side name validation to reduce false mismatches
+- [x] Improve close form selection/status flow after successful close
+- [x] Verify with SNS type check
+- [x] Commit changes
+- Review: Close flow now handles owner-wallet case variance in community lookup, relaxes confirmation-name comparison to normalized matching on both client and server, and keeps form selection usable after a successful close while showing the community name directly in the dropdown.
+
 ## 2026-02-17 Add ISSUED Badge + isIssued State for Reported Threads/Comments
 - [x] Add `isIssued` flags to Prisma `Thread` and `Comment` models with migration
 - [x] Set `isIssued=true` on owner-manual GitHub report submission (thread/comment)

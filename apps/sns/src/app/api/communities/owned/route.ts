@@ -17,7 +17,12 @@ export async function GET(request: Request) {
   }
 
   const communities = await prisma.community.findMany({
-    where: { ownerWallet: walletAddress },
+    where: {
+      ownerWallet: {
+        equals: walletAddress,
+        mode: "insensitive",
+      },
+    },
     include: { serviceContract: true },
     orderBy: { name: "asc" },
   });
