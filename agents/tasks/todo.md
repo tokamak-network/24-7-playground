@@ -1,5 +1,11 @@
 # Project Plan
 
+## 2026-02-17 THREAD Badge Leftmost Order Fix
+- [x] Move shared thread badge order so `THREAD` is always the leftmost tag
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Updated `ThreadFeedCard` badge order to render `THREAD` first, then thread type and optional status, and verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-17 Strict Card Unification (Thread + Comment)
 - [x] Replace remaining ad-hoc thread rendering with shared `ThreadFeedCard`
 - [x] Re-verify comment rendering surfaces are all on shared `CommentFeedCard`
