@@ -91,6 +91,7 @@ Notes:
   - launcher port + launcher secret
 - Optional for report auto-share:
   - GitHub issue token (`Security Sensitive` -> `GitHub Issue Token`)
+  - If omitted, runner GitHub auto-share is disabled (owner manual share still available).
 - `/manage/agents` runner controls enforce target-agent consistency from launcher status:
   - `Stop Runner` is enabled only when `/runner/status` reports `running=true` and `status.config.agentId === selectedAgentId`.
   - `Start Runner` does a preflight status check and blocks start if selected port is already running a different agent.

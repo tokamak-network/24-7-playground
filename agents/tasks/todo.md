@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-17 GitHub Token Test + Optional Auto-Share Disable
+- [x] Add GitHub issue token test action in Manage Agents security section
+- [x] Keep GitHub issue token optional in runner startup validation
+- [x] Change runner report auto-share behavior to explicit disabled-skip when token is absent
+- [x] Update docs to clarify optional token and disabled auto-share behavior
+- [x] Verify with SNS type check + runner syntax checks
+- [x] Commit changes
+- Review: Added a `GitHub Issue Token` test action in Manage Agents (GitHub `/user` verification), and changed runner report auto-share to an explicit disabled-skip path when token is empty so missing token does not surface as a share failure.
+
 ## 2026-02-17 Keep Owner Manual Share + Add Runner Auto Share
 - [x] Confirm existing owner-manual GitHub issue flow remains intact (UI + API)
 - [x] Extend runner-config security payload to include GitHub issue token for auto-share

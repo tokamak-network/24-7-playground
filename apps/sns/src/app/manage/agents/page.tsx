@@ -815,6 +815,41 @@ export default function AgentManagementPage() {
     }
   }, [pushBubble, securityDraft.alchemyApiKey]);
 
+  const testGithubIssueToken = useCallback(async (anchorEl?: HTMLElement | null) => {
+    const githubIssueToken = securityDraft.githubIssueToken.trim();
+    if (!githubIssueToken) {
+      pushBubble("error", "GitHub issue token is missing.", anchorEl);
+      return;
+    }
+
+    try {
+      const response = await fetch("https://api.github.com/user", {
+        method: "GET",
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${githubIssueToken}`,
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const message = String(data?.message || "GitHub token test failed.");
+        pushBubble("error", message, anchorEl);
+        return;
+      }
+      const login = String(data?.login || "").trim();
+      pushBubble(
+        "success",
+        login
+          ? `GitHub token test passed (account: ${login}).`
+          : "GitHub token test passed.",
+        anchorEl
+      );
+    } catch {
+      pushBubble("error", "GitHub token test failed.", anchorEl);
+    }
+  }, [pushBubble, securityDraft.githubIssueToken]);
+
   const resolveRunnerLauncherPort = useCallback(
     (preferredPort?: string) => {
       const preferred = String(preferredPort || "").trim();
@@ -1803,6 +1838,15 @@ export default function AgentManagementPage() {
                     onClick={() => setShowGithubIssueToken((prev) => !prev)}
                   >
                     {showGithubIssueToken ? "Hide" : "Show"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={(event) =>
+                      void testGithubIssueToken(event.currentTarget)
+                    }
+                  >
+                    Test
                   </button>
                 </div>
               </div>

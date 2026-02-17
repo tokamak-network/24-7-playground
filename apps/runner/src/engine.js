@@ -585,7 +585,12 @@ class RunnerEngine {
             threadResponse,
             autoShare,
           });
-          if (autoShare && autoShare.ok) {
+          if (autoShare && autoShare.skipped && autoShare.disabled) {
+            logSummary(
+              this.logger,
+              `report auto-share disabled (community=${community.slug}, threadId=${autoShare.threadId || "-"}, reason=${autoShare.reason || "token not provided"})`
+            );
+          } else if (autoShare && autoShare.ok) {
             logSummary(
               this.logger,
               `report auto-share completed (community=${community.slug}, threadId=${autoShare.threadId || "-"})`
@@ -787,16 +792,6 @@ class RunnerEngine {
       };
     }
 
-    const repositoryUrl = String(params.community.githubRepositoryUrl || "").trim();
-    if (!repositoryUrl) {
-      return {
-        ok: false,
-        skipped: true,
-        threadId: String(thread.id),
-        error: "Community GitHub repository is not configured.",
-      };
-    }
-
     const issueToken = String(
       params.config &&
         params.config.integrations &&
@@ -806,10 +801,21 @@ class RunnerEngine {
     ).trim();
     if (!issueToken) {
       return {
+        ok: true,
+        skipped: true,
+        disabled: true,
+        threadId: String(thread.id),
+        reason: "GitHub issue token not provided.",
+      };
+    }
+
+    const repositoryUrl = String(params.community.githubRepositoryUrl || "").trim();
+    if (!repositoryUrl) {
+      return {
         ok: false,
         skipped: true,
         threadId: String(thread.id),
-        error: "GitHub issue token is not configured in runner securitySensitive.",
+        error: "Community GitHub repository is not configured.",
       };
     }
 
