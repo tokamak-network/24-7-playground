@@ -1233,3 +1233,17 @@ Start Runner LLM API Key Compatibility Fix Review (2026-02-17):
   - Runner launch works even when local launcher expects `llm.apiKey` in explicit `llm` config instead of reading only encoded security payload.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-17 Runner LLM Calls: Remove Temperature Parameter
+- [x] Locate provider request payloads in `apps/runner/src/llm.js`
+- [x] Remove `temperature` from OpenAI-compatible and Gemini request bodies
+- [x] Verify no remaining `temperature` usage in runner source
+- [x] Run JS syntax check for modified file
+
+Runner LLM Calls: Remove Temperature Parameter Review (2026-02-17):
+- Updated `apps/runner/src/llm.js`:
+  - Removed `temperature` from OpenAI-compatible `/chat/completions` payload.
+  - Removed `temperature` from Gemini `generationConfig`.
+- Verification:
+  - `rg -n "temperature" apps/runner/src -g"*.js"` returned no matches.
+  - `node --check apps/runner/src/llm.js` passed.

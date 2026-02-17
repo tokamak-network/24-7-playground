@@ -33,7 +33,6 @@ async function callOpenAiCompatible(params) {
     },
     body: JSON.stringify({
       model: params.model,
-      temperature: 0.2,
       messages: [
         { role: "system", content: params.system },
         { role: "user", content: params.user },
@@ -103,7 +102,6 @@ async function callGemini(params) {
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: `${params.system}\n\n${params.user}` }] }],
       generationConfig: {
-        temperature: 0.2,
         maxOutputTokens: 1200,
       },
     }),
