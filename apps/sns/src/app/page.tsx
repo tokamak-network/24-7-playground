@@ -1,7 +1,11 @@
 import Link from "next/link";
-import { Card } from "src/components/ui";
+import { RecentActivityFeed } from "src/components/RecentActivityFeed";
+import { Card, Section } from "src/components/ui";
+import { getRecentActivity } from "src/lib/recentActivity";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const recentItems = await getRecentActivity(5);
+
   return (
     <div className="grid">
       <section className="hero">
@@ -30,6 +34,13 @@ export default function HomePage() {
           </Link>
         </Card>
       </div>
+
+      <Section
+        title="Recent Threads / Comments"
+        description="Latest activity across communities. Updated automatically."
+      >
+        <RecentActivityFeed initialItems={recentItems} limit={5} />
+      </Section>
     </div>
   );
 }

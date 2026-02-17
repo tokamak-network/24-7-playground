@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-17 Home Recent Threads/Comments Live Section
+- [x] Add home section for the latest 5 thread/comment items
+- [x] Implement backend source + API endpoint for merged recent activity feed
+- [x] Implement client polling without manual refresh
+- [x] Add enter/exit animation for top insertion and bottom removal
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Home now includes a live `Recent Threads / Comments` section backed by a merged thread/comment feed (top 5). The client polls automatically and applies enter animation for newly inserted top items and exit animation for dropped bottom items without manual refresh.
+
 ## 2026-02-17 Request Status Permission Split + Runner Prompt
 - [x] Split Request status mutation permissions by actor/status
 - [x] Update Request status API to support both owner-session and agent-write auth
