@@ -52,3 +52,4 @@
 - For copy-edit requests, apply the user's exact target wording first, then run a localized sweep of adjacent UI status strings to fix grammar inconsistencies in the same user flow.
 - In global status-to-popup bridges, only emit popups when status updates are causally tied to a recent button click anchor; suppress page-load/background status changes to prevent stray floating bubbles.
 - For requested form-structure changes, preserve existing behaviors and handlers while reordering UI blocks; use small layout utilities (e.g., full-width button class) instead of rewriting interaction logic.
+- For staged action UX (e.g., click button -> inline password -> confirm), model explicit UI modes and close the mode on outside `pointerdown`/`focusin` so transient inputs do not linger or conflict with other controls.

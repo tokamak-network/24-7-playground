@@ -446,6 +446,12 @@ a {
   width: 100%;
 }
 
+.button-compact {
+  min-height: 36px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;

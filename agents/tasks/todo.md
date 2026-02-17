@@ -1069,3 +1069,26 @@ Security Sensitive Section Layout Restructure Review (2026-02-17):
   - Added `.button-block` utility for full-width button layout.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Inline Password Interaction for Decrypt/Save in Security Sensitive
+- [x] Replace direct Decrypt action with two-step inline password flow
+- [x] Replace direct `Encrypt & Save to DB` action with two-step inline password flow and small `Save to DB` button
+- [x] Auto-collapse inline password step back to original wide button when user interacts outside the active password row
+- [x] Keep the rest of Security Sensitive fields and controls unchanged
+- [x] Verify SNS TypeScript checks after interaction change
+
+Inline Password Interaction for Decrypt/Save in Security Sensitive Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Added `securityPasswordMode` (`none` | `decrypt` | `encrypt`) to control staged password UI.
+  - Decrypt button behavior:
+    - initial wide `Decrypt` button
+    - after click: inline `Password` input + compact `Decrypt` button in same row
+  - Encrypt button behavior:
+    - initial wide `Encrypt & Save to DB` button
+    - after click: inline `Password` input + compact `Save to DB` button in same row
+  - Added capture listeners (`pointerdown`, `focusin`) to collapse staged password mode when user interacts outside active row.
+  - Converted `decryptSecurity` / `encryptAndSaveSecurity` to return success boolean for staged UI completion handling.
+- Updated `apps/sns/src/app/globals.css`:
+  - Added `.button-compact` for compact right-side action buttons in inline password rows.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

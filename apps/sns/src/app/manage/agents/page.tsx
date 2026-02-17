@@ -71,6 +71,8 @@ type BubbleMessage = {
   placement: BubblePlacement;
 };
 
+type SecurityPasswordMode = "none" | "decrypt" | "encrypt";
+
 const PROVIDER_OPTIONS = ["GEMINI", "OPENAI", "LITELLM", "ANTHROPIC"] as const;
 const DEFAULT_RUNNER_INTERVAL_SEC = "60";
 const DEFAULT_COMMENT_CONTEXT_LIMIT = "50";
@@ -150,6 +152,10 @@ export default function AgentManagementPage() {
     useState<EncryptedSecurity | null>(null);
   const [securityPassword, setSecurityPassword] = useState("");
   const [securitySignature, setSecuritySignature] = useState("");
+  const [securityPasswordMode, setSecurityPasswordMode] =
+    useState<SecurityPasswordMode>("none");
+  const decryptPasswordRowRef = useRef<HTMLDivElement | null>(null);
+  const encryptPasswordRowRef = useRef<HTMLDivElement | null>(null);
   const [securityDraft, setSecurityDraft] = useState<SecuritySensitiveDraft>({
     llmApiKey: "",
     executionWalletPrivateKey: "",
@@ -509,15 +515,15 @@ export default function AgentManagementPage() {
   const decryptSecurity = async (anchorEl?: HTMLElement | null) => {
     if (!encryptedSecurity) {
       pushBubble("error", "Load encrypted security-sensitive data first.", anchorEl);
-      return;
+      return false;
     }
     if (!securityPassword) {
       pushBubble("error", "Password is required to decrypt.", anchorEl);
-      return;
+      return false;
     }
     const signature = await acquireSecuritySignature(anchorEl);
     if (!signature) {
-      return;
+      return false;
     }
     setSecurityBusy(true);
     try {
@@ -537,8 +543,10 @@ export default function AgentManagementPage() {
       if (String(decrypted?.llmApiKey || "").trim()) {
         void fetchModelsByApiKey({ showSuccessBubble: false });
       }
+      return true;
     } catch {
       pushBubble("error", "Decryption failed. Check password/signature.", anchorEl);
+      return false;
     } finally {
       setSecurityBusy(false);
     }
@@ -547,15 +555,15 @@ export default function AgentManagementPage() {
   const encryptAndSaveSecurity = async (anchorEl?: HTMLElement | null) => {
     if (!token || !selectedAgentId) {
       pushBubble("error", "Sign in and select an agent pair first.", anchorEl);
-      return;
+      return false;
     }
     if (!securityPassword) {
       pushBubble("error", "Password is required to encrypt.", anchorEl);
-      return;
+      return false;
     }
     const signature = await acquireSecuritySignature(anchorEl);
     if (!signature) {
-      return;
+      return false;
     }
     setSecurityBusy(true);
     try {
@@ -571,13 +579,15 @@ export default function AgentManagementPage() {
       });
       if (!response.ok) {
         pushBubble("error", await readError(response), anchorEl);
-        return;
+        return false;
       }
       setEncryptedSecurity(encrypted);
       pushBubble("success", "Security-sensitive data has been saved.", anchorEl);
       await loadPairs();
+      return true;
     } catch {
       pushBubble("error", "Failed to encrypt and save security-sensitive data.", anchorEl);
+      return false;
     } finally {
       setSecurityBusy(false);
     }
@@ -975,6 +985,8 @@ export default function AgentManagementPage() {
       setGeneralStatus("");
       setEncryptedSecurity(null);
       setAvailableModels([]);
+      setSecurityPasswordMode("none");
+      setSecurityPassword("");
       setDetectedRunnerPorts([]);
       setSecurityDraft({
         llmApiKey: "",
@@ -986,6 +998,8 @@ export default function AgentManagementPage() {
     void loadGeneral(selectedAgentId, { silent: true });
     setEncryptedSecurity(null);
     setAvailableModels([]);
+    setSecurityPasswordMode("none");
+    setSecurityPassword("");
     setSecurityDraft({
       llmApiKey: "",
       executionWalletPrivateKey: "",
@@ -997,6 +1011,36 @@ export default function AgentManagementPage() {
       silent: true,
     });
   }, [detectRunnerLauncherPorts, loadGeneral, loadRunnerConfig, selectedAgentId]);
+
+  useEffect(() => {
+    if (securityPasswordMode === "none") return;
+
+    const activeRow =
+      securityPasswordMode === "decrypt"
+        ? decryptPasswordRowRef.current
+        : encryptPasswordRowRef.current;
+    if (!activeRow) return;
+
+    const resetInlinePasswordMode = (target: EventTarget | null) => {
+      if (!(target instanceof Node)) return;
+      if (activeRow.contains(target)) return;
+      setSecurityPasswordMode("none");
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      resetInlinePasswordMode(event.target);
+    };
+    const onFocusIn = (event: FocusEvent) => {
+      resetInlinePasswordMode(event.target);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown, true);
+    document.addEventListener("focusin", onFocusIn, true);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown, true);
+      document.removeEventListener("focusin", onFocusIn, true);
+    };
+  }, [securityPasswordMode]);
 
   return (
     <div className="grid">
@@ -1223,23 +1267,40 @@ export default function AgentManagementPage() {
                   </button>
                 </div>
               </div>
-              <button
-                type="button"
-                className="button button-secondary button-block"
-                onClick={(event) => void decryptSecurity(event.currentTarget)}
-                disabled={securityBusy}
-              >
-                {securityBusy ? "Decrypting..." : "Decrypt"}
-              </button>
-              <div className="field">
-                <label>Password</label>
-                <input
-                  type="password"
-                  value={securityPassword}
-                  onChange={(event) => setSecurityPassword(event.currentTarget.value)}
-                  placeholder="Password for encryption/decryption"
-                />
-              </div>
+              {securityPasswordMode === "decrypt" ? (
+                <div className="manager-inline-field" ref={decryptPasswordRowRef}>
+                  <input
+                    type="password"
+                    value={securityPassword}
+                    onChange={(event) => setSecurityPassword(event.currentTarget.value)}
+                    placeholder="Password"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    className="button button-secondary button-compact"
+                    onClick={async (event) => {
+                      const ok = await decryptSecurity(event.currentTarget);
+                      if (ok) {
+                        setSecurityPasswordMode("none");
+                        setSecurityPassword("");
+                      }
+                    }}
+                    disabled={securityBusy}
+                  >
+                    {securityBusy ? "Decrypting..." : "Decrypt"}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="button button-secondary button-block"
+                  onClick={() => setSecurityPasswordMode("decrypt")}
+                  disabled={securityBusy || securityPasswordMode === "encrypt"}
+                >
+                  Decrypt
+                </button>
+              )}
               <div className="field">
                 <label>LLM API Key</label>
                 <div className="manager-inline-field">
@@ -1333,14 +1394,40 @@ export default function AgentManagementPage() {
                   </button>
                 </div>
               </div>
-              <button
-                type="button"
-                className="button"
-                onClick={(event) => void encryptAndSaveSecurity(event.currentTarget)}
-                disabled={securityBusy}
-              >
-                {securityBusy ? "Saving..." : "Encrypt & Save to DB"}
-              </button>
+              {securityPasswordMode === "encrypt" ? (
+                <div className="manager-inline-field" ref={encryptPasswordRowRef}>
+                  <input
+                    type="password"
+                    value={securityPassword}
+                    onChange={(event) => setSecurityPassword(event.currentTarget.value)}
+                    placeholder="Password"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    className="button button-compact"
+                    onClick={async (event) => {
+                      const ok = await encryptAndSaveSecurity(event.currentTarget);
+                      if (ok) {
+                        setSecurityPasswordMode("none");
+                        setSecurityPassword("");
+                      }
+                    }}
+                    disabled={securityBusy}
+                  >
+                    {securityBusy ? "Saving..." : "Save to DB"}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="button button-block"
+                  onClick={() => setSecurityPasswordMode("encrypt")}
+                  disabled={securityBusy || securityPasswordMode === "decrypt"}
+                >
+                  Encrypt & Save to DB
+                </button>
+              )}
             </Card>
           </div>
           <Card
