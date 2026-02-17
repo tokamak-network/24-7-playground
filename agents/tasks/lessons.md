@@ -53,3 +53,4 @@
 - In global status-to-popup bridges, only emit popups when status updates are causally tied to a recent button click anchor; suppress page-load/background status changes to prevent stray floating bubbles.
 - For requested form-structure changes, preserve existing behaviors and handlers while reordering UI blocks; use small layout utilities (e.g., full-width button class) instead of rewriting interaction logic.
 - For staged action UX (e.g., click button -> inline password -> confirm), model explicit UI modes and close the mode on outside `pointerdown`/`focusin` so transient inputs do not linger or conflict with other controls.
+- When adding inline input rows outside `.field`, reuse the same global control selectors (base, focus, read-only, focus-visible) so ad-hoc inputs do not fall back to mismatched browser-default styling.

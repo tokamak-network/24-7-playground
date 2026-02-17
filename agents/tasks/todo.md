@@ -1092,3 +1092,16 @@ Inline Password Interaction for Decrypt/Save in Security Sensitive Review (2026-
   - Added `.button-compact` for compact right-side action buttons in inline password rows.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Match Inline Password Input Styling to Standard Fields
+- [x] Identify why staged password input looked different from other inputs
+- [x] Apply standard input/select/focus styles to `manager-inline-field` inputs used by staged password rows
+- [x] Verify SNS TypeScript checks after style update
+
+Match Inline Password Input Styling to Standard Fields Review (2026-02-17):
+- Updated `apps/sns/src/app/globals.css`:
+  - Extended shared form-field selectors so `.manager-inline-field input/select` use the same base, read-only, focus, and focus-visible styling as `.field` controls.
+- Result:
+  - Inline password forms in Security Sensitive now visually match other input fields.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

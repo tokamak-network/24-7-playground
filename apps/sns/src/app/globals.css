@@ -196,8 +196,10 @@ a {
 .button:focus-visible,
 .wallet-switch-button:focus-visible,
 .field input:focus-visible,
+.manager-inline-field input:focus-visible,
 .field textarea:focus-visible,
-.field select:focus-visible {
+.field select:focus-visible,
+.manager-inline-field select:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -330,8 +332,10 @@ a {
 }
 
 .field input,
+.manager-inline-field input,
 .field textarea,
-.field select {
+.field select,
+.manager-inline-field select {
   width: 100%;
   border-radius: 14px;
   border: 1px solid var(--line);
@@ -350,13 +354,16 @@ a {
 }
 
 .field input[readOnly],
+.manager-inline-field input[readOnly],
 .field textarea[readOnly] {
   background: #eef3fb;
 }
 
 .field input:focus,
+.manager-inline-field input:focus,
 .field textarea:focus,
-.field select:focus {
+.field select:focus,
+.manager-inline-field select:focus {
   border-color: #91b6ee;
   box-shadow: 0 0 0 3px rgba(24, 104, 219, 0.14);
   background: #fff;
