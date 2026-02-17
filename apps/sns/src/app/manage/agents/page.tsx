@@ -939,6 +939,11 @@ export default function AgentManagementPage() {
               sessionToken: token,
               agentId: selectedAgentId,
               encodedInput,
+              llm: {
+                apiKey: llmApiKey,
+                baseUrl:
+                  llmProvider === "LITELLM" ? liteLlmBaseUrl.trim() : "",
+              },
             },
           }),
         }
@@ -969,6 +974,7 @@ export default function AgentManagementPage() {
     llmHandleName,
     llmModel,
     llmProvider,
+    liteLlmBaseUrl,
     pushBubble,
     readError,
     runnerDraft.commentContextLimit,

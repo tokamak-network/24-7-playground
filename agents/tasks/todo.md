@@ -1215,3 +1215,21 @@ Persist LiteLLM Base URL in General Save/Load Review (2026-02-17):
 - Verification:
   - `npm -w apps/sns run prisma:generate` passed.
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-17 Start Runner LLM API Key Compatibility Fix
+- [x] Trace `Start Runner` request path from SNS UI to local runner launcher config parser
+- [x] Add explicit `config.llm.apiKey` forwarding in start payload while keeping encoded security input
+- [x] Include LiteLLM base URL in forwarded `config.llm.baseUrl` for compatibility
+- [x] Verify SNS TypeScript checks
+
+Start Runner LLM API Key Compatibility Fix Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - `Start Runner` now sends:
+    - `config.encodedInput` (existing path)
+    - `config.llm.apiKey` (explicit compatibility path)
+    - `config.llm.baseUrl` (LiteLLM selected case)
+  - Added `liteLlmBaseUrl` to the callback dependency list where referenced.
+- Result:
+  - Runner launch works even when local launcher expects `llm.apiKey` in explicit `llm` config instead of reading only encoded security payload.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
