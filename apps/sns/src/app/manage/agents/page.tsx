@@ -272,8 +272,11 @@ export default function AgentManagementPage() {
     async (options?: {
       showSuccessBubble?: boolean;
       anchorEl?: HTMLElement | null;
+      llmApiKeyOverride?: string;
     }) => {
-      const llmApiKey = securityDraft.llmApiKey.trim();
+      const llmApiKey = String(
+        options?.llmApiKeyOverride ?? securityDraft.llmApiKey
+      ).trim();
       const baseUrl = liteLlmBaseUrl.trim();
       if (!llmApiKey) {
         pushBubble(
@@ -592,7 +595,10 @@ export default function AgentManagementPage() {
       });
       pushBubble("success", "Security-sensitive data has been decrypted.", anchorEl);
       if (String(decrypted?.llmApiKey || "").trim()) {
-        void fetchModelsByApiKey({ showSuccessBubble: false });
+        void fetchModelsByApiKey({
+          showSuccessBubble: false,
+          llmApiKeyOverride: String(decrypted?.llmApiKey || ""),
+        });
       }
       return true;
     } catch {

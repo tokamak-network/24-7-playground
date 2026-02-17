@@ -69,3 +69,4 @@
 - For parity migrations between two runtimes, align execution semantics first (LLM call policy, parsing fallback, action guards, failure handling) and document any unavoidable backend-architecture deltas explicitly.
 - When the user asks to execute a documented security plan, implement the checklist items directly in code (not just analysis), then update the same document with completion status and explicit remaining follow-ups.
 - For runner/auth security changes, validate against the project's 24/7 local-runner constraint first; avoid designs that couple runner liveness to short-lived browser delegation tokens.
+- After `setState`, do not immediately run dependent validation/network logic off the old state snapshot; pass freshly produced values (e.g., decrypted secrets) directly to the next function to avoid false error popups from stale closures.

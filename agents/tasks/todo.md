@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Manage Agents Decrypt Bubble False Error
+- [x] Reproduce and trace the `Decrypt` -> unexpected `LLM API key is required...` bubble path
+- [x] Remove stale-state dependency by allowing model loader to use decrypted API key override
+- [x] Verify no false missing-key bubble appears immediately after successful decrypt
+- [x] Commit the fix
+- Review: `decryptSecurity` now passes the freshly decrypted `llmApiKey` directly into `fetchModelsByApiKey`, preventing the stale React state read that produced a false missing-key popup on initial decrypt flow.
+
 ## 2026-02-17 Security Constraints Skill Doc
 - [x] Create `docs/security/security_constraints.md` as a reusable security skill
 - [x] Encode 24/7 runner assumptions, mandatory constraints, allowed/forbidden flows
