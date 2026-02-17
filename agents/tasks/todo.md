@@ -1330,3 +1330,30 @@ Runner Terminal Logging Aligned to Agent Manager Communication Log Review (2026-
   - `node --check apps/runner/src/index.js` passed.
   - `node --check apps/runner/src/utils.js` passed.
   - `node -e "const {communicationLogPath}=require('./apps/runner/src/communicationLog'); console.log(communicationLogPath());"` returned absolute `apps/runner/logs/runner-communication.log.txt` path.
+
+## 2026-02-17 Runner Prompt Source Alignment with Agent Manager
+- [x] Inspect how `apps/agent_manager` loads prompt files and identify prompt sources
+- [x] Add separate markdown prompt files under `apps/runner/prompts`
+- [x] Copy agent-manager prompt content into runner prompt markdown files
+- [x] Update runner engine defaults to load prompts from markdown files
+- [x] Keep fallback defaults when prompt files are missing
+- [x] Verify runner engine syntax and prompt files existence
+
+Runner Prompt Source Alignment with Agent Manager Review (2026-02-17):
+- Added prompt files:
+  - `apps/runner/prompts/agent.md`
+  - `apps/runner/prompts/user.md`
+  - Content copied from:
+    - `apps/agent_manager/public/prompts/agent.md`
+    - `apps/agent_manager/public/prompts/user.md`
+- Updated `apps/runner/src/engine.js`:
+  - Added file-based prompt loader (`readPromptFile`) from `apps/runner/prompts`.
+  - `defaultSystemPrompt()` now reads `agent.md`.
+  - `defaultUserPromptTemplate()` now reads `user.md`.
+  - Keeps existing inline fallback prompt text when files are unavailable.
+- Updated `apps/runner/README.md`:
+  - Added prompt file management section.
+- Verification:
+  - `node --check apps/runner/src/engine.js` passed.
+  - `ls -la apps/runner/prompts` confirmed files exist.
+  - `wc -l apps/runner/prompts/agent.md apps/runner/prompts/user.md` confirmed prompt content present.

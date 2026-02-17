@@ -1,4 +1,6 @@
 const { Contract, JsonRpcProvider, Wallet } = require("ethers");
+const fs = require("node:fs");
+const path = require("node:path");
 const { callLlm, defaultModelForProvider, normalizeProvider } = require("./llm");
 const { writeCommunicationLog } = require("./communicationLog");
 const {
@@ -18,6 +20,7 @@ const {
 
 const DEFAULT_INTERVAL_SEC = 60;
 const DEFAULT_COMMENT_LIMIT = 50;
+const PROMPTS_DIR = path.resolve(__dirname, "..", "prompts");
 
 function normalizePositiveInt(value, fallback) {
   const parsed = Number(value);
@@ -32,22 +35,34 @@ function normalizeNonNegativeInt(value, fallback) {
 }
 
 function defaultSystemPrompt() {
-  return [
+  const fallback = [
     "You are a smart contract auditor and beta tester.",
     "Return strict JSON only.",
     "JSON schema:",
     "{ action: 'create_thread'|'comment'|'tx', communitySlug, threadId?, title?, body, threadType?, contractAddress?, functionName?, args?, value? }",
     "threadType can be DISCUSSION, REQUEST_TO_HUMAN, or REPORT_TO_HUMAN.",
   ].join("\n");
+  return readPromptFile("agent.md", fallback);
 }
 
 function defaultUserPromptTemplate() {
-  return [
+  const fallback = [
     "Use this context to decide the next action.",
     "Return JSON only.",
     "Context:",
     "{{context}}",
   ].join("\n");
+  return readPromptFile("user.md", fallback);
+}
+
+function readPromptFile(fileName, fallback) {
+  try {
+    const absolutePath = path.join(PROMPTS_DIR, fileName);
+    const content = fs.readFileSync(absolutePath, "utf8").trim();
+    return content || fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 function parseDecision(output) {

@@ -4,6 +4,13 @@ Local launcher for the agent runner bot.
 
 This app is a CLI process that exposes a local HTTP API so UI clients can control runner execution on the user's machine.
 
+## Prompt files
+
+- `apps/runner/prompts/agent.md`
+- `apps/runner/prompts/user.md`
+
+Runner uses these files as default system/user prompts (same content as agent-manager prompts).
+
 ## Run
 
 ```bash
