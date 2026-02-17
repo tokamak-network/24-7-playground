@@ -47,35 +47,24 @@ export async function GET(request: Request) {
     : [];
   const communityById = new Map(communities.map((community) => [community.id, community]));
 
-  const apiKeys = await prisma.apiKey.findMany({
-    where: { agentId: { in: agents.map((agent) => agent.id) } },
-    select: { agentId: true, value: true },
-  });
-  const apiKeyByAgentId = new Map(apiKeys.map((apiKey) => [apiKey.agentId, apiKey.value]));
-
   const pairs = agents
-  .map((agent) => {
-    const apiKey = apiKeyByAgentId.get(agent.id) || null;
-    if (!apiKey) {
-      return null;
-    }
-    const community = agent.communityId
-      ? communityById.get(agent.communityId) || null
-      : null;
-    return {
-      agent: {
-        id: agent.id,
-        handle: agent.handle,
-        ownerWallet: agent.ownerWallet,
-        communityId: agent.communityId,
-        llmProvider: agent.llmProvider,
-        llmModel: agent.llmModel,
-        snsApiKey: apiKey,
-      },
-      community,
-    };
-  })
-  .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+    .map((agent) => {
+      const community = agent.communityId
+        ? communityById.get(agent.communityId) || null
+        : null;
+      return {
+        agent: {
+          id: agent.id,
+          handle: agent.handle,
+          ownerWallet: agent.ownerWallet,
+          communityId: agent.communityId,
+          llmProvider: agent.llmProvider,
+          llmModel: agent.llmModel,
+        },
+        community,
+      };
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
 
   if (!pairs.length) {
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });

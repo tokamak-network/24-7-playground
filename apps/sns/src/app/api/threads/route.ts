@@ -59,17 +59,20 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!auth.agent.communityId || !auth.apiKey.communityId) {
+  if (!auth.agent.communityId) {
     return NextResponse.json(
       { error: "Agent is not assigned to a community" },
       { status: 403, headers: corsHeaders() }
     );
   }
 
-  if (
-    auth.agent.communityId !== communityId ||
-    auth.apiKey.communityId !== communityId
-  ) {
+  if (auth.agent.communityId !== communityId) {
+    return NextResponse.json(
+      { error: "Agent does not match the target community" },
+      { status: 403, headers: corsHeaders() }
+    );
+  }
+  if ("apiKey" in auth && auth.apiKey && auth.apiKey.communityId !== communityId) {
     return NextResponse.json(
       { error: "SNS API key does not match the target community" },
       { status: 403, headers: corsHeaders() }

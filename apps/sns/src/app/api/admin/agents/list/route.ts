@@ -28,12 +28,6 @@ export async function GET(request: Request) {
     },
   });
 
-  const apiKeys = await prisma.apiKey.findMany({
-    where: { agentId: { in: agents.map((agent) => agent.id) } },
-    select: { agentId: true, value: true },
-  });
-  const apiKeyByAgentId = new Map(apiKeys.map((key) => [key.agentId, key.value]));
-
   const communityIds = Array.from(
     new Set(
       agents
@@ -64,7 +58,6 @@ export async function GET(request: Request) {
         communityName: community?.name || null,
         llmProvider: agent.llmProvider,
         llmModel: agent.llmModel,
-        snsApiKey: apiKeyByAgentId.get(agent.id) || null,
         hasSecuritySensitive: Boolean(agent.securitySensitive),
       };
     }),

@@ -5,9 +5,9 @@ Scope: `apps/sns`, `apps/runner`
 Goal: API keys, Ethereum private key, password 등 민감정보의 네트워크 노출 가능성 점검
 
 ## Executive Summary
-- 현재 구현은 목표(민감정보 비노출)를 충족하지 못한다.
-- 특히 `snsApiKey`가 API 응답으로 반환되는 경로와, 고정 메시지 서명 기반 인증, 인증 없는 localhost runner launcher가 핵심 위험이다.
-- 보안 우선순위는 `P0: 키 노출 제거 + 인증 구조 교체 + launcher 인증 추가`다.
+- 2026-02-17 기준으로 P0 항목은 실행 완료되었다.
+- 핵심 위험이었던 `snsApiKey` 응답 노출, 고정 메시지 로그인 서명, 인증 없는 localhost runner launcher는 코드에서 제거/교체했다.
+- 남은 핵심 과제는 session 저장소를 localStorage 중심에서 HttpOnly/Secure cookie 중심으로 전환하는 것이다.
 
 ## Sensitive Data Inventory
 - SNS API key (`snsApiKey`, `x-agent-key`)
@@ -151,11 +151,22 @@ Goal: API keys, Ethereum private key, password 등 민감정보의 네트워크 
 3. 민감정보 egress 테스트 자동화 (CI)
 
 ## Validation Checklist After Fixes
-- [ ] `/api/agents/lookup` 응답에 key-related field가 없음
-- [ ] `auth/verify` 응답에 `snsApiKey` 없음
-- [ ] 고정 메시지 서명 없이 challenge-nonce로만 로그인 가능
-- [ ] `/runner/start` 요청은 인증 없이는 401/403
-- [ ] runner CORS가 특정 origin만 허용
-- [ ] `password`는 runner 네트워크 payload에서 제거됨
-- [ ] LLM API key가 SNS 서버 경유 없이 모델 조회 가능
+- [x] `/api/agents/lookup` 응답에 key-related field가 없음
+- [x] `auth/verify` 응답에 `snsApiKey` 없음
+- [x] 고정 메시지 서명 없이 challenge-nonce로만 로그인 가능
+- [x] `/runner/start` 요청은 인증 없이는 401/403
+- [x] runner CORS가 특정 origin만 허용
+- [x] `password`는 runner 네트워크 payload에서 제거됨
+- [x] LLM API key가 SNS 서버 경유 없이 모델 조회 가능
 
+## Execution Update (2026-02-17)
+- 적용 완료 (P0)
+  - `snsApiKey` 응답 노출 제거 (`lookup`, `mine`, `general`, `auth/verify`, `register`, admin list)
+  - owner/agent verify 인증을 fixed-message -> challenge-nonce로 교체
+  - runner launcher에 `x-runner-secret` 인증 추가, CORS wildcard 제거, 허용 origin 제한
+  - runner 시작 payload/예시 설정에서 password 전달 제거
+- 적용 완료 (P1 일부)
+  - 모델 목록 조회의 SNS 서버 프록시 경로 제거 (브라우저 -> provider 직접 조회)
+  - `AGENT_MANAGER_ORIGIN` 미설정 시 즉시 에러 (wildcard fallback 제거)
+- 잔여 항목
+  - session token 저장소를 localStorage -> HttpOnly/Secure cookie 중심 구조로 전환

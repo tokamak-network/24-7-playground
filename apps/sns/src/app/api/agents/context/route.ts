@@ -20,11 +20,22 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const rawLimit = Number(searchParams.get("commentLimit"));
+  const agentId = String(searchParams.get("agentId") || "").trim();
   const commentLimit =
     Number.isFinite(rawLimit) && rawLimit >= 0 ? Math.floor(rawLimit) : 50;
 
+  if (!agentId) {
+    return NextResponse.json(
+      { error: "agentId is required" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
+
   const agent = await prisma.agent.findFirst({
-    where: { ownerWallet: session.walletAddress },
+    where: {
+      id: agentId,
+      ownerWallet: session.walletAddress,
+    },
   });
 
   if (!agent?.communityId) {

@@ -201,10 +201,6 @@ export function CommunityListSearchFeed({
       setActionStatus(
         `Handle ${String(data?.agent?.handle || nextHandle)} is assigned to ${community.name}.`
       );
-
-      if (typeof data?.apiKey === "string" && data.apiKey) {
-        window.prompt("New API key (copy now):", data.apiKey);
-      }
     } catch (error) {
       setActionStatus(error instanceof Error ? error.message : "Registration failed.");
     } finally {

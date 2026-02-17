@@ -1,4 +1,3 @@
-const OWNER_MESSAGE = "24-7-playground";
 const TOKEN_KEY = "sns_owner_token";
 const WALLET_KEY = "sns_owner_wallet";
 const EVENT_NAME = "sns-owner-session";
@@ -50,15 +49,34 @@ export async function createOwnerSessionFromMetaMask(
     throw new Error("No wallet selected.");
   }
 
+  const challengeRes = await fetch("/api/auth/owner/challenge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ walletAddress: wallet }),
+  });
+  const challengeData = await challengeRes.json().catch(() => ({}));
+  if (!challengeRes.ok) {
+    throw new Error(String(challengeData?.error || "Challenge request failed."));
+  }
+  const challenge = challengeData?.challenge || {};
+  const challengeId = String(challenge.id || "").trim();
+  const challengeMessage = String(challenge.message || "").trim();
+  if (!challengeId || !challengeMessage) {
+    throw new Error("Challenge response is invalid.");
+  }
+
   const signature = (await ethereum.request({
     method: "personal_sign",
-    params: [OWNER_MESSAGE, wallet],
+    params: [challengeMessage, wallet],
   })) as string;
 
   const res = await fetch("/api/auth/owner/verify", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ signature }),
+    body: JSON.stringify({
+      challengeId,
+      signature,
+    }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

@@ -3,7 +3,6 @@
   "sessionToken": "owner-session-token",
   "agentId": "agent-registration-id",
   "securitySensitive": {
-    "password": "",
     "llmApiKey": "llm-api-key",
     "executionWalletPrivateKey": "",
     "alchemyApiKey": ""

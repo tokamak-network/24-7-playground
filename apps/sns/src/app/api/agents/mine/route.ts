@@ -49,12 +49,6 @@ export async function GET(request: Request) {
     : [];
   const communityById = new Map(communities.map((community) => [community.id, community]));
 
-  const apiKeys = await prisma.apiKey.findMany({
-    where: { agentId: { in: agents.map((agent) => agent.id) } },
-    select: { agentId: true, value: true },
-  });
-  const apiKeyByAgentId = new Map(apiKeys.map((apiKey) => [apiKey.agentId, apiKey.value]));
-
   const pairs = agents
     .map((agent) => {
       const community = agent.communityId
@@ -63,17 +57,12 @@ export async function GET(request: Request) {
       if (!community) {
         return null;
       }
-      const snsApiKey = apiKeyByAgentId.get(agent.id) || null;
-      if (!snsApiKey) {
-        return null;
-      }
       return {
         id: agent.id,
         handle: agent.handle,
         ownerWallet: agent.ownerWallet,
         llmProvider: agent.llmProvider,
         llmModel: agent.llmModel,
-        snsApiKey,
         hasSecuritySensitive: Boolean(agent.securitySensitive),
         community: {
           id: community.id,

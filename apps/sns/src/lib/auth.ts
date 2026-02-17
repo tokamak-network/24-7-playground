@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { prisma } from "src/db";
+import { requireSession } from "src/lib/session";
 
 const NONCE_TTL_MS = 2 * 60 * 1000;
 
@@ -21,10 +22,20 @@ function hashBody(body: unknown) {
   return crypto.createHash("sha256").update(stableStringify(body)).digest("hex");
 }
 
-function signNonce(key: string, nonce: string, timestamp: string, bodyHash: string) {
+function signNonce(
+  key: string,
+  nonce: string,
+  timestamp: string,
+  bodyHash: string,
+  agentId?: string
+) {
   return crypto
     .createHmac("sha256", key)
-    .update(`${nonce}.${timestamp}.${bodyHash}`)
+    .update(
+      agentId
+        ? `${nonce}.${timestamp}.${bodyHash}.${agentId}`
+        : `${nonce}.${timestamp}.${bodyHash}`
+    )
     .digest("hex");
 }
 
@@ -48,22 +59,56 @@ export async function requireAgentFromKey(request: Request) {
   return { agent: apiKey.agent, apiKey } as const;
 }
 
+export async function requireAgentFromSession(request: Request) {
+  const session = await requireSession(request);
+  if ("error" in session) {
+    return { error: session.error } as const;
+  }
+
+  const agentId = String(request.headers.get("x-agent-id") || "").trim();
+  if (!agentId) {
+    return { error: "Missing x-agent-id" } as const;
+  }
+
+  const agent = await prisma.agent.findFirst({
+    where: {
+      id: agentId,
+      ownerWallet: session.walletAddress,
+    },
+  });
+  if (!agent) {
+    return { error: "Agent not found" } as const;
+  }
+
+  const authHeader = request.headers.get("authorization") || "";
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.slice("Bearer ".length).trim()
+    : "";
+  if (!token) {
+    return { error: "Missing session" } as const;
+  }
+
+  return { agent, sessionToken: token } as const;
+}
+
 export async function requireAgentWriteAuth(
   request: Request,
   body: unknown
 ) {
-  const base = await requireAgentFromKey(request);
-  if ("error" in base) {
-    return base;
-  }
-
   const nonce = request.headers.get("x-agent-nonce");
   const timestamp = request.headers.get("x-agent-timestamp");
   const signature = request.headers.get("x-agent-signature");
-  const key = request.headers.get("x-agent-key");
 
-  if (!nonce || !timestamp || !signature || !key) {
+  if (!nonce || !timestamp || !signature) {
     return { error: "Missing agent auth headers" } as const;
+  }
+
+  const key = request.headers.get("x-agent-key");
+  const keyBase = key ? await requireAgentFromKey(request) : null;
+  const sessionBase = key ? null : await requireAgentFromSession(request);
+  const base = keyBase || sessionBase;
+  if (!base || "error" in base) {
+    return base || ({ error: "Unauthorized" } as const);
   }
 
   const tsNumber = Number(timestamp);
@@ -90,7 +135,21 @@ export async function requireAgentWriteAuth(
   }
 
   const bodyHash = hashBody(body);
-  const expected = signNonce(key, nonce, timestamp, bodyHash);
+  let expected: string;
+  if (key) {
+    expected = signNonce(key, nonce, timestamp, bodyHash);
+  } else {
+    if (!("sessionToken" in base)) {
+      return { error: "Missing session" } as const;
+    }
+    expected = signNonce(
+      base.sessionToken,
+      nonce,
+      timestamp,
+      bodyHash,
+      base.agent.id
+    );
+  }
   const match =
     expected.length === signature.length &&
     crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
@@ -104,5 +163,8 @@ export async function requireAgentWriteAuth(
     data: { usedAt: new Date() },
   });
 
-  return { agent: base.agent, apiKey: base.apiKey } as const;
+  if ("apiKey" in base) {
+    return { agent: base.agent, apiKey: base.apiKey } as const;
+  }
+  return { agent: base.agent, apiKey: null } as const;
 }

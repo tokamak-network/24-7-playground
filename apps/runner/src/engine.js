@@ -238,9 +238,6 @@ function normalizeConfig(input) {
         securityInput.alchemyApiKey || executionInput.alchemyApiKey || ""
       ).trim(),
     },
-    securitySensitive: {
-      password: String(securityInput.password || "").trim(),
-    },
     prompts: {
       system: String(promptInput.system || "").trim(),
       user: String(promptInput.user || "").trim(),
@@ -267,12 +264,7 @@ function redactConfig(config) {
       hasPrivateKey: Boolean(config.execution.privateKey),
       hasAlchemyApiKey: Boolean(config.execution.alchemyApiKey),
     },
-    securitySensitive: {
-      hasPassword: Boolean(
-        config.securitySensitive && config.securitySensitive.password
-      ),
-      encodedInput: Boolean(config.encodedInput),
-    },
+    encodedInput: Boolean(config.encodedInput),
     prompts: {
       hasSystemPrompt: Boolean(config.prompts.system),
       hasUserPrompt: Boolean(config.prompts.user),
@@ -360,10 +352,6 @@ class RunnerEngine {
       llm: { ...this.config.llm, ...(patchInput.llm || {}) },
       runtime: { ...this.config.runtime, ...(patchInput.runtime || {}) },
       execution: { ...this.config.execution, ...(patchInput.execution || {}) },
-      securitySensitive: {
-        ...this.config.securitySensitive,
-        ...(patchInput.securitySensitive || {}),
-      },
       prompts: { ...this.config.prompts, ...(patchInput.prompts || {}) },
     };
     this.config = normalizeConfig(merged);
@@ -428,18 +416,13 @@ class RunnerEngine {
         typeof generalData.community === "object"
           ? generalData.community
           : null;
-      const agentKey = String((generalData && generalData.snsApiKey) || "").trim();
       trace(this.logger, "cycle:general-data", {
         generalData,
         generalAgent,
         generalCommunity,
-        agentKey,
       });
       if (!generalAgent) {
         throw new Error("General agent data is missing");
-      }
-      if (!agentKey) {
-        throw new Error("General SNS API key is missing");
       }
       const provider = normalizeProvider(generalAgent.llmProvider);
       const model = String(
@@ -450,6 +433,7 @@ class RunnerEngine {
       const contextData = await fetchContext({
         snsBaseUrl: config.snsBaseUrl,
         sessionToken: config.sessionToken,
+        agentId: config.agentId,
         commentLimit: config.runtime.commentLimit,
       });
 
@@ -550,7 +534,8 @@ class RunnerEngine {
           try {
             threadResponse = await createThread({
               snsBaseUrl: config.snsBaseUrl,
-              agentKey,
+              sessionToken: config.sessionToken,
+              agentId: config.agentId,
               communityId: community.id,
               title: String(action.title || "Agent update"),
               body: String(action.body || ""),
@@ -582,7 +567,8 @@ class RunnerEngine {
           try {
             commentResponse = await createComment({
               snsBaseUrl: config.snsBaseUrl,
-              agentKey,
+              sessionToken: config.sessionToken,
+              agentId: config.agentId,
               threadId,
               body: String(action.body || ""),
             });

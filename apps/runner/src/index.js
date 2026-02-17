@@ -3,6 +3,7 @@
 const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
+const crypto = require("node:crypto");
 const { RunnerEngine } = require("./engine");
 const { toErrorMessage, logJson, logSummary, fullLogPath } = require("./utils");
 const { communicationLogPath } = require("./communicationLog");
@@ -36,14 +37,29 @@ function jsonResponse(response, statusCode, payload, meta) {
     meta: meta || null,
   });
   const body = JSON.stringify(payload);
+  const origin = String(meta?.allowedOrigin || "");
   response.writeHead(statusCode, {
     "Content-Type": "application/json",
     "Content-Length": Buffer.byteLength(body),
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "content-type,authorization",
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Headers": "content-type,authorization,x-runner-secret",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
   });
   response.end(body);
+}
+
+function normalizeOrigin(value, fallback) {
+  const raw = String(value || "").trim();
+  const normalized = raw ? raw.replace(/\/+$/, "") : "";
+  if (normalized) return normalized;
+  return String(fallback || "").trim().replace(/\/+$/, "");
+}
+
+function secureCompare(left, right) {
+  const leftBuffer = Buffer.from(String(left || ""));
+  const rightBuffer = Buffer.from(String(right || ""));
+  if (leftBuffer.length !== rightBuffer.length) return false;
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 function normalizePath(urlString) {
@@ -74,16 +90,37 @@ async function readJsonBody(request) {
 async function startServer(options) {
   const host = String(options.host || "127.0.0.1");
   const port = Number(options.port || 4318);
+  const allowedOrigin = normalizeOrigin(
+    options["allow-origin"] || process.env.RUNNER_ALLOWED_ORIGIN,
+    "http://localhost:3000"
+  );
+  const launcherSecret = String(
+    options.secret || process.env.RUNNER_LAUNCHER_SECRET || ""
+  ).trim();
   if (!Number.isFinite(port) || port <= 0) {
     throw new Error("Invalid --port value");
+  }
+  if (!launcherSecret) {
+    throw new Error("RUNNER_LAUNCHER_SECRET (or --secret) is required");
   }
 
   const engine = new RunnerEngine(console);
   const server = http.createServer(async (request, response) => {
+    const requestOrigin = normalizeOrigin(request.headers.origin, "");
+    const originAllowed = !requestOrigin || requestOrigin === allowedOrigin;
+
     if (request.method === "OPTIONS") {
+      if (!originAllowed) {
+        response.writeHead(403, {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": allowedOrigin,
+        });
+        response.end(JSON.stringify({ error: "Origin not allowed" }));
+        return;
+      }
       response.writeHead(204, {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "content-type,authorization",
+        "Access-Control-Allow-Origin": allowedOrigin,
+        "Access-Control-Allow-Headers": "content-type,authorization,x-runner-secret",
         "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
       });
       response.end();
@@ -96,14 +133,39 @@ async function startServer(options) {
       url: request.url,
       route,
       headers: request.headers,
+      allowedOrigin,
     });
     try {
+      if (!originAllowed) {
+        jsonResponse(
+          response,
+          403,
+          { error: "Origin not allowed" },
+          { route, method: request.method, allowedOrigin }
+        );
+        return;
+      }
+
+      const isProtectedRunnerRoute = route.startsWith("/runner/");
+      if (isProtectedRunnerRoute) {
+        const incomingSecret = String(request.headers["x-runner-secret"] || "");
+        if (!secureCompare(incomingSecret, launcherSecret)) {
+          jsonResponse(
+            response,
+            401,
+            { error: "Unauthorized" },
+            { route, method: request.method, allowedOrigin }
+          );
+          return;
+        }
+      }
+
       if (request.method === "GET" && route === "/health") {
         jsonResponse(
           response,
           200,
           { ok: true, service: "runner-launcher" },
-          { route, method: request.method }
+          { route, method: request.method, allowedOrigin }
         );
         return;
       }
@@ -113,7 +175,7 @@ async function startServer(options) {
           response,
           200,
           { ok: true, status: engine.getStatus() },
-          { route, method: request.method }
+          { route, method: request.method, allowedOrigin }
         );
         return;
       }
@@ -133,7 +195,7 @@ async function startServer(options) {
             message: "Runner started",
             status: engine.getStatus(),
           },
-          { route, method: request.method, body }
+          { route, method: request.method, body, allowedOrigin }
         );
         return;
       }
@@ -152,7 +214,7 @@ async function startServer(options) {
             message: "Runner stopped",
             status: engine.getStatus(),
           },
-          { route, method: request.method }
+          { route, method: request.method, allowedOrigin }
         );
         return;
       }
@@ -172,7 +234,7 @@ async function startServer(options) {
             message: "Runner config updated",
             status: nextStatus,
           },
-          { route, method: request.method, body }
+          { route, method: request.method, body, allowedOrigin }
         );
         return;
       }
@@ -190,7 +252,7 @@ async function startServer(options) {
           response,
           200,
           { ok: true, result, status: engine.getStatus() },
-          { route, method: request.method, body }
+          { route, method: request.method, body, allowedOrigin }
         );
         return;
       }
@@ -199,7 +261,7 @@ async function startServer(options) {
         response,
         404,
         { error: "Not found" },
-        { route, method: request.method }
+        { route, method: request.method, allowedOrigin }
       );
     } catch (error) {
       trace("error", {
@@ -216,7 +278,7 @@ async function startServer(options) {
         {
           error: toErrorMessage(error, "Request failed"),
         },
-        { route, method: request.method }
+        { route, method: request.method, allowedOrigin }
       );
     }
   });
@@ -226,6 +288,7 @@ async function startServer(options) {
     server.listen(port, host, resolve);
   });
   console.log(`[runner-launcher] listening on http://${host}:${port}`);
+  console.log(`[runner-launcher] allowed origin: ${allowedOrigin}`);
   console.log(`[runner-launcher] full trace log: ${fullLogPath()}`);
   console.log(
     `[runner-launcher] communication log: ${communicationLogPath()}`
@@ -251,7 +314,7 @@ function printHelp() {
       "Local Runner Launcher CLI",
       "",
       "Commands:",
-      "  serve [--host 127.0.0.1] [--port 4318]",
+      "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>] [--allow-origin http://localhost:3000]",
       "  run-once --config ./runner.config.example.json",
       "",
       "Launcher API routes (serve):",

@@ -14,7 +14,6 @@ export default function AdminPage() {
       communityName: string | null;
       llmProvider: string;
       llmModel: string;
-      snsApiKey: string | null;
       hasSecuritySensitive: boolean;
     }>
   >([]);
@@ -160,9 +159,6 @@ export default function AdminPage() {
                   </div>
                   <div className="meta-text">
                     <strong>LLM Model:</strong> {selectedAgent.llmModel || "—"}
-                  </div>
-                  <div className="meta-text">
-                    <strong>SNS API Key:</strong> {selectedAgent.snsApiKey || "—"}
                   </div>
                   <div className="meta-text">
                     <strong>Security Sensitive Saved:</strong>{" "}

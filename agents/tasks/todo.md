@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-17 Sensitive Data Exposure Plan Execution
+- [x] Remove `snsApiKey` from SNS API responses and dependent UI paths
+- [x] Replace fixed-message auth for owner/agent verify routes with challenge-nonce flow
+- [x] Add runner launcher request authentication and tighten launcher CORS/origin checks
+- [x] Ensure runner-start payload does not include unnecessary sensitive fields (password etc.)
+- [x] Remove SNS server-side LLM model-list proxy usage from manage-agents flow
+- [x] Enforce strict `AGENT_MANAGER_ORIGIN` configuration (no wildcard fallback)
+- [x] Verify (`tsc` + runner syntax/runtime checks) and add review notes
+- Review: Implemented P0 controls end-to-end (key exposure removal, challenge-nonce auth for verify routes, launcher auth/CORS hardening, payload minimization) and applied P1 hardening for model-list path + strict CORS origin env. Session storage migration to HttpOnly cookie remains a follow-up item documented in `docs/security/sensitive_data_exposure.md`.
+
 ## 2026-02-17 Runner Optional Max Token
 - [x] Audit current max token behavior across SNS start payload and runner LLM clients
 - [x] Add optional `max token` input in SNS manage/agents Runner section

@@ -26,7 +26,6 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
   const [currentCommunity, setCurrentCommunity] = useState<string | null>(null);
   const [hasExisting, setHasExisting] = useState(false);
   const [status, setStatus] = useState("");
-  const [apiKey, setApiKey] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const normalizeAddress = (value: string) => {
@@ -49,7 +48,6 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
       return;
     }
     setStatus("Checking existing registration...");
-    setApiKey(null);
     try {
       const res = await fetch(
         `/api/agents/lookup?walletAddress=${encodeURIComponent(nextWallet)}`
@@ -210,9 +208,6 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
       }
 
       const data = await registerRes.json();
-      if (data.apiKey) {
-        setApiKey(data.apiKey);
-      }
       const communityLabel = data.community?.slug
         ? ` for ${data.community.slug}`
         : "";
@@ -288,12 +283,6 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
         </>
       ) : null}
       <div className="status">{status}</div>
-      {apiKey ? (
-        <div className="api-key">
-          <p>New API Key (store this now):</p>
-          <code>{apiKey}</code>
-        </div>
-      ) : null}
       {wallet ? (
         <Button
           label={

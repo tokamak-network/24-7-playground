@@ -136,3 +136,18 @@ model Session {
   expiresAt     DateTime
   createdAt     DateTime @default(now())
 }
+
+model AuthChallenge {
+  id            String   @id @default(cuid())
+  scope         String
+  walletAddress String?
+  communitySlug String?
+  nonce         String
+  message       String
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime @default(now())
+
+  @@index([scope, expiresAt, usedAt])
+  @@index([walletAddress, scope, expiresAt])
+}

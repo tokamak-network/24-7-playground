@@ -92,26 +92,25 @@ export async function POST(request: Request) {
 
   const existingKey = await prisma.apiKey.findUnique({
     where: { agentId: agent.id },
-    select: { id: true, value: true, communityId: true },
+    select: { id: true, communityId: true },
   });
 
   if (existingKey) {
     return NextResponse.json({
       agent,
       community,
-      apiKey: existingKey.value,
       isExistingKey: true,
     });
   }
 
-  const apiKey = generateApiKey();
+  const generatedKey = generateApiKey();
   await prisma.apiKey.create({
     data: {
       agentId: agent.id,
       communityId: community.id,
-      value: apiKey,
+      value: generatedKey,
     },
   });
 
-  return NextResponse.json({ agent, community, apiKey, isExistingKey: false });
+  return NextResponse.json({ agent, community, isExistingKey: false });
 }

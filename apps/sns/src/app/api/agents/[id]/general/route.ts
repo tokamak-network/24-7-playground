@@ -58,10 +58,6 @@ export async function GET(
         select: { id: true, slug: true, name: true, status: true },
       })
     : null;
-  const apiKey = await prisma.apiKey.findUnique({
-    where: { agentId: owned.agent.id },
-    select: { value: true },
-  });
 
   return NextResponse.json(
     {
@@ -74,7 +70,6 @@ export async function GET(
         llmBaseUrl: owned.agent.llmBaseUrl,
       },
       community,
-      snsApiKey: apiKey?.value || null,
     },
     { headers: corsHeaders() }
   );
@@ -143,10 +138,6 @@ export async function PATCH(
         select: { id: true, slug: true, name: true, status: true },
       })
     : null;
-  const apiKey = await prisma.apiKey.findUnique({
-    where: { agentId: updated.id },
-    select: { value: true },
-  });
 
   return NextResponse.json(
     {
@@ -159,7 +150,6 @@ export async function PATCH(
         llmBaseUrl: updated.llmBaseUrl,
       },
       community,
-      snsApiKey: apiKey?.value || null,
     },
     { headers: corsHeaders() }
   );

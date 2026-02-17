@@ -46,6 +46,7 @@ async function readJsonOrThrow(response, fallbackMessage, meta) {
 async function fetchContext(params) {
   const query = new URLSearchParams();
   query.set("commentLimit", String(params.commentLimit));
+  query.set("agentId", String(params.agentId || ""));
   const url = buildUrl(params.snsBaseUrl, `/api/agents/context?${query.toString()}`);
   const headers = {
     Authorization: `Bearer ${params.sessionToken}`,
@@ -100,7 +101,10 @@ async function fetchAgentGeneral(params) {
 
 async function issueNonce(params) {
   const url = buildUrl(params.snsBaseUrl, "/api/agents/nonce");
-  const headers = { "x-agent-key": params.agentKey };
+  const headers = {
+    Authorization: `Bearer ${params.sessionToken}`,
+    "x-agent-id": params.agentId,
+  };
   trace("request", {
     name: "issueNonce",
     method: "POST",
@@ -126,17 +130,19 @@ async function issueNonce(params) {
 async function buildSignedHeaders(params) {
   const nonceData = await issueNonce({
     snsBaseUrl: params.snsBaseUrl,
-    agentKey: params.agentKey,
+    sessionToken: params.sessionToken,
+    agentId: params.agentId,
   });
   const timestamp = Date.now().toString();
   const bodyHash = sha256Hex(stableStringify(params.body));
   const signature = hmacSha256Hex(
-    params.agentKey,
-    `${nonceData.nonce}.${timestamp}.${bodyHash}`
+    params.sessionToken,
+    `${nonceData.nonce}.${timestamp}.${bodyHash}.${params.agentId}`
   );
   const signed = {
     "Content-Type": "application/json",
-    "x-agent-key": params.agentKey,
+    Authorization: `Bearer ${params.sessionToken}`,
+    "x-agent-id": params.agentId,
     "x-agent-nonce": nonceData.nonce,
     "x-agent-timestamp": timestamp,
     "x-agent-signature": signature,
@@ -167,7 +173,8 @@ async function createThread(params) {
   const url = buildUrl(params.snsBaseUrl, "/api/threads");
   const headers = await buildSignedHeaders({
     snsBaseUrl: params.snsBaseUrl,
-    agentKey: params.agentKey,
+    sessionToken: params.sessionToken,
+    agentId: params.agentId,
     body,
   });
   trace("request", {
@@ -199,7 +206,8 @@ async function createComment(params) {
   );
   const headers = await buildSignedHeaders({
     snsBaseUrl: params.snsBaseUrl,
-    agentKey: params.agentKey,
+    sessionToken: params.sessionToken,
+    agentId: params.agentId,
     body,
   });
   trace("request", {

@@ -16,7 +16,6 @@ type PairItem = {
   ownerWallet: string | null;
   llmProvider: string;
   llmModel: string;
-  snsApiKey: string;
   hasSecuritySensitive: boolean;
   community: {
     id: string;
@@ -41,7 +40,6 @@ type GeneralPayload = {
     name: string;
     status: string;
   } | null;
-  snsApiKey: string | null;
 };
 
 type EncryptedSecurity = {
@@ -79,6 +77,7 @@ const PROVIDER_OPTIONS = ["GEMINI", "OPENAI", "LITELLM", "ANTHROPIC"] as const;
 const DEFAULT_RUNNER_INTERVAL_SEC = "60";
 const DEFAULT_COMMENT_CONTEXT_LIMIT = "50";
 const DEFAULT_RUNNER_LAUNCHER_PORT = "4318";
+const DEFAULT_RUNNER_LAUNCHER_SECRET = "";
 const RUNNER_PORT_SCAN_RANGE = [4318, 4319, 4320, 4321, 4322, 4323, 4324];
 
 function defaultModelByProvider(provider: string) {
@@ -146,7 +145,6 @@ export default function AgentManagementPage() {
   const [llmProvider, setLlmProvider] = useState("GEMINI");
   const [llmModel, setLlmModel] = useState(defaultModelByProvider("GEMINI"));
   const [liteLlmBaseUrl, setLiteLlmBaseUrl] = useState("");
-  const [showSnsApiKey, setShowSnsApiKey] = useState(false);
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [modelsBusy, setModelsBusy] = useState(false);
 
@@ -174,6 +172,9 @@ export default function AgentManagementPage() {
   });
   const [runnerLauncherPort, setRunnerLauncherPort] = useState(
     DEFAULT_RUNNER_LAUNCHER_PORT
+  );
+  const [runnerLauncherSecret, setRunnerLauncherSecret] = useState(
+    DEFAULT_RUNNER_LAUNCHER_SECRET
   );
   const [detectedRunnerPorts, setDetectedRunnerPorts] = useState<number[]>([]);
   const [detectRunnerBusy, setDetectRunnerBusy] = useState(false);
@@ -205,10 +206,6 @@ export default function AgentManagementPage() {
     }
     return Array.from(set);
   }, [availableModels, llmModel]);
-  const currentSnsApiKey = useMemo(
-    () => String(general?.snsApiKey || selectedPair?.snsApiKey || "").trim(),
-    [general?.snsApiKey, selectedPair?.snsApiKey]
-  );
   const encryptedSecurityLine = useMemo(() => {
     if (!encryptedSecurity) return "";
     if (typeof encryptedSecurity.ciphertext === "string") {
@@ -278,10 +275,6 @@ export default function AgentManagementPage() {
     }) => {
       const llmApiKey = securityDraft.llmApiKey.trim();
       const baseUrl = liteLlmBaseUrl.trim();
-      if (!token || !authHeaders) {
-        pushBubble("error", "Sign-in is required.", options?.anchorEl);
-        return;
-      }
       if (!llmApiKey) {
         pushBubble(
           "error",
@@ -297,36 +290,75 @@ export default function AgentManagementPage() {
 
       setModelsBusy(true);
       try {
-        const response = await fetch("/api/agents/models", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...authHeaders },
-          body: JSON.stringify({
-            provider: llmProvider,
-            apiKey: llmApiKey,
-            baseUrl: llmProvider === "LITELLM" ? baseUrl : "",
-          }),
-        });
-        const text = await response.text().catch(() => "");
-        let data: any = {};
-        try {
-          data = text ? JSON.parse(text) : {};
-        } catch {
-          data = {};
-        }
-        if (!response.ok) {
+        let models: string[] = [];
+
+        if (llmProvider === "GEMINI") {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(llmApiKey)}`
+          );
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            pushBubble(
+              "error",
+              String(data?.error?.message || "Gemini request failed."),
+              options?.anchorEl
+            );
+            return;
+          }
+          models = Array.isArray(data?.models)
+            ? data.models
+                .filter((item: any) =>
+                  Array.isArray(item?.supportedGenerationMethods)
+                    ? item.supportedGenerationMethods.includes("generateContent")
+                    : false
+                )
+                .map((item: any) => String(item?.name || "").replace("models/", ""))
+                .filter(Boolean)
+            : [];
+        } else if (llmProvider === "OPENAI") {
+          const response = await fetch("https://api.openai.com/v1/models", {
+            headers: { Authorization: `Bearer ${llmApiKey}` },
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            pushBubble(
+              "error",
+              String(data?.error?.message || "OpenAI request failed."),
+              options?.anchorEl
+            );
+            return;
+          }
+          models = Array.isArray(data?.data)
+            ? data.data.map((item: any) => String(item?.id || "")).filter(Boolean)
+            : [];
+        } else if (llmProvider === "LITELLM") {
+          const normalized = baseUrl.replace(/\/+$/, "");
+          const apiBase = normalized.endsWith("/v1")
+            ? normalized
+            : `${normalized}/v1`;
+          const response = await fetch(`${apiBase}/models`, {
+            headers: { Authorization: `Bearer ${llmApiKey}` },
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            pushBubble(
+              "error",
+              String(data?.error?.message || "LiteLLM request failed."),
+              options?.anchorEl
+            );
+            return;
+          }
+          models = Array.isArray(data?.data)
+            ? data.data.map((item: any) => String(item?.id || "")).filter(Boolean)
+            : [];
+        } else {
           pushBubble(
             "error",
-            String(data?.error || "Failed to load model list."),
+            "Provider is not supported for model listing.",
             options?.anchorEl
           );
           return;
         }
-
-        const models = Array.isArray(data?.models)
-          ? data.models
-              .map((item: unknown) => String(item || "").trim())
-              .filter(Boolean)
-          : [];
 
         if (!models.length) {
           pushBubble("error", "No models returned from provider.", options?.anchorEl);
@@ -349,12 +381,10 @@ export default function AgentManagementPage() {
       }
     },
     [
-      authHeaders,
       liteLlmBaseUrl,
       llmProvider,
       pushBubble,
       securityDraft.llmApiKey,
-      token,
     ]
   );
 
@@ -624,6 +654,7 @@ export default function AgentManagementPage() {
         });
         setRunnerStatus("");
         setRunnerLauncherPort(DEFAULT_RUNNER_LAUNCHER_PORT);
+        setRunnerLauncherSecret(DEFAULT_RUNNER_LAUNCHER_SECRET);
         return;
       }
 
@@ -641,6 +672,7 @@ export default function AgentManagementPage() {
 
         const parsed = JSON.parse(raw) as Partial<RunnerDraft> & {
           runnerLauncherPort?: string;
+          runnerLauncherSecret?: string;
         };
         setRunnerDraft({
           intervalSec: normalizePositiveInteger(
@@ -659,6 +691,9 @@ export default function AgentManagementPage() {
             DEFAULT_RUNNER_LAUNCHER_PORT
           )
         );
+        setRunnerLauncherSecret(
+          String(parsed?.runnerLauncherSecret || "").trim()
+        );
         setRunnerStatus("Runner settings loaded.");
       } catch {
         setRunnerDraft({
@@ -667,6 +702,7 @@ export default function AgentManagementPage() {
           maxTokens: "",
         });
         setRunnerLauncherPort(DEFAULT_RUNNER_LAUNCHER_PORT);
+        setRunnerLauncherSecret(DEFAULT_RUNNER_LAUNCHER_SECRET);
         setRunnerStatus("Failed to load runner settings.");
       }
     },
@@ -700,6 +736,7 @@ export default function AgentManagementPage() {
         JSON.stringify({
           ...nextDraft,
           runnerLauncherPort: nextPort,
+          runnerLauncherSecret,
         })
       );
       setRunnerStatus("Runner settings saved.");
@@ -707,25 +744,6 @@ export default function AgentManagementPage() {
       setRunnerStatus("Failed to save runner settings.");
     }
   };
-
-  const testSnsApiKey = useCallback(async (anchorEl?: HTMLElement | null) => {
-    if (!currentSnsApiKey) {
-      pushBubble("error", "SNS API key is missing.", anchorEl);
-      return;
-    }
-    try {
-      const response = await fetch("/api/agents/nonce", {
-        method: "POST",
-        headers: { "x-agent-key": currentSnsApiKey },
-      });
-      const message = response.ok
-        ? "SNS API key test passed."
-        : await readError(response);
-      pushBubble(response.ok ? "success" : "error", message, anchorEl);
-    } catch {
-      pushBubble("error", "SNS API key test failed.", anchorEl);
-    }
-  }, [currentSnsApiKey, pushBubble]);
 
   const testLlmApiKey = useCallback(async (anchorEl?: HTMLElement | null) => {
     await fetchModelsByApiKey({ showSuccessBubble: true, anchorEl });
@@ -853,7 +871,6 @@ export default function AgentManagementPage() {
     const ownerWallet = String(
       general?.agent.ownerWallet || selectedPair.ownerWallet || ""
     ).trim();
-    const snsApiKey = currentSnsApiKey.trim();
     const llmApiKey = securityDraft.llmApiKey.trim();
     const detectedPortValues = detectedRunnerPorts.map((port) => String(port));
     const launcherPort = detectedPortValues.includes(runnerLauncherPort)
@@ -864,7 +881,6 @@ export default function AgentManagementPage() {
       missingFields.push("Registered Community");
     }
     if (!ownerWallet) missingFields.push("Handle Owner MetaMask Address");
-    if (!snsApiKey) missingFields.push("SNS API Key");
     if (!llmHandleName.trim()) missingFields.push("LLM Handle Name");
     if (!llmProvider.trim()) missingFields.push("LLM Provider");
     if (!llmModel.trim()) missingFields.push("LLM Model");
@@ -880,6 +896,7 @@ export default function AgentManagementPage() {
       missingFields.push("Comment Context Limit");
     }
     if (!launcherPort) missingFields.push("Runner Launcher Port");
+    if (!runnerLauncherSecret.trim()) missingFields.push("Runner Launcher Secret");
 
     if (missingFields.length) {
       pushBubble(
@@ -955,7 +972,10 @@ export default function AgentManagementPage() {
         `http://127.0.0.1:${launcherPort}/runner/start`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-runner-secret": runnerLauncherSecret.trim(),
+          },
           body: JSON.stringify({
             config: {
               snsBaseUrl: window.location.origin,
@@ -989,7 +1009,6 @@ export default function AgentManagementPage() {
       setStartRunnerBusy(false);
     }
   }, [
-    currentSnsApiKey,
     detectedRunnerPorts,
     general?.agent.ownerWallet,
     general?.community?.name,
@@ -1004,6 +1023,7 @@ export default function AgentManagementPage() {
     runnerDraft.intervalSec,
     runnerDraft.maxTokens,
     runnerLauncherPort,
+    runnerLauncherSecret,
     saveRunnerConfig,
     securityDraft.alchemyApiKey,
     securityDraft.executionWalletPrivateKey,
@@ -1174,7 +1194,7 @@ export default function AgentManagementPage() {
           <div className="grid two">
             <Card
               title="General"
-              description="Community/Owner/SNS API key are read-only after initial registration."
+              description="Community and handle owner are read-only after initial registration."
             >
               <div className="field">
                 <label>Registered Community</label>
@@ -1191,30 +1211,6 @@ export default function AgentManagementPage() {
                     general?.agent.ownerWallet || selectedPair.ownerWallet || ""
                   }
                 />
-              </div>
-              <div className="field">
-                <label>SNS API Key</label>
-                <div className="manager-inline-field">
-                  <input
-                    type={showSnsApiKey ? "text" : "password"}
-                    readOnly
-                    value={currentSnsApiKey}
-                  />
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    onClick={() => setShowSnsApiKey((prev) => !prev)}
-                  >
-                    {showSnsApiKey ? "Hide" : "Show"}
-                  </button>
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    onClick={(event) => void testSnsApiKey(event.currentTarget)}
-                  >
-                    Test
-                  </button>
-                </div>
               </div>
               <div className="field">
                 <label>LLM Handle Name</label>
@@ -1591,6 +1587,17 @@ export default function AgentManagementPage() {
                   <option value="">No detected ports. Click Detect Launcher.</option>
                 )}
               </select>
+            </div>
+            <div className="field">
+              <label>Runner Launcher Secret</label>
+              <input
+                type="password"
+                value={runnerLauncherSecret}
+                onChange={(event) =>
+                  setRunnerLauncherSecret(event.currentTarget.value)
+                }
+                placeholder="Enter launcher secret"
+              />
             </div>
             <div className="row wrap">
               <button
