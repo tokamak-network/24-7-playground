@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
 const { RunnerEngine } = require("./engine");
-const { toErrorMessage } = require("./utils");
+const { toErrorMessage, logJson } = require("./utils");
 
 function parseArgs(argv) {
   const [, , command = "serve", ...rest] = argv;
@@ -24,7 +24,16 @@ function parseArgs(argv) {
   return { command, options };
 }
 
-function jsonResponse(response, statusCode, payload) {
+function trace(label, payload) {
+  logJson(console, `[runner][launcher] ${label}`, payload);
+}
+
+function jsonResponse(response, statusCode, payload, meta) {
+  trace("response", {
+    statusCode,
+    payload,
+    meta: meta || null,
+  });
   const body = JSON.stringify(payload);
   response.writeHead(statusCode, {
     "Content-Type": "application/json",
@@ -51,8 +60,14 @@ async function readJsonBody(request) {
     chunks.push(chunk);
   }
   const raw = Buffer.concat(chunks).toString("utf8");
-  if (!raw.trim()) return {};
-  return JSON.parse(raw);
+  const parsed = raw.trim() ? JSON.parse(raw) : {};
+  trace("request-body", {
+    method: request.method,
+    url: request.url,
+    raw,
+    parsed,
+  });
+  return parsed;
 }
 
 async function startServer(options) {
@@ -75,46 +90,77 @@ async function startServer(options) {
     }
 
     const route = normalizePath(request.url || "/");
+    trace("request", {
+      method: request.method,
+      url: request.url,
+      route,
+      headers: request.headers,
+    });
     try {
       if (request.method === "GET" && route === "/health") {
-        jsonResponse(response, 200, { ok: true, service: "runner-launcher" });
+        jsonResponse(
+          response,
+          200,
+          { ok: true, service: "runner-launcher" },
+          { route, method: request.method }
+        );
         return;
       }
 
       if (request.method === "GET" && route === "/runner/status") {
-        jsonResponse(response, 200, { ok: true, status: engine.getStatus() });
+        jsonResponse(
+          response,
+          200,
+          { ok: true, status: engine.getStatus() },
+          { route, method: request.method }
+        );
         return;
       }
 
       if (request.method === "POST" && route === "/runner/start") {
         const body = await readJsonBody(request);
         await engine.start(body.config || body);
-        jsonResponse(response, 200, {
-          ok: true,
-          message: "Runner started",
-          status: engine.getStatus(),
-        });
+        jsonResponse(
+          response,
+          200,
+          {
+            ok: true,
+            message: "Runner started",
+            status: engine.getStatus(),
+          },
+          { route, method: request.method, body }
+        );
         return;
       }
 
       if (request.method === "POST" && route === "/runner/stop") {
         engine.stop();
-        jsonResponse(response, 200, {
-          ok: true,
-          message: "Runner stopped",
-          status: engine.getStatus(),
-        });
+        jsonResponse(
+          response,
+          200,
+          {
+            ok: true,
+            message: "Runner stopped",
+            status: engine.getStatus(),
+          },
+          { route, method: request.method }
+        );
         return;
       }
 
       if (request.method === "POST" && route === "/runner/config") {
         const body = await readJsonBody(request);
         const nextStatus = engine.updateConfig(body.config || body);
-        jsonResponse(response, 200, {
-          ok: true,
-          message: "Runner config updated",
-          status: nextStatus,
-        });
+        jsonResponse(
+          response,
+          200,
+          {
+            ok: true,
+            message: "Runner config updated",
+            status: nextStatus,
+          },
+          { route, method: request.method, body }
+        );
         return;
       }
 
@@ -123,15 +169,38 @@ async function startServer(options) {
         const result = body && (body.config || body.snsBaseUrl)
           ? await engine.runOnceWithConfig(body.config || body)
           : await engine.runOnce();
-        jsonResponse(response, 200, { ok: true, result, status: engine.getStatus() });
+        jsonResponse(
+          response,
+          200,
+          { ok: true, result, status: engine.getStatus() },
+          { route, method: request.method, body }
+        );
         return;
       }
 
-      jsonResponse(response, 404, { error: "Not found" });
+      jsonResponse(
+        response,
+        404,
+        { error: "Not found" },
+        { route, method: request.method }
+      );
     } catch (error) {
-      jsonResponse(response, 400, {
-        error: toErrorMessage(error, "Request failed"),
+      trace("error", {
+        route,
+        method: request.method,
+        error: {
+          message: toErrorMessage(error, "Request failed"),
+          stack: error && error.stack ? String(error.stack) : null,
+        },
       });
+      jsonResponse(
+        response,
+        400,
+        {
+          error: toErrorMessage(error, "Request failed"),
+        },
+        { route, method: request.method }
+      );
     }
   });
 

@@ -1247,3 +1247,29 @@ Runner LLM Calls: Remove Temperature Parameter Review (2026-02-17):
 - Verification:
   - `rg -n "temperature" apps/runner/src -g"*.js"` returned no matches.
   - `node --check apps/runner/src/llm.js` passed.
+
+## 2026-02-17 Full Runner Trace Logging (Send/Receive/Internal)
+- [x] Add shared structured JSON logging helper in runner utils
+- [x] Log runner launcher inbound requests/bodies/outbound responses/errors
+- [x] Log SNS client request/response payloads and signed header generation details
+- [x] Log LLM client request/response payloads and call inputs/errors
+- [x] Log engine internal processing data (config normalization, context shaping, prompts, parsed actions, execution results, tx internals)
+- [x] Verify modified runner files pass JS syntax checks
+
+Full Runner Trace Logging (Send/Receive/Internal) Review (2026-02-17):
+- Updated `apps/runner/src/utils.js`:
+  - Added `formatLogData` and `logJson` helpers for consistent structured terminal logging.
+- Updated `apps/runner/src/index.js`:
+  - Added logs for launcher API request metadata, parsed request bodies, responses, and error payloads.
+- Updated `apps/runner/src/sns.js`:
+  - Added logs for every outgoing SNS request (URL/method/headers/body), corresponding response status/body, and signed-header generation data.
+- Updated `apps/runner/src/llm.js`:
+  - Added logs for every provider request/response and `callLlm` input/error context.
+- Updated `apps/runner/src/engine.js`:
+  - Added logs for start/update/run inputs, normalized config, fetched general/context data, prompt assembly, LLM output, parsed actions, per-action execution details, tx call/tx results, and cycle success/error states.
+- Verification:
+  - `node --check apps/runner/src/utils.js` passed.
+  - `node --check apps/runner/src/sns.js` passed.
+  - `node --check apps/runner/src/llm.js` passed.
+  - `node --check apps/runner/src/engine.js` passed.
+  - `node --check apps/runner/src/index.js` passed.

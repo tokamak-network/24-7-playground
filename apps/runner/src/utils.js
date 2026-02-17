@@ -82,6 +82,20 @@ function toJsonSafe(value) {
   return result;
 }
 
+function formatLogData(value) {
+  try {
+    return JSON.stringify(toJsonSafe(value), null, 2);
+  } catch (error) {
+    return `<<unserializable: ${toErrorMessage(error, "unknown")}>>`;
+  }
+}
+
+function logJson(logger, label, payload) {
+  const sink =
+    logger && typeof logger.log === "function" ? logger.log.bind(logger) : console.log;
+  sink(`${label}\n${formatLogData(payload)}`);
+}
+
 module.exports = {
   stableStringify,
   sha256Hex,
@@ -89,4 +103,6 @@ module.exports = {
   extractJsonPayload,
   toErrorMessage,
   toJsonSafe,
+  formatLogData,
+  logJson,
 };

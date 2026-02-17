@@ -1,4 +1,4 @@
-const { hmacSha256Hex, sha256Hex, stableStringify } = require("./utils");
+const { hmacSha256Hex, sha256Hex, stableStringify, logJson } = require("./utils");
 
 function normalizeBaseUrl(value) {
   return String(value || "http://localhost:3000").replace(/\/$/, "");
@@ -18,8 +18,18 @@ function buildUrl(baseUrl, path) {
   return `${normalizeBaseUrl(baseUrl)}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-async function readJsonOrThrow(response, fallbackMessage) {
+function trace(label, payload) {
+  logJson(console, `[runner][sns] ${label}`, payload);
+}
+
+async function readJsonOrThrow(response, fallbackMessage, meta) {
   const data = await parseResponseBody(response);
+  trace("response", {
+    request: meta || null,
+    status: response.status,
+    ok: response.ok,
+    body: data,
+  });
   if (!response.ok) {
     const errorMessage =
       data && typeof data.error === "string" && data.error.trim()
@@ -36,15 +46,26 @@ async function readJsonOrThrow(response, fallbackMessage) {
 async function fetchContext(params) {
   const query = new URLSearchParams();
   query.set("commentLimit", String(params.commentLimit));
+  const url = buildUrl(params.snsBaseUrl, `/api/agents/context?${query.toString()}`);
+  const headers = {
+    Authorization: `Bearer ${params.sessionToken}`,
+  };
+  trace("request", {
+    name: "fetchContext",
+    method: "GET",
+    url,
+    headers,
+  });
   const response = await fetch(
-    buildUrl(params.snsBaseUrl, `/api/agents/context?${query.toString()}`),
-    {
-      headers: {
-        Authorization: `Bearer ${params.sessionToken}`,
-      },
-    }
+    url,
+    { headers }
   );
-  return readJsonOrThrow(response, "Failed to fetch runner context");
+  return readJsonOrThrow(response, "Failed to fetch runner context", {
+    name: "fetchContext",
+    method: "GET",
+    url,
+    headers,
+  });
 }
 
 async function fetchAgentGeneral(params) {
@@ -52,26 +73,50 @@ async function fetchAgentGeneral(params) {
   if (!agentId) {
     throw new Error("agentId is required");
   }
-  const response = await fetch(
-    buildUrl(
-      params.snsBaseUrl,
-      `/api/agents/${encodeURIComponent(agentId)}/general`
-    ),
-    {
-      headers: {
-        Authorization: `Bearer ${params.sessionToken}`,
-      },
-    }
+  const url = buildUrl(
+    params.snsBaseUrl,
+    `/api/agents/${encodeURIComponent(agentId)}/general`
   );
-  return readJsonOrThrow(response, "Failed to fetch agent general data");
+  const headers = {
+    Authorization: `Bearer ${params.sessionToken}`,
+  };
+  trace("request", {
+    name: "fetchAgentGeneral",
+    method: "GET",
+    url,
+    headers,
+  });
+  const response = await fetch(
+    url,
+    { headers }
+  );
+  return readJsonOrThrow(response, "Failed to fetch agent general data", {
+    name: "fetchAgentGeneral",
+    method: "GET",
+    url,
+    headers,
+  });
 }
 
 async function issueNonce(params) {
-  const response = await fetch(buildUrl(params.snsBaseUrl, "/api/agents/nonce"), {
+  const url = buildUrl(params.snsBaseUrl, "/api/agents/nonce");
+  const headers = { "x-agent-key": params.agentKey };
+  trace("request", {
+    name: "issueNonce",
     method: "POST",
-    headers: { "x-agent-key": params.agentKey },
+    url,
+    headers,
   });
-  const data = await readJsonOrThrow(response, "Failed to issue nonce");
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+  });
+  const data = await readJsonOrThrow(response, "Failed to issue nonce", {
+    name: "issueNonce",
+    method: "POST",
+    url,
+    headers,
+  });
   if (!data.nonce) {
     throw new Error("Nonce endpoint returned empty nonce");
   }
@@ -89,13 +134,20 @@ async function buildSignedHeaders(params) {
     params.agentKey,
     `${nonceData.nonce}.${timestamp}.${bodyHash}`
   );
-  return {
+  const signed = {
     "Content-Type": "application/json",
     "x-agent-key": params.agentKey,
     "x-agent-nonce": nonceData.nonce,
     "x-agent-timestamp": timestamp,
     "x-agent-signature": signature,
   };
+  trace("signed-headers", {
+    name: "buildSignedHeaders",
+    body: params.body,
+    nonceData,
+    signed,
+  });
+  return signed;
 }
 
 function normalizeThreadType(value) {
@@ -112,35 +164,63 @@ async function createThread(params) {
     body: params.body,
     type: normalizeThreadType(params.threadType),
   };
+  const url = buildUrl(params.snsBaseUrl, "/api/threads");
   const headers = await buildSignedHeaders({
     snsBaseUrl: params.snsBaseUrl,
     agentKey: params.agentKey,
     body,
   });
-  const response = await fetch(buildUrl(params.snsBaseUrl, "/api/threads"), {
+  trace("request", {
+    name: "createThread",
+    method: "POST",
+    url,
+    headers,
+    body,
+  });
+  const response = await fetch(url, {
     method: "POST",
     headers,
     body: JSON.stringify(body),
   });
-  return readJsonOrThrow(response, "Failed to create thread");
+  return readJsonOrThrow(response, "Failed to create thread", {
+    name: "createThread",
+    method: "POST",
+    url,
+    headers,
+    body,
+  });
 }
 
 async function createComment(params) {
   const body = { body: params.body };
+  const url = buildUrl(
+    params.snsBaseUrl,
+    `/api/threads/${encodeURIComponent(params.threadId)}/comments`
+  );
   const headers = await buildSignedHeaders({
     snsBaseUrl: params.snsBaseUrl,
     agentKey: params.agentKey,
     body,
   });
-  const response = await fetch(
-    buildUrl(params.snsBaseUrl, `/api/threads/${encodeURIComponent(params.threadId)}/comments`),
-    {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    }
-  );
-  return readJsonOrThrow(response, "Failed to create comment");
+  trace("request", {
+    name: "createComment",
+    method: "POST",
+    url,
+    headers,
+    body,
+  });
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+  return readJsonOrThrow(response, "Failed to create comment", {
+    name: "createComment",
+    method: "POST",
+    url,
+    headers,
+    body,
+  });
 }
 
 module.exports = {

@@ -7,7 +7,7 @@ const {
   fetchContext,
   normalizeBaseUrl,
 } = require("./sns");
-const { extractJsonPayload, toErrorMessage, toJsonSafe } = require("./utils");
+const { extractJsonPayload, toErrorMessage, toJsonSafe, logJson } = require("./utils");
 
 const DEFAULT_INTERVAL_SEC = 60;
 const DEFAULT_COMMENT_LIMIT = 50;
@@ -189,6 +189,10 @@ function redactConfig(config) {
   };
 }
 
+function trace(logger, label, payload) {
+  logJson(logger, `[runner][engine] ${label}`, payload);
+}
+
 class RunnerEngine {
   constructor(logger = console) {
     this.logger = logger;
@@ -218,7 +222,9 @@ class RunnerEngine {
     if (this.state.running) {
       throw new Error("Runner is already running");
     }
+    trace(this.logger, "start:input", { configInput });
     this.config = normalizeConfig(configInput);
+    trace(this.logger, "start:normalized-config", { config: this.config });
     this.state.running = true;
     this.state.startedAt = new Date().toISOString();
     this.state.lastError = null;
@@ -247,6 +253,7 @@ class RunnerEngine {
     if (!this.config) {
       throw new Error("Runner config is not initialized");
     }
+    trace(this.logger, "update-config:patch-input", { patchInput });
     const merged = {
       ...this.config,
       ...patchInput,
@@ -260,6 +267,7 @@ class RunnerEngine {
       prompts: { ...this.config.prompts, ...(patchInput.prompts || {}) },
     };
     this.config = normalizeConfig(merged);
+    trace(this.logger, "update-config:normalized-config", { config: this.config });
     if (this.state.running) {
       if (this.timer) {
         clearInterval(this.timer);
@@ -278,7 +286,9 @@ class RunnerEngine {
   }
 
   async runOnceWithConfig(configInput) {
+    trace(this.logger, "run-once-with-config:input", { configInput });
     const normalized = normalizeConfig(configInput);
+    trace(this.logger, "run-once-with-config:normalized", { normalized });
     return this.#runCycle(normalized);
   }
 
@@ -286,6 +296,7 @@ class RunnerEngine {
     if (!this.config) {
       throw new Error("Runner config is not initialized");
     }
+    trace(this.logger, "run-once:using-config", { config: this.config });
     return this.#runCycle(this.config);
   }
 
@@ -293,6 +304,7 @@ class RunnerEngine {
     if (this.inFlight) {
       return { skipped: true, reason: "Runner cycle already in-flight" };
     }
+    trace(this.logger, "cycle:start", { config });
     this.inFlight = true;
     this.state.lastRunAt = new Date().toISOString();
 
@@ -313,6 +325,12 @@ class RunnerEngine {
           ? generalData.community
           : null;
       const agentKey = String((generalData && generalData.snsApiKey) || "").trim();
+      trace(this.logger, "cycle:general-data", {
+        generalData,
+        generalAgent,
+        generalCommunity,
+        agentKey,
+      });
       if (!generalAgent) {
         throw new Error("General agent data is missing");
       }
@@ -354,6 +372,10 @@ class RunnerEngine {
           contextData.context.communities = filtered;
         }
       }
+      trace(this.logger, "cycle:context-data", {
+        contextData,
+        communities,
+      });
       if (!communities.length) {
         throw new Error("No community assigned for this runner");
       }
@@ -364,6 +386,11 @@ class RunnerEngine {
         "{{context}}",
         JSON.stringify(contextData.context)
       );
+      trace(this.logger, "cycle:prompt", {
+        system,
+        userTemplate,
+        user,
+      });
 
       const llmOutput = await callLlm({
         provider,
@@ -374,6 +401,7 @@ class RunnerEngine {
         user,
       });
       this.state.lastLlmOutput = llmOutput || "";
+      trace(this.logger, "cycle:llm-output", { llmOutput });
 
       const actions = parseDecision(llmOutput || "");
       const validActions = actions.filter(
@@ -383,6 +411,10 @@ class RunnerEngine {
           item.action &&
           item.communitySlug
       );
+      trace(this.logger, "cycle:parsed-actions", {
+        actions,
+        validActions,
+      });
 
       if (!validActions.length) {
         throw new Error("LLM decision does not include valid actions");
@@ -390,21 +422,30 @@ class RunnerEngine {
 
       const executionResults = [];
       for (const action of validActions) {
+        trace(this.logger, "cycle:action:start", { action });
         const community = communities.find(
           (candidate) =>
             candidate && candidate.slug === String(action.communitySlug || "")
         );
+        trace(this.logger, "cycle:action:community-match", {
+          actionCommunitySlug: String(action.communitySlug || ""),
+          matchedCommunity: community || null,
+        });
         if (!community) continue;
 
         const actionType = String(action.action || "").trim();
         if (actionType === "create_thread") {
-          await createThread({
+          const threadResponse = await createThread({
             snsBaseUrl: config.snsBaseUrl,
             agentKey,
             communityId: community.id,
             title: String(action.title || "Agent update"),
             body: String(action.body || ""),
             threadType: action.threadType,
+          });
+          trace(this.logger, "cycle:action:create-thread:result", {
+            action,
+            threadResponse,
           });
           executionResults.push({ action: "create_thread", community: community.slug });
           continue;
@@ -413,11 +454,15 @@ class RunnerEngine {
         if (actionType === "comment") {
           const threadId = String(action.threadId || "").trim();
           if (!threadId) continue;
-          await createComment({
+          const commentResponse = await createComment({
             snsBaseUrl: config.snsBaseUrl,
             agentKey,
             threadId,
             body: String(action.body || ""),
+          });
+          trace(this.logger, "cycle:action:comment:result", {
+            action,
+            commentResponse,
           });
           executionResults.push({ action: "comment", community: community.slug, threadId });
           continue;
@@ -425,6 +470,10 @@ class RunnerEngine {
 
         if (actionType === "tx") {
           const txResult = await this.#executeTxAction(config, community, action);
+          trace(this.logger, "cycle:action:tx:result", {
+            action,
+            txResult,
+          });
           executionResults.push({
             action: "tx",
             community: community.slug,
@@ -436,11 +485,15 @@ class RunnerEngine {
               null,
               2
             )}\n\`\`\``;
-            await createComment({
+            const txCommentResponse = await createComment({
               snsBaseUrl: config.snsBaseUrl,
               agentKey,
               threadId: String(action.threadId),
               body: summary,
+            });
+            trace(this.logger, "cycle:action:tx:comment-result", {
+              action,
+              txCommentResponse,
             });
           }
         }
@@ -450,6 +503,10 @@ class RunnerEngine {
       this.state.lastActionCount = executionResults.length;
       this.state.lastSuccessAt = new Date().toISOString();
       this.state.lastError = null;
+      trace(this.logger, "cycle:success", {
+        state: this.state,
+        executionResults,
+      });
       return {
         ok: true,
         cycleCount: this.state.cycleCount,
@@ -459,6 +516,14 @@ class RunnerEngine {
     } catch (error) {
       const message = toErrorMessage(error, "Runner cycle failed");
       this.state.lastError = message;
+      trace(this.logger, "cycle:error", {
+        error: {
+          message,
+          stack: error && error.stack ? String(error.stack) : null,
+        },
+        config,
+        state: this.state,
+      });
       this.logger.error("[runner] cycle error:", message);
       return { ok: false, error: message };
     } finally {
@@ -467,6 +532,11 @@ class RunnerEngine {
   }
 
   async #executeTxAction(config, community, action) {
+    trace(this.logger, "tx-action:start", {
+      config,
+      community,
+      action,
+    });
     if (!config.execution.privateKey || !config.execution.alchemyApiKey) {
       throw new Error(
         "TX action requires execution.privateKey and execution.alchemyApiKey"
@@ -494,17 +564,19 @@ class RunnerEngine {
 
     if (fragment.stateMutability === "view" || fragment.stateMutability === "pure") {
       const result = await contract[functionName](...args);
-      return {
+      const output = {
         type: "call",
         functionName,
         args,
         result: toJsonSafe(result),
       };
+      trace(this.logger, "tx-action:call-result", { output });
+      return output;
     }
 
     const tx = await contract[functionName](...args, value ? { value } : {});
     const receipt = await tx.wait(1);
-    return {
+    const output = {
       type: "tx",
       functionName,
       args,
@@ -516,6 +588,8 @@ class RunnerEngine {
           : null,
       blockNumber: receipt && receipt.blockNumber ? receipt.blockNumber : null,
     };
+    trace(this.logger, "tx-action:tx-result", { output });
+    return output;
   }
 }
 

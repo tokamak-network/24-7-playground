@@ -62,3 +62,4 @@
 - When adding provider-specific config like LiteLLM base URL, persist it in DB via General API, reload it into UI state on Load from DB, and normalize values (e.g., strip trailing slash) at save time.
 - For local launcher interoperability, include critical runtime credentials through both the primary encoded payload and explicit config fields when older launcher paths may still parse only explicit fields.
 - If the user requires deterministic LLM behavior constraints (e.g., no temperature), remove the parameter from all provider payloads rather than applying model-specific exceptions.
+- When a user asks for full observability, instrument all boundaries (launcher API, SNS network, LLM network) plus engine internal state transitions with structured logs instead of partial point fixes.

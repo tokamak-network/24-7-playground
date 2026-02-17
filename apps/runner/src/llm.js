@@ -1,4 +1,4 @@
-const { toErrorMessage } = require("./utils");
+const { toErrorMessage, logJson } = require("./utils");
 
 function normalizeProvider(value) {
   return String(value || "OPENAI").trim().toUpperCase();
@@ -8,6 +8,10 @@ function defaultModelForProvider(provider) {
   if (provider === "ANTHROPIC") return "claude-3-5-sonnet-20240620";
   if (provider === "GEMINI") return "gemini-1.5-flash-002";
   return "gpt-4o-mini";
+}
+
+function trace(label, payload) {
+  logJson(console, `[runner][llm] ${label}`, payload);
 }
 
 async function parseJsonResponse(response) {
@@ -25,21 +29,39 @@ async function callOpenAiCompatible(params) {
     /\/$/,
     ""
   );
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+  const url = `${baseUrl}/chat/completions`;
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${params.apiKey}`,
+  };
+  const body = {
+    model: params.model,
+    messages: [
+      { role: "system", content: params.system },
+      { role: "user", content: params.user },
+    ],
+  };
+  trace("request", {
+    provider: "OPENAI_COMPATIBLE",
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${params.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: params.model,
-      messages: [
-        { role: "system", content: params.system },
-        { role: "user", content: params.user },
-      ],
-    }),
+    url,
+    headers,
+    body,
+  });
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
   });
   const data = await parseJsonResponse(response);
+  trace("response", {
+    provider: "OPENAI_COMPATIBLE",
+    method: "POST",
+    url,
+    status: response.status,
+    ok: response.ok,
+    body: data,
+  });
   if (!response.ok) {
     throw new Error(
       data.error && data.error.message
@@ -61,21 +83,39 @@ async function callAnthropic(params) {
     /\/$/,
     ""
   );
-  const response = await fetch(`${baseUrl}/v1/messages`, {
+  const url = `${baseUrl}/v1/messages`;
+  const headers = {
+    "Content-Type": "application/json",
+    "x-api-key": params.apiKey,
+    "anthropic-version": "2023-06-01",
+  };
+  const body = {
+    model: params.model,
+    max_tokens: 1200,
+    system: params.system,
+    messages: [{ role: "user", content: params.user }],
+  };
+  trace("request", {
+    provider: "ANTHROPIC",
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": params.apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: params.model,
-      max_tokens: 1200,
-      system: params.system,
-      messages: [{ role: "user", content: params.user }],
-    }),
+    url,
+    headers,
+    body,
+  });
+  const response = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
   });
   const data = await parseJsonResponse(response);
+  trace("response", {
+    provider: "ANTHROPIC",
+    method: "POST",
+    url,
+    status: response.status,
+    ok: response.ok,
+    body: data,
+  });
   if (!response.ok) {
     throw new Error(
       data.error && data.error.message
@@ -96,17 +136,34 @@ async function callGemini(params) {
       : `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(
           model
         )}:generateContent?key=${encodeURIComponent(params.apiKey)}`;
+  const headers = { "Content-Type": "application/json" };
+  const body = {
+    contents: [{ role: "user", parts: [{ text: `${params.system}\n\n${params.user}` }] }],
+    generationConfig: {
+      maxOutputTokens: 1200,
+    },
+  };
+  trace("request", {
+    provider: "GEMINI",
+    method: "POST",
+    url: endpoint,
+    headers,
+    body,
+  });
   const response = await fetch(endpoint, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: `${params.system}\n\n${params.user}` }] }],
-      generationConfig: {
-        maxOutputTokens: 1200,
-      },
-    }),
+    headers,
+    body: JSON.stringify(body),
   });
   const data = await parseJsonResponse(response);
+  trace("response", {
+    provider: "GEMINI",
+    method: "POST",
+    url: endpoint,
+    status: response.status,
+    ok: response.ok,
+    body: data,
+  });
   if (!response.ok) {
     throw new Error(
       data.error && data.error.message
@@ -128,6 +185,14 @@ async function callGemini(params) {
 async function callLlm(params) {
   const provider = normalizeProvider(params.provider);
   const model = String(params.model || defaultModelForProvider(provider));
+  trace("call", {
+    provider,
+    model,
+    baseUrl: String(params.baseUrl || ""),
+    apiKey: String(params.apiKey || ""),
+    system: String(params.system || ""),
+    user: String(params.user || ""),
+  });
   if (!params.apiKey) {
     throw new Error("Missing LLM API key");
   }
@@ -141,6 +206,11 @@ async function callLlm(params) {
     }
     return await callOpenAiCompatible({ ...params, provider, model });
   } catch (error) {
+    trace("error", {
+      provider,
+      model,
+      error: toErrorMessage(error, "Failed to call LLM"),
+    });
     throw new Error(toErrorMessage(error, "Failed to call LLM"));
   }
 }
