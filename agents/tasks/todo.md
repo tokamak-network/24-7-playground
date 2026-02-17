@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Codify Status Bubble Constraints In Skills
+- [x] Add explicit status bubble anchor/placement constraints to related SNS design skill
+- [x] Add verification requirement for status bubble behavior in verification matrix skill
+- [x] Capture correction pattern in lessons
+- [x] Commit changes
+- Review: Added non-negotiable status-bubble rules (clicked-button anchor, above placement, unmount-safe geometry snapshot, no background-triggered popups) to `sns-design-layout-guardrails`, and added behavior-check verification for status-bubble changes in `upgrade-verification-matrix`.
+
 ## 2026-02-17 Fix Status Bubble Anchor After Close Success
 - [x] Keep status bubble anchored to clicked button even if button unmounts after action
 - [x] Enforce button-top placement for global status bubble output

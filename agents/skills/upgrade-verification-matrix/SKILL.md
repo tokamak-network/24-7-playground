@@ -21,6 +21,7 @@ Do not mark completion without evidence.
 - Verify changed path success case.
 - Verify at least one expected rejection/error case.
 - Diff behavior against previous logic for impacted surface.
+- If status bubble/toast behavior was touched, verify popup appears above the clicked button for both success and error paths, including cases where the button unmounts after action.
 
 ## Runner checks (if touched)
 - Run 2-port/2-agent matrix and verify cross-control blocking and log separation.

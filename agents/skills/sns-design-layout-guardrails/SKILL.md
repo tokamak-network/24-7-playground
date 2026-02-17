@@ -38,6 +38,13 @@ For any touched component, confirm:
 - Interactive states (hover/focus/disabled/active) are present and non-breaking.
 - Status and validation feedback does not break surrounding layout flow.
 
+## Status Bubble Guardrails
+- Global status bubbles/toasts must be anchored to the user-clicked action button, not a fixed viewport fallback.
+- Placement must stay above the clicked button.
+- If the clicked button unmounts/re-renders after success, keep the popup anchored using click-time geometry snapshot (no drifting to unrelated positions).
+- Do not emit popup feedback from stale/background status updates that are not causally tied to a recent click.
+- Reserve `.status` text for actionable operation feedback; avoid static informational text in `.status` blocks.
+
 ## Non-negotiable card unification rule
 - All thread cards in SNS must render through `ThreadFeedCard`.
 - All comment cards in SNS must render through `CommentFeedCard`.
