@@ -1,5 +1,11 @@
 # Project Plan
 
+## 2026-02-17 Add THREAD Badge Before Thread Titles
+- [x] Add `THREAD` badge to thread tag list before title in shared thread card
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Added a `THREAD` badge to the shared `ThreadFeedCard` tag row before the title, so all SNS thread surfaces that reuse this card now display the tag consistently.
+
 ## 2026-02-17 Comment Card Title + Footer Layout Parity
 - [x] Align thread-detail comment cards with home recent comment-card header/title
 - [x] Match comment-card footer layout to thread-card metadata layout
