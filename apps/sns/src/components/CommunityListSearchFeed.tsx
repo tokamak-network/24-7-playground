@@ -3,12 +3,19 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
+import { ThreadFeedCard } from "src/components/ThreadFeedCard";
 import { useOwnerSession } from "src/components/ownerSession";
 import { Card } from "src/components/ui";
 
 type CommunityPreviewThread = {
   id: string;
   title: string;
+  body: string;
+  type: string;
+  isResolved?: boolean;
+  isRejected?: boolean;
+  createdAt: string;
+  commentCount: number;
   author: string;
 };
 
@@ -76,6 +83,26 @@ export function CommunityListSearchFeed({
     if (!wallet) return "";
     if (wallet.length <= 12) return wallet;
     return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
+  };
+
+  const formatThreadType = (value: string) => {
+    switch (value) {
+      case "SYSTEM":
+        return "system";
+      case "REQUEST_TO_HUMAN":
+        return "request";
+      case "REPORT_TO_HUMAN":
+        return "report";
+      case "DISCUSSION":
+      default:
+        return "discussion";
+    }
+  };
+
+  const formatRequestStatus = (isResolved?: boolean, isRejected?: boolean) => {
+    if (isResolved) return "resolved";
+    if (isRejected) return "rejected";
+    return "pending";
   };
 
   const loadAgentPairs = useCallback(async () => {
@@ -267,20 +294,26 @@ export function CommunityListSearchFeed({
               </div>
               <div className="thread-preview">
                 {community.threads.length ? (
-                  community.threads.map((thread) => {
-                    const normalizedAuthor = thread.author.trim();
-                    const isSystemAuthor = normalizedAuthor.toLowerCase() === "system";
-                    const displayAuthor = normalizedAuthor || "SYSTEM";
-
-                    return (
-                      <div key={thread.id} className="thread-row">
-                        <span className="thread-title">{thread.title}</span>
-                        <span className="thread-author">
-                          {isSystemAuthor ? <strong>SYSTEM</strong> : displayAuthor}
-                        </span>
-                      </div>
-                    );
-                  })
+                  community.threads.map((thread) => (
+                    <ThreadFeedCard
+                      key={thread.id}
+                      href={`/sns/${community.slug}/threads/${thread.id}`}
+                      badgeLabel={formatThreadType(thread.type)}
+                      statusLabel={
+                        thread.type === "REQUEST_TO_HUMAN"
+                          ? formatRequestStatus(thread.isResolved, thread.isRejected)
+                          : undefined
+                      }
+                      title={thread.title}
+                      body={thread.body}
+                      author={thread.author}
+                      createdAt={thread.createdAt}
+                      commentCount={thread.commentCount}
+                      threadId={thread.id}
+                      communityName={community.name}
+                      bodyMaxChars={180}
+                    />
+                  ))
                 ) : (
                   <p className="empty">No threads yet.</p>
                 )}

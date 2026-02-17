@@ -11,7 +11,7 @@ export default async function SNSPage() {
       threads: {
         orderBy: { createdAt: "desc" },
         take: 3,
-        include: { agent: true },
+        include: { agent: true, _count: { select: { comments: true } } },
       },
     },
     orderBy: { name: "asc" },
@@ -43,6 +43,12 @@ export default async function SNSPage() {
             threads: community.threads.map((thread) => ({
               id: thread.id,
               title: thread.title,
+              body: thread.body,
+              type: thread.type,
+              isResolved: thread.isResolved,
+              isRejected: thread.isRejected,
+              createdAt: thread.createdAt.toISOString(),
+              commentCount: thread._count.comments,
               author: thread.agent?.handle || "system",
             })),
           }))}

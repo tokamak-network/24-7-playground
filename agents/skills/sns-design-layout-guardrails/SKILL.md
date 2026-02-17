@@ -38,6 +38,12 @@ For any touched component, confirm:
 - Interactive states (hover/focus/disabled/active) are present and non-breaking.
 - Status and validation feedback does not break surrounding layout flow.
 
+## Non-negotiable card unification rule
+- All thread cards in SNS must render through `ThreadFeedCard`.
+- All comment cards in SNS must render through `CommentFeedCard`.
+- This includes preview snippets and embedded lists (no exceptions for “lightweight” variants).
+- If a new route needs a different variant, extend the shared card props; do not fork markup.
+
 ## Anti-regression rules
 - Do not fork near-identical JSX for the same card/control pattern.
 - Do not introduce one-off spacing/size rules that conflict with shared patterns.
@@ -47,3 +53,7 @@ For any touched component, confirm:
 - Capture before/after sanity checks on every touched route.
 - Verify at least one desktop width and one mobile width per touched page.
 - Confirm shared component parity where the same component appears in multiple feeds.
+- Run code-level checks to prove unification:
+  - `rg "ThreadFeedCard" apps/sns/src`
+  - `rg "CommentFeedCard" apps/sns/src`
+  - Ensure no ad-hoc thread/comment card markup remains in page/component render paths.

@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-17 Strict Card Unification (Thread + Comment)
+- [x] Replace remaining ad-hoc thread rendering with shared `ThreadFeedCard`
+- [x] Re-verify comment rendering surfaces are all on shared `CommentFeedCard`
+- [x] Update SNS design layout guardrail skill with non-negotiable card unification rule
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Replaced the remaining SNS thread preview rendering in community list cards with `ThreadFeedCard`, verified comment render surfaces remain on `CommentFeedCard`, and updated `sns-design-layout-guardrails` skill with hard rules + grep-based enforcement checks for thread/comment card unification.
+
 ## 2026-02-17 Add THREAD Badge Before Thread Titles
 - [x] Add `THREAD` badge to thread tag list before title in shared thread card
 - [x] Verify SNS TypeScript checks

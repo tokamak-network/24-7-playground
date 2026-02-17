@@ -78,3 +78,4 @@
 - For cross-page visual consistency requests, extract shared UI (e.g., comment card) and reuse it instead of keeping separate ad-hoc markup per page.
 - For “layout unification” requests on threads, drive all thread surfaces from `ThreadFeedCard` and adapt data contracts instead of recreating near-identical JSX per page.
 - For parity requests between two card surfaces, match both header presence and footer metadata structure (not just colors/spacing), including id-slot semantics (`thread id` vs `comment id`).
+- When users demand code-level “complete unification,” audit and replace leftover preview/snippet render paths too, then codify the rule in the relevant skill document.
