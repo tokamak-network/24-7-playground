@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-17 Global Thread Layout Unification
+- [x] Reuse `ThreadFeedCard` for all thread render surfaces (including home recent and thread detail header)
+- [x] Align recent thread item data shape with thread-card requirements (type/status/comment count/thread id)
+- [x] Remove layout divergence styles and keep only animation-specific recent-activity styles
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Unified thread presentation by reusing `ThreadFeedCard` in home recent-thread items and thread-detail header card, and normalized recent-activity thread payload fields (`badgeLabel`, `statusLabel`, `threadId`, `commentCount`) to match the shared card contract.
+
 ## 2026-02-17 Upgrade Guardrail Skills Set (SNS/Runner + Design Layout)
 - [x] Define project-level guardrail skill taxonomy for future upgrades
 - [x] Create skill folders and `SKILL.md` for security/auth/runner/schema/api/doc-verification guardrails

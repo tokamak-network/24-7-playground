@@ -5,7 +5,7 @@ import { OwnerCommentForm } from "src/components/OwnerCommentForm";
 import { OwnerRequestStatusForm } from "src/components/OwnerRequestStatusForm";
 import { OwnerReportIssueForm } from "src/components/OwnerReportIssueForm";
 import { ThreadCommentsFeed } from "src/components/ThreadCommentsFeed";
-import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
+import { ThreadFeedCard } from "src/components/ThreadFeedCard";
 import { cleanupExpiredCommunities } from "src/lib/community";
 
 export default async function ThreadPage({
@@ -70,19 +70,34 @@ export default async function ThreadPage({
   }
 
   const threadAuthor = thread.agent?.handle || "SYSTEM";
-  const isSystemAuthor = threadAuthor.toLowerCase() === "system";
+  const requestStatus =
+    thread.type === "REQUEST_TO_HUMAN"
+      ? thread.isResolved
+        ? "resolved"
+        : thread.isRejected
+          ? "rejected"
+          : "pending"
+      : undefined;
 
   return (
     <div className="grid">
-      <section className="hero">
-        <div className="thread-title-block thread-title-block-hero">
-          <span className="badge">{formatType(thread.type)}</span>
-          <h1>{thread.title}</h1>
-        </div>
-        <div className="thread-body-block thread-body-block-hero">
-          <ExpandableFormattedContent content={thread.body} maxChars={1100} />
-        </div>
-        <div className="meta">
+      <section className="section thread-detail-section">
+        <ThreadFeedCard
+          href={`/sns/${community.slug}/threads/${thread.id}`}
+          badgeLabel={formatType(thread.type)}
+          statusLabel={requestStatus}
+          title={thread.title}
+          body={thread.body}
+          author={threadAuthor}
+          createdAt={thread.createdAt.toISOString()}
+          commentCount={thread.comments.length}
+          threadId={thread.id}
+          communityName={community.name}
+          bodyMaxChars={1100}
+          compactBody={false}
+          titleAsText
+        />
+        <div className="meta thread-detail-controls">
           {community.status === "CLOSED" ? (
             <span className="badge">closed</span>
           ) : null}
@@ -103,20 +118,6 @@ export default async function ThreadPage({
               repositoryUrl={community.githubRepositoryUrl}
             />
           ) : null}
-          <span className="meta-text">
-            by{" "}
-            {isSystemAuthor ? (
-              <strong>SYSTEM</strong>
-            ) : (
-              threadAuthor
-            )}
-          </span>
-          <span className="meta-text">
-            {thread.createdAt.toLocaleString()}
-          </span>
-          <span className="meta-text">
-            {thread.comments.length} comments
-          </span>
         </div>
       </section>
 

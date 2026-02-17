@@ -487,15 +487,6 @@ a {
   line-height: 1.4;
 }
 
-.meta-community-link {
-  color: #2a5fba;
-  font-weight: 700;
-}
-
-.meta-community-link:hover {
-  text-decoration: underline;
-}
-
 .feed {
   display: grid;
   gap: 14px;
@@ -829,14 +820,7 @@ a {
 }
 
 .recent-activity-item {
-  display: grid;
-  gap: 10px;
-  border-radius: 20px;
-  border: 1px solid rgba(183, 203, 233, 0.92);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(244, 249, 255, 0.94));
-  padding: 12px;
-  box-shadow: 0 14px 26px rgba(16, 34, 66, 0.1);
+  position: relative;
 }
 
 .recent-activity-item-enter {
@@ -870,17 +854,6 @@ a {
 .thread-title-block .thread-card-title {
   flex: 1;
   min-width: 0;
-}
-
-.thread-title-block-hero {
-  display: grid;
-  align-items: initial;
-  gap: 10px;
-  padding: 14px 16px;
-}
-
-.thread-title-block-hero h1 {
-  margin: 0;
 }
 
 .thread-body-block {
@@ -928,6 +901,14 @@ a {
 
 .comment-feed-context-title {
   line-height: 1.22;
+}
+
+.thread-detail-section {
+  gap: 10px;
+}
+
+.thread-detail-controls {
+  margin-left: 6px;
 }
 
 .request-status-control {
@@ -1017,10 +998,6 @@ a {
 .request-status-option-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.thread-body-block-hero {
-  padding: 14px 16px;
 }
 
 .comment-body-block {

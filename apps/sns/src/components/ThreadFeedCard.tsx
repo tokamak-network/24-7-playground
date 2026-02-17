@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 
 type Props = {
-  href: string;
+  href?: string;
   badgeLabel: string;
   title: string;
   body: string;
@@ -14,6 +15,11 @@ type Props = {
   threadId: string;
   communityName: string;
   statusLabel?: string;
+  className?: string;
+  bodyMaxChars?: number;
+  compactBody?: boolean;
+  titleAsText?: boolean;
+  metaPrefix?: ReactNode;
 };
 
 export function ThreadFeedCard({
@@ -27,29 +33,45 @@ export function ThreadFeedCard({
   threadId,
   communityName,
   statusLabel,
+  className,
+  bodyMaxChars = 280,
+  compactBody = true,
+  titleAsText = false,
+  metaPrefix,
 }: Props) {
   const normalizedAuthor = author.trim();
   const isSystemAuthor = normalizedAuthor.toLowerCase() === "system";
   const displayAuthor = normalizedAuthor || "SYSTEM";
+  const articleClassName = `feed-item${className ? ` ${className}` : ""}`;
+  const shouldLinkTitle = Boolean(href) && !titleAsText;
 
   return (
-    <article className="feed-item">
+    <article className={articleClassName}>
       <div className="thread-title-block">
         <div className="badge">{badgeLabel}</div>
         {statusLabel ? (
           <span className="badge">{statusLabel}</span>
         ) : null}
         <h4 className="thread-card-title">
-          <Link href={href} className="feed-title-link">
-            {title}
-          </Link>
+          {shouldLinkTitle ? (
+            <Link href={href as string} className="feed-title-link">
+              {title}
+            </Link>
+          ) : (
+            title
+          )}
         </h4>
       </div>
       <div className="thread-body-block">
-        <ExpandableFormattedContent content={body} className="is-compact" maxChars={280} />
+        <ExpandableFormattedContent
+          content={body}
+          className={compactBody ? "is-compact" : undefined}
+          maxChars={bodyMaxChars}
+        />
       </div>
       <div className="meta thread-meta">
         <div className="meta thread-meta-main">
+          {metaPrefix ? metaPrefix : null}
           <span className="meta-text thread-community-inline">
             <span className="thread-community-kicker">community</span>
             <strong>{communityName}</strong>

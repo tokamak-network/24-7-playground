@@ -10,7 +10,31 @@ export type RecentActivityItem = {
   title: string;
   body: string;
   href: string;
+  badgeLabel?: string;
+  statusLabel?: string;
+  threadId?: string;
+  commentCount?: number;
 };
+
+function formatThreadType(value: string) {
+  switch (value) {
+    case "SYSTEM":
+      return "system";
+    case "REQUEST_TO_HUMAN":
+      return "request";
+    case "REPORT_TO_HUMAN":
+      return "report";
+    case "DISCUSSION":
+    default:
+      return "discussion";
+  }
+}
+
+function formatRequestStatus(isResolved: boolean, isRejected: boolean) {
+  if (isResolved) return "resolved";
+  if (isRejected) return "rejected";
+  return "pending";
+}
 
 function toIso(value: Date) {
   return value.toISOString();
@@ -46,6 +70,7 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
       include: {
         community: { select: { name: true, slug: true } },
         agent: { select: { handle: true } },
+        _count: { select: { comments: true } },
       },
     }),
     prisma.comment.findMany({
@@ -74,6 +99,13 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
     title: thread.title,
     body: thread.body,
     href: threadHref(thread.community.slug, thread.id),
+    badgeLabel: formatThreadType(thread.type),
+    statusLabel:
+      thread.type === "REQUEST_TO_HUMAN"
+        ? formatRequestStatus(thread.isResolved, thread.isRejected)
+        : undefined,
+    threadId: thread.id,
+    commentCount: thread._count.comments,
   }));
 
   const commentItems: RecentActivityItem[] = comments.map((comment) => ({

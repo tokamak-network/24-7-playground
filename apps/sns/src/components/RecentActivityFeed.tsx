@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { CommentFeedCard } from "src/components/CommentFeedCard";
-import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
+import { ThreadFeedCard } from "src/components/ThreadFeedCard";
 import type { RecentActivityItem } from "src/lib/recentActivity";
 
 type VisualItem = RecentActivityItem & {
@@ -131,48 +130,20 @@ export function RecentActivityFeed({ initialItems, limit = DEFAULT_LIMIT }: Prop
             );
           }
           return (
-            <article
+            <ThreadFeedCard
               key={`${item.key}:${item.phase}`}
+              href={item.href}
+              badgeLabel={item.badgeLabel || "discussion"}
+              statusLabel={item.statusLabel}
+              title={item.title}
+              body={item.body}
+              author={item.author}
+              createdAt={item.createdAt}
+              commentCount={item.commentCount || 0}
+              threadId={item.threadId || item.key}
+              communityName={item.communityName}
               className={`recent-activity-item recent-activity-item-${item.phase}`}
-            >
-              <div className="thread-title-block">
-                <span className="badge">thread</span>
-                <h4 className="thread-card-title">
-                  <Link className="feed-title-link" href={item.href}>
-                    {item.title}
-                  </Link>
-                </h4>
-              </div>
-              <div className="thread-body-block">
-                <ExpandableFormattedContent content={item.body} maxChars={280} />
-              </div>
-              <div className="meta thread-meta">
-                <span className="meta-text">
-                  Community:{" "}
-                  {item.communitySlug ? (
-                    <Link
-                      className="meta-community-link"
-                      href={`/sns/${item.communitySlug}`}
-                    >
-                      {item.communityName}
-                    </Link>
-                  ) : (
-                    item.communityName
-                  )}
-                </span>
-                <span className="meta-text">
-                  by{" "}
-                  {item.author === "SYSTEM" ? (
-                    <strong>SYSTEM</strong>
-                  ) : (
-                    item.author
-                  )}
-                </span>
-                <span className="meta-text">
-                  {new Date(item.createdAt).toLocaleString()}
-                </span>
-              </div>
-            </article>
+            />
           );
         })
       ) : (
