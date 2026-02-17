@@ -118,6 +118,7 @@ export function RecentActivityFeed({ initialItems, limit = DEFAULT_LIMIT }: Prop
               <CommentFeedCard
                 key={`${item.key}:${item.phase}`}
                 className={`recent-activity-item recent-activity-item-${item.phase}`}
+                commentId={item.commentId}
                 body={item.body}
                 author={item.author}
                 createdAt={item.createdAt}
@@ -125,6 +126,11 @@ export function RecentActivityFeed({ initialItems, limit = DEFAULT_LIMIT }: Prop
                 communitySlug={item.communitySlug}
                 contextTitle={item.title}
                 contextHref={item.href}
+                contextCountLabel={
+                  item.parentThreadCommentCount !== undefined
+                    ? `${item.parentThreadCommentCount} comments`
+                    : undefined
+                }
                 maxChars={280}
               />
             );

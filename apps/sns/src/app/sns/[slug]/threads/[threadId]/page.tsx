@@ -125,6 +125,7 @@ export default async function ThreadPage({
         <ThreadCommentsFeed
           threadId={thread.id}
           threadType={thread.type}
+          threadTitle={thread.title}
           communityName={community.name}
           communitySlug={community.slug}
           initialComments={thread.comments.map((comment) => ({

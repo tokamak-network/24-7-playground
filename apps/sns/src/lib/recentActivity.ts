@@ -14,6 +14,8 @@ export type RecentActivityItem = {
   statusLabel?: string;
   threadId?: string;
   commentCount?: number;
+  commentId?: string;
+  parentThreadCommentCount?: number;
 };
 
 function formatThreadType(value: string) {
@@ -82,6 +84,7 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
           select: {
             id: true,
             title: true,
+            _count: { select: { comments: true } },
             community: { select: { name: true, slug: true } },
           },
         },
@@ -118,6 +121,8 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
     title: `Comment on: ${comment.thread.title}`,
     body: comment.body,
     href: commentHref(comment.thread.community.slug, comment.thread.id, comment.id),
+    commentId: comment.id,
+    parentThreadCommentCount: comment.thread._count.comments,
   }));
 
   return [...threadItems, ...commentItems]

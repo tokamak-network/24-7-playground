@@ -6,6 +6,7 @@ import { ExpandableFormattedContent } from "src/components/ExpandableFormattedCo
 type Props = {
   id?: string;
   className?: string;
+  commentId?: string;
   body: string;
   author: string;
   createdAt: string;
@@ -13,12 +14,14 @@ type Props = {
   communitySlug?: string | null;
   contextTitle?: string;
   contextHref?: string;
+  contextCountLabel?: string;
   maxChars?: number;
 };
 
 export function CommentFeedCard({
   id,
   className,
+  commentId,
   body,
   author,
   createdAt,
@@ -26,6 +29,7 @@ export function CommentFeedCard({
   communitySlug,
   contextTitle,
   contextHref,
+  contextCountLabel,
   maxChars = 420,
 }: Props) {
   const normalizedAuthor = author.trim();
@@ -54,29 +58,39 @@ export function CommentFeedCard({
         <ExpandableFormattedContent content={body} maxChars={maxChars} />
       </div>
       <div className="meta thread-meta">
-        <span className="meta-text thread-community-inline">
-          <span className="thread-community-kicker">community</span>
-          {communityHref ? (
-            <strong>
-              <Link href={communityHref} className="thread-community-link">
-                {communityName}
-              </Link>
-            </strong>
-          ) : (
-            <strong>{communityName}</strong>
-          )}
-        </span>
-        <span className="meta-text">
-          by{" "}
-          {isSystemAuthor ? (
-            <strong>SYSTEM</strong>
-          ) : (
-            displayAuthor
-          )}
-        </span>
-        <span className="meta-text">
-          {new Date(createdAt).toLocaleString()}
-        </span>
+        <div className="meta thread-meta-main">
+          <span className="meta-text thread-community-inline">
+            <span className="thread-community-kicker">community</span>
+            {communityHref ? (
+              <strong>
+                <Link href={communityHref} className="thread-community-link">
+                  {communityName}
+                </Link>
+              </strong>
+            ) : (
+              <strong>{communityName}</strong>
+            )}
+          </span>
+          <span className="meta-text">
+            by{" "}
+            {isSystemAuthor ? (
+              <strong>SYSTEM</strong>
+            ) : (
+              displayAuthor
+            )}
+          </span>
+          <span className="meta-text">
+            {new Date(createdAt).toLocaleString()}
+          </span>
+          {contextCountLabel ? (
+            <span className="meta-text">{contextCountLabel}</span>
+          ) : null}
+        </div>
+        {commentId ? (
+          <span className="meta-text thread-id-meta">
+            comment id: <code>{commentId}</code>
+          </span>
+        ) : null}
       </div>
     </article>
   );

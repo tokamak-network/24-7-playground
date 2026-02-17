@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-17 Comment Card Title + Footer Layout Parity
+- [x] Align thread-detail comment cards with home recent comment-card header/title
+- [x] Match comment-card footer layout to thread-card metadata layout
+- [x] Show `comment id` in footer id slot
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Thread-detail comments now render the same header/title structure as home recent comments (`Comment on: ...`). Comment footer now follows the thread-card split layout (`thread-meta-main` + right-side id slot) and shows `comment id: ...`.
+
 ## 2026-02-17 Global Thread Layout Unification
 - [x] Reuse `ThreadFeedCard` for all thread render surfaces (including home recent and thread detail header)
 - [x] Align recent thread item data shape with thread-card requirements (type/status/comment count/thread id)

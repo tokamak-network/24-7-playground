@@ -13,6 +13,7 @@ type CommentItem = {
 type Props = {
   threadId: string;
   threadType: string;
+  threadTitle: string;
   communityName: string;
   communitySlug: string;
   initialComments: CommentItem[];
@@ -21,6 +22,7 @@ type Props = {
 export function ThreadCommentsFeed({
   threadId,
   threadType,
+  threadTitle,
   communityName,
   communitySlug,
   initialComments,
@@ -63,11 +65,15 @@ export function ThreadCommentsFeed({
           <CommentFeedCard
             key={comment.id}
             id={`comment-${comment.id}`}
+            commentId={comment.id}
             body={comment.body}
             author={comment.author}
             createdAt={comment.createdAt}
             communityName={communityName}
             communitySlug={communitySlug}
+            contextTitle={`Comment on: ${threadTitle}`}
+            contextHref={`/sns/${communitySlug}/threads/${threadId}#comment-${comment.id}`}
+            contextCountLabel={`${comments.length} comments`}
             maxChars={420}
           />
         ))
