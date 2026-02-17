@@ -60,6 +60,14 @@ type RunnerDraft = {
   maxTokens: string;
 };
 
+type RunnerStatusSnapshot = {
+  launcherPort: string;
+  rawRunning: boolean;
+  runningForSelectedAgent: boolean;
+  runningForOtherAgent: boolean;
+  statusAgentId: string;
+};
+
 type BubbleKind = "success" | "error" | "info";
 type BubblePlacement = "above" | "below";
 
@@ -682,6 +690,8 @@ export default function AgentManagementPage() {
             commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
             maxTokens: "",
           });
+          setRunnerLauncherPort(DEFAULT_RUNNER_LAUNCHER_PORT);
+          setRunnerLauncherSecret(DEFAULT_RUNNER_LAUNCHER_SECRET);
           setRunnerStatus("Using default runner settings.");
           return;
         }
@@ -803,14 +813,11 @@ export default function AgentManagementPage() {
 
   const resolveRunnerLauncherPort = useCallback(
     (preferredPort?: string) => {
-      const detectedPortValues = detectedRunnerPorts.map((port) => String(port));
-      const preferred = String(preferredPort || runnerLauncherPort).trim();
-      if (detectedPortValues.includes(preferred)) {
-        return preferred;
-      }
-      return detectedPortValues[0] || "";
+      const preferred = String(preferredPort || "").trim();
+      if (preferred) return preferred;
+      return String(runnerLauncherPort || "").trim();
     },
-    [detectedRunnerPorts, runnerLauncherPort]
+    [runnerLauncherPort]
   );
 
   const fetchRunnerStatus = useCallback(
@@ -818,14 +825,14 @@ export default function AgentManagementPage() {
       preferredPort?: string;
       silent?: boolean;
       anchorEl?: HTMLElement | null;
-    }) => {
+    }): Promise<RunnerStatusSnapshot | null> => {
       const launcherPort = resolveRunnerLauncherPort(options?.preferredPort);
       if (!launcherPort) {
         setRunnerRunning(false);
         if (!options?.silent) {
           pushBubble(
             "error",
-            "No detected launcher port. Click Detect Launcher first.",
+            "Runner Launcher Port is required.",
             options?.anchorEl
           );
         }
@@ -855,12 +862,38 @@ export default function AgentManagementPage() {
           return null;
         }
         const data = await response.json().catch(() => ({}));
-        const running = Boolean(data?.status?.running);
-        setRunnerRunning(running);
-        setRunnerStatus(
-          `Runner is ${running ? "running" : "stopped"} on localhost:${launcherPort}.`
-        );
-        return running;
+        const rawRunning = Boolean(data?.status?.running);
+        const statusAgentId = String(data?.status?.config?.agentId || "").trim();
+        const hasSelectedAgent = Boolean(selectedAgentId);
+        const runningForSelectedAgent =
+          rawRunning && hasSelectedAgent && statusAgentId === selectedAgentId;
+        const runningForOtherAgent =
+          rawRunning && hasSelectedAgent && !runningForSelectedAgent;
+
+        setRunnerRunning(runningForSelectedAgent);
+        if (runningForSelectedAgent) {
+          setRunnerStatus(
+            `Runner is running on localhost:${launcherPort} for selected agent.`
+          );
+        } else if (runningForOtherAgent) {
+          setRunnerStatus(
+            `Runner is running on localhost:${launcherPort} for another agent${
+              statusAgentId ? ` (${statusAgentId})` : ""
+            }.`
+          );
+        } else if (rawRunning) {
+          setRunnerStatus(`Runner is running on localhost:${launcherPort}.`);
+        } else {
+          setRunnerStatus(`Runner is stopped on localhost:${launcherPort}.`);
+        }
+
+        return {
+          launcherPort,
+          rawRunning,
+          runningForSelectedAgent,
+          runningForOtherAgent,
+          statusAgentId,
+        };
       } catch {
         setRunnerRunning(false);
         const message =
@@ -872,7 +905,13 @@ export default function AgentManagementPage() {
         return null;
       }
     },
-    [pushBubble, readError, resolveRunnerLauncherPort, runnerLauncherSecret]
+    [
+      pushBubble,
+      readError,
+      resolveRunnerLauncherPort,
+      runnerLauncherSecret,
+      selectedAgentId,
+    ]
   );
 
   const detectRunnerLauncherPorts = useCallback(
@@ -924,8 +963,13 @@ export default function AgentManagementPage() {
         );
         if (matched.length) {
           setRunnerLauncherPort((prev) => {
-            const next = String(matched[0]);
-            return prev === next ? prev : next;
+            const current = String(prev || "").trim();
+            if (current) return current;
+            const preferred = String(options?.preferredPort || "").trim();
+            if (preferred && matched.includes(Number(preferred))) {
+              return preferred;
+            }
+            return String(matched[0]);
           });
           if (!options?.silent) {
             pushBubble(
@@ -935,7 +979,6 @@ export default function AgentManagementPage() {
             );
           }
         } else if (!options?.silent) {
-          setRunnerLauncherPort("");
           setRunnerRunning(false);
           pushBubble(
             "error",
@@ -943,7 +986,6 @@ export default function AgentManagementPage() {
             options?.anchorEl
           );
         } else {
-          setRunnerLauncherPort("");
           setRunnerRunning(false);
         }
       } finally {
@@ -1004,7 +1046,7 @@ export default function AgentManagementPage() {
     if (!launcherPort) {
       pushBubble(
         "error",
-        "No detected launcher port. Click Detect Launcher first.",
+        "Runner Launcher Port is required.",
         anchorEl
       );
       return;
@@ -1062,6 +1104,33 @@ export default function AgentManagementPage() {
 
     setStartRunnerBusy(true);
     try {
+      const preflightStatus = await fetchRunnerStatus({
+        preferredPort: launcherPort,
+        silent: true,
+      });
+      if (!preflightStatus) {
+        const message = "Runner status preflight check failed.";
+        setRunnerStatus(message);
+        pushBubble("error", message, anchorEl);
+        return;
+      }
+      if (preflightStatus.runningForOtherAgent) {
+        const message = `Cannot start on localhost:${launcherPort}. Another agent is already running${
+          preflightStatus.statusAgentId
+            ? ` (${preflightStatus.statusAgentId})`
+            : ""
+        }.`;
+        setRunnerStatus(message);
+        pushBubble("error", message, anchorEl);
+        return;
+      }
+      if (preflightStatus.runningForSelectedAgent) {
+        const message = `Runner is already running on localhost:${launcherPort} for selected agent.`;
+        setRunnerStatus(message);
+        pushBubble("info", message, anchorEl);
+        return;
+      }
+
       const credentialResponse = await fetch(
         `/api/agents/${encodeURIComponent(selectedAgentId)}/runner-credential`,
         {
@@ -1127,7 +1196,7 @@ export default function AgentManagementPage() {
     }
   }, [
     authHeaders,
-    detectedRunnerPorts,
+    fetchRunnerStatus,
     general?.agent.ownerWallet,
     general?.community?.name,
     general?.community?.slug,
@@ -1153,11 +1222,15 @@ export default function AgentManagementPage() {
 
   const stopRunnerLauncher = useCallback(
     async (anchorEl?: HTMLElement | null) => {
+      if (!selectedAgentId) {
+        pushBubble("error", "Select an agent pair first.", anchorEl);
+        return;
+      }
       const launcherPort = resolveRunnerLauncherPort();
       if (!launcherPort) {
         pushBubble(
           "error",
-          "No detected launcher port. Click Detect Launcher first.",
+          "Runner Launcher Port is required.",
           anchorEl
         );
         return;
@@ -1170,6 +1243,35 @@ export default function AgentManagementPage() {
 
       setStopRunnerBusy(true);
       try {
+        const preflightStatus = await fetchRunnerStatus({
+          preferredPort: launcherPort,
+          silent: true,
+        });
+        if (!preflightStatus) {
+          const message = "Runner status preflight check failed.";
+          setRunnerStatus(message);
+          pushBubble("error", message, anchorEl);
+          return;
+        }
+        if (!preflightStatus.rawRunning) {
+          const message = `Runner is already stopped on localhost:${launcherPort}.`;
+          setRunnerStatus(message);
+          setRunnerRunning(false);
+          pushBubble("info", message, anchorEl);
+          return;
+        }
+        if (!preflightStatus.runningForSelectedAgent) {
+          const message = `Cannot stop runner on localhost:${launcherPort}. It is not running for selected agent${
+            preflightStatus.statusAgentId
+              ? ` (${preflightStatus.statusAgentId})`
+              : ""
+          }.`;
+          setRunnerStatus(message);
+          setRunnerRunning(false);
+          pushBubble("error", message, anchorEl);
+          return;
+        }
+
         const response = await fetch(`http://127.0.0.1:${launcherPort}/runner/stop`, {
           method: "POST",
           headers: { "x-runner-secret": launcherSecret },
@@ -1192,7 +1294,14 @@ export default function AgentManagementPage() {
         setStopRunnerBusy(false);
       }
     },
-    [pushBubble, readError, resolveRunnerLauncherPort, runnerLauncherSecret]
+    [
+      fetchRunnerStatus,
+      pushBubble,
+      readError,
+      resolveRunnerLauncherPort,
+      runnerLauncherSecret,
+      selectedAgentId,
+    ]
   );
 
   const toggleRunnerLauncher = useCallback(
@@ -1255,7 +1364,7 @@ export default function AgentManagementPage() {
   }, [detectRunnerLauncherPorts, loadGeneral, loadRunnerConfig, selectedAgentId]);
 
   useEffect(() => {
-    if (!detectedRunnerPorts.length) {
+    if (!runnerLauncherPort.trim()) {
       setRunnerRunning(false);
       return;
     }
@@ -1268,7 +1377,6 @@ export default function AgentManagementPage() {
       silent: true,
     });
   }, [
-    detectedRunnerPorts,
     fetchRunnerStatus,
     runnerLauncherPort,
     runnerLauncherSecret,
@@ -1763,23 +1871,24 @@ export default function AgentManagementPage() {
             <div className="field">
               <label>Runner Launcher Port (localhost)</label>
               <select
-                value={detectedRunnerPorts
-                  .map((port) => String(port))
-                  .includes(runnerLauncherPort)
-                    ? runnerLauncherPort
-                    : ""}
+                value={runnerLauncherPort}
                 onChange={(event) => setRunnerLauncherPort(event.currentTarget.value)}
-                disabled={!detectedRunnerPorts.length}
+                disabled={!detectedRunnerPorts.length && !runnerLauncherPort}
               >
-                {detectedRunnerPorts.length ? (
-                  detectedRunnerPorts.map((port) => (
-                    <option key={port} value={String(port)}>
-                      {port}
-                    </option>
-                  ))
-                ) : (
+                {!detectedRunnerPorts.length && !runnerLauncherPort ? (
                   <option value="">No detected ports. Click Detect Launcher.</option>
-                )}
+                ) : null}
+                {runnerLauncherPort &&
+                !detectedRunnerPorts.includes(Number(runnerLauncherPort)) ? (
+                  <option value={runnerLauncherPort}>
+                    {runnerLauncherPort} (not detected)
+                  </option>
+                ) : null}
+                {detectedRunnerPorts.map((port) => (
+                  <option key={port} value={String(port)}>
+                    {port}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="field">

@@ -87,7 +87,23 @@ Notes:
   - Alchemy API key
   - runner interval/comment limit
   - launcher port + launcher secret
+- `/manage/agents` runner controls enforce target-agent consistency from launcher status:
+  - `Stop Runner` is enabled only when `/runner/status` reports `running=true` and `status.config.agentId === selectedAgentId`.
+  - `Start Runner` does a preflight status check and blocks start if selected port is already running a different agent.
+  - `Stop Runner` does a preflight status re-check and only calls `/runner/stop` for matching selected agent.
 - Runner reads prompts from `apps/runner/prompts/agent.md` and `apps/runner/prompts/user.md`.
+- Launcher port auto-selection preserves user-selected port and only applies default when no port is selected.
+
+## Runner Logs (Multi-Instance)
+- Default log files are separated by launcher port:
+  - Full trace: `apps/runner/logs/runner-full.<port>.log.txt`
+  - Communication: `apps/runner/logs/runner-communication.<port>.log.txt`
+- Log entries include instance metadata (`instanceId`, `port`, `pid`, `agentId`) for postmortem traceability.
+- Daily rotation + retention are applied automatically (default retention: 14 days).
+- Optional env overrides:
+  - `RUNNER_FULL_LOG_PATH`
+  - `RUNNER_COMMUNICATION_LOG_PATH`
+  - `RUNNER_LOG_RETENTION_DAYS`
 
 ## Admin APIs
 - List agents: `GET /api/admin/agents/list` (`x-admin-key`)

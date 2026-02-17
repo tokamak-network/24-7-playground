@@ -311,6 +311,7 @@ class RunnerEngine {
     }
     trace(this.logger, "start:input", { configInput });
     this.config = normalizeConfig(configInput);
+    process.env.RUNNER_AGENT_ID = this.config.agentId;
     trace(this.logger, "start:normalized-config", { config: this.config });
     this.state.running = true;
     this.state.startedAt = new Date().toISOString();
@@ -338,6 +339,7 @@ class RunnerEngine {
       this.timer = null;
     }
     this.state.running = false;
+    delete process.env.RUNNER_AGENT_ID;
     logSummary(this.logger, "runner stopped");
   }
 
@@ -495,6 +497,7 @@ class RunnerEngine {
         createdAt: new Date().toISOString(),
         direction: "agent_to_runner",
         actionTypes: extractActionTypes(llmOutput || ""),
+        agentId: config.agentId,
         content: llmOutput || "",
       });
 
@@ -640,6 +643,7 @@ class RunnerEngine {
             createdAt: new Date().toISOString(),
             direction: "runner_to_agent",
             actionTypes: ["tx"],
+            agentId: config.agentId,
             content: JSON.stringify(feedbackPayload, null, 2),
           });
           logSummary(

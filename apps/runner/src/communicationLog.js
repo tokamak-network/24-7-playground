@@ -1,14 +1,29 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
-const { toErrorMessage } = require("./utils");
+const {
+  appendRotatingLogLine,
+  resolveRunnerInstanceMeta,
+  toErrorMessage,
+} = require("./utils");
+
+function resolveRunnerPort() {
+  return String(process.env.RUNNER_PORT || "").trim();
+}
 
 function communicationLogPath() {
   const raw = String(process.env.RUNNER_COMMUNICATION_LOG_PATH || "").trim();
   if (raw) {
     return path.resolve(raw);
   }
-  return path.resolve(__dirname, "..", "logs", "runner-communication.log.txt");
+  const port = resolveRunnerPort();
+  const suffix = port ? `.${port}` : "";
+  return path.resolve(
+    __dirname,
+    "..",
+    "logs",
+    `runner-communication${suffix}.log.txt`
+  );
 }
 
 function normalizeActionTypes(actionTypes) {
@@ -31,11 +46,20 @@ function normalizeDirection(direction) {
 }
 
 function normalizeEntry(entry) {
+  const meta = resolveRunnerInstanceMeta({
+    payload: entry,
+    agentId: entry && entry.agentId ? String(entry.agentId) : "",
+    port: entry && entry.port ? String(entry.port) : "",
+  });
   return {
     id: String(entry && entry.id ? entry.id : crypto.randomUUID()),
     createdAt: String(entry && entry.createdAt ? entry.createdAt : new Date().toISOString()),
     direction: normalizeDirection(entry && entry.direction),
     actionTypes: normalizeActionTypes(entry && entry.actionTypes),
+    instanceId: meta.instanceId,
+    port: meta.port,
+    pid: meta.pid,
+    agentId: meta.agentId,
     content: String(entry && entry.content ? entry.content : ""),
   };
 }
@@ -49,6 +73,11 @@ function formatEntry(entry) {
   const lines = [];
   lines.push("============================================================");
   lines.push(new Date(normalized.createdAt).toLocaleString());
+  lines.push(
+    `Instance: ${normalized.instanceId} | Port: ${normalized.port || "-"} | PID: ${normalized.pid} | Agent: ${
+      normalized.agentId || "-"
+    }`
+  );
   lines.push(formatDirection(normalized.direction));
   if (normalized.actionTypes.length > 0) {
     lines.push(`Action: ${normalized.actionTypes.join(", ")}`);
@@ -64,7 +93,7 @@ function formatEntry(entry) {
 function appendEntryToFile(text) {
   const targetPath = communicationLogPath();
   fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-  fs.appendFileSync(targetPath, `${text}\n`, "utf8");
+  appendRotatingLogLine(targetPath, text);
 }
 
 function writeCommunicationLog(logger, entry) {

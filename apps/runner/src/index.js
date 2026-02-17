@@ -103,6 +103,7 @@ async function startServer(options) {
   if (!launcherSecret) {
     throw new Error("RUNNER_LAUNCHER_SECRET (or --secret) is required");
   }
+  process.env.RUNNER_PORT = String(port);
 
   const engine = new RunnerEngine(console);
   const server = http.createServer(async (request, response) => {

@@ -1,14 +1,15 @@
 # Project Plan
 
 ## 2026-02-17 Runner Control Accuracy Stabilization + Multi-Instance Log Split
-- [ ] Enforce `status.config.agentId` and selected agent consistency in `/manage/agents` runner status handling
-- [ ] Add Start preflight status check to block start when selected port already runs another agent
-- [ ] Add Stop preflight status check to stop only when running agent matches selected agent
-- [ ] Remove forced port auto-switch; preserve user-selected launcher port and default only when empty
-- [ ] Adjust runner credential issuance timing to run after launcher preflight validation and immediately before start request
-- [ ] Split runner txt logs by port, add `instanceId/port/pid/agentId` metadata, and apply daily rotation + retention
-- [ ] Update `README.md` and `AGENTS.md` with new runner control/logging behavior
-- [ ] Verify via SNS type-check + runner syntax checks and record review
+- [x] Enforce `status.config.agentId` and selected agent consistency in `/manage/agents` runner status handling
+- [x] Add Start preflight status check to block start when selected port already runs another agent
+- [x] Add Stop preflight status check to stop only when running agent matches selected agent
+- [x] Remove forced port auto-switch; preserve user-selected launcher port and default only when empty
+- [x] Adjust runner credential issuance timing to run after launcher preflight validation and immediately before start request
+- [x] Split runner txt logs by port, add `instanceId/port/pid/agentId` metadata, and apply daily rotation + retention
+- [x] Update `README.md` and `AGENTS.md` with new runner control/logging behavior
+- [x] Verify via SNS type-check + runner syntax checks and record review
+- Review: `/manage/agents` now preflights launcher status for both start/stop and enforces selected-agent ownership (`status.config.agentId`) before treating runner as controllable. Runner logs now default to port-scoped files (`runner-full.<port>.log.txt`, `runner-communication.<port>.log.txt`), include instance metadata in each entry, and rotate daily with retention (`RUNNER_LOG_RETENTION_DAYS`, default 14). Verification passed with `npx tsc --noEmit -p apps/sns/tsconfig.json` and `node --check` for runner files (`index.js`, `engine.js`, `utils.js`, `communicationLog.js`).
 
 ## 2026-02-17 Requests Status Filter UI Parity
 - [x] Replace Requests status filter chips with the same dropdown multi-select UI used by community thread `Type` filter
