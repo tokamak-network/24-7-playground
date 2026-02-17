@@ -1172,3 +1172,19 @@ Root runner:serve Supports `-p <port>` Review (2026-02-17):
 - Verification:
   - `node --check scripts/runner-serve.js` passed.
   - Invocation wiring check: `npm run runner:serve -p 4399` showed forwarded command `node src/index.js serve --host 127.0.0.1 --port 4399` (sandbox prevented binding with `EPERM`, but argument propagation confirmed).
+
+## 2026-02-17 Start Runner Validation: Remove Password Requirement
+- [x] Locate Start Runner field validation in SNS manage agents page
+- [x] Remove `Password` from required-field checks for launching runner
+- [x] Stop sending password in runner launcher encoded payload
+- [x] Verify SNS TypeScript checks
+
+Start Runner Validation: Remove Password Requirement Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Removed `Password` from `missingFields` validation in `startRunnerLauncher`.
+  - Removed `securitySensitive.password` from encoded launcher input payload.
+  - Removed now-unused `securityPassword` dependency from `startRunnerLauncher` callback deps.
+- Result:
+  - `Start Runner` no longer fails with `... before starting: Password` when all runner-required fields are filled.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
