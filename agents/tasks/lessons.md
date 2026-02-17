@@ -54,3 +54,4 @@
 - For requested form-structure changes, preserve existing behaviors and handlers while reordering UI blocks; use small layout utilities (e.g., full-width button class) instead of rewriting interaction logic.
 - For staged action UX (e.g., click button -> inline password -> confirm), model explicit UI modes and close the mode on outside `pointerdown`/`focusin` so transient inputs do not linger or conflict with other controls.
 - When adding inline input rows outside `.field`, reuse the same global control selectors (base, focus, read-only, focus-visible) so ad-hoc inputs do not fall back to mismatched browser-default styling.
+- For user-requested UI copy changes, apply the exact requested phrasing in rendered labels instead of shorthand values-only text.

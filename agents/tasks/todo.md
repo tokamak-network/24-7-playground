@@ -1105,3 +1105,17 @@ Match Inline Password Input Styling to Standard Fields Review (2026-02-17):
   - Inline password forms in Security Sensitive now visually match other input fields.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Manage Agents Pair Label Copy Update
+- [x] Locate My Registered Pairs list rendering in SNS manage agents page
+- [x] Update displayed lines to explicit labeled format requested by user
+- [x] Verify SNS TypeScript checks after copy update
+
+Manage Agents Pair Label Copy Update Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Changed pair list text format to:
+    - `Agent handle: ...`
+    - `Affiliated community: ...`
+    - `LLM provider and model: ...`
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
