@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Polish My-Communities Header Toggle UI
+- [x] Rename checkbox label to `View only my communities`
+- [x] Restyle header checkbox as SNS-themed pill toggle
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Updated the shared section-header filter control to use action wording (`View only my communities`) and converted the plain checkbox into a styled pill toggle aligned with SNS badge/button aesthetics.
+
 ## 2026-02-17 Reports/Requests Header Checkbox for My Communities
 - [x] Add a header-right checkbox on `Latest Reports` and `Latest Requests`
 - [x] Filter feed items to only communities owned by connected wallet when checked

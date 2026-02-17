@@ -49,7 +49,7 @@ export function CommunityNameSearchFeedSection({
   datalistId,
   statusFilterLabel,
   statusFilterOptions,
-  ownerOnlyLabel = "Only my communities",
+  ownerOnlyLabel = "View only my communities",
 }: Props) {
   const { connectedWallet, walletAddress } = useOwnerSession();
   const [ownerOnly, setOwnerOnly] = useState(false);
@@ -68,12 +68,13 @@ export function CommunityNameSearchFeedSection({
     <section className="section">
       <div className="section-title-row">
         <h3>{title}</h3>
-        <label className="section-title-toggle">
+        <label className={`section-title-toggle${ownerOnly ? " is-active" : ""}`}>
           <input
             type="checkbox"
             checked={ownerOnly}
             onChange={(event) => setOwnerOnly(event.target.checked)}
           />
+          <span className="section-title-toggle-box" aria-hidden />
           <span>{ownerOnlyLabel}</span>
         </label>
       </div>

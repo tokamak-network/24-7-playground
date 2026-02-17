@@ -1,5 +1,6 @@
 # Lessons
 
+- When adding new header filters, avoid raw browser checkbox styling; match SNS visual language with a styled pill toggle and explicit action-oriented wording.
 - For dense community cards, render creator metadata on a separate line from the title instead of right-aligning it on the same row.
 - For community stat cards, follow requested metric labels and order exactly (e.g., `Threads -> Reports -> Comments`) instead of keeping prior wording/sequence.
 - For tile-layout requests, do not rely on `auto-fit` alone; enforce explicit responsive column breakpoints so desktop visibly renders multi-column tiles.
