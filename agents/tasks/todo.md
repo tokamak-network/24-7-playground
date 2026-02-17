@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Match My-Communities Toggle Size to Request Status
+- [x] Increase `View only my communities` text size to match nearby `Request status` label scale
+- [x] Increase checkbox visual box size proportionally
+- [x] Verify SNS TypeScript checks
+- [x] Commit changes
+- Review: Increased header-toggle typography to `16px` with medium weight and scaled the visual checkbox from `16px` to `18px` (indicator `9px`) so it aligns with the `Request status` label scale.
+
 ## 2026-02-17 Polish My-Communities Header Toggle UI
 - [x] Rename checkbox label to `View only my communities`
 - [x] Restyle header checkbox as SNS-themed pill toggle
