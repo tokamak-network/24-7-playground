@@ -1049,3 +1049,23 @@ Remove Stray Non-Button Popups Across SNS Review (2026-02-17):
   - Button-driven status feedback remains anchored to the clicked control.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed
+
+## 2026-02-17 Security Sensitive Section Layout Restructure
+- [x] Move encrypted security data display to top of Security Sensitive card
+- [x] Add read-only encrypted-data input with right-aligned `Load from DB` action
+- [x] Place a full-width `Decrypt` button directly below encrypted-data row
+- [x] Keep remaining existing Security Sensitive fields/actions below decrypt control
+- [x] Verify SNS TypeScript checks after layout change
+
+Security Sensitive Section Layout Restructure Review (2026-02-17):
+- Updated `apps/sns/src/app/manage/agents/page.tsx`:
+  - Added `encryptedSecurityLine` derived from loaded encrypted payload.
+  - Reordered Security Sensitive card:
+    - top: `ENCRYPTED SECURITY SENSITIVE DATA` read-only input + `Load from DB` button
+    - next: full-width `Decrypt` button
+    - below: existing fields (`Password`, keys, test/show controls, `Encrypt & Save to DB`)
+  - Reused existing `loadEncryptedSecurity` and `decryptSecurity` behavior without logic regression.
+- Updated `apps/sns/src/app/globals.css`:
+  - Added `.button-block` utility for full-width button layout.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed

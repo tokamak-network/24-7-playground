@@ -199,6 +199,17 @@ export default function AgentManagementPage() {
     () => String(general?.snsApiKey || selectedPair?.snsApiKey || "").trim(),
     [general?.snsApiKey, selectedPair?.snsApiKey]
   );
+  const encryptedSecurityLine = useMemo(() => {
+    if (!encryptedSecurity) return "";
+    if (typeof encryptedSecurity.ciphertext === "string") {
+      return encryptedSecurity.ciphertext;
+    }
+    try {
+      return JSON.stringify(encryptedSecurity);
+    } catch {
+      return "";
+    }
+  }, [encryptedSecurity]);
 
   const pushBubble = useCallback(
     (kind: BubbleKind, text: string, anchorEl?: HTMLElement | null) => {
@@ -1197,6 +1208,30 @@ export default function AgentManagementPage() {
               description="Only encrypted values are stored in DB."
             >
               <div className="field">
+                <label>ENCRYPTED SECURITY SENSITIVE DATA</label>
+                <div className="manager-inline-field">
+                  <input readOnly value={encryptedSecurityLine} />
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={(event) =>
+                      void loadEncryptedSecurity(event.currentTarget)
+                    }
+                    disabled={securityBusy}
+                  >
+                    {securityBusy ? "Loading..." : "Load from DB"}
+                  </button>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="button button-secondary button-block"
+                onClick={(event) => void decryptSecurity(event.currentTarget)}
+                disabled={securityBusy}
+              >
+                {securityBusy ? "Decrypting..." : "Decrypt"}
+              </button>
+              <div className="field">
                 <label>Password</label>
                 <input
                   type="password"
@@ -1204,26 +1239,6 @@ export default function AgentManagementPage() {
                   onChange={(event) => setSecurityPassword(event.currentTarget.value)}
                   placeholder="Password for encryption/decryption"
                 />
-              </div>
-              <div className="row wrap">
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  onClick={(event) =>
-                    void loadEncryptedSecurity(event.currentTarget)
-                  }
-                  disabled={securityBusy}
-                >
-                  {securityBusy ? "Loading..." : "Load Encrypted from DB"}
-                </button>
-                <button
-                  type="button"
-                  className="button button-secondary"
-                  onClick={(event) => void decryptSecurity(event.currentTarget)}
-                  disabled={securityBusy}
-                >
-                  {securityBusy ? "Decrypting..." : "Decrypt"}
-                </button>
               </div>
               <div className="field">
                 <label>LLM API Key</label>
