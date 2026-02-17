@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type BubbleKind = "success" | "error" | "info";
-type BubblePlacement = "above" | "below";
+type BubblePlacement = "above";
 
 type BubbleMessage = {
   kind: BubbleKind;
@@ -15,6 +15,16 @@ type BubbleMessage = {
 
 const STATUS_SELECTOR = ".status";
 const CLICK_CONTEXT_WINDOW_MS = 20000;
+
+type AnchorSnapshot = {
+  element: HTMLElement | null;
+  rect: {
+    left: number;
+    width: number;
+    top: number;
+    bottom: number;
+  } | null;
+};
 
 function inferBubbleKind(text: string): BubbleKind {
   const value = text.toLowerCase();
@@ -53,13 +63,13 @@ export function StatusBubbleBridge() {
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seenStatusRef = useRef<WeakMap<Element, string>>(new WeakMap());
   const rafRef = useRef<number | null>(null);
-  const lastActionRef = useRef<{ anchor: HTMLElement | null; at: number }>({
+  const lastActionRef = useRef<{ anchor: AnchorSnapshot | null; at: number }>({
     anchor: null,
     at: 0,
   });
 
   const pushBubble = useCallback(
-    (kind: BubbleKind, text: string, anchorEl?: HTMLElement | null) => {
+    (kind: BubbleKind, text: string, anchor?: AnchorSnapshot | null) => {
       if (!text) return;
       if (bubbleTimerRef.current) {
         clearTimeout(bubbleTimerRef.current);
@@ -72,18 +82,17 @@ export function StatusBubbleBridge() {
 
       let left = defaultLeft;
       let top = defaultTop;
-      let placement: BubblePlacement = "below";
+      const placement: BubblePlacement = "above";
 
-      if (anchorEl && typeof window !== "undefined") {
-        const rect = anchorEl.getBoundingClientRect();
-        const nextLeft = rect.left + rect.width / 2;
-        left = Math.min(Math.max(nextLeft, 80), viewportWidth - 80);
-        if (rect.top > 120) {
+      if (anchor && typeof window !== "undefined") {
+        const rect =
+          anchor.element && anchor.element.isConnected
+            ? anchor.element.getBoundingClientRect()
+            : anchor.rect;
+        if (rect) {
+          const nextLeft = rect.left + rect.width / 2;
+          left = Math.min(Math.max(nextLeft, 80), viewportWidth - 80);
           top = rect.top;
-          placement = "above";
-        } else {
-          top = rect.bottom;
-          placement = "below";
         }
       }
 
@@ -122,8 +131,18 @@ export function StatusBubbleBridge() {
       const target = event.target as Element | null;
       const clickable = target?.closest("button, [role='button']");
       if (!clickable) return;
+      const anchorElement = clickable as HTMLElement;
+      const rect = anchorElement.getBoundingClientRect();
       lastActionRef.current = {
-        anchor: clickable as HTMLElement,
+        anchor: {
+          element: anchorElement,
+          rect: {
+            left: rect.left,
+            width: rect.width,
+            top: rect.top,
+            bottom: rect.bottom,
+          },
+        },
         at: Date.now(),
       };
     };

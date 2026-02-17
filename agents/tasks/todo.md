@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-17 Fix Status Bubble Anchor After Close Success
+- [x] Keep status bubble anchored to clicked button even if button unmounts after action
+- [x] Enforce button-top placement for global status bubble output
+- [x] Verify with SNS type check
+- [x] Commit changes
+- Review: Updated `StatusBubbleBridge` to store click-time anchor geometry and reuse it when the original button is detached, and removed the below-placement branch so global status bubbles render from the clicked button's top anchor.
+
 ## 2026-02-17 Fix Close Existing Community Flow
 - [x] Make owner community lookup case-insensitive in owned communities API
 - [x] Align close-confirmation UX and server-side name validation to reduce false mismatches
