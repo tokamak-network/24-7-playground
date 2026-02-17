@@ -7,7 +7,13 @@ const {
   fetchContext,
   normalizeBaseUrl,
 } = require("./sns");
-const { extractJsonPayload, toErrorMessage, toJsonSafe, logJson } = require("./utils");
+const {
+  extractJsonPayload,
+  toErrorMessage,
+  toJsonSafe,
+  logJson,
+  logSummary,
+} = require("./utils");
 
 const DEFAULT_INTERVAL_SEC = 60;
 const DEFAULT_COMMENT_LIMIT = 50;
@@ -228,6 +234,10 @@ class RunnerEngine {
     this.state.running = true;
     this.state.startedAt = new Date().toISOString();
     this.state.lastError = null;
+    logSummary(
+      this.logger,
+      `runner started (agentId=${this.config.agentId}, intervalSec=${this.config.runtime.intervalSec}, commentLimit=${this.config.runtime.commentLimit})`
+    );
     await this.runOnce();
 
     const intervalMs = Math.max(1, this.config.runtime.intervalSec) * 1000;
@@ -247,6 +257,7 @@ class RunnerEngine {
       this.timer = null;
     }
     this.state.running = false;
+    logSummary(this.logger, "runner stopped");
   }
 
   updateConfig(patchInput) {
@@ -305,6 +316,10 @@ class RunnerEngine {
       return { skipped: true, reason: "Runner cycle already in-flight" };
     }
     trace(this.logger, "cycle:start", { config });
+    logSummary(
+      this.logger,
+      `cycle started (nextCycle=${this.state.cycleCount + 1}, agentId=${config.agentId})`
+    );
     this.inFlight = true;
     this.state.lastRunAt = new Date().toISOString();
 
@@ -447,6 +462,10 @@ class RunnerEngine {
             action,
             threadResponse,
           });
+          logSummary(
+            this.logger,
+            `action create_thread completed (community=${community.slug})`
+          );
           executionResults.push({ action: "create_thread", community: community.slug });
           continue;
         }
@@ -464,6 +483,10 @@ class RunnerEngine {
             action,
             commentResponse,
           });
+          logSummary(
+            this.logger,
+            `action comment completed (community=${community.slug}, threadId=${threadId})`
+          );
           executionResults.push({ action: "comment", community: community.slug, threadId });
           continue;
         }
@@ -474,6 +497,10 @@ class RunnerEngine {
             action,
             txResult,
           });
+          logSummary(
+            this.logger,
+            `action tx completed (community=${community.slug}, function=${String(action.functionName || "")})`
+          );
           executionResults.push({
             action: "tx",
             community: community.slug,
@@ -507,6 +534,11 @@ class RunnerEngine {
         state: this.state,
         executionResults,
       });
+      const actionSummary = executionResults.map((item) => item.action).join(", ") || "none";
+      logSummary(
+        this.logger,
+        `cycle completed (cycleCount=${this.state.cycleCount}, actionCount=${executionResults.length}, actions=[${actionSummary}])`
+      );
       return {
         ok: true,
         cycleCount: this.state.cycleCount,
@@ -525,6 +557,7 @@ class RunnerEngine {
         state: this.state,
       });
       this.logger.error("[runner] cycle error:", message);
+      logSummary(this.logger, `cycle failed (error=${message})`);
       return { ok: false, error: message };
     } finally {
       this.inFlight = false;

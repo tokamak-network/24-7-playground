@@ -1273,3 +1273,28 @@ Full Runner Trace Logging (Send/Receive/Internal) Review (2026-02-17):
   - `node --check apps/runner/src/llm.js` passed.
   - `node --check apps/runner/src/engine.js` passed.
   - `node --check apps/runner/src/index.js` passed.
+
+## 2026-02-17 Runner Logging Mode Change: Full Trace to TXT, Terminal Summary Only
+- [x] Redirect full structured runner traces from console to `.txt` file sink
+- [x] Keep concise terminal summaries for lifecycle and action outcomes
+- [x] Keep existing boundary/internal trace instrumentation but route through file logger
+- [x] Verify runner file path resolution and JS syntax
+
+Runner Logging Mode Change: Full Trace to TXT, Terminal Summary Only Review (2026-02-17):
+- Updated `apps/runner/src/utils.js`:
+  - `logJson` now writes full structured traces to text file instead of terminal.
+  - Added default file path: `apps/runner/logs/runner-full.log.txt` (override via `RUNNER_FULL_LOG_PATH`).
+  - Added `logSummary` helper for short terminal output.
+- Updated `apps/runner/src/index.js`:
+  - Added terminal summary lines for launcher start/stop/config/run-once actions.
+  - Prints full trace log path on launcher startup.
+- Updated `apps/runner/src/engine.js`:
+  - Added concise summary logs for runner start/stop, cycle start/success/failure, and action completion.
+  - Kept detailed traces via `trace(...)`, now persisted to file.
+- Verification:
+  - `node --check apps/runner/src/utils.js` passed.
+  - `node --check apps/runner/src/index.js` passed.
+  - `node --check apps/runner/src/engine.js` passed.
+  - `node --check apps/runner/src/sns.js` passed.
+  - `node --check apps/runner/src/llm.js` passed.
+  - `node -e "const {fullLogPath}=require('./apps/runner/src/utils'); console.log(fullLogPath());"` returned `apps/runner/logs/runner-full.log.txt` absolute path.

@@ -4,7 +4,7 @@ const fs = require("node:fs");
 const http = require("node:http");
 const path = require("node:path");
 const { RunnerEngine } = require("./engine");
-const { toErrorMessage, logJson } = require("./utils");
+const { toErrorMessage, logJson, logSummary, fullLogPath } = require("./utils");
 
 function parseArgs(argv) {
   const [, , command = "serve", ...rest] = argv;
@@ -120,6 +120,10 @@ async function startServer(options) {
       if (request.method === "POST" && route === "/runner/start") {
         const body = await readJsonBody(request);
         await engine.start(body.config || body);
+        logSummary(
+          console,
+          `launcher start request accepted (route=${route}, method=${request.method})`
+        );
         jsonResponse(
           response,
           200,
@@ -135,6 +139,10 @@ async function startServer(options) {
 
       if (request.method === "POST" && route === "/runner/stop") {
         engine.stop();
+        logSummary(
+          console,
+          `launcher stop request accepted (route=${route}, method=${request.method})`
+        );
         jsonResponse(
           response,
           200,
@@ -151,6 +159,10 @@ async function startServer(options) {
       if (request.method === "POST" && route === "/runner/config") {
         const body = await readJsonBody(request);
         const nextStatus = engine.updateConfig(body.config || body);
+        logSummary(
+          console,
+          `launcher config updated (route=${route}, method=${request.method})`
+        );
         jsonResponse(
           response,
           200,
@@ -169,6 +181,10 @@ async function startServer(options) {
         const result = body && (body.config || body.snsBaseUrl)
           ? await engine.runOnceWithConfig(body.config || body)
           : await engine.runOnce();
+        logSummary(
+          console,
+          `launcher run-once completed (route=${route}, method=${request.method}, ok=${Boolean(result && result.ok)})`
+        );
         jsonResponse(
           response,
           200,
@@ -209,6 +225,7 @@ async function startServer(options) {
     server.listen(port, host, resolve);
   });
   console.log(`[runner-launcher] listening on http://${host}:${port}`);
+  console.log(`[runner-launcher] full trace log: ${fullLogPath()}`);
 }
 
 async function runOnceWithConfig(options) {

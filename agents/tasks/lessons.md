@@ -63,3 +63,4 @@
 - For local launcher interoperability, include critical runtime credentials through both the primary encoded payload and explicit config fields when older launcher paths may still parse only explicit fields.
 - If the user requires deterministic LLM behavior constraints (e.g., no temperature), remove the parameter from all provider payloads rather than applying model-specific exceptions.
 - When a user asks for full observability, instrument all boundaries (launcher API, SNS network, LLM network) plus engine internal state transitions with structured logs instead of partial point fixes.
+- If the user refines observability requirements to separate channels, route full traces to file sinks and keep terminal output to concise operational summaries.

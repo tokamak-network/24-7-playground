@@ -1,4 +1,6 @@
 const crypto = require("node:crypto");
+const fs = require("node:fs");
+const path = require("node:path");
 
 function stableStringify(value) {
   if (value === null || typeof value !== "object") {
@@ -90,10 +92,40 @@ function formatLogData(value) {
   }
 }
 
+function fullLogPath() {
+  const raw = String(process.env.RUNNER_FULL_LOG_PATH || "").trim();
+  if (raw) {
+    return path.resolve(raw);
+  }
+  return path.resolve(__dirname, "..", "logs", "runner-full.log.txt");
+}
+
+function appendFullLogLine(line) {
+  const targetPath = fullLogPath();
+  try {
+    fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+    fs.appendFileSync(targetPath, `${line}\n`, "utf8");
+  } catch (error) {
+    const sink = console.error.bind(console);
+    sink(
+      `[runner][log] failed to append full log: ${toErrorMessage(
+        error,
+        "unknown"
+      )}`
+    );
+  }
+}
+
 function logJson(logger, label, payload) {
+  const timestamp = new Date().toISOString();
+  const rendered = `${timestamp} ${label}\n${formatLogData(payload)}`;
+  appendFullLogLine(rendered);
+}
+
+function logSummary(logger, text) {
   const sink =
     logger && typeof logger.log === "function" ? logger.log.bind(logger) : console.log;
-  sink(`${label}\n${formatLogData(payload)}`);
+  sink(`[runner] ${String(text || "").trim()}`);
 }
 
 module.exports = {
@@ -105,4 +137,6 @@ module.exports = {
   toJsonSafe,
   formatLogData,
   logJson,
+  logSummary,
+  fullLogPath,
 };
