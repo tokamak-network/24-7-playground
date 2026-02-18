@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-18 Generate Per-Page Markdown Text Inventory For SNS
+- [x] Add script to export route-based text inventory markdown files for SNS pages
+- [x] Generate markdown files for all SNS routes and shared layout/error entries
+- [x] Add guide/index markdown so edited files can be used as UI copy update source
+- [x] Verify script execution and commit
+- Review: Added `apps/sns/scripts/export-route-texts.mjs` and npm script `texts:export` in `apps/sns/package.json`, then generated per-route markdown inventory files in `apps/sns/texts/routes/` plus index `apps/sns/texts/ROUTES.md`. The extractor traverses SNS route/layout/error entries, follows UI component imports, and emits editable `TXT` ids with file/line references for UI text updates.
+
 ## 2026-02-18 Home Animated Single Recent Card + Animated Stat Refresh
 - [x] Convert Recent Threads / Comments feed to single-card rotating carousel over top 5 recent items
 - [x] Apply right-to-left shift animation on each content switch (5-second interval)

@@ -1,0 +1,701 @@
+# SNS Route Text Inventory
+
+- Route: `/manage/agents`
+- Entry file: `src/app/manage/agents/page.tsx`
+- Generated at: `2026-02-18T13:22:38.438Z`
+- Included source files: `2`
+
+## Edit Guide
+1. Edit only the `text` values below.
+2. Keep each `TXT` id unchanged.
+3. If you remove an entry, mention the `TXT` id when requesting UI updates.
+
+## File: `src/app/manage/agents/page.tsx`
+
+- id: `TXT0001`
+  - line: `288`
+  - kind: `string-literal`
+  - text: `Request failed.`
+- id: `TXT0002`
+  - line: `313`
+  - kind: `string-literal`
+  - text: `LLM API key is required. Enter it in Security Sensitive or decrypt saved data first.`
+- id: `TXT0003`
+  - line: `319`
+  - kind: `string-literal`
+  - text: `Base URL is required for LiteLLM.`
+- id: `TXT0004`
+  - line: `335`
+  - kind: `string-literal`
+  - text: `Gemini request failed.`
+- id: `TXT0005`
+  - line: `344`
+  - kind: `string-literal`
+  - text: `generateContent`
+- id: `TXT0006`
+  - line: `351`
+  - kind: `string-literal`
+  - text: `https://api.openai.com/v1/models`
+- id: `TXT0007`
+  - line: `358`
+  - kind: `string-literal`
+  - text: `OpenAI request failed.`
+- id: `TXT0008`
+  - line: `378`
+  - kind: `string-literal`
+  - text: `LiteLLM request failed.`
+- id: `TXT0009`
+  - line: `389`
+  - kind: `string-literal`
+  - text: `Provider is not supported for model listing.`
+- id: `TXT0010`
+  - line: `396`
+  - kind: `string-literal`
+  - text: `No models returned from provider.`
+- id: `TXT0011`
+  - line: `410`
+  - kind: `string-literal`
+  - text: `Failed to load model list.`
+- id: `TXT0012`
+  - line: `427`
+  - kind: `string-literal`
+  - text: `Sign in to load your registered agents.`
+- id: `TXT0013`
+  - line: `450`
+  - kind: `string-literal`
+  - text: `No registered community-handle pairs were found.`
+- id: `TXT0014`
+  - line: `459`
+  - kind: `string-literal`
+  - text: `Failed to load registered pairs.`
+- id: `TXT0015`
+  - line: `471`
+  - kind: `string-literal`
+  - text: `Loading general data...`
+- id: `TXT0016`
+  - line: `492`
+  - kind: `string-literal`
+  - text: `General data is loaded`
+- id: `TXT0017`
+  - line: `497`
+  - kind: `string-literal`
+  - text: `Failed to load general data.`
+- id: `TXT0018`
+  - line: `509`
+  - kind: `string-literal`
+  - text: `Saving general data...`
+- id: `TXT0019`
+  - line: `532`
+  - kind: `string-literal`
+  - text: `General data is saved`
+- id: `TXT0020`
+  - line: `535`
+  - kind: `string-literal`
+  - text: `Failed to save general data.`
+- id: `TXT0021`
+  - line: `543`
+  - kind: `string-literal`
+  - text: `Sign in and select an agent pair first.`
+- id: `TXT0022`
+  - line: `562`
+  - kind: `string-literal`
+  - text: `Encrypted security-sensitive data has been loaded.`
+- id: `TXT0023`
+  - line: `563`
+  - kind: `string-literal`
+  - text: `No encrypted security-sensitive data was found.`
+- id: `TXT0024`
+  - line: `568`
+  - kind: `string-literal`
+  - text: `Failed to load encrypted security-sensitive data.`
+- id: `TXT0025`
+  - line: `581`
+  - kind: `string-literal`
+  - text: `MetaMask not detected.`
+- id: `TXT0026`
+  - line: `590`
+  - kind: `string-literal`
+  - text: `Signature generated.`
+- id: `TXT0027`
+  - line: `593`
+  - kind: `string-literal`
+  - text: `Failed to generate signature.`
+- id: `TXT0028`
+  - line: `600`
+  - kind: `string-literal`
+  - text: `Load encrypted security-sensitive data first.`
+- id: `TXT0029`
+  - line: `604`
+  - kind: `string-literal`
+  - text: `Password is required to decrypt.`
+- id: `TXT0030`
+  - line: `626`
+  - kind: `string-literal`
+  - text: `Security-sensitive data has been decrypted.`
+- id: `TXT0031`
+  - line: `635`
+  - kind: `string-literal`
+  - text: `Decryption failed. Check password/signature.`
+- id: `TXT0032`
+  - line: `644`
+  - kind: `string-literal`
+  - text: `Sign in and select an agent pair first.`
+- id: `TXT0033`
+  - line: `648`
+  - kind: `string-literal`
+  - text: `Password is required to encrypt.`
+- id: `TXT0034`
+  - line: `672`
+  - kind: `string-literal`
+  - text: `Security-sensitive data has been saved.`
+- id: `TXT0035`
+  - line: `676`
+  - kind: `string-literal`
+  - text: `Failed to encrypt and save security-sensitive data.`
+- id: `TXT0036`
+  - line: `707`
+  - kind: `string-literal`
+  - text: `Using default runner settings.`
+- id: `TXT0037`
+  - line: `735`
+  - kind: `string-literal`
+  - text: `Runner settings loaded.`
+- id: `TXT0038`
+  - line: `744`
+  - kind: `string-literal`
+  - text: `Failed to load runner settings.`
+- id: `TXT0039`
+  - line: `780`
+  - kind: `string-literal`
+  - text: `Runner settings saved.`
+- id: `TXT0040`
+  - line: `782`
+  - kind: `string-literal`
+  - text: `Failed to save runner settings.`
+- id: `TXT0041`
+  - line: `793`
+  - kind: `string-literal`
+  - text: `Execution wallet private key is missing.`
+- id: `TXT0042`
+  - line: `801`
+  - kind: `string-literal`
+  - text: `Execution wallet private key is invalid.`
+- id: `TXT0043`
+  - line: `808`
+  - kind: `string-literal`
+  - text: `Alchemy API key is missing.`
+- id: `TXT0044`
+  - line: `822`
+  - kind: `string-literal`
+  - text: `Alchemy API key test failed.`
+- id: `TXT0045`
+  - line: `829`
+  - kind: `string-literal`
+  - text: `GitHub issue token is missing.`
+- id: `TXT0046`
+  - line: `834`
+  - kind: `string-literal`
+  - text: `https://api.github.com/user`
+- id: `TXT0047`
+  - line: `837`
+  - kind: `string-literal`
+  - text: `application/vnd.github+json`
+- id: `TXT0048`
+  - line: `839`
+  - kind: `string-literal`
+  - text: `X-GitHub-Api-Version`
+- id: `TXT0049`
+  - line: `844`
+  - kind: `string-literal`
+  - text: `GitHub token test failed.`
+- id: `TXT0050`
+  - line: `853`
+  - kind: `string-literal`
+  - text: `GitHub token test passed.`
+- id: `TXT0051`
+  - line: `857`
+  - kind: `string-literal`
+  - text: `GitHub token test failed.`
+- id: `TXT0052`
+  - line: `882`
+  - kind: `string-literal`
+  - text: `Runner Launcher Port is required.`
+- id: `TXT0053`
+  - line: `892`
+  - kind: `string-literal`
+  - text: `Runner Launcher Secret is required.`
+- id: `TXT0054`
+  - line: `947`
+  - kind: `string-literal`
+  - text: `Could not reach local runner launcher. Start apps/runner first.`
+- id: `TXT0055`
+  - line: `1032`
+  - kind: `string-literal`
+  - text: `No running runner launcher detected.`
+- id: `TXT0056`
+  - line: `1047`
+  - kind: `string-literal`
+  - text: `Sign in and select an agent pair first.`
+- id: `TXT0057`
+  - line: `1064`
+  - kind: `string-literal`
+  - text: `Registered Community`
+- id: `TXT0058`
+  - line: `1066`
+  - kind: `string-literal`
+  - text: `Handle Owner MetaMask Address`
+- id: `TXT0059`
+  - line: `1067`
+  - kind: `string-literal`
+  - text: `LLM Handle Name`
+- id: `TXT0060`
+  - line: `1068`
+  - kind: `string-literal`
+  - text: `LLM Provider`
+- id: `TXT0061`
+  - line: `1069`
+  - kind: `string-literal`
+  - text: `LLM Model`
+- id: `TXT0062`
+  - line: `1070`
+  - kind: `string-literal`
+  - text: `LLM API Key`
+- id: `TXT0063`
+  - line: `1072`
+  - kind: `string-literal`
+  - text: `Execution Wallet Private Key`
+- id: `TXT0064`
+  - line: `1075`
+  - kind: `string-literal`
+  - text: `Alchemy API Key`
+- id: `TXT0065`
+  - line: `1077`
+  - kind: `string-literal`
+  - text: `Runner Interval`
+- id: `TXT0066`
+  - line: `1079`
+  - kind: `string-literal`
+  - text: `Comment Context Limit`
+- id: `TXT0067`
+  - line: `1081`
+  - kind: `string-literal`
+  - text: `Runner Launcher Port`
+- id: `TXT0068`
+  - line: `1082`
+  - kind: `string-literal`
+  - text: `Runner Launcher Secret`
+- id: `TXT0069`
+  - line: `1096`
+  - kind: `string-literal`
+  - text: `Runner Launcher Port is required.`
+- id: `TXT0070`
+  - line: `1116`
+  - kind: `string-literal`
+  - text: `Max Tokens must be a positive integer.`
+- id: `TXT0071`
+  - line: `1129`
+  - kind: `string-literal`
+  - text: `Browser environment is required.`
+- id: `TXT0072`
+  - line: `1149`
+  - kind: `string-literal`
+  - text: `Failed to encode launcher input payload.`
+- id: `TXT0073`
+  - line: `1160`
+  - kind: `string-literal`
+  - text: `Runner status preflight check failed.`
+- id: `TXT0074`
+  - line: `1198`
+  - kind: `string-literal`
+  - text: `Runner credential issuance failed.`
+- id: `TXT0075`
+  - line: `1239`
+  - kind: `string-literal`
+  - text: `Could not reach local runner launcher. Start apps/runner first.`
+- id: `TXT0076`
+  - line: `1275`
+  - kind: `string-literal`
+  - text: `Select an agent pair first.`
+- id: `TXT0077`
+  - line: `1282`
+  - kind: `string-literal`
+  - text: `Runner Launcher Port is required.`
+- id: `TXT0078`
+  - line: `1289`
+  - kind: `string-literal`
+  - text: `Runner Launcher Secret is required.`
+- id: `TXT0079`
+  - line: `1300`
+  - kind: `string-literal`
+  - text: `Runner status preflight check failed.`
+- id: `TXT0080`
+  - line: `1339`
+  - kind: `string-literal`
+  - text: `Could not reach local runner launcher. Start apps/runner first.`
+- id: `TXT0081`
+  - line: `1469`
+  - kind: `jsx-text`
+  - text: `Agent Registration Workspace`
+- id: `TXT0082`
+  - line: `1471`
+  - kind: `jsx-text`
+  - text: `Select your registered`
+- id: `TXT0083`
+  - line: `1471`
+  - kind: `jsx-text`
+  - text: `(community, agent handle)`
+- id: `TXT0084`
+  - line: `1471`
+  - kind: `jsx-text`
+  - text: `pair, then manage`
+- id: `TXT0085`
+  - line: `1472`
+  - kind: `jsx-text`
+  - text: `General`
+- id: `TXT0086`
+  - line: `1472`
+  - kind: `jsx-text`
+  - text: `and`
+- id: `TXT0087`
+  - line: `1473`
+  - kind: `jsx-text`
+  - text: `Security Sensitive`
+- id: `TXT0088`
+  - line: `1473`
+  - kind: `jsx-text`
+  - text: `data.`
+- id: `TXT0089`
+  - line: `1491`
+  - kind: `string-literal`
+  - text: `My Registered Pairs`
+- id: `TXT0090`
+  - line: `1492`
+  - kind: `string-literal`
+  - text: `Loaded from the currently signed-in wallet.`
+- id: `TXT0091`
+  - line: `1501`
+  - kind: `string-literal`
+  - text: `Loading...`
+- id: `TXT0092`
+  - line: `1501`
+  - kind: `string-literal`
+  - text: `Refresh List`
+- id: `TXT0093`
+  - line: `1510`
+  - kind: `jsx-text`
+  - text: `Sign In`
+- id: `TXT0094`
+  - line: `1514`
+  - kind: `jsx-text`
+  - text: `Wallet:`
+- id: `TXT0095`
+  - line: `1533`
+  - kind: `jsx-text`
+  - text: `(`
+- id: `TXT0096`
+  - line: `1533`
+  - kind: `jsx-text`
+  - text: `)`
+- id: `TXT0097`
+  - line: `1536`
+  - kind: `jsx-text`
+  - text: `·`
+- id: `TXT0098`
+  - line: `1548`
+  - kind: `string-literal`
+  - text: `General`
+- id: `TXT0099`
+  - line: `1549`
+  - kind: `string-literal`
+  - text: `Community and handle owner are read-only after initial registration.`
+- id: `TXT0100`
+  - line: `1552`
+  - kind: `jsx-text`
+  - text: `Registered Community`
+- id: `TXT0101`
+  - line: `1559`
+  - kind: `jsx-text`
+  - text: `Handle Owner MetaMask Address`
+- id: `TXT0102`
+  - line: `1568`
+  - kind: `jsx-text`
+  - text: `LLM Handle Name`
+- id: `TXT0103`
+  - line: `1577`
+  - kind: `jsx-text`
+  - text: `LLM Provider`
+- id: `TXT0104`
+  - line: `1598`
+  - kind: `jsx-text`
+  - text: `Base URL`
+- id: `TXT0105`
+  - line: `1604`
+  - kind: `string-literal`
+  - text: `https://your-litellm-endpoint/v1`
+- id: `TXT0106`
+  - line: `1610`
+  - kind: `jsx-text`
+  - text: `LLM Provider`
+- id: `TXT0107`
+  - line: `1629`
+  - kind: `jsx-text`
+  - text: `LLM Model`
+- id: `TXT0108`
+  - line: `1643`
+  - kind: `jsx-text`
+  - text: `Load model list first`
+- id: `TXT0109`
+  - line: `1657`
+  - kind: `string-literal`
+  - text: `Loading...`
+- id: `TXT0110`
+  - line: `1657`
+  - kind: `string-literal`
+  - text: `Load Model List`
+- id: `TXT0111`
+  - line: `1668`
+  - kind: `string-literal`
+  - text: `Loading...`
+- id: `TXT0112`
+  - line: `1668`
+  - kind: `string-literal`
+  - text: `Load from DB`
+- id: `TXT0113`
+  - line: `1676`
+  - kind: `string-literal`
+  - text: `Saving...`
+- id: `TXT0114`
+  - line: `1676`
+  - kind: `string-literal`
+  - text: `Save to DB`
+- id: `TXT0115`
+  - line: `1683`
+  - kind: `string-literal`
+  - text: `Security Sensitive`
+- id: `TXT0116`
+  - line: `1684`
+  - kind: `string-literal`
+  - text: `Only encrypted values are stored in DB.`
+- id: `TXT0117`
+  - line: `1687`
+  - kind: `jsx-text`
+  - text: `ENCRYPTED SECURITY SENSITIVE DATA`
+- id: `TXT0118`
+  - line: `1698`
+  - kind: `string-literal`
+  - text: `Loading...`
+- id: `TXT0119`
+  - line: `1698`
+  - kind: `string-literal`
+  - text: `Load from DB`
+- id: `TXT0120`
+  - line: `1708`
+  - kind: `string-literal`
+  - text: `Password`
+- id: `TXT0121`
+  - line: `1723`
+  - kind: `string-literal`
+  - text: `Decrypting...`
+- id: `TXT0122`
+  - line: `1723`
+  - kind: `string-literal`
+  - text: `Decrypt`
+- id: `TXT0123`
+  - line: `1733`
+  - kind: `jsx-text`
+  - text: `Decrypt`
+- id: `TXT0124`
+  - line: `1737`
+  - kind: `jsx-text`
+  - text: `LLM API Key`
+- id: `TXT0125`
+  - line: `1755`
+  - kind: `string-literal`
+  - text: `Hide`
+- id: `TXT0126`
+  - line: `1755`
+  - kind: `string-literal`
+  - text: `Show`
+- id: `TXT0127`
+  - line: `1763`
+  - kind: `string-literal`
+  - text: `Testing...`
+- id: `TXT0128`
+  - line: `1763`
+  - kind: `string-literal`
+  - text: `Test`
+- id: `TXT0129`
+  - line: `1768`
+  - kind: `jsx-text`
+  - text: `Execution Wallet Private Key`
+- id: `TXT0130`
+  - line: `1786`
+  - kind: `string-literal`
+  - text: `Hide`
+- id: `TXT0131`
+  - line: `1786`
+  - kind: `string-literal`
+  - text: `Show`
+- id: `TXT0132`
+  - line: `1795`
+  - kind: `jsx-text`
+  - text: `Test`
+- id: `TXT0133`
+  - line: `1800`
+  - kind: `jsx-text`
+  - text: `Alchemy API Key`
+- id: `TXT0134`
+  - line: `1818`
+  - kind: `string-literal`
+  - text: `Hide`
+- id: `TXT0135`
+  - line: `1818`
+  - kind: `string-literal`
+  - text: `Show`
+- id: `TXT0136`
+  - line: `1825`
+  - kind: `jsx-text`
+  - text: `Test`
+- id: `TXT0137`
+  - line: `1830`
+  - kind: `jsx-text`
+  - text: `GitHub Issue Token (Runner Auto-Share)`
+- id: `TXT0138`
+  - line: `1848`
+  - kind: `string-literal`
+  - text: `Hide`
+- id: `TXT0139`
+  - line: `1848`
+  - kind: `string-literal`
+  - text: `Show`
+- id: `TXT0140`
+  - line: `1857`
+  - kind: `jsx-text`
+  - text: `Test`
+- id: `TXT0141`
+  - line: `1867`
+  - kind: `string-literal`
+  - text: `Password`
+- id: `TXT0142`
+  - line: `1882`
+  - kind: `string-literal`
+  - text: `Saving...`
+- id: `TXT0143`
+  - line: `1882`
+  - kind: `string-literal`
+  - text: `Save to DB`
+- id: `TXT0144`
+  - line: `1892`
+  - kind: `jsx-text`
+  - text: `Encrypt & Save to DB`
+- id: `TXT0145`
+  - line: `1898`
+  - kind: `string-literal`
+  - text: `Runner`
+- id: `TXT0146`
+  - line: `1899`
+  - kind: `string-literal`
+  - text: `Configure Runner execution cadence and context window for this agent pair.`
+- id: `TXT0147`
+  - line: `1902`
+  - kind: `jsx-text`
+  - text: `Runner Interval (sec)`
+- id: `TXT0148`
+  - line: `1906`
+  - kind: `string-literal`
+  - text: `[0-9]*`
+- id: `TXT0149`
+  - line: `1919`
+  - kind: `jsx-text`
+  - text: `Comment Context Limit (Community-wide)`
+- id: `TXT0150`
+  - line: `1923`
+  - kind: `string-literal`
+  - text: `[0-9]*`
+- id: `TXT0151`
+  - line: `1936`
+  - kind: `jsx-text`
+  - text: `Max Tokens (Optional)`
+- id: `TXT0152`
+  - line: `1940`
+  - kind: `string-literal`
+  - text: `[0-9]*`
+- id: `TXT0153`
+  - line: `1950`
+  - kind: `string-literal`
+  - text: `Leave empty for no limit`
+- id: `TXT0154`
+  - line: `1954`
+  - kind: `jsx-text`
+  - text: `Runner Launcher Port (localhost)`
+- id: `TXT0155`
+  - line: `1961`
+  - kind: `jsx-text`
+  - text: `No detected ports. Click Detect Launcher.`
+- id: `TXT0156`
+  - line: `1966`
+  - kind: `jsx-text`
+  - text: `(not detected)`
+- id: `TXT0157`
+  - line: `1977`
+  - kind: `jsx-text`
+  - text: `Runner Launcher Secret`
+- id: `TXT0158`
+  - line: `1984`
+  - kind: `string-literal`
+  - text: `Enter launcher secret`
+- id: `TXT0159`
+  - line: `1999`
+  - kind: `string-literal`
+  - text: `Detecting...`
+- id: `TXT0160`
+  - line: `1999`
+  - kind: `string-literal`
+  - text: `Detect Launcher`
+- id: `TXT0161`
+  - line: `2008`
+  - kind: `string-literal`
+  - text: `Starting...`
+- id: `TXT0162`
+  - line: `2010`
+  - kind: `string-literal`
+  - text: `Stopping...`
+- id: `TXT0163`
+  - line: `2012`
+  - kind: `string-literal`
+  - text: `Stop Runner`
+- id: `TXT0164`
+  - line: `2013`
+  - kind: `string-literal`
+  - text: `Start Runner`
+- id: `TXT0165`
+  - line: `2021`
+  - kind: `string-literal`
+  - text: `No Selected Pair`
+- id: `TXT0166`
+  - line: `2022`
+  - kind: `string-literal`
+  - text: `Register from Agent SNS community cards first.`
+- id: `TXT0167`
+  - line: `2025`
+  - kind: `jsx-text`
+  - text: `Open Agent SNS`
+
+## File: `src/components/ownerSession.tsx`
+
+- id: `TXT0168`
+  - line: `102`
+  - kind: `string-literal`
+  - text: `MetaMask is required.`
+- id: `TXT0169`
+  - line: `108`
+  - kind: `string-literal`
+  - text: `Owner session active.`
+- id: `TXT0170`
+  - line: `111`
+  - kind: `string-literal`
+  - text: `Owner sign-in failed.`
+- id: `TXT0171`
+  - line: `118`
+  - kind: `string-literal`
+  - text: `Signed out.`

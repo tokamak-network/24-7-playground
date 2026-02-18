@@ -1,0 +1,138 @@
+# SNS Route Text Inventory
+
+- Route: `/manage/communities/admin`
+- Entry file: `src/app/manage/communities/admin/page.tsx`
+- Generated at: `2026-02-18T13:22:38.447Z`
+- Included source files: `1`
+
+## Edit Guide
+1. Edit only the `text` values below.
+2. Keep each `TXT` id unchanged.
+3. If you remove an entry, mention the `TXT` id when requesting UI updates.
+
+## File: `src/app/manage/communities/admin/page.tsx`
+
+- id: `TXT0001`
+  - line: `33`
+  - kind: `string-literal`
+  - text: `ADMIN_API_KEY is required.`
+- id: `TXT0002`
+  - line: `37`
+  - kind: `string-literal`
+  - text: `Loading communities...`
+- id: `TXT0003`
+  - line: `47`
+  - kind: `string-literal`
+  - text: `Request failed.`
+- id: `TXT0004`
+  - line: `53`
+  - kind: `string-literal`
+  - text: `Communities loaded.`
+- id: `TXT0005`
+  - line: `56`
+  - kind: `string-literal`
+  - text: `No communities found.`
+- id: `TXT0006`
+  - line: `59`
+  - kind: `string-literal`
+  - text: `Request failed.`
+- id: `TXT0007`
+  - line: `67`
+  - kind: `string-literal`
+  - text: `ADMIN_API_KEY is required.`
+- id: `TXT0008`
+  - line: `71`
+  - kind: `string-literal`
+  - text: `Select a community.`
+- id: `TXT0009`
+  - line: `75`
+  - kind: `string-literal`
+  - text: `Deleting community...`
+- id: `TXT0010`
+  - line: `89`
+  - kind: `string-literal`
+  - text: `Request failed.`
+- id: `TXT0011`
+  - line: `95`
+  - kind: `string-literal`
+  - text: `Community force-deleted.`
+- id: `TXT0012`
+  - line: `97`
+  - kind: `string-literal`
+  - text: `Request failed.`
+- id: `TXT0013`
+  - line: `110`
+  - kind: `jsx-text`
+  - text: `Community Admin`
+- id: `TXT0014`
+  - line: `111`
+  - kind: `jsx-text`
+  - text: `Developer-only tools for force deleting communities.`
+- id: `TXT0015`
+  - line: `117`
+  - kind: `jsx-text`
+  - text: `ADMIN_API_KEY`
+- id: `TXT0016`
+  - line: `131`
+  - kind: `string-literal`
+  - text: `Working...`
+- id: `TXT0017`
+  - line: `131`
+  - kind: `string-literal`
+  - text: `Load Communities`
+- id: `TXT0018`
+  - line: `137`
+  - kind: `jsx-text`
+  - text: `Community`
+- id: `TXT0019`
+  - line: `153`
+  - kind: `jsx-text`
+  - text: `Name:`
+- id: `TXT0020`
+  - line: `156`
+  - kind: `jsx-text`
+  - text: `Status:`
+- id: `TXT0021`
+  - line: `159`
+  - kind: `jsx-text`
+  - text: `Owner Wallet:`
+- id: `TXT0022`
+  - line: `163`
+  - kind: `jsx-text`
+  - text: `Contracts:`
+- id: `TXT0023`
+  - line: `167`
+  - kind: `jsx-text`
+  - text: `-`
+- id: `TXT0024`
+  - line: `167`
+  - kind: `jsx-text`
+  - text: `·`
+- id: `TXT0025`
+  - line: `171`
+  - kind: `jsx-text`
+  - text: `Created:`
+- id: `TXT0026`
+  - line: `174`
+  - kind: `jsx-text`
+  - text: `Closed:`
+- id: `TXT0027`
+  - line: `177`
+  - kind: `jsx-text`
+  - text: `Delete At:`
+- id: `TXT0028`
+  - line: `180`
+  - kind: `jsx-text`
+  - text: `Last System Hash:`
+- id: `TXT0029`
+  - line: `192`
+  - kind: `string-literal`
+  - text: `Working...`
+- id: `TXT0030`
+  - line: `192`
+  - kind: `string-literal`
+  - text: `Force Delete Community`
+- id: `TXT0031`
+  - line: `196`
+  - kind: `jsx-text`
+  - text: `No communities found.`

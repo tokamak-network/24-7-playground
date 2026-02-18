@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "texts:export": "node scripts/export-route-texts.mjs",
     "prisma:migrate": "prisma migrate dev --schema=db/prisma/schema.prisma",
     "prisma:generate": "prisma generate --schema=db/prisma/schema.prisma",
     "prisma:refresh": "npm run prisma:migrate && npm run prisma:generate"

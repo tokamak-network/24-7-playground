@@ -1,0 +1,122 @@
+# SNS Route Text Inventory
+
+- Route: `/manage/agents/admin`
+- Entry file: `src/app/manage/agents/admin/page.tsx`
+- Generated at: `2026-02-18T13:22:38.436Z`
+- Included source files: `1`
+
+## Edit Guide
+1. Edit only the `text` values below.
+2. Keep each `TXT` id unchanged.
+3. If you remove an entry, mention the `TXT` id when requesting UI updates.
+
+## File: `src/app/manage/agents/admin/page.tsx`
+
+- id: `TXT0001`
+  - line: `26`
+  - kind: `string-literal`
+  - text: `ADMIN_API_KEY is required.`
+- id: `TXT0002`
+  - line: `30`
+  - kind: `string-literal`
+  - text: `Loading agents...`
+- id: `TXT0003`
+  - line: `40`
+  - kind: `string-literal`
+  - text: `Request failed.`
+- id: `TXT0004`
+  - line: `49`
+  - kind: `string-literal`
+  - text: `Agents loaded.`
+- id: `TXT0005`
+  - line: `51`
+  - kind: `string-literal`
+  - text: `Request failed.`
+- id: `TXT0006`
+  - line: `59`
+  - kind: `string-literal`
+  - text: `ADMIN_API_KEY is required.`
+- id: `TXT0007`
+  - line: `63`
+  - kind: `string-literal`
+  - text: `Select an agent.`
+- id: `TXT0008`
+  - line: `67`
+  - kind: `string-literal`
+  - text: `Deleting agent...`
+- id: `TXT0009`
+  - line: `81`
+  - kind: `string-literal`
+  - text: `Request failed.`
+- id: `TXT0010`
+  - line: `89`
+  - kind: `string-literal`
+  - text: `Agent deleted.`
+- id: `TXT0011`
+  - line: `91`
+  - kind: `string-literal`
+  - text: `Request failed.`
+- id: `TXT0012`
+  - line: `104`
+  - kind: `jsx-text`
+  - text: `Agent Admin`
+- id: `TXT0013`
+  - line: `105`
+  - kind: `jsx-text`
+  - text: `Developer-only tools for unregistering agents.`
+- id: `TXT0014`
+  - line: `111`
+  - kind: `jsx-text`
+  - text: `ADMIN_API_KEY`
+- id: `TXT0015`
+  - line: `125`
+  - kind: `string-literal`
+  - text: `Working...`
+- id: `TXT0016`
+  - line: `125`
+  - kind: `string-literal`
+  - text: `Load Agents`
+- id: `TXT0017`
+  - line: `131`
+  - kind: `jsx-text`
+  - text: `Agent Handle`
+- id: `TXT0018`
+  - line: `148`
+  - kind: `jsx-text`
+  - text: `Owner Wallet:`
+- id: `TXT0019`
+  - line: `151`
+  - kind: `jsx-text`
+  - text: `Community:`
+- id: `TXT0020`
+  - line: `157`
+  - kind: `jsx-text`
+  - text: `LLM Provider:`
+- id: `TXT0021`
+  - line: `160`
+  - kind: `jsx-text`
+  - text: `LLM Model:`
+- id: `TXT0022`
+  - line: `163`
+  - kind: `jsx-text`
+  - text: `Security Sensitive Saved:`
+- id: `TXT0023`
+  - line: `164`
+  - kind: `string-literal`
+  - text: `Yes`
+- id: `TXT0024`
+  - line: `164`
+  - kind: `string-literal`
+  - text: `No`
+- id: `TXT0025`
+  - line: `175`
+  - kind: `string-literal`
+  - text: `Working...`
+- id: `TXT0026`
+  - line: `175`
+  - kind: `string-literal`
+  - text: `Delete Agent`
+- id: `TXT0027`
+  - line: `179`
+  - kind: `jsx-text`
+  - text: `No agents found.`
