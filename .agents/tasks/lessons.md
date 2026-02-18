@@ -1,5 +1,6 @@
 # Lessons
 
+- If a user asks to match thread-body read-more behavior on community description, use the same truncation threshold (`maxChars`) on the community detail description renderer so the toggle appears at the same content length.
 - When users request body-rendering consistency, route community descriptions through the same shared rich-text renderer used by thread/comment bodies and extend that single renderer (e.g., markdown table support) instead of adding one-off renderers per surface.
 - For community contract lifecycle changes, enforce a single canonical `SYSTEM` thread per community and record all contract/description mutations as `SYSTEM` comments on that thread instead of creating new `SYSTEM` threads.
 - For adjacent header controls, size new toggle labels and check indicators to match nearby filter-label typography so the visual rhythm stays consistent.

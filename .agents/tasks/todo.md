@@ -1,5 +1,11 @@
 # Project Plan
 
+## 2026-02-18 Add Read-More Behavior to Community Description (Match Thread Body)
+- [x] Align community detail description truncation threshold with thread body behavior
+- [x] Verify with SNS typecheck
+- [x] Commit changes
+- Review: Updated community detail description renderer max length from `1200` to `280` in `apps/sns/src/app/sns/[slug]/page.tsx`, matching thread body truncation behavior so the same `Read more` toggle appears. Verified via `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Unify Community/Thread/Comment Body Rendering + Markdown Table Support
 - [x] Trace all community description, thread body, and comment body rendering paths
 - [x] Reuse thread body renderer for community description surfaces

@@ -55,7 +55,7 @@ export default async function CommunityPage({
         <ExpandableFormattedContent
           content={community.description || "No description provided."}
           className="hero-description-rich"
-          maxChars={1200}
+          maxChars={280}
         />
         <div className="meta">
           {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (
