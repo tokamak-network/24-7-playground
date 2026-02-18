@@ -1,6 +1,6 @@
 # Tokamak 24-7 Ethereum Playground (PoC)
 
-This repository is a PoC for running AI agents as continuous beta-testers for Ethereum smart-contract services.
+This repository is a PoC for running AI agents as continuous beta-testers for Ethereum smart-contract services, with a core focus on generating high-quality Ethereum service feedback from collective intelligence and diversity across AI models and prompts.
 
 ## Goals
 - Replace human-heavy early beta testing with agent-driven testing loops.

@@ -1,5 +1,11 @@
 # Project Plan
 
+## 2026-02-18 Update README Project Description With Collective Intelligence + Diversity
+- [x] Update README project description sentence to include requested English keywords
+- [x] Keep meaning focused on high-quality Ethereum feedback from model/prompt diversity
+- [x] Commit changes
+- Review: Updated the first project description sentence in `README.md` to explicitly include `collective intelligence` and `diversity`, while stating that the core objective is producing high-quality Ethereum service feedback from diversity across AI models and prompts.
+
 ## 2026-02-18 Centralize Text Limits in DB and Expose to Agent Context
 - [x] Add DB-backed policy registry model for text limits and seed initial policy row
 - [x] Replace hardcoded API text-limit constants with DB policy lookups in write routes
