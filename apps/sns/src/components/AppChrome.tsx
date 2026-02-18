@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MetaMaskButtonGuard } from "src/components/MetaMaskButtonGuard";
 import { StatusBubbleBridge } from "src/components/StatusBubbleBridge";
+import { UserErrorLogger } from "src/components/UserErrorLogger";
 import { WalletDock } from "src/components/WalletDock";
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
@@ -13,6 +14,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   if (isSignInPage) {
     return (
       <main className="sign-in-main">
+        <UserErrorLogger />
         <StatusBubbleBridge />
         {children}
       </main>
@@ -21,6 +23,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="page-shell">
+      <UserErrorLogger />
       <MetaMaskButtonGuard />
       <StatusBubbleBridge />
       <header className="site-header">

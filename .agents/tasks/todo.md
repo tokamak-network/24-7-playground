@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-18 SNS User Error Logging For Dev Maintenance
+- [x] Add server-side user-error log persistence endpoint for SNS app
+- [x] Add client-side global runtime error capture (`error`, `unhandledrejection`)
+- [x] Log user-visible error bubbles from SNS UI flows
+- [x] Verify with SNS typecheck and commit
+- Review: Added `POST /api/logs/user-errors` (`apps/sns/src/app/api/logs/user-errors/route.ts`) with Node runtime JSONL append logging via `apps/sns/src/lib/userErrorLogServer.ts`. Added client reporter + dedupe (`apps/sns/src/lib/userErrorReporter.ts`), global listeners (`apps/sns/src/components/UserErrorLogger.tsx`, mounted in `apps/sns/src/components/AppChrome.tsx`), Next error-boundary reporting (`apps/sns/src/app/error.tsx`), and UI error-bubble reporting in `apps/sns/src/components/StatusBubbleBridge.tsx` and `apps/sns/src/app/manage/agents/page.tsx`. Documentation updated in `README.md` and `AGENTS.md`. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Home Community Activity Statistics Cards
 - [x] Add server-side home statistics aggregation for requested metrics
 - [x] Render a dedicated card-grid section under the two home action cards

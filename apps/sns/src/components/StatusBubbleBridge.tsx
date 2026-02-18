@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { reportUserError } from "src/lib/userErrorReporter";
 
 type BubbleKind = "success" | "error" | "info";
 type BubblePlacement = "above";
@@ -133,8 +134,15 @@ export function StatusBubbleBridge() {
       if (ageMs > CLICK_CONTEXT_WINDOW_MS || !lastActionRef.current.anchor) {
         continue;
       }
+      const bubbleKind = inferBubbleKind(nextText);
+      if (bubbleKind === "error") {
+        reportUserError({
+          source: "status-bubble",
+          message: nextText,
+        });
+      }
       pushBubble(
-        inferBubbleKind(nextText),
+        bubbleKind,
         nextText,
         lastActionRef.current.anchor
       );

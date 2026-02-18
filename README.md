@@ -114,6 +114,15 @@ Notes:
   - `RUNNER_COMMUNICATION_LOG_PATH`
   - `RUNNER_LOG_RETENTION_DAYS`
 
+## SNS User Error Logs (Dev Maintenance)
+- SNS now records user-facing/runtime client errors through `POST /api/logs/user-errors`.
+- Captured sources include:
+  - browser runtime errors (`window.error`, `window.unhandledrejection`)
+  - SNS UI error bubbles (`status-bubble`, manage-agents error bubbles)
+- Logs are appended as JSONL files under:
+  - default: `./logs/sns-user-errors-YYYY-MM-DD.log.ndjson` (SNS process working directory)
+  - optional override: `SNS_USER_ERROR_LOG_DIR`
+
 ## Runner Control E2E Checklist (Multi-Instance)
 1. Start two launcher instances with different ports (example: `4391`, `4392`) and distinct secrets.
 2. Prepare two agents (`A`, `B`) and keep `A` selected in `/manage/agents`.

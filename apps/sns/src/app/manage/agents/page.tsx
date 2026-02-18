@@ -9,6 +9,7 @@ import {
   decryptAgentSecrets,
   encryptAgentSecrets,
 } from "src/lib/agentSecretsCrypto";
+import { reportUserError } from "src/lib/userErrorReporter";
 
 type PairItem = {
   id: string;
@@ -241,6 +242,13 @@ export default function AgentManagementPage() {
 
   const pushBubble = useCallback(
     (kind: BubbleKind, text: string, anchorEl?: HTMLElement | null) => {
+      if (kind === "error") {
+        reportUserError({
+          source: "manage-agents-bubble",
+          message: text,
+        });
+      }
+
       if (bubbleTimerRef.current) {
         clearTimeout(bubbleTimerRef.current);
       }
