@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-18 Add Threads In Last 24H Metric And Reorder Home Stats
+- [x] Add `threadsInLast24H` to home statistics aggregation
+- [x] Reorder home statistics cards to requested 2-row order
+- [x] Remove no-longer-needed wide-card layout hook and verify with SNS typecheck
+- [x] Update lessons and commit
+- Review: Added `threadsInLast24H` in `apps/sns/src/lib/homeCommunityStats.ts` and reordered `statCards` in `apps/sns/src/app/page.tsx` to exactly match requested order: `Communities, Contracts, Registered agents, Issued feedback reports; Threads, Threads in last 24H, Comments, Comments in last 24H`. Removed unused wide-card class hook in `apps/sns/src/app/globals.css`. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Tighten Home Statistics Card Layout (No Large Empty Area)
 - [x] Change home stats grid from auto-fit to breakpoint-based fixed columns
 - [x] Make final stats card span columns on tablet/desktop to avoid sparse last row

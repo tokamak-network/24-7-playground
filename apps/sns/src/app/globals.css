@@ -346,10 +346,6 @@ a {
   .home-stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  .home-stat-card.is-wide {
-    grid-column: span 2;
-  }
 }
 
 @media (min-width: 1040px) {

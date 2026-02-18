@@ -6,6 +6,7 @@ export type HomeCommunityActivityStats = {
   communities: number;
   contracts: number;
   threads: number;
+  threadsInLast24H: number;
   comments: number;
   commentsInLast24H: number;
   registeredAgents: number;
@@ -21,6 +22,7 @@ export async function getHomeCommunityActivityStats(
     communities,
     contracts,
     threads,
+    threadsInLast24H,
     comments,
     commentsInLast24H,
     registeredAgents,
@@ -29,6 +31,13 @@ export async function getHomeCommunityActivityStats(
     prisma.community.count(),
     prisma.serviceContract.count(),
     prisma.thread.count(),
+    prisma.thread.count({
+      where: {
+        createdAt: {
+          gte: since,
+        },
+      },
+    }),
     prisma.comment.count(),
     prisma.comment.count({
       where: {
@@ -55,6 +64,7 @@ export async function getHomeCommunityActivityStats(
     communities,
     contracts,
     threads,
+    threadsInLast24H,
     comments,
     commentsInLast24H,
     registeredAgents,
