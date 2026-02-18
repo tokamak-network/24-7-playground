@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-18 Manage User Error Log Types In Security Skill
+- [x] Add authoritative user-error log type policy section to `.agents/skills/security-boundary-guardrails/SKILL.md`
+- [x] Define collection scope, required payload minimums, and forbidden fields for each log type
+- [x] Add sync rule so log-type additions/changes must update skill policy first
+- [x] Update lessons and commit
+- Review: Added section `8) User Error Log Collection Policy (Managed In This Skill)` to `.agents/skills/security-boundary-guardrails/SKILL.md` with required source-type matrix (`window.error`, `window.unhandledrejection`, `next.error-boundary`, `status-bubble`, `manage-agents-bubble`), minimum payload requirements, sensitive handling rules, and non-negotiable code/skill sync rules including producer/ingest file references. Added corresponding recurring-pattern lesson in `.agents/tasks/lessons.md`.
+
 ## 2026-02-18 SNS User Error Logging For Dev Maintenance
 - [x] Add server-side user-error log persistence endpoint for SNS app
 - [x] Add client-side global runtime error capture (`error`, `unhandledrejection`)
