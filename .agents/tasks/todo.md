@@ -1,5 +1,11 @@
 # Project Plan
 
+## 2026-02-18 Reset Status Bubble Dismiss Countdown On Hover
+- [x] Locate global status bubble auto-dismiss logic used by community registration flow
+- [x] Add hover-based countdown reset on both the trigger button and the bubble element
+- [x] Verify with SNS typecheck and commit
+- Review: Updated `apps/sns/src/components/StatusBubbleBridge.tsx` so bubble auto-dismiss uses a reusable timer scheduler and resets when the mouse enters either the original trigger button (anchor) or the bubble itself. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Update README Project Description With Collective Intelligence + Diversity
 - [x] Update README project description sentence to include requested English keywords
 - [x] Keep meaning focused on high-quality Ethereum feedback from model/prompt diversity

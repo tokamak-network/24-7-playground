@@ -15,6 +15,7 @@ type BubbleMessage = {
 
 const STATUS_SELECTOR = ".status";
 const CLICK_CONTEXT_WINDOW_MS = 20000;
+const BUBBLE_DISMISS_DELAY_MS = 3200;
 
 type AnchorSnapshot = {
   element: HTMLElement | null;
@@ -61,6 +62,7 @@ function normalizeStatusText(node: Element) {
 export function StatusBubbleBridge() {
   const [bubbleMessage, setBubbleMessage] = useState<BubbleMessage | null>(null);
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bubbleAnchorElementRef = useRef<HTMLElement | null>(null);
   const seenStatusRef = useRef<WeakMap<Element, string>>(new WeakMap());
   const rafRef = useRef<number | null>(null);
   const lastActionRef = useRef<{ anchor: AnchorSnapshot | null; at: number }>({
@@ -68,12 +70,19 @@ export function StatusBubbleBridge() {
     at: 0,
   });
 
+  const scheduleBubbleDismiss = useCallback(() => {
+    if (bubbleTimerRef.current) {
+      clearTimeout(bubbleTimerRef.current);
+    }
+    bubbleTimerRef.current = setTimeout(() => {
+      bubbleAnchorElementRef.current = null;
+      setBubbleMessage(null);
+    }, BUBBLE_DISMISS_DELAY_MS);
+  }, []);
+
   const pushBubble = useCallback(
     (kind: BubbleKind, text: string, anchor?: AnchorSnapshot | null) => {
       if (!text) return;
-      if (bubbleTimerRef.current) {
-        clearTimeout(bubbleTimerRef.current);
-      }
 
       const viewportWidth =
         typeof window !== "undefined" ? window.innerWidth : 1200;
@@ -84,7 +93,10 @@ export function StatusBubbleBridge() {
       let top = defaultTop;
       const placement: BubblePlacement = "above";
 
+      bubbleAnchorElementRef.current = null;
       if (anchor && typeof window !== "undefined") {
+        bubbleAnchorElementRef.current =
+          anchor.element && anchor.element.isConnected ? anchor.element : null;
         const rect =
           anchor.element && anchor.element.isConnected
             ? anchor.element.getBoundingClientRect()
@@ -97,12 +109,15 @@ export function StatusBubbleBridge() {
       }
 
       setBubbleMessage({ kind, text, left, top, placement });
-      bubbleTimerRef.current = setTimeout(() => {
-        setBubbleMessage(null);
-      }, 3200);
+      scheduleBubbleDismiss();
     },
-    []
+    [scheduleBubbleDismiss]
   );
+
+  const resetBubbleDismissCountdown = useCallback(() => {
+    if (!bubbleMessage) return;
+    scheduleBubbleDismiss();
+  }, [bubbleMessage, scheduleBubbleDismiss]);
 
   const processStatusNodes = useCallback(() => {
     if (typeof document === "undefined") return;
@@ -154,6 +169,29 @@ export function StatusBubbleBridge() {
   }, []);
 
   useEffect(() => {
+    if (!bubbleMessage) return;
+
+    const isWithin = (target: EventTarget | null, container: HTMLElement) => {
+      return target instanceof Node && (target === container || container.contains(target));
+    };
+
+    const onMouseOver = (event: MouseEvent) => {
+      const anchorElement = bubbleAnchorElementRef.current;
+      if (!anchorElement) return;
+      const enteredAnchor =
+        isWithin(event.target, anchorElement) &&
+        !isWithin(event.relatedTarget, anchorElement);
+      if (!enteredAnchor) return;
+      resetBubbleDismissCountdown();
+    };
+
+    document.addEventListener("mouseover", onMouseOver, true);
+    return () => {
+      document.removeEventListener("mouseover", onMouseOver, true);
+    };
+  }, [bubbleMessage, resetBubbleDismissCountdown]);
+
+  useEffect(() => {
     const nodes = Array.from(document.querySelectorAll(STATUS_SELECTOR));
     for (const node of nodes) {
       seenStatusRef.current.set(node, normalizeStatusText(node));
@@ -203,6 +241,7 @@ export function StatusBubbleBridge() {
       }}
       role="status"
       aria-live="polite"
+      onMouseEnter={resetBubbleDismissCountdown}
     >
       {bubbleMessage.text}
     </div>
