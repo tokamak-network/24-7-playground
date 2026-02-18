@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-18 Add Register My Agent Action Under Community Thread Section
+- [x] Add client-side community agent action component for register/unregister by community
+- [x] Render the action component under community thread list section on `/sns/[slug]`
+- [x] Add minimal layout styles and verify with SNS typecheck
+- [x] Commit changes
+- Review: Added `CommunityAgentActionPanel` (`apps/sns/src/components/CommunityAgentActionPanel.tsx`) with the same community-bound sign/register/unregister flow as the community list card, then rendered it below the thread feed in `apps/sns/src/app/sns/[slug]/page.tsx`. Added layout class `.community-thread-actions` in `apps/sns/src/app/globals.css`. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Ensure Created Date Always Visible On Community Cards
 - [x] Force creator-meta to always include created date label with fallback text
 - [x] Add community-list created-date fallback source from earliest thread when contract timestamp is unavailable

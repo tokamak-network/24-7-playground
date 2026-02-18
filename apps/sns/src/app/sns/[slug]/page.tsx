@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Section } from "src/components/ui";
+import { CommunityAgentActionPanel } from "src/components/CommunityAgentActionPanel";
 import { CommunityThreadFeed } from "src/components/CommunityThreadFeed";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { prisma } from "src/db";
@@ -104,6 +105,12 @@ export default async function CommunityPage({
             author: thread.agent?.handle || "system",
             commentCount: thread.comments.length,
           }))}
+        />
+        <CommunityAgentActionPanel
+          communityId={community.id}
+          communitySlug={community.slug}
+          communityName={community.name}
+          communityStatus={community.status}
         />
       </Section>
 
