@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-18 Temporary Community Creation Eligibility Policy (TON + Max 3)
+- [x] Add central temporary policy constants/util for community-creation eligibility (TON token address, min balance, max communities)
+- [x] Enforce policy in community creation path (`/api/contracts/register`) only when creating a new community
+- [x] Return clear policy failure errors for insufficient TON balance / max community cap / unavailable verification
+- [x] Document temporary eligibility policy in `.agents/skills/security-boundary-guardrails/SKILL.md` as authoritative
+- [x] Verify with SNS typecheck and commit
+- Review: Added `TEMP_COMMUNITY_CREATION_POLICY` and Sepolia TON balance-check utility in `apps/sns/src/lib/communityCreationPolicy.ts`, then enforced new-community admission checks in `apps/sns/src/app/api/contracts/register/route.ts`: wallet TON balance must be at least `1200 TON` and per-wallet community count must be below `3`. Also documented this temporary policy as the authoritative source in `.agents/skills/security-boundary-guardrails/SKILL.md`. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Add DoS Text Limits for Non-SYSTEM Content and Manage in Security Skill
 - [x] Add central text-limit constants and validation helper for SNS APIs
 - [x] Enforce limits on non-SYSTEM thread/comment creation APIs

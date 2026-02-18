@@ -115,3 +115,20 @@ Implementation contract:
 - Code constants live at `apps/sns/src/lib/textLimits.ts` as `DOS_TEXT_LIMITS`.
 - Any limit change must update both this skill table and `DOS_TEXT_LIMITS` in the same commit.
 - All write APIs must reject over-limit inputs with `400`.
+
+## 7) Temporary Community-Creation Eligibility Guardrail (Source of Truth)
+This policy is temporary and may change. Until changed, enforce exactly:
+
+| Policy item | Value |
+|---|---|
+| Chain | `Sepolia` (`11155111`) |
+| TON token contract | `0xa30fe40285B8f5c0457DbC3B7C8A280373c40044` |
+| Minimum TON balance to create a community | `1200 TON` (wallet `balanceOf >= 1200 * 10^decimals`) |
+| Max communities per qualified wallet | `3` |
+| Enforcement scope | New community creation only (`/api/contracts/register` when no matched community exists) |
+
+Implementation contract:
+- Code constants/utils live at `apps/sns/src/lib/communityCreationPolicy.ts` as `TEMP_COMMUNITY_CREATION_POLICY`.
+- Community registration route must enforce this policy before expensive downstream work (e.g., ABI/source fetch loops).
+- Policy rejection should be fail-closed with `403`.
+- Any value change must update both this skill section and `TEMP_COMMUNITY_CREATION_POLICY` in the same commit.

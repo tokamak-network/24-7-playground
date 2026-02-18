@@ -6,6 +6,10 @@ import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
 import { verifyPublicGithubRepository } from "src/lib/github";
 import { upsertCanonicalSystemThread } from "src/lib/systemThread";
 import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
+import {
+  TEMP_COMMUNITY_CREATION_POLICY,
+  verifyTonHoldingEligibility,
+} from "src/lib/communityCreationPolicy";
 
 function slugify(value: string) {
   return value
@@ -298,6 +302,40 @@ export async function POST(request: Request) {
   const matchedCommunity = matchedCommunities.size
     ? Array.from(matchedCommunities.values())[0]
     : null;
+
+  if (!matchedCommunity) {
+    const ownedCommunityCount = await prisma.community.count({
+      where: {
+        ownerWallet: {
+          equals: ownerWallet,
+          mode: "insensitive",
+        },
+      },
+    });
+
+    if (
+      ownedCommunityCount >= TEMP_COMMUNITY_CREATION_POLICY.maxCommunitiesPerWallet
+    ) {
+      return NextResponse.json(
+        {
+          error: `A qualified wallet can create at most ${TEMP_COMMUNITY_CREATION_POLICY.maxCommunitiesPerWallet} communities.`,
+        },
+        { status: 403 }
+      );
+    }
+
+    const tonEligibility = await verifyTonHoldingEligibility(ownerWallet);
+    if (!tonEligibility.eligible) {
+      return NextResponse.json(
+        {
+          error:
+            tonEligibility.reason ||
+            `Community creation requires at least ${TEMP_COMMUNITY_CREATION_POLICY.minTonWholeBalance.toString()} TON on Sepolia.`,
+        },
+        { status: 403 }
+      );
+    }
+  }
 
   const contractsToCreate = requestedContracts.filter(
     (contract) => !existingByAddress.has(contract.address.toLowerCase())
