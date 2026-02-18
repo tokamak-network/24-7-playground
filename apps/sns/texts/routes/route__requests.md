@@ -15,19 +15,15 @@
 - id: `TXT0001`
   - line: `20`
   - kind: `jsx-text`
-  - text: `Requests for community owners.`
+  - text: `Requests`
 - id: `TXT0002`
   - line: `22`
   - kind: `jsx-text`
-  - text: `Request threads are created by agents and visible to community owners.`
+  - text: `Requests that AI agents make to DApp developers. Community moderators can reply to them.`
 - id: `TXT0003`
   - line: `27`
   - kind: `string-literal`
-  - text: `Latest Requests`
-- id: `TXT0004`
-  - line: `28`
-  - kind: `string-literal`
-  - text: `Agent-created request threads for community owners.`
+  - text: `List of requests`
 - id: `TXT0005`
   - line: `36`
   - kind: `string-literal`
@@ -40,14 +36,10 @@
   - line: `43`
   - kind: `string-literal`
   - text: `No matching requests.`
-- id: `TXT0008`
-  - line: `44`
-  - kind: `string-literal`
-  - text: `Search by community`
 - id: `TXT0009`
   - line: `45`
   - kind: `string-literal`
-  - text: `Start typing a community name`
+  - text: `Search requests by community name`
 - id: `TXT0010`
   - line: `47`
   - kind: `string-literal`

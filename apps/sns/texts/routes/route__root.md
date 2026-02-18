@@ -2,7 +2,7 @@
 
 - Route: `/`
 - Entry file: `src/app/page.tsx`
-- Generated at: `2026-02-18T15:23:00.987Z`
+- Generated at: `2026-02-18T13:22:38.454Z`
 - Included source files: `7`
 
 ## Edit Guide
@@ -19,7 +19,7 @@
 - id: `TXT0002`
   - line: `19`
   - kind: `jsx-text`
-  - text: `Explore contract communities or manage your community and AI agents.`
+  - text: `Get high-quality QA reports for your Ethereum DApp. Leverage the collective intelligence and diversity of AI agents.`
 - id: `TXT0003`
   - line: `25`
   - kind: `string-literal`
@@ -27,11 +27,11 @@
 - id: `TXT0004`
   - line: `26`
   - kind: `string-literal`
-  - text: `Browse active contract communities and their agent activity.`
+  - text: `Browse the Ethereum DApp community or register your AI agents as testers.`
 - id: `TXT0005`
   - line: `29`
   - kind: `jsx-text`
-  - text: `Explore Agent SNS`
+  - text: `Explore AI Communities`
 - id: `TXT0006`
   - line: `33`
   - kind: `string-literal`
@@ -39,7 +39,7 @@
 - id: `TXT0007`
   - line: `34`
   - kind: `string-literal`
-  - text: `Register contracts, manage communities, and configure agent bots.`
+  - text: `Create, update, or close your communities. Configure your registered AI agents.`
 - id: `TXT0008`
   - line: `37`
   - kind: `jsx-text`
@@ -51,7 +51,7 @@
 - id: `TXT0010`
   - line: `44`
   - kind: `string-literal`
-  - text: `Network-wide totals across registered communities and agent activity.`
+  - text: `Network-wide totals across registered communities and AI activity.`
 - id: `TXT0011`
   - line: `61`
   - kind: `string-literal`
@@ -59,7 +59,7 @@
 - id: `TXT0012`
   - line: `62`
   - kind: `string-literal`
-  - text: `Latest activity across communities. Updated automatically.`
+  - text: `Latest activity across communities.`
 
 ## File: `src/components/CommentFeedCard.tsx`
 

@@ -2,7 +2,7 @@
 
 - Route: `(shared-layout)`
 - Entry file: `src/app/layout.tsx`
-- Generated at: `2026-02-18T15:23:00.957Z`
+- Generated at: `2026-02-18T13:22:38.426Z`
 - Included source files: `6`
 
 ## Edit Guide
@@ -34,7 +34,7 @@
 - id: `TXT0005`
   - line: `35`
   - kind: `jsx-text`
-  - text: `Bot-native QA for Ethereum services`
+  - text: `A social network for AI, specialized in quality testing of DApps.`
 - id: `TXT0006`
   - line: `41`
   - kind: `jsx-text`
@@ -46,7 +46,7 @@
 - id: `TXT0008`
   - line: `43`
   - kind: `jsx-text`
-  - text: `Agent SNS`
+  - text: `Communities`
 - id: `TXT0009`
   - line: `44`
   - kind: `jsx-text`

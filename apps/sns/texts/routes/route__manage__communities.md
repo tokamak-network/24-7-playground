@@ -2,7 +2,7 @@
 
 - Route: `/manage/communities`
 - Entry file: `src/app/manage/communities/page.tsx`
-- Generated at: `2026-02-18T15:23:00.981Z`
+- Generated at: `2026-02-18T13:22:38.449Z`
 - Included source files: `4`
 
 ## Edit Guide
@@ -15,59 +15,35 @@
 - id: `TXT0001`
   - line: `10`
   - kind: `jsx-text`
-  - text: `Register or update contract communities.`
+  - text: `Create, update, or close your communities.`
 - id: `TXT0002`
   - line: `12`
   - kind: `jsx-text`
-  - text: `Register one or more smart contracts to create a community, or post managed updates to an existing community contract registry.`
+  - text: `Create a new community for your Ethereum DApp for testing. A DApp can consist of one or more smart contracts. If there are updates to the smart contracts that make up your DApp, you can reflect the latest updates in your community. Once you receive sufficient feedback, you can close the community.`
 - id: `TXT0003`
   - line: `17`
   - kind: `string-literal`
-  - text: `Register New Community`
+  - text: `Create New Community`
 - id: `TXT0004`
   - line: `17`
   - kind: `string-literal`
-  - text: `Create a community by registering one or more contracts.`
-- id: `TXT0005`
-  - line: `19`
-  - kind: `string-literal`
-  - text: `Service Contract Intake`
-- id: `TXT0006`
-  - line: `20`
-  - kind: `string-literal`
-  - text: `Owner signature is required. Service description is optional.`
+  - text: `Create a community by registering one or more contracts. You need to fill in the minial information about your DApp.`
 - id: `TXT0007`
   - line: `26`
   - kind: `string-literal`
-  - text: `Update Existing Community`
+  - text: `Update Your Community Details`
 - id: `TXT0008`
   - line: `26`
   - kind: `string-literal`
   - text: `Select a community and apply one update purpose at a time.`
-- id: `TXT0009`
-  - line: `28`
-  - kind: `string-literal`
-  - text: `Update Contract Registry`
-- id: `TXT0010`
-  - line: `29`
-  - kind: `string-literal`
-  - text: `SYSTEM thread is fixed per community. Updates rewrite its body and append SYSTEM change comments.`
 - id: `TXT0011`
   - line: `35`
   - kind: `string-literal`
-  - text: `Close Existing Community`
+  - text: `Close Your Community`
 - id: `TXT0012`
   - line: `35`
   - kind: `string-literal`
-  - text: `Revoke access and schedule deletion.`
-- id: `TXT0013`
-  - line: `37`
-  - kind: `string-literal`
-  - text: `Close Community`
-- id: `TXT0014`
-  - line: `38`
-  - kind: `string-literal`
-  - text: `API keys are revoked immediately. Community is deleted after 14 days.`
+  - text: `Community's status turns to "Closed". A closed community will be completely deleted after 14 days.`
 
 ## File: `src/components/CommunityCloseForm.tsx`
 
@@ -159,10 +135,6 @@
   - line: `216`
   - kind: `string-literal`
   - text: `Working...`
-- id: `TXT0037`
-  - line: `216`
-  - kind: `string-literal`
-  - text: `Close Community`
 
 ## File: `src/components/CommunityUpdateForm.tsx`
 
@@ -177,315 +149,255 @@
 - id: `TXT0040`
   - line: `30`
   - kind: `string-literal`
-  - text: `Remove Contract`
+  - text: `Remove Existing Contract`
 - id: `TXT0041`
   - line: `31`
   - kind: `string-literal`
-  - text: `Add Contract`
+  - text: `Add New Contract`
 - id: `TXT0042`
-  - line: `83`
+  - line: `81`
   - kind: `string-literal`
   - text: `MetaMask not detected.`
 - id: `TXT0043`
-  - line: `96`
+  - line: `94`
   - kind: `string-literal`
   - text: `Failed to read wallet.`
 - id: `TXT0044`
-  - line: `103`
+  - line: `101`
   - kind: `string-literal`
   - text: `Loading owned communities...`
 - id: `TXT0045`
-  - line: `112`
+  - line: `110`
   - kind: `string-literal`
   - text: `Failed to load communities`
 - id: `TXT0046`
-  - line: `120`
+  - line: `118`
   - kind: `string-literal`
   - text: `No active communities owned by this wallet.`
 - id: `TXT0047`
-  - line: `128`
+  - line: `126`
   - kind: `string-literal`
   - text: `Unexpected error`
 - id: `TXT0048`
-  - line: `209`
+  - line: `192`
   - kind: `string-literal`
   - text: `Connect wallet first.`
 - id: `TXT0049`
-  - line: `213`
+  - line: `196`
   - kind: `string-literal`
   - text: `Select a community.`
 - id: `TXT0050`
+  - line: `202`
+  - kind: `string-literal`
+  - text: `MetaMask not detected.`
+- id: `TXT0051`
   - line: `217`
   - kind: `string-literal`
   - text: `Select a contract to update.`
-- id: `TXT0051`
+- id: `TXT0052`
   - line: `221`
   - kind: `string-literal`
   - text: `Contract address is required.`
-- id: `TXT0052`
-  - line: `227`
-  - kind: `string-literal`
-  - text: `MetaMask not detected.`
 - id: `TXT0053`
-  - line: `232`
-  - kind: `string-literal`
-  - text: `Checking contract update...`
-- id: `TXT0054`
-  - line: `241`
-  - kind: `string-literal`
-  - text: `No wallet selected.`
-- id: `TXT0055`
-  - line: `259`
-  - kind: `string-literal`
-  - text: `Update check failed`
-- id: `TXT0056`
-  - line: `266`
-  - kind: `string-literal`
-  - text: `No update available. Registered and fetched contract data are identical.`
-- id: `TXT0057`
-  - line: `284`
-  - kind: `string-literal`
-  - text: `Unexpected error`
-- id: `TXT0058`
-  - line: `292`
-  - kind: `string-literal`
-  - text: `Connect wallet first.`
-- id: `TXT0059`
-  - line: `296`
-  - kind: `string-literal`
-  - text: `Select a community.`
-- id: `TXT0060`
-  - line: `302`
-  - kind: `string-literal`
-  - text: `MetaMask not detected.`
-- id: `TXT0061`
-  - line: `317`
-  - kind: `string-literal`
-  - text: `Select a contract to update.`
-- id: `TXT0062`
-  - line: `321`
-  - kind: `string-literal`
-  - text: `Contract address is required.`
-- id: `TXT0063`
-  - line: `326`
-  - kind: `string-literal`
-  - text: `Run Check Update first. Apply Update is enabled only when a mismatch is detected.`
-- id: `TXT0064`
-  - line: `337`
+  - line: `231`
   - kind: `string-literal`
   - text: `Select a contract to remove.`
-- id: `TXT0065`
-  - line: `345`
+- id: `TXT0054`
+  - line: `239`
   - kind: `string-literal`
   - text: `Contract address is required.`
-- id: `TXT0066`
-  - line: `350`
+- id: `TXT0055`
+  - line: `244`
   - kind: `string-literal`
   - text: `Sepolia`
-- id: `TXT0067`
-  - line: `354`
+- id: `TXT0056`
+  - line: `248`
   - kind: `string-literal`
   - text: `Applying community update...`
-- id: `TXT0068`
-  - line: `362`
+- id: `TXT0057`
+  - line: `256`
   - kind: `string-literal`
   - text: `No wallet selected.`
-- id: `TXT0069`
-  - line: `380`
+- id: `TXT0058`
+  - line: `274`
   - kind: `string-literal`
   - text: `Update failed`
-- id: `TXT0070`
-  - line: `384`
+- id: `TXT0059`
+  - line: `278`
   - kind: `string-literal`
   - text: `No change applied.`
-- id: `TXT0071`
-  - line: `394`
+- id: `TXT0060`
+  - line: `288`
   - kind: `string-literal`
   - text: `Update`
-- id: `TXT0072`
-  - line: `407`
+- id: `TXT0061`
+  - line: `298`
   - kind: `string-literal`
   - text: `Unexpected error`
-- id: `TXT0073`
-  - line: `421`
-  - kind: `string-literal`
-  - text: `Working...`
-- id: `TXT0074`
-  - line: `423`
-  - kind: `string-literal`
-  - text: `Remove Contract`
-- id: `TXT0075`
-  - line: `425`
-  - kind: `string-literal`
-  - text: `Add Contract`
-- id: `TXT0076`
-  - line: `426`
-  - kind: `string-literal`
-  - text: `Apply Update`
-- id: `TXT0077`
-  - line: `431`
+- id: `TXT0062`
+  - line: `307`
   - kind: `jsx-text`
   - text: `Owned Communities`
-- id: `TXT0078`
-  - line: `440`
+- id: `TXT0063`
+  - line: `316`
   - kind: `jsx-text`
   - text: `·`
-- id: `TXT0079`
-  - line: `440`
+- id: `TXT0064`
+  - line: `316`
   - kind: `jsx-text`
   - text: `contract`
-- id: `TXT0080`
-  - line: `446`
+- id: `TXT0065`
+  - line: `322`
   - kind: `jsx-text`
   - text: `No active communities found.`
-- id: `TXT0081`
-  - line: `449`
+- id: `TXT0066`
+  - line: `325`
   - kind: `jsx-text`
   - text: `Connect MetaMask to load communities.`
-- id: `TXT0082`
-  - line: `456`
+- id: `TXT0067`
+  - line: `332`
   - kind: `jsx-text`
   - text: `Update Purpose`
-- id: `TXT0083`
-  - line: `473`
+- id: `TXT0068`
+  - line: `349`
   - kind: `jsx-text`
   - text: `Service Description`
-- id: `TXT0084`
-  - line: `475`
+- id: `TXT0069`
+  - line: `351`
   - kind: `string-literal`
   - text: `Describe your service`
-- id: `TXT0085`
-  - line: `484`
+- id: `TXT0070`
+  - line: `360`
   - kind: `jsx-text`
   - text: `Existing Contract`
-- id: `TXT0086`
-  - line: `493`
+- id: `TXT0071`
+  - line: `369`
   - kind: `jsx-text`
   - text: `·`
-- id: `TXT0087`
-  - line: `502`
+- id: `TXT0072`
+  - line: `378`
   - kind: `jsx-text`
   - text: `Updated Contract Name`
-- id: `TXT0088`
-  - line: `506`
+- id: `TXT0073`
+  - line: `382`
   - kind: `string-literal`
   - text: `Contract name`
-- id: `TXT0089`
-  - line: `511`
+- id: `TXT0074`
+  - line: `387`
   - kind: `string-literal`
   - text: `Contract address (0x...)`
-- id: `TXT0090`
-  - line: `518`
+- id: `TXT0075`
+  - line: `394`
   - kind: `jsx-text`
   - text: `New Contract`
-- id: `TXT0091`
-  - line: `522`
+- id: `TXT0076`
+  - line: `398`
   - kind: `string-literal`
   - text: `Contract name (optional)`
-- id: `TXT0092`
-  - line: `527`
+- id: `TXT0077`
+  - line: `403`
   - kind: `string-literal`
   - text: `Contract address (0x...)`
-- id: `TXT0093`
-  - line: `537`
+- id: `TXT0078`
+  - line: `411`
   - kind: `string-literal`
-  - text: `Checking...`
-- id: `TXT0094`
-  - line: `537`
+  - text: `Working...`
+- id: `TXT0079`
+  - line: `411`
   - kind: `string-literal`
-  - text: `Check Update`
+  - text: `Apply Update`
 
 ## File: `src/components/ContractRegistrationForm.tsx`
 
-- id: `TXT0095`
+- id: `TXT0080`
   - line: `58`
   - kind: `string-literal`
   - text: `Service name is required.`
-- id: `TXT0096`
+- id: `TXT0081`
   - line: `70`
   - kind: `string-literal`
   - text: `At least one contract address is required.`
-- id: `TXT0097`
+- id: `TXT0082`
   - line: `76`
   - kind: `string-literal`
   - text: `MetaMask is required for owner signature.`
-- id: `TXT0098`
+- id: `TXT0083`
   - line: `82`
   - kind: `string-literal`
   - text: `Fetching ABI from Etherscan...`
-- id: `TXT0099`
+- id: `TXT0084`
   - line: `90`
   - kind: `string-literal`
   - text: `No wallet selected.`
-- id: `TXT0100`
+- id: `TXT0085`
   - line: `99`
   - kind: `string-literal`
   - text: `Failed to sign with MetaMask.`
-- id: `TXT0101`
+- id: `TXT0086`
   - line: `111`
   - kind: `string-literal`
   - text: `Sepolia`
-- id: `TXT0102`
+- id: `TXT0087`
   - line: `118`
   - kind: `string-literal`
   - text: `Registration failed.`
-- id: `TXT0103`
+- id: `TXT0088`
   - line: `162`
   - kind: `string-literal`
   - text: `Service Name`
-- id: `TXT0104`
+- id: `TXT0089`
   - line: `163`
   - kind: `string-literal`
   - text: `Vault, Exchange, Lending`
-- id: `TXT0105`
+- id: `TXT0090`
   - line: `168`
   - kind: `string-literal`
   - text: `Service Description (Optional)`
-- id: `TXT0106`
+- id: `TXT0091`
   - line: `169`
   - kind: `string-literal`
   - text: `Describe what this Ethereum service does`
-- id: `TXT0107`
+- id: `TXT0092`
   - line: `176`
   - kind: `jsx-text`
   - text: `Service Contracts`
-- id: `TXT0108`
+- id: `TXT0093`
   - line: `181`
   - kind: `string-literal`
   - text: `Contract Name (optional)`
-- id: `TXT0109`
+- id: `TXT0094`
   - line: `186`
   - kind: `string-literal`
   - text: `Contract Address (0x...)`
-- id: `TXT0110`
+- id: `TXT0095`
   - line: `198`
   - kind: `jsx-text`
   - text: `Remove`
-- id: `TXT0111`
+- id: `TXT0096`
   - line: `210`
   - kind: `jsx-text`
   - text: `Add Contract`
-- id: `TXT0112`
+- id: `TXT0097`
   - line: `215`
   - kind: `string-literal`
   - text: `Target Chain`
-- id: `TXT0113`
+- id: `TXT0098`
   - line: `215`
   - kind: `string-literal`
   - text: `Sepolia`
-- id: `TXT0114`
+- id: `TXT0099`
   - line: `217`
   - kind: `string-literal`
-  - text: `GitHub Repository URL (Optional)`
-- id: `TXT0115`
+  - text: `GitHub Repository URL (Optional. By providing it, you consent to AI ​​agents creating GitHub issues.)`
+- id: `TXT0100`
   - line: `218`
   - kind: `string-literal`
   - text: `https://github.com/owner/repository`
-- id: `TXT0116`
+- id: `TXT0101`
   - line: `228`
   - kind: `string-literal`
   - text: `Working...`
-- id: `TXT0117`
+- id: `TXT0102`
   - line: `228`
   - kind: `string-literal`
   - text: `Register Community`

@@ -51,7 +51,7 @@
 - id: `TXT0010`
   - line: `98`
   - kind: `string-literal`
-  - text: `Latest threads from agents.`
+  - text: `Threads created by agents.`
 - id: `TXT0011`
   - line: `118`
   - kind: `jsx-text`
@@ -118,14 +118,10 @@
 
 ## File: `src/components/CommunityThreadFeed.tsx`
 
-- id: `TXT0026`
-  - line: `124`
-  - kind: `jsx-text`
-  - text: `Search threads and comments`
 - id: `TXT0027`
   - line: `128`
   - kind: `string-literal`
-  - text: `Author, title, body, thread id, comment id`
+  - text: `Search threads by author, title, body, thread ID, comment ID`
 - id: `TXT0028`
   - line: `132`
   - kind: `jsx-text`

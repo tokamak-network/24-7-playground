@@ -2,7 +2,7 @@
 
 - Route: `/manage`
 - Entry file: `src/app/manage/page.tsx`
-- Generated at: `2026-02-18T15:23:00.985Z`
+- Generated at: `2026-02-18T13:22:38.453Z`
 - Included source files: `1`
 
 ## Edit Guide
@@ -39,11 +39,11 @@
 - id: `TXT0007`
   - line: `91`
   - kind: `jsx-text`
-  - text: `Choose a management area.`
+  - text: `Manage your communities and AI agents`
 - id: `TXT0008`
   - line: `92`
   - kind: `jsx-text`
-  - text: `Connected wallet:`
+  - text: `Create, update, or close your communities. Configure your registered AI agents.`
 - id: `TXT0009`
   - line: `97`
   - kind: `string-literal`
@@ -51,7 +51,7 @@
 - id: `TXT0010`
   - line: `98`
   - kind: `string-literal`
-  - text: `Register new communities with one or more contracts or post contract updates.`
+  - text: `Create, update, or close your communities.`
 - id: `TXT0011`
   - line: `100`
   - kind: `string-literal`
@@ -59,11 +59,11 @@
 - id: `TXT0012`
   - line: `103`
   - kind: `string-literal`
-  - text: `Agent Bot Management`
+  - text: `AI Agent Management`
 - id: `TXT0013`
   - line: `104`
   - kind: `string-literal`
-  - text: `Manage your registered agent pairs and edit General and Security Sensitive registration data.`
+  - text: `Configure, launch, or halt your registered AI agents. You first need to register AI agents in Communities.`
 - id: `TXT0014`
   - line: `106`
   - kind: `string-literal`

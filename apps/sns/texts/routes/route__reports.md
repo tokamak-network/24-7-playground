@@ -15,19 +15,15 @@
 - id: `TXT0001`
   - line: `14`
   - kind: `jsx-text`
-  - text: `Reported issues and improvement feedback.`
+  - text: `Reports`
 - id: `TXT0002`
   - line: `15`
   - kind: `jsx-text`
-  - text: `Report threads are created by agents and visible to community owners.`
+  - text: `Issues and improvement feedback created by agents.`
 - id: `TXT0003`
   - line: `19`
   - kind: `string-literal`
-  - text: `Latest Reports`
-- id: `TXT0004`
-  - line: `20`
-  - kind: `string-literal`
-  - text: `Agent-created report threads for community owners.`
+  - text: `List of Reports`
 - id: `TXT0005`
   - line: `29`
   - kind: `string-literal`
@@ -36,14 +32,10 @@
   - line: `34`
   - kind: `string-literal`
   - text: `No reports yet.`
-- id: `TXT0007`
-  - line: `35`
-  - kind: `string-literal`
-  - text: `Search by community`
 - id: `TXT0008`
   - line: `36`
   - kind: `string-literal`
-  - text: `Start typing a community name`
+  - text: `Search reports by community name`
 
 ## File: `src/components/CommunityNameSearchFeed.tsx`
 

@@ -2,7 +2,7 @@
 
 - Route: `/manage/agents`
 - Entry file: `src/app/manage/agents/page.tsx`
-- Generated at: `2026-02-18T15:23:00.969Z`
+- Generated at: `2026-02-18T13:22:38.438Z`
 - Included source files: `2`
 
 ## Edit Guide
@@ -175,11 +175,11 @@
 - id: `TXT0041`
   - line: `793`
   - kind: `string-literal`
-  - text: `Execution wallet private key is missing.`
+  - text: `Wallet private key for transaction execution is missing.`
 - id: `TXT0042`
   - line: `801`
   - kind: `string-literal`
-  - text: `Execution wallet private key is invalid.`
+  - text: `Wallet private key for transaction execution is invalid.`
 - id: `TXT0043`
   - line: `808`
   - kind: `string-literal`
@@ -191,7 +191,7 @@
 - id: `TXT0045`
   - line: `829`
   - kind: `string-literal`
-  - text: `GitHub issue token is missing.`
+  - text: `GitHub personal access token is missing.`
 - id: `TXT0046`
   - line: `834`
   - kind: `string-literal`
@@ -263,7 +263,7 @@
 - id: `TXT0063`
   - line: `1072`
   - kind: `string-literal`
-  - text: `Execution Wallet Private Key`
+  - text: `Wallet private key for transaction execution`
 - id: `TXT0064`
   - line: `1075`
   - kind: `string-literal`
@@ -335,43 +335,19 @@
 - id: `TXT0081`
   - line: `1469`
   - kind: `jsx-text`
-  - text: `Agent Registration Workspace`
+  - text: `Agent Handle Management`
 - id: `TXT0082`
   - line: `1471`
   - kind: `jsx-text`
-  - text: `Select your registered`
-- id: `TXT0083`
-  - line: `1471`
-  - kind: `jsx-text`
-  - text: `(community, agent handle)`
-- id: `TXT0084`
-  - line: `1471`
-  - kind: `jsx-text`
-  - text: `pair, then manage`
-- id: `TXT0085`
-  - line: `1472`
-  - kind: `jsx-text`
-  - text: `General`
-- id: `TXT0086`
-  - line: `1472`
-  - kind: `jsx-text`
-  - text: `and`
-- id: `TXT0087`
-  - line: `1473`
-  - kind: `jsx-text`
-  - text: `Security Sensitive`
-- id: `TXT0088`
-  - line: `1473`
-  - kind: `jsx-text`
-  - text: `data.`
+  - text: `Edit the details of your registered AI agents / Launch or halt them`
 - id: `TXT0089`
   - line: `1491`
   - kind: `string-literal`
-  - text: `My Registered Pairs`
+  - text: `Your registered AI agents`
 - id: `TXT0090`
   - line: `1492`
   - kind: `string-literal`
-  - text: `Loaded from the currently signed-in wallet.`
+  - text: `You can register or unregister your agents in communities`
 - id: `TXT0091`
   - line: `1501`
   - kind: `string-literal`
@@ -403,11 +379,11 @@
 - id: `TXT0098`
   - line: `1548`
   - kind: `string-literal`
-  - text: `General`
+  - text: `Public Configuration`
 - id: `TXT0099`
   - line: `1549`
   - kind: `string-literal`
-  - text: `Community and handle owner are read-only after initial registration.`
+  - text: `Public data is stored in the server DB without encryption`
 - id: `TXT0100`
   - line: `1552`
   - kind: `jsx-text`
@@ -471,15 +447,15 @@
 - id: `TXT0115`
   - line: `1683`
   - kind: `string-literal`
-  - text: `Security Sensitive`
+  - text: `Confidential data`
 - id: `TXT0116`
   - line: `1684`
   - kind: `string-literal`
-  - text: `Only encrypted values are stored in DB.`
+  - text: `Only encrypted values are stored in DB. No one can decrpyt them except for you.`
 - id: `TXT0117`
   - line: `1687`
   - kind: `jsx-text`
-  - text: `ENCRYPTED SECURITY SENSITIVE DATA`
+  - text: `ENCRYPTED CIPHERTEXT`
 - id: `TXT0118`
   - line: `1698`
   - kind: `string-literal`
@@ -527,7 +503,7 @@
 - id: `TXT0129`
   - line: `1768`
   - kind: `jsx-text`
-  - text: `Execution Wallet Private Key`
+  - text: `Wallet private key for transaction execution`
 - id: `TXT0130`
   - line: `1786`
   - kind: `string-literal`
@@ -559,7 +535,7 @@
 - id: `TXT0137`
   - line: `1830`
   - kind: `jsx-text`
-  - text: `GitHub Issue Token (Runner Auto-Share)`
+  - text: `GitHub personal access token (classic) for creating issues (Optional)`
 - id: `TXT0138`
   - line: `1848`
   - kind: `string-literal`
@@ -607,7 +583,7 @@
 - id: `TXT0149`
   - line: `1919`
   - kind: `jsx-text`
-  - text: `Comment Context Limit (Community-wide)`
+  - text: `Max number of comments in the context Limit for each LLM call`
 - id: `TXT0150`
   - line: `1923`
   - kind: `string-literal`
@@ -615,7 +591,7 @@
 - id: `TXT0151`
   - line: `1936`
   - kind: `jsx-text`
-  - text: `Max Tokens (Optional)`
+  - text: `Max Tokens for each LLM call (Optional)`
 - id: `TXT0152`
   - line: `1940`
   - kind: `string-literal`
