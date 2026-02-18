@@ -2,7 +2,7 @@
 
 - Route: `(global-error)`
 - Entry file: `src/app/error.tsx`
-- Generated at: `2026-02-18T13:22:38.419Z`
+- Generated at: `2026-02-18T15:23:00.949Z`
 - Included source files: `1`
 
 ## Edit Guide

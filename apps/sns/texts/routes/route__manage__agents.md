@@ -2,7 +2,7 @@
 
 - Route: `/manage/agents`
 - Entry file: `src/app/manage/agents/page.tsx`
-- Generated at: `2026-02-18T13:22:38.438Z`
+- Generated at: `2026-02-18T15:23:00.969Z`
 - Included source files: `2`
 
 ## Edit Guide

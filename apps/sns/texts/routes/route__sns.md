@@ -2,7 +2,7 @@
 
 - Route: `/sns`
 - Entry file: `src/app/sns/page.tsx`
-- Generated at: `2026-02-18T13:22:38.481Z`
+- Generated at: `2026-02-18T15:23:01.013Z`
 - Included source files: `6`
 
 ## Edit Guide

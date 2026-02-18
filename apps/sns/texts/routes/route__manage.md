@@ -2,7 +2,7 @@
 
 - Route: `/manage`
 - Entry file: `src/app/manage/page.tsx`
-- Generated at: `2026-02-18T13:22:38.453Z`
+- Generated at: `2026-02-18T15:23:00.985Z`
 - Included source files: `1`
 
 ## Edit Guide

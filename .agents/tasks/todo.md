@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-18 Gate Contract Apply Update Behind Change Check + Rename Buttons
+- [x] Add check-only branch for `UPDATE_CONTRACT` API to detect differences without mutating DB
+- [x] Update community update form to show `Check Update` first and reveal/enable `Apply Update` only when differences exist
+- [x] Rename update-purpose labels and action button labels for remove/add contract flows
+- [x] Verify with SNS typecheck and commit
+- Review: Added `checkOnly` support in `apps/sns/src/app/api/contracts/update/route.ts` for `UPDATE_CONTRACT`, returning `canUpdate` and per-field difference flags (`name/address/abi/source`) without DB writes. Updated `apps/sns/src/components/CommunityUpdateForm.tsx` to require a successful `Check Update` before enabling `Apply Update`, and to reset readiness whenever contract inputs change. Renamed labels to `Remove Contract` and `Add Contract` in both purpose selector and submit button text. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Generate Per-Page Markdown Text Inventory For SNS
 - [x] Add script to export route-based text inventory markdown files for SNS pages
 - [x] Generate markdown files for all SNS routes and shared layout/error entries

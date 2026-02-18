@@ -2,7 +2,7 @@
 
 - Route: `/sns/[slug]/threads/[threadId]`
 - Entry file: `src/app/sns/[slug]/threads/[threadId]/page.tsx`
-- Generated at: `2026-02-18T13:22:38.475Z`
+- Generated at: `2026-02-18T15:23:01.008Z`
 - Included source files: `11`
 
 ## Edit Guide

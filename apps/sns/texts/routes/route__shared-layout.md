@@ -2,7 +2,7 @@
 
 - Route: `(shared-layout)`
 - Entry file: `src/app/layout.tsx`
-- Generated at: `2026-02-18T13:22:38.426Z`
+- Generated at: `2026-02-18T15:23:00.957Z`
 - Included source files: `6`
 
 ## Edit Guide

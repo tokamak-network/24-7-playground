@@ -27,8 +27,8 @@ type UpdatePurpose =
 const PURPOSE_OPTIONS: Array<{ value: UpdatePurpose; label: string }> = [
   { value: "UPDATE_DESCRIPTION", label: "Service Description" },
   { value: "UPDATE_CONTRACT", label: "Update Existing Contract" },
-  { value: "REMOVE_CONTRACT", label: "Remove Existing Contract" },
-  { value: "ADD_CONTRACT", label: "Add New Contract" },
+  { value: "REMOVE_CONTRACT", label: "Remove Contract" },
+  { value: "ADD_CONTRACT", label: "Add Contract" },
 ];
 
 const FIXED_MESSAGE = "24-7-playground";
@@ -53,6 +53,8 @@ export function CommunityUpdateForm() {
   const [addName, setAddName] = useState("");
   const [addAddress, setAddAddress] = useState("");
   const [busy, setBusy] = useState(false);
+  const [checkBusy, setCheckBusy] = useState(false);
+  const [updateReady, setUpdateReady] = useState(false);
 
   const normalizeAddress = (value: string) => {
     try {
@@ -187,6 +189,104 @@ export function CommunityUpdateForm() {
     setUpdateAddress(selectedContract.address);
   }, [purpose, selectedContract]);
 
+  useEffect(() => {
+    setUpdateReady(false);
+  }, [purpose, selectedId, selectedContractId, updateName, updateAddress]);
+
+  const buildUpdateContractPayload = () => {
+    const payload: Record<string, unknown> = {
+      communityId: selectedCommunity?.id || "",
+      action: "UPDATE_CONTRACT",
+      contractId: selectedContractId,
+      name: updateName.trim(),
+      address: updateAddress.trim(),
+    };
+    return payload;
+  };
+
+  const checkUpdate = async () => {
+    if (!wallet) {
+      setStatus("Connect wallet first.");
+      return;
+    }
+    if (!selectedCommunity) {
+      setStatus("Select a community.");
+      return;
+    }
+    if (!selectedContractId) {
+      setStatus("Select a contract to update.");
+      return;
+    }
+    if (!updateAddress.trim()) {
+      setStatus("Contract address is required.");
+      return;
+    }
+
+    const ethereum = (window as any).ethereum;
+    if (!ethereum) {
+      setStatus("MetaMask not detected.");
+      return;
+    }
+
+    setCheckBusy(true);
+    setStatus("Checking contract update...");
+    setUpdateReady(false);
+
+    try {
+      const accounts = (await ethereum.request({
+        method: "eth_requestAccounts",
+      })) as string[];
+      const walletAddress = accounts?.[0];
+      if (!walletAddress) {
+        setStatus("No wallet selected.");
+        return;
+      }
+
+      const signature = (await ethereum.request({
+        method: "personal_sign",
+        params: [FIXED_MESSAGE, walletAddress],
+      })) as string;
+
+      const payload = buildUpdateContractPayload();
+      const res = await fetch("/api/contracts/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, signature, checkOnly: true }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Update check failed");
+      }
+
+      if (!data.canUpdate) {
+        setUpdateReady(false);
+        setStatus(
+          data.message ||
+            "No update available. Registered and fetched contract data are identical."
+        );
+        return;
+      }
+
+      const differences = data.differences || {};
+      const changedLabels: string[] = [];
+      if (differences.nameChanged) changedLabels.push("name");
+      if (differences.addressChanged) changedLabels.push("address");
+      if (differences.abiChanged) changedLabels.push("ABI");
+      if (differences.sourceChanged) changedLabels.push("source");
+
+      setUpdateReady(true);
+      setStatus(
+        `Update available${changedLabels.length ? ` (${changedLabels.join(", ")} changed)` : ""}. Click Apply Update.`
+      );
+    } catch (error) {
+      setUpdateReady(false);
+      setStatus(error instanceof Error ? error.message : "Unexpected error");
+    } finally {
+      setCheckBusy(false);
+    }
+  };
+
   const submit = async () => {
     if (!wallet) {
       setStatus("Connect wallet first.");
@@ -219,6 +319,12 @@ export function CommunityUpdateForm() {
       }
       if (!updateAddress.trim()) {
         setStatus("Contract address is required.");
+        return;
+      }
+      if (!updateReady) {
+        setStatus(
+          "Run Check Update first. Apply Update is enabled only when a mismatch is detected."
+        );
         return;
       }
       payload.contractId = selectedContractId;
@@ -294,12 +400,30 @@ export function CommunityUpdateForm() {
         setAddName("");
         setAddAddress("");
       }
+      if (purpose === "UPDATE_CONTRACT") {
+        setUpdateReady(false);
+      }
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Unexpected error");
     } finally {
       setBusy(false);
     }
   };
+
+  const canCheckUpdate =
+    purpose === "UPDATE_CONTRACT" &&
+    Boolean(wallet && selectedCommunity && selectedContractId && updateAddress.trim()) &&
+    !busy &&
+    !checkBusy;
+
+  const primaryLabel =
+    busy
+      ? "Working..."
+      : purpose === "REMOVE_CONTRACT"
+        ? "Remove Contract"
+        : purpose === "ADD_CONTRACT"
+          ? "Add Contract"
+          : "Apply Update";
 
   return (
     <div className="form">
@@ -407,13 +531,34 @@ export function CommunityUpdateForm() {
 
           {status ? <div className="status">{status}</div> : null}
 
-          <Button
-            label={busy ? "Working..." : "Apply Update"}
-            type="button"
-            onClick={submit}
-            variant="secondary"
-            disabled={busy}
-          />
+          {purpose === "UPDATE_CONTRACT" ? (
+            <div className="manager-inline-field">
+              <Button
+                label={checkBusy ? "Checking..." : "Check Update"}
+                type="button"
+                onClick={checkUpdate}
+                variant="secondary"
+                disabled={!canCheckUpdate}
+              />
+              {updateReady ? (
+                <Button
+                  label={primaryLabel}
+                  type="button"
+                  onClick={submit}
+                  variant="secondary"
+                  disabled={busy || checkBusy}
+                />
+              ) : null}
+            </div>
+          ) : (
+            <Button
+              label={primaryLabel}
+              type="button"
+              onClick={submit}
+              variant="secondary"
+              disabled={busy || checkBusy}
+            />
+          )}
         </>
       ) : null}
     </div>

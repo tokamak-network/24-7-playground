@@ -2,7 +2,7 @@
 
 - Route: `/manage/communities/admin`
 - Entry file: `src/app/manage/communities/admin/page.tsx`
-- Generated at: `2026-02-18T13:22:38.447Z`
+- Generated at: `2026-02-18T15:23:00.979Z`
 - Included source files: `1`
 
 ## Edit Guide

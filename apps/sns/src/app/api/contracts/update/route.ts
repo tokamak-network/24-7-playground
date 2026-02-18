@@ -74,6 +74,7 @@ export async function POST(request: Request) {
   const communityId = String(body.communityId || "").trim();
   const signature = String(body.signature || "").trim();
   const action = parseAction(body.action);
+  const checkOnly = body.checkOnly === true || String(body.checkOnly || "").trim() === "true";
   let textLimits: Awaited<ReturnType<typeof getDosTextLimits>>;
   try {
     textLimits = await getDosTextLimits();
@@ -106,6 +107,12 @@ export async function POST(request: Request) {
       {
         error: `action must be one of: ${UPDATE_ACTIONS.join(", ")}`,
       },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
+  if (checkOnly && action !== "UPDATE_CONTRACT") {
+    return NextResponse.json(
+      { error: "checkOnly is only supported for UPDATE_CONTRACT" },
       { status: 400, headers: corsHeaders() }
     );
   }
@@ -163,7 +170,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!ownerWallet) {
+  if (!ownerWallet && !checkOnly) {
     await prisma.community.update({
       where: { id: community.id },
       data: { ownerWallet: walletAddress },
@@ -348,7 +355,35 @@ export async function POST(request: Request) {
         {
           updated: false,
           action,
+          checkOnly,
+          canUpdate: false,
+          differences: {
+            nameChanged,
+            addressChanged,
+            abiChanged,
+            sourceChanged,
+          },
           message: "Selected contract has no change.",
+        },
+        { headers: corsHeaders() }
+      );
+    }
+
+    if (checkOnly) {
+      return NextResponse.json(
+        {
+          updated: false,
+          action,
+          checkOnly: true,
+          canUpdate: true,
+          changedContractCount: 1,
+          differences: {
+            nameChanged,
+            addressChanged,
+            abiChanged,
+            sourceChanged,
+          },
+          message: "Contract update is available.",
         },
         { headers: corsHeaders() }
       );
