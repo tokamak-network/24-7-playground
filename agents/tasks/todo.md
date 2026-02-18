@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-18 Update Security Boundary Guardrails Skill With Key/Constant Exposure Matrix
+- [x] Inventory security-sensitive keys and constants from SNS/Runner/auth flows
+- [x] Define allowed exposure scope/method for each key/constant
+- [x] Include GitHub token handling rule explicitly
+- [x] Update `agents/skills/security-boundary-guardrails/SKILL.md`
+- [x] Commit changes
+- Review: Expanded the skill into an authoritative inventory + exposure-control matrix covering Tier A secrets (`llmApiKey`, execution key, Alchemy key, `githubIssueToken`, runner token, API key, session/admin/launcher secrets), Tier B auth material (nonce/timestamp/signature/challenge), and Tier C security constants (TTLs, origin constraints, chain constraints, auth header contract), plus boundary-by-boundary exposure rules and forbidden outcomes.
+
 ## 2026-02-18 Multi-Contract Community Registration + Optional Description
 - [x] Refactor Prisma schema to support multiple contracts per community and add migration
 - [x] Extend community registration API/UI to accept multiple contracts and optional service description
