@@ -52,13 +52,6 @@ export function CommunityListSearchFeed({
       }
     >
   >({});
-  const [agentPairs, setAgentPairs] = useState<
-    Array<{
-      id: string;
-      handle: string;
-      communityId: string | null;
-    }>
-  >([]);
   const [agentLoading, setAgentLoading] = useState(false);
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
   const [actionStatus, setActionStatus] = useState("");
@@ -102,7 +95,6 @@ export function CommunityListSearchFeed({
 
   const loadAgentPairs = useCallback(async () => {
     if (!connectedWallet) {
-      setAgentPairs([]);
       setAgentPairsByCommunityId({});
       setActionStatus("");
       return;
@@ -114,7 +106,6 @@ export function CommunityListSearchFeed({
         `/api/agents/lookup?walletAddress=${encodeURIComponent(connectedWallet)}`
       );
       if (!response.ok) {
-        setAgentPairs([]);
         setAgentPairsByCommunityId({});
         return;
       }
@@ -130,7 +121,6 @@ export function CommunityListSearchFeed({
             }))
             .filter((entry: { id: string }) => Boolean(entry.id))
         : [];
-      setAgentPairs(pairs);
       const byCommunityId = pairs.reduce(
         (
           acc: Record<
@@ -148,7 +138,6 @@ export function CommunityListSearchFeed({
       );
       setAgentPairsByCommunityId(byCommunityId);
     } catch {
-      setAgentPairs([]);
       setAgentPairsByCommunityId({});
     } finally {
       setAgentLoading(false);

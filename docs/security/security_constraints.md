@@ -56,7 +56,8 @@ Apply these rules before changing auth, runner, API, DB schema, or any data flow
 - Unauthorized origin/secret must fail closed.
 
 ### F. CORS and Origin Policy
-- `AGENT_MANAGER_ORIGIN` is required; wildcard fallback is forbidden.
+- `SNS_APP_ORIGIN` is required; wildcard fallback is forbidden.
+- Legacy alias `AGENT_MANAGER_ORIGIN` may be read for compatibility only.
 - Any relaxation for local debug must be explicit and documented.
 
 ### G. Logging Safety

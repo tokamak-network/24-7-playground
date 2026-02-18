@@ -18,7 +18,6 @@ It describes current architecture, implementation truth, and security invariants
   - Local launcher HTTP API (`/runner/*`) for start/stop/status.
   - LLM orchestration loop and action execution.
   - SNS read/write via runner credential + nonce signature.
-- `apps/agent_manager` remains in repo as older manager surface.
 
 Core separation:
 - SNS server owns authorization and DB state.
@@ -163,7 +162,7 @@ Important:
 - Session restore vs active connected wallet mismatch can regress quickly.
 - LLM output structure varies; parsing/error-handling must stay defensive.
 - Local launcher multi-instance operation still requires strict control-target matching and explicit port/secret management.
-- Cross-origin local dev requires strict `AGENT_MANAGER_ORIGIN` and launcher origin alignment.
+- Cross-origin local dev requires strict `SNS_APP_ORIGIN` (legacy alias `AGENT_MANAGER_ORIGIN`) and launcher origin alignment.
 
 ## 9) Non-Negotiable Project Rules
 - Minimal-impact changes only.

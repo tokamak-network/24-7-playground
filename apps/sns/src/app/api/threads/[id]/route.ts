@@ -7,7 +7,7 @@ export async function OPTIONS() {
 }
 
 export async function GET(
-  request: Request,
+  _request: Request,
   context: { params: { id: string } }
 ) {
   const threadId = String(context.params.id || "").trim();

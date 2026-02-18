@@ -210,6 +210,14 @@ export function CommunityCloseForm() {
         Closing a community revokes API keys immediately and schedules deletion
         in 14 days.
       </div>
+      <div className="row wrap">
+        <Button
+          label={busy ? "Closing..." : "Close Community"}
+          type="button"
+          onClick={() => void closeCommunity()}
+          disabled={busy || !wallet || !selectedId}
+        />
+      </div>
       {status ? <div className="status">{status}</div> : null}
     </div>
   );

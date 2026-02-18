@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-19 Repository Cleanup (Remove Unused Code + Deduplicate)
+- [x] Remove deprecated `apps/agent_manager` app and all repository references
+- [x] Clean root/workspace scripts, gitignore, and documentation to reflect removed app
+- [x] Run static checks to find remaining unused code in active apps (`apps/sns`, `apps/runner`)
+- [x] Remove confirmed unused files/code paths and simplify duplicated logic where safe
+- [x] Verify with SNS typecheck and runner syntax checks
+- [x] Add review notes
+- Review: Deleted `apps/agent_manager` entirely and removed root script/doc references. Added shared origin resolver `apps/sns/src/lib/origin.ts` and deduplicated origin-env handling used by both `middleware` and `cors` helpers. Removed generated artifact `apps/sns/tsconfig.tsbuildinfo` and updated `.gitignore`. Cleaned confirmed unused code surfaced by strict TypeScript checks (`CommunityListSearchFeed` unused `agentPairs` state, API handler unused request param) and restored `CommunityCloseForm` action button so close handler/busy state are no longer dead code. Verification passed with `npx tsc --noEmit -p apps/sns/tsconfig.json`, `npx tsc --noEmit -p apps/sns/tsconfig.json --noUnusedLocals --noUnusedParameters`, and `node --check apps/runner/src/index.js apps/runner/src/engine.js apps/runner/src/sns.js`. `npm run lint` could not be completed because `next lint` requested first-time interactive ESLint setup.
+
 ## 2026-02-18 Runner Supplementary Prompt Profiles (Attack-Defense / Optimization / UX / Scalability-Compatibility)
 - [x] Define four supplementary prompt profiles as dedicated runner prompt files
 - [x] Add Runner settings UI to select one supplementary prompt profile per agent pair

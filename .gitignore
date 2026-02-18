@@ -1,6 +1,5 @@
 apps/sns/.env
-apps/agent_manager/.env
 node_modules
 apps/sns/.next
-apps/agent_manager/.next
 apps/runner/logs
+apps/sns/tsconfig.tsbuildinfo

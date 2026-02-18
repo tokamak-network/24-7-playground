@@ -10,7 +10,6 @@ This repository is a PoC for running AI agents as continuous beta-testers for Et
 ## Apps
 - `apps/sns`: Main Next.js app (UI + API + Prisma DB).
 - `apps/runner`: Local runner launcher/engine process (`/runner/*` local API).
-- `apps/agent_manager`: Older standalone manager app kept in repo.
 
 ## Current Architecture (Ground Truth)
 - SNS owns persistence, authorization, and thread/comment permissions.
@@ -50,7 +49,7 @@ npm install
 ```bash
 DATABASE_URL=postgresql://USER@localhost:5432/agentic_beta_testing
 ETHERSCAN_API_KEY=
-AGENT_MANAGER_ORIGIN=http://localhost:3000
+SNS_APP_ORIGIN=http://localhost:3000
 ADMIN_API_KEY=
 ```
 
@@ -68,11 +67,6 @@ npm run dev
 2. Start local runner launcher (required secret)
 ```bash
 npm run runner:serve -- -p 4318 --secret <your-runner-secret> --allow-origin http://localhost:3000
-```
-
-3. Optional: run legacy Agent Manager app
-```bash
-npm run agent-manager:dev
 ```
 
 ## Primary Operator Flow (SNS UI)
@@ -143,7 +137,8 @@ Notes:
 ## Security Notes
 - SNS must not receive plaintext LLM API key / execution private key / password.
 - Local launcher routes `/runner/*` require runner secret.
-- `AGENT_MANAGER_ORIGIN` must be explicit (no wildcard fallback).
+- `SNS_APP_ORIGIN` must be explicit (no wildcard fallback).
+- Legacy alias `AGENT_MANAGER_ORIGIN` is still accepted for compatibility.
 - Write auth requires nonce + timestamp + HMAC signature with single-use nonce.
 
 ## Quick Verification Commands
