@@ -13,6 +13,7 @@ type CommunityListItem = {
   slug: string;
   description: string;
   ownerWallet: string | null;
+  createdAt: string | null;
   contracts: Array<{
     id: string;
     name: string;
@@ -78,6 +79,17 @@ export function CommunityListSearchFeed({
     if (!wallet) return "";
     if (wallet.length <= 12) return wallet;
     return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
+  };
+
+  const formatCreatedDate = (createdAt: string | null) => {
+    if (!createdAt) return "";
+    const value = new Date(createdAt);
+    if (Number.isNaN(value.getTime())) return "";
+    return value.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   const summarizeContracts = (contracts: CommunityListItem["contracts"]) => {
@@ -265,96 +277,96 @@ export function CommunityListSearchFeed({
                   .filter((chain) => chain)
               )
             );
+            const createdBy = community.ownerWallet
+              ? `created by ${shortenWallet(community.ownerWallet)}`
+              : "created by unknown";
+            const createdDate = formatCreatedDate(community.createdAt);
+            const titleMeta = createdDate
+              ? `${createdBy} · created at ${createdDate}`
+              : createdBy;
 
             return (
               <div key={community.id} className="community-tile">
-              <Card
-                title={community.name}
-                titleMeta={
-                  community.ownerWallet
-                    ? `created by ${shortenWallet(community.ownerWallet)}`
-                    : undefined
-                }
-              >
-                <div className="community-description-rich">
-                  <ExpandableFormattedContent
-                    content={community.description || "No description provided."}
-                    className="is-compact"
-                    maxChars={280}
-                  />
-                </div>
-                <div className="meta">
-                  {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (
-                    <span className="badge" key={`${community.id}-${chain}`}>
-                      {chain}
+                <Card title={community.name} titleMeta={titleMeta}>
+                  <div className="community-description-rich">
+                    <ExpandableFormattedContent
+                      content={community.description || "No description provided."}
+                      className="is-compact"
+                      maxChars={280}
+                    />
+                  </div>
+                  <div className="meta">
+                    {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (
+                      <span className="badge" key={`${community.id}-${chain}`}>
+                        {chain}
+                      </span>
+                    ))}
+                    {community.status === "CLOSED" ? (
+                      <span className="badge">closed</span>
+                    ) : null}
+                    <span className="meta-text">
+                      {summarizeContracts(community.contracts)}
                     </span>
-                  ))}
-                  {community.status === "CLOSED" ? (
-                    <span className="badge">closed</span>
-                  ) : null}
-                  <span className="meta-text">
-                    {summarizeContracts(community.contracts)}
-                  </span>
-                </div>
-                <div className="community-stats">
-                  <div className="community-stat-item">
-                    <span className="community-stat-label">Threads</span>
-                    <strong className="community-stat-value">
-                      {community.threadCount}
-                    </strong>
                   </div>
-                  <div className="community-stat-item">
-                    <span className="community-stat-label">Reports</span>
-                    <strong className="community-stat-value">
-                      {community.reportCount}
-                    </strong>
+                  <div className="community-stats">
+                    <div className="community-stat-item">
+                      <span className="community-stat-label">Threads</span>
+                      <strong className="community-stat-value">
+                        {community.threadCount}
+                      </strong>
+                    </div>
+                    <div className="community-stat-item">
+                      <span className="community-stat-label">Reports</span>
+                      <strong className="community-stat-value">
+                        {community.reportCount}
+                      </strong>
+                    </div>
+                    <div className="community-stat-item">
+                      <span className="community-stat-label">Comments</span>
+                      <strong className="community-stat-value">
+                        {community.commentCount}
+                      </strong>
+                    </div>
+                    <div className="community-stat-item">
+                      <span className="community-stat-label">Registered agents</span>
+                      <strong className="community-stat-value">
+                        {community.registeredHandleCount}
+                      </strong>
+                    </div>
                   </div>
-                  <div className="community-stat-item">
-                    <span className="community-stat-label">Comments</span>
-                    <strong className="community-stat-value">
-                      {community.commentCount}
-                    </strong>
+                  <div className="community-tile-actions">
+                    <Link className="button button-block" href={`/sns/${community.slug}`}>
+                      View Community
+                    </Link>
+                    {agentPairsByCommunityId[community.id] ? (
+                      <button
+                        type="button"
+                        className="button button-secondary button-block"
+                        onClick={() => void unregisterHandle(community)}
+                        disabled={actionBusyId === community.id || agentLoading}
+                      >
+                        {actionBusyId === community.id
+                          ? "Working..."
+                          : "Unregister My Agent"}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="button button-secondary button-block"
+                        onClick={() => void registerHandle(community)}
+                        disabled={
+                          community.status === "CLOSED" ||
+                          actionBusyId === community.id ||
+                          agentLoading
+                        }
+                      >
+                        {actionBusyId === community.id
+                          ? "Working..."
+                          : "Register My Agent"}
+                      </button>
+                    )}
                   </div>
-                  <div className="community-stat-item">
-                    <span className="community-stat-label">Registered agents</span>
-                    <strong className="community-stat-value">
-                      {community.registeredHandleCount}
-                    </strong>
-                  </div>
-                </div>
-                <div className="community-tile-actions">
-                  <Link className="button button-block" href={`/sns/${community.slug}`}>
-                    View Community
-                  </Link>
-                  {agentPairsByCommunityId[community.id] ? (
-                    <button
-                      type="button"
-                      className="button button-secondary button-block"
-                      onClick={() => void unregisterHandle(community)}
-                      disabled={actionBusyId === community.id || agentLoading}
-                    >
-                      {actionBusyId === community.id
-                        ? "Working..."
-                        : "Unregister My Agent"}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="button button-secondary button-block"
-                      onClick={() => void registerHandle(community)}
-                      disabled={
-                        community.status === "CLOSED" ||
-                        actionBusyId === community.id ||
-                        agentLoading
-                      }
-                    >
-                      {actionBusyId === community.id
-                        ? "Working..."
-                        : "Register My Agent"}
-                    </button>
-                  )}
-                </div>
-              </Card>
+                </Card>
               </div>
             );
           })}

@@ -1,5 +1,11 @@
 # Project Plan
 
+## 2026-02-18 Show Community Created Date On List + Community Page Cards
+- [x] Add community created-date field to SNS community-list card payload and render meta after creator
+- [x] Render same creator+created-date meta on community detail page top card
+- [x] Verify with SNS typecheck and commit
+- Review: Added `createdAt` to the community-list card payload in `apps/sns/src/app/sns/page.tsx` (derived from earliest registered service contract timestamp) and rendered `created by ... · created at ...` in `apps/sns/src/components/CommunityListSearchFeed.tsx`. Added the same metadata line to the community detail top card in `apps/sns/src/app/sns/[slug]/page.tsx`. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Manage User Error Log Types In Security Skill
 - [x] Add authoritative user-error log type policy section to `.agents/skills/security-boundary-guardrails/SKILL.md`
 - [x] Define collection scope, required payload minimums, and forbidden fields for each log type

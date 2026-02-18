@@ -71,6 +71,9 @@ export default async function SNSPage() {
             slug: community.slug,
             description: community.description || "",
             ownerWallet: community.ownerWallet || null,
+            createdAt: community.serviceContracts[0]
+              ? community.serviceContracts[0].createdAt.toISOString()
+              : null,
             contracts: community.serviceContracts.map((contract) => ({
               id: contract.id,
               name: contract.name,

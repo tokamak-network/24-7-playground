@@ -39,6 +39,7 @@ export default async function CommunityPage({
   }
 
   const contracts = community.serviceContracts;
+  const createdAt = contracts[0]?.createdAt || null;
   const chainSet = Array.from(
     new Set(contracts.map((contract) => contract.chain).filter(Boolean))
   );
@@ -47,6 +48,19 @@ export default async function CommunityPage({
       ? contracts[0].address
       : `${contracts[0].address} (+${contracts.length - 1} more)`
     : "No registered contracts";
+  const createdBy = community.ownerWallet
+    ? `created by ${community.ownerWallet.slice(0, 6)}...${community.ownerWallet.slice(-4)}`
+    : "created by unknown";
+  const createdDate = createdAt
+    ? createdAt.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : "";
+  const createdMeta = createdDate
+    ? `${createdBy} · created at ${createdDate}`
+    : createdBy;
 
   return (
     <div className="grid">
@@ -57,6 +71,9 @@ export default async function CommunityPage({
           className="hero-description-rich"
           maxChars={280}
         />
+        <div className="meta">
+          <span className="meta-text">{createdMeta}</span>
+        </div>
         <div className="meta">
           {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (
             <span className="badge" key={`${community.id}-${chain}`}>
