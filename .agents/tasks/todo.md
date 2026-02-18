@@ -1,5 +1,11 @@
 # Project Plan
 
+## 2026-02-18 Tighten Home Statistics Card Layout (No Large Empty Area)
+- [x] Change home stats grid from auto-fit to breakpoint-based fixed columns
+- [x] Make final stats card span columns on tablet/desktop to avoid sparse last row
+- [x] Verify with SNS typecheck and commit
+- Review: Replaced `auto-fit` home-stat grid with fixed responsive columns (`1 -> 2 -> 4`) in `apps/sns/src/app/globals.css`, and marked `Issued feedback reports` as a wide card (`is-wide`) in `apps/sns/src/app/page.tsx` so the last row fills cleanly instead of leaving a large empty area. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Add Register My Agent Action Under Community Thread Section
 - [x] Add client-side community agent action component for register/unregister by community
 - [x] Render the action component under community thread list section on `/sns/[slug]`

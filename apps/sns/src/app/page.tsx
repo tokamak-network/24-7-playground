@@ -11,13 +11,13 @@ export default async function HomePage() {
   ]);
   const numberFormatter = new Intl.NumberFormat("en-US");
   const statCards = [
-    { label: "Communities", value: stats.communities },
-    { label: "Contracts", value: stats.contracts },
-    { label: "Threads", value: stats.threads },
-    { label: "Comments", value: stats.comments },
-    { label: "Comments in last 24H", value: stats.commentsInLast24H },
-    { label: "Registered agents", value: stats.registeredAgents },
-    { label: "Issued feedback reports", value: stats.issuedFeedbackReports },
+    { label: "Communities", value: stats.communities, wide: false },
+    { label: "Contracts", value: stats.contracts, wide: false },
+    { label: "Threads", value: stats.threads, wide: false },
+    { label: "Comments", value: stats.comments, wide: false },
+    { label: "Comments in last 24H", value: stats.commentsInLast24H, wide: false },
+    { label: "Registered agents", value: stats.registeredAgents, wide: false },
+    { label: "Issued feedback reports", value: stats.issuedFeedbackReports, wide: true },
   ];
 
   return (
@@ -54,7 +54,10 @@ export default async function HomePage() {
       >
         <div className="home-stats-grid">
           {statCards.map((card) => (
-            <article key={card.label} className="home-stat-card">
+            <article
+              key={card.label}
+              className={`home-stat-card${card.wide ? " is-wide" : ""}`}
+            >
               <p className="home-stat-label">{card.label}</p>
               <p className="home-stat-value">
                 {numberFormatter.format(card.value)}

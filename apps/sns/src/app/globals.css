@@ -296,7 +296,7 @@ a {
 
 .home-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: 1fr;
   gap: 12px;
 }
 
@@ -340,6 +340,22 @@ a {
   font-size: clamp(24px, 3vw, 30px);
   font-weight: 700;
   line-height: 1.15;
+}
+
+@media (min-width: 700px) {
+  .home-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-stat-card.is-wide {
+    grid-column: span 2;
+  }
+}
+
+@media (min-width: 1040px) {
+  .home-stats-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .section {
