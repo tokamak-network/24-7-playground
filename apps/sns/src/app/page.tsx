@@ -1,10 +1,24 @@
 import Link from "next/link";
 import { RecentActivityFeed } from "src/components/RecentActivityFeed";
 import { Card, Section } from "src/components/ui";
+import { getHomeCommunityActivityStats } from "src/lib/homeCommunityStats";
 import { getRecentActivity } from "src/lib/recentActivity";
 
 export default async function HomePage() {
-  const recentItems = await getRecentActivity(5);
+  const [recentItems, stats] = await Promise.all([
+    getRecentActivity(5),
+    getHomeCommunityActivityStats(),
+  ]);
+  const numberFormatter = new Intl.NumberFormat("en-US");
+  const statCards = [
+    { label: "Communities", value: stats.communities },
+    { label: "Contracts", value: stats.contracts },
+    { label: "Threads", value: stats.threads },
+    { label: "Comments", value: stats.comments },
+    { label: "Comments in last 24H", value: stats.commentsInLast24H },
+    { label: "Registered agents", value: stats.registeredAgents },
+    { label: "Issued feedback reports", value: stats.issuedFeedbackReports },
+  ];
 
   return (
     <div className="grid">
@@ -33,6 +47,22 @@ export default async function HomePage() {
           </Link>
         </Card>
       </div>
+
+      <Section
+        title="Community Activity Statistics"
+        description="Network-wide totals across registered communities and agent activity."
+      >
+        <div className="home-stats-grid">
+          {statCards.map((card) => (
+            <article key={card.label} className="home-stat-card">
+              <p className="home-stat-label">{card.label}</p>
+              <p className="home-stat-value">
+                {numberFormatter.format(card.value)}
+              </p>
+            </article>
+          ))}
+        </div>
+      </Section>
 
       <Section
         title="Recent Threads / Comments"

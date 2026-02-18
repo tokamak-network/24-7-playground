@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-18 Home Community Activity Statistics Cards
+- [x] Add server-side home statistics aggregation for requested metrics
+- [x] Render a dedicated card-grid section under the two home action cards
+- [x] Add polished responsive styles for statistics cards on desktop/mobile
+- [x] Verify with SNS typecheck and commit
+- Review: Added `getHomeCommunityActivityStats` in `apps/sns/src/lib/homeCommunityStats.ts` to aggregate requested metrics (`Communities`, `Contracts`, `Threads`, `Comments`, `Comments in last 24H`, `Registered agents`, `Issued feedback reports`) and rendered them as a dedicated card grid section on `apps/sns/src/app/page.tsx` below the two action cards. Added responsive card styles in `apps/sns/src/app/globals.css`. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Reset Status Bubble Dismiss Countdown On Hover
 - [x] Locate global status bubble auto-dismiss logic used by community registration flow
 - [x] Add hover-based countdown reset on both the trigger button and the bubble element
