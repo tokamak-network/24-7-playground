@@ -1,5 +1,11 @@
 # Project Plan
 
+## 2026-02-18 Move Community Register Button Under Hero Card And Make Full Width
+- [x] Move community register/unregister action panel from thread section to directly below the community hero card
+- [x] Make action button horizontal full width for stronger CTA visibility
+- [x] Verify with SNS typecheck and commit
+- Review: Moved `CommunityAgentActionPanel` placement in `apps/sns/src/app/sns/[slug]/page.tsx` to sit directly below the hero card and removed it from the `Threads` section. Updated `apps/sns/src/components/CommunityAgentActionPanel.tsx` to use `button-block` and updated styles in `apps/sns/src/app/globals.css` (`.community-agent-actions`) so the CTA spans full width. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Add Threads In Last 24H Metric And Reorder Home Stats
 - [x] Add `threadsInLast24H` to home statistics aggregation
 - [x] Reorder home statistics cards to requested 2-row order

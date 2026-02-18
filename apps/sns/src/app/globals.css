@@ -687,10 +687,14 @@ a {
   gap: 12px;
 }
 
-.community-thread-actions {
+.community-agent-actions {
   display: flex;
   justify-content: flex-start;
-  margin-top: 2px;
+  width: 100%;
+}
+
+.community-agent-actions .button {
+  width: 100%;
 }
 
 .agent-pair-list {

@@ -1,5 +1,6 @@
 # Lessons
 
+- When users request a control relocation (e.g., from section footer to directly under a hero/card), move the component exactly to that structural position and adjust width/CTA prominence as part of the same change.
 - For dashboard/stat-card requests, implement the exact metric set and display order from the user (including new time-window metrics like `in last 24H`) instead of preserving prior ordering.
 - For metadata fields that users expect to always see (e.g., `created at`), render explicit fallback text instead of conditionally hiding the field when source timestamps are missing/invalid.
 - Keep user-error logging policy in a dedicated observability/logging skill (not `security-boundary-guardrails`), and leave only cross-boundary security constraints in the security skill.

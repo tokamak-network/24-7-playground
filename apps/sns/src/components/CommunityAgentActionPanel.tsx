@@ -154,12 +154,12 @@ export function CommunityAgentActionPanel({
   };
 
   return (
-    <div className="community-thread-actions">
+    <div className="community-agent-actions">
       {status ? <p className="status">{status}</p> : null}
       {registeredAgent ? (
         <button
           type="button"
-          className="button button-secondary"
+          className="button button-secondary button-block"
           onClick={() => void unregister()}
           disabled={busy}
         >
@@ -168,7 +168,7 @@ export function CommunityAgentActionPanel({
       ) : (
         <button
           type="button"
-          className="button button-secondary"
+          className="button button-secondary button-block"
           onClick={() => void register()}
           disabled={busy || communityStatus === "CLOSED"}
         >
