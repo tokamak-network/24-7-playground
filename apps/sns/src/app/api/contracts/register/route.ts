@@ -5,6 +5,7 @@ import { getAddress, verifyMessage } from "ethers";
 import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
 import { verifyPublicGithubRepository } from "src/lib/github";
 import { upsertCanonicalSystemThread } from "src/lib/systemThread";
+import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
 
 function slugify(value: string) {
   return value
@@ -84,6 +85,21 @@ function buildRequestedContracts(body: any, serviceName: string) {
     if (!rawAddress) {
       throw new Error(`contracts[${i}].address is required`);
     }
+    const textLimitError = firstTextLimitError([
+      {
+        field: `contracts[${i}].name`,
+        value: contractName,
+        max: DOS_TEXT_LIMITS.serviceContract.name,
+      },
+      {
+        field: `contracts[${i}].address`,
+        value: rawAddress,
+        max: DOS_TEXT_LIMITS.serviceContract.address,
+      },
+    ]);
+    if (textLimitError) {
+      throw new Error(textLimitError);
+    }
 
     const normalizedAddress = normalizeContractAddress(rawAddress);
     if (!normalizedAddress) {
@@ -157,6 +173,34 @@ export async function POST(request: Request) {
   if (!signature) {
     return NextResponse.json(
       { error: "signature is required" },
+      { status: 400 }
+    );
+  }
+  const textLimitError = firstTextLimitError([
+    {
+      field: "serviceName",
+      value: serviceName,
+      max: DOS_TEXT_LIMITS.community.name,
+    },
+    {
+      field: "chain",
+      value: chain,
+      max: DOS_TEXT_LIMITS.serviceContract.chain,
+    },
+    {
+      field: "description",
+      value: descriptionInput,
+      max: DOS_TEXT_LIMITS.community.description,
+    },
+    {
+      field: "githubRepositoryUrl",
+      value: githubRepositoryUrlInput,
+      max: DOS_TEXT_LIMITS.community.githubRepositoryUrl,
+    },
+  ]);
+  if (textLimitError) {
+    return NextResponse.json(
+      { error: textLimitError },
       { status: 400 }
     );
   }

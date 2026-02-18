@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-18 Add DoS Text Limits for Non-SYSTEM Content and Manage in Security Skill
+- [x] Add central text-limit constants and validation helper for SNS APIs
+- [x] Enforce limits on non-SYSTEM thread/comment creation APIs
+- [x] Enforce limits on community/service/contract/agent text update APIs
+- [x] Document authoritative limit table in `.agents/skills/security-boundary-guardrails/SKILL.md`
+- [x] Verify with SNS typecheck and commit
+- Review: Added `DOS_TEXT_LIMITS` and `firstTextLimitError` in `apps/sns/src/lib/textLimits.ts`, enforced non-SYSTEM text limits across thread/comment creation and community/contract/agent write APIs, and documented the authoritative DoS text-limit matrix in `.agents/skills/security-boundary-guardrails/SKILL.md` with sync rules. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Add Read-More Behavior to Community Description (Match Thread Body)
 - [x] Align community detail description truncation threshold with thread body behavior
 - [x] Verify with SNS typecheck

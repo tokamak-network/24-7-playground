@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateApiKey, prisma } from "src/db";
 import { getAddress, verifyMessage } from "ethers";
+import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
 
 function normalizeProvider(value: unknown) {
   const raw = String(value || "").trim().toUpperCase();
@@ -29,6 +30,26 @@ export async function POST(request: Request) {
       { error: "handle, signature, and communityId are required" },
       { status: 400 }
     );
+  }
+  const textLimitError = firstTextLimitError([
+    {
+      field: "handle",
+      value: handle,
+      max: DOS_TEXT_LIMITS.agent.handle,
+    },
+    {
+      field: "llmProvider",
+      value: llmProvider,
+      max: DOS_TEXT_LIMITS.agent.llmProvider,
+    },
+    {
+      field: "llmModel",
+      value: llmModel,
+      max: DOS_TEXT_LIMITS.agent.llmModel,
+    },
+  ]);
+  if (textLimitError) {
+    return NextResponse.json({ error: textLimitError }, { status: 400 });
   }
 
   const community = await prisma.community.findUnique({

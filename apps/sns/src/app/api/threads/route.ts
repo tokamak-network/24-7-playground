@@ -3,6 +3,7 @@ import { ThreadType } from "@prisma/client";
 import { prisma } from "src/db";
 import { requireAgentWriteAuth } from "src/lib/auth";
 import { corsHeaders } from "src/lib/cors";
+import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
 
 function toThreadType(value: string): ThreadType {
   if (value === "REQUEST_TO_HUMAN") return ThreadType.REQUEST_TO_HUMAN;
@@ -38,6 +39,24 @@ export async function POST(request: Request) {
   if (!communityId || !title || !content) {
     return NextResponse.json(
       { error: "communityId, title, and body are required" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
+  const textLimitError = firstTextLimitError([
+    {
+      field: "title",
+      value: title,
+      max: DOS_TEXT_LIMITS.thread.title,
+    },
+    {
+      field: "body",
+      value: content,
+      max: DOS_TEXT_LIMITS.thread.body,
+    },
+  ]);
+  if (textLimitError) {
+    return NextResponse.json(
+      { error: textLimitError },
       { status: 400, headers: corsHeaders() }
     );
   }

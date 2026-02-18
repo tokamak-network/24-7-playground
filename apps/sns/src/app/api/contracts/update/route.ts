@@ -6,6 +6,7 @@ import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
 import { getAddress, verifyMessage } from "ethers";
 import { upsertCanonicalSystemThread } from "src/lib/systemThread";
 import { cleanupExpiredCommunities } from "src/lib/community";
+import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
 
 const FIXED_MESSAGE = "24-7-playground";
 const SEPOLIA_CHAIN = "Sepolia";
@@ -94,6 +95,19 @@ export async function POST(request: Request) {
       { status: 400, headers: corsHeaders() }
     );
   }
+  const commonTextLimitError = firstTextLimitError([
+    {
+      field: "communityId",
+      value: communityId,
+      max: 128,
+    },
+  ]);
+  if (commonTextLimitError) {
+    return NextResponse.json(
+      { error: commonTextLimitError },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
 
   const community = await prisma.community.findUnique({
     where: { id: communityId },
@@ -149,6 +163,19 @@ export async function POST(request: Request) {
   if (action === "UPDATE_DESCRIPTION") {
     const nextDescription = String(body.description || "").trim();
     const prevDescription = String(community.description || "").trim();
+    const textLimitError = firstTextLimitError([
+      {
+        field: "description",
+        value: nextDescription,
+        max: DOS_TEXT_LIMITS.community.description,
+      },
+    ]);
+    if (textLimitError) {
+      return NextResponse.json(
+        { error: textLimitError },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
 
     if (prevDescription === nextDescription) {
       return NextResponse.json(
@@ -186,6 +213,19 @@ export async function POST(request: Request) {
         { status: 400, headers: corsHeaders() }
       );
     }
+    const contractIdLimitError = firstTextLimitError([
+      {
+        field: "contractId",
+        value: contractId,
+        max: 128,
+      },
+    ]);
+    if (contractIdLimitError) {
+      return NextResponse.json(
+        { error: contractIdLimitError },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
 
     const target = community.serviceContracts.find((contract) => contract.id === contractId);
     if (!target) {
@@ -197,6 +237,24 @@ export async function POST(request: Request) {
 
     const nextName = String(body.name || "").trim() || target.name;
     const rawNextAddress = String(body.address || "").trim() || target.address;
+    const textLimitError = firstTextLimitError([
+      {
+        field: "name",
+        value: nextName,
+        max: DOS_TEXT_LIMITS.serviceContract.name,
+      },
+      {
+        field: "address",
+        value: rawNextAddress,
+        max: DOS_TEXT_LIMITS.serviceContract.address,
+      },
+    ]);
+    if (textLimitError) {
+      return NextResponse.json(
+        { error: textLimitError },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
     const nextAddress = normalizeContractAddress(rawNextAddress);
 
     if (!nextAddress) {
@@ -315,6 +373,19 @@ export async function POST(request: Request) {
         { status: 400, headers: corsHeaders() }
       );
     }
+    const contractIdLimitError = firstTextLimitError([
+      {
+        field: "contractId",
+        value: contractId,
+        max: 128,
+      },
+    ]);
+    if (contractIdLimitError) {
+      return NextResponse.json(
+        { error: contractIdLimitError },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
 
     const target = community.serviceContracts.find((contract) => contract.id === contractId);
     if (!target) {
@@ -341,6 +412,29 @@ export async function POST(request: Request) {
     const name = String(body.name || "").trim() || community.name;
     const rawAddress = String(body.address || "").trim();
     const chain = String(body.chain || community.serviceContracts[0]?.chain || SEPOLIA_CHAIN).trim() || SEPOLIA_CHAIN;
+    const textLimitError = firstTextLimitError([
+      {
+        field: "name",
+        value: name,
+        max: DOS_TEXT_LIMITS.serviceContract.name,
+      },
+      {
+        field: "address",
+        value: rawAddress,
+        max: DOS_TEXT_LIMITS.serviceContract.address,
+      },
+      {
+        field: "chain",
+        value: chain,
+        max: DOS_TEXT_LIMITS.serviceContract.chain,
+      },
+    ]);
+    if (textLimitError) {
+      return NextResponse.json(
+        { error: textLimitError },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
 
     if (!rawAddress) {
       return NextResponse.json(

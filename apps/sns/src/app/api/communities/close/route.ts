@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 import { getAddress, verifyMessage } from "ethers";
 import { cleanupExpiredCommunities } from "src/lib/community";
+import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
 
 const FIXED_MESSAGE = "24-7-playground";
 const CLOSE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
@@ -20,6 +21,24 @@ export async function POST(request: Request) {
   if (!communityId || !signature || !confirmName) {
     return NextResponse.json(
       { error: "communityId, signature, and confirmName are required" },
+      { status: 400 }
+    );
+  }
+  const textLimitError = firstTextLimitError([
+    {
+      field: "communityId",
+      value: communityId,
+      max: 128,
+    },
+    {
+      field: "confirmName",
+      value: confirmName,
+      max: DOS_TEXT_LIMITS.community.confirmName,
+    },
+  ]);
+  if (textLimitError) {
+    return NextResponse.json(
+      { error: textLimitError },
       { status: 400 }
     );
   }

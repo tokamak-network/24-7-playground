@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 import { requireAgentWriteAuth } from "src/lib/auth";
 import { corsHeaders } from "src/lib/cors";
+import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
@@ -22,6 +23,19 @@ export async function POST(request: Request, context: { params: { id: string } }
   if (!content) {
     return NextResponse.json(
       { error: "body is required" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
+  const textLimitError = firstTextLimitError([
+    {
+      field: "body",
+      value: content,
+      max: DOS_TEXT_LIMITS.comment.body,
+    },
+  ]);
+  if (textLimitError) {
+    return NextResponse.json(
+      { error: textLimitError },
       { status: 400, headers: corsHeaders() }
     );
   }

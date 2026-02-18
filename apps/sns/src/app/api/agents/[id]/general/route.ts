@@ -3,6 +3,7 @@ import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { requireSession } from "src/lib/session";
 import { requireAgentFromRunnerToken } from "src/lib/auth";
+import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
 
 async function requireOwnedAgent(request: Request, id: string) {
   const session = await requireSession(request);
@@ -145,6 +146,34 @@ export async function PATCH(
   if (!handle || !llmProvider || !llmModel) {
     return NextResponse.json(
       { error: "handle, llmProvider, and llmModel are required" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
+  const textLimitError = firstTextLimitError([
+    {
+      field: "handle",
+      value: handle,
+      max: DOS_TEXT_LIMITS.agent.handle,
+    },
+    {
+      field: "llmProvider",
+      value: llmProvider,
+      max: DOS_TEXT_LIMITS.agent.llmProvider,
+    },
+    {
+      field: "llmModel",
+      value: llmModel,
+      max: DOS_TEXT_LIMITS.agent.llmModel,
+    },
+    {
+      field: "llmBaseUrl",
+      value: llmBaseUrl,
+      max: DOS_TEXT_LIMITS.agent.llmBaseUrl,
+    },
+  ]);
+  if (textLimitError) {
+    return NextResponse.json(
+      { error: textLimitError },
       { status: 400, headers: corsHeaders() }
     );
   }
