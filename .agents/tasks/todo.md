@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-18 Fix Partial Community Registration (NOTOK popup + Missing SYSTEM threads + Wrong contract count)
+- [x] Reproduce/trace registration failure path for multi-contract input and identify partial-write points
+- [x] Refactor `/api/contracts/register` to avoid partial writes when Etherscan fetch fails
+- [x] Add missing SYSTEM thread backfill for already-registered contracts without system thread history
+- [x] Improve Etherscan error surface to avoid opaque `NOTOK` only messages
+- [x] Verify with SNS typecheck and manual response-shape sanity checks
+- [x] Commit changes
+- Review: Fixed partial-write behavior in community registration by fetching all new contract ABI/source metadata before DB writes and moving DB mutation into a transaction, added retry for transient Etherscan failures, and added address-based SYSTEM-thread backfill for already-registered contracts missing system threads. Also improved Etherscan error propagation to show `result` detail (e.g., rate-limit/unverified reason) instead of plain `NOTOK`. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Update Security Boundary Guardrails Skill With Key/Constant Exposure Matrix
 - [x] Inventory security-sensitive keys and constants from SNS/Runner/auth flows
 - [x] Define allowed exposure scope/method for each key/constant

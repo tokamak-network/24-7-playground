@@ -99,6 +99,118 @@ function buildRequestedContracts(body: any, serviceName: string) {
   return Array.from(byAddress.values());
 }
 
+function toErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message.trim();
+  }
+  return fallback;
+}
+
+function isRetryableEtherscanError(error: unknown) {
+  const message = toErrorMessage(error, "").toLowerCase();
+  return (
+    message.includes("rate limit") ||
+    message.includes("notok") ||
+    message.includes("timeout") ||
+    message.includes("temporarily") ||
+    message.includes("fetch")
+  );
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withEtherscanRetry<T>(
+  action: () => Promise<T>,
+  maxAttempts = 3
+): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await action();
+    } catch (error) {
+      lastError = error;
+      if (!isRetryableEtherscanError(error) || attempt === maxAttempts) {
+        throw error;
+      }
+      await sleep(attempt * 450);
+    }
+  }
+  throw lastError;
+}
+
+async function ensureSystemThreadsForContracts(input: {
+  community: {
+    id: string;
+    description: string | null;
+    githubRepositoryUrl: string | null;
+  };
+  contracts: Array<{
+    id: string;
+    name: string;
+    address: string;
+    chain: string;
+    abiJson: unknown;
+    sourceJson: unknown;
+  }>;
+}) {
+  const { community, contracts } = input;
+
+  const systemThreads = await prisma.thread.findMany({
+    where: {
+      communityId: community.id,
+      type: "SYSTEM",
+    },
+    select: { body: true },
+  });
+  const bodiesLower = systemThreads.map((thread) => String(thread.body || "").toLowerCase());
+
+  let lastHash: string | null = null;
+  let createdCount = 0;
+
+  for (const contract of contracts) {
+    const addressLower = String(contract.address || "").trim().toLowerCase();
+    if (!addressLower) continue;
+
+    const addressMarker = `- **address:** \`${addressLower}\``;
+    const alreadyDocumented = bodiesLower.some((body) => body.includes(addressMarker));
+    if (alreadyDocumented) continue;
+
+    const systemBody = buildSystemBody({
+      name: contract.name,
+      address: contract.address,
+      chain: contract.chain,
+      serviceDescription: community.description,
+      sourceInfo: contract.sourceJson || {},
+      abiJson: contract.abiJson,
+      githubRepositoryUrl: community.githubRepositoryUrl,
+    });
+
+    await prisma.thread.create({
+      data: {
+        communityId: community.id,
+        title: `Contract registered: ${contract.name}`,
+        body: systemBody,
+        type: "SYSTEM",
+      },
+    });
+
+    lastHash = hashSystemBody(systemBody);
+    bodiesLower.push(systemBody.toLowerCase());
+    createdCount += 1;
+  }
+
+  if (lastHash) {
+    await prisma.community.update({
+      where: { id: community.id },
+      data: { lastSystemHash: lastHash },
+    });
+  }
+
+  return createdCount;
+}
+
 export async function POST(request: Request) {
   const body = await request.json();
   const serviceName = String(body.serviceName || body.name || "").trim();
@@ -214,63 +326,11 @@ export async function POST(request: Request) {
     ? Array.from(matchedCommunities.values())[0]
     : null;
 
-  const fallbackDescription = `Agent community for ${serviceName} on ${chain}.`;
-
-  let community = matchedCommunity;
-  if (!community) {
-    const baseSlug =
-      slugify(`${serviceName}-${requestedContracts[0].address.slice(0, 6)}`) ||
-      `community-${Date.now()}`;
-    const uniqueSlug = await buildUniqueSlug(baseSlug);
-
-    community = await prisma.community.create({
-      data: {
-        name: serviceName,
-        slug: uniqueSlug,
-        description: descriptionInput || fallbackDescription,
-        ownerWallet,
-        githubRepositoryUrl,
-      },
-    });
-  } else {
-    const updateData: {
-      ownerWallet?: string;
-      description?: string;
-      githubRepositoryUrl?: string | null;
-    } = {};
-
-    if (!community.ownerWallet) {
-      updateData.ownerWallet = ownerWallet;
-    }
-    if (descriptionInput) {
-      updateData.description = descriptionInput;
-    }
-    if (githubRepositoryUrlInput) {
-      updateData.githubRepositoryUrl = githubRepositoryUrl;
-    }
-
-    if (Object.keys(updateData).length > 0) {
-      community = await prisma.community.update({
-        where: { id: community.id },
-        data: updateData,
-      });
-    }
-  }
-
   const contractsToCreate = requestedContracts.filter(
     (contract) => !existingByAddress.has(contract.address.toLowerCase())
   );
 
-  if (!contractsToCreate.length) {
-    return NextResponse.json({
-      contracts: existingContracts,
-      community,
-      alreadyRegistered: true,
-    });
-  }
-
-  const createdContracts: Array<{
-    id: string;
+  const resolvedContracts: Array<{
     name: string;
     address: string;
     chain: string;
@@ -304,85 +364,133 @@ export async function POST(request: Request) {
     };
 
     try {
-      abiJson = await fetchEtherscanAbi(contractInput.address);
-      sourceInfo = await fetchEtherscanSource(contractInput.address);
+      abiJson = await withEtherscanRetry(() => fetchEtherscanAbi(contractInput.address));
+      sourceInfo = await withEtherscanRetry(() => fetchEtherscanSource(contractInput.address));
     } catch (error) {
       return NextResponse.json(
         {
-          error:
-            error instanceof Error
-              ? `${contractInput.address}: ${error.message}`
-              : `Failed to fetch ABI/source for ${contractInput.address}`,
+          error: `${contractInput.address}: ${toErrorMessage(
+            error,
+            "Failed to fetch ABI/source"
+          )}`,
         },
         { status: 400 }
       );
     }
 
-    const faucetFunction = detectFaucet(abiJson);
-
-    const contract = await prisma.serviceContract.create({
-      data: {
-        name: contractInput.name,
-        address: contractInput.address,
-        chain,
-        communityId: community.id,
-        abiJson: toInputJson(abiJson),
-        sourceJson: toInputJson(sourceInfo),
-        faucetFunction,
-      },
-    });
-
-    createdContracts.push({
-      id: contract.id,
-      name: contract.name,
-      address: contract.address,
-      chain: contract.chain,
+    resolvedContracts.push({
+      name: contractInput.name,
+      address: contractInput.address,
+      chain,
       abiJson,
       sourceInfo,
-      faucetFunction,
+      faucetFunction: detectFaucet(abiJson),
     });
   }
 
-  let lastSystemHash: string | null = null;
-  for (const contract of createdContracts) {
-    const systemBody = buildSystemBody({
-      name: contract.name,
-      address: contract.address,
-      chain: contract.chain,
-      serviceDescription: community.description,
-      sourceInfo: contract.sourceInfo,
-      abiJson: contract.abiJson,
-      githubRepositoryUrl: community.githubRepositoryUrl,
-    });
-    const systemHash = hashSystemBody(systemBody);
+  const fallbackDescription = `Agent community for ${serviceName} on ${chain}.`;
+  const uniqueSlug = !matchedCommunity
+    ? await buildUniqueSlug(
+        slugify(`${serviceName}-${requestedContracts[0].address.slice(0, 6)}`) ||
+          `community-${Date.now()}`
+      )
+    : null;
 
-    await prisma.thread.create({
-      data: {
-        communityId: community.id,
-        title: `Contract registered: ${contract.name}`,
-        body: systemBody,
-        type: "SYSTEM",
-      },
-    });
+  const result = await prisma.$transaction(async (tx) => {
+    let community = matchedCommunity;
 
-    lastSystemHash = systemHash;
-  }
+    if (!community) {
+      community = await tx.community.create({
+        data: {
+          name: serviceName,
+          slug: String(uniqueSlug || ""),
+          description: descriptionInput || fallbackDescription,
+          ownerWallet,
+          githubRepositoryUrl,
+        },
+      });
+    } else {
+      const updateData: {
+        ownerWallet?: string;
+        description?: string;
+        githubRepositoryUrl?: string | null;
+      } = {};
 
-  if (lastSystemHash) {
-    await prisma.community.update({
-      where: { id: community.id },
-      data: { lastSystemHash: lastSystemHash },
-    });
-  }
+      if (!community.ownerWallet) {
+        updateData.ownerWallet = ownerWallet;
+      }
+      if (descriptionInput) {
+        updateData.description = descriptionInput;
+      }
+      if (githubRepositoryUrlInput) {
+        updateData.githubRepositoryUrl = githubRepositoryUrl;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        community = await tx.community.update({
+          where: { id: community.id },
+          data: updateData,
+        });
+      }
+    }
+
+    for (const contract of resolvedContracts) {
+      await tx.serviceContract.create({
+        data: {
+          name: contract.name,
+          address: contract.address,
+          chain: contract.chain,
+          communityId: community.id,
+          abiJson: toInputJson(contract.abiJson),
+          sourceJson: toInputJson(contract.sourceInfo),
+          faucetFunction: contract.faucetFunction,
+        },
+      });
+    }
+
+    return { community };
+  });
 
   const allContracts = await prisma.serviceContract.findMany({
-    where: { communityId: community.id },
+    where: { communityId: result.community.id },
     orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      chain: true,
+      abiJson: true,
+      sourceJson: true,
+      faucetFunction: true,
+      createdAt: true,
+      communityId: true,
+      lastRunAt: true,
+    },
   });
+
+  const backfilledSystemThreads = await ensureSystemThreadsForContracts({
+    community: {
+      id: result.community.id,
+      description: result.community.description || null,
+      githubRepositoryUrl: result.community.githubRepositoryUrl || null,
+    },
+    contracts: allContracts,
+  });
+
+  if (!contractsToCreate.length) {
+    return NextResponse.json({
+      contracts: allContracts,
+      community: result.community,
+      contractCount: allContracts.length,
+      alreadyRegistered: true,
+      systemThreadsBackfilled: backfilledSystemThreads,
+    });
+  }
 
   return NextResponse.json({
     contracts: allContracts,
-    community,
+    community: result.community,
     contractCount: allContracts.length,
+    systemThreadsBackfilled: backfilledSystemThreads,
   });
 }

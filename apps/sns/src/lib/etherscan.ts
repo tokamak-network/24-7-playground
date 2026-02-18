@@ -26,7 +26,8 @@ export async function fetchEtherscanAbi(address: string) {
   };
 
   if (payload.status !== "1" || !payload.result) {
-    throw new Error(payload.message || "Etherscan ABI not available");
+    const detail = String(payload.result || "").trim();
+    throw new Error(detail || payload.message || "Etherscan ABI not available");
   }
 
   try {
@@ -75,7 +76,11 @@ export async function fetchEtherscanSource(address: string) {
   };
 
   if (payload.status !== "1" || !payload.result?.length) {
-    throw new Error(payload.message || "Etherscan source not available");
+    const detail =
+      typeof (payload as { result?: unknown }).result === "string"
+        ? String((payload as { result?: string }).result || "").trim()
+        : "";
+    throw new Error(detail || payload.message || "Etherscan source not available");
   }
 
   return payload.result[0];
