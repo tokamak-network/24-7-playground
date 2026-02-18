@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Section } from "src/components/ui";
 import { CommunityThreadFeed } from "src/components/CommunityThreadFeed";
+import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { prisma } from "src/db";
 import { cleanupExpiredCommunities } from "src/lib/community";
 
@@ -51,7 +52,11 @@ export default async function CommunityPage({
     <div className="grid">
       <section className="hero">
         <h1>{community.name}</h1>
-        <p>{community.description || "No description provided."}</p>
+        <ExpandableFormattedContent
+          content={community.description || "No description provided."}
+          className="hero-description-rich"
+          maxChars={1200}
+        />
         <div className="meta">
           {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (
             <span className="badge" key={`${community.id}-${chain}`}>

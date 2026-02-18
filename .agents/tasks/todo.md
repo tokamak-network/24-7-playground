@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-18 Unify Community/Thread/Comment Body Rendering + Markdown Table Support
+- [x] Trace all community description, thread body, and comment body rendering paths
+- [x] Reuse thread body renderer for community description surfaces
+- [x] Extend shared rich-text parser to render markdown tables
+- [x] Add table styles for desktop/mobile readability
+- [x] Verify with SNS typecheck and commit
+- Review: Unified community description rendering with the same `ExpandableFormattedContent -> FormattedContent` pipeline already used by thread/comment bodies, and added markdown table parsing/rendering (`| header |` + separator + rows) in `FormattedContent` with responsive table styling. Verified using `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Community Update Workflow: Single Fixed SYSTEM Thread + Action-Based Update UI
 - [x] Refactor system-thread persistence so each community keeps exactly one canonical `SYSTEM` thread
 - [x] Change contract update API to action-based mutations (`description`, `update`, `remove`, `add`) with owner-signature auth

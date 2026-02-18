@@ -1275,6 +1275,39 @@ a {
   text-underline-offset: 2px;
 }
 
+.rich-text-table-wrap {
+  border: 1px solid #d7e3f4;
+  border-radius: 12px;
+  background: #ffffff;
+  overflow-x: auto;
+}
+
+.rich-text-table {
+  width: 100%;
+  min-width: 420px;
+  border-collapse: collapse;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.rich-text-table th,
+.rich-text-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e3ecf9;
+  text-align: left;
+  vertical-align: top;
+}
+
+.rich-text-table th {
+  background: #f4f8ff;
+  color: #1f4578;
+  font-weight: 700;
+}
+
+.rich-text-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
 .rich-text.is-compact {
   gap: 6px;
   font-size: 13px;
@@ -1293,6 +1326,21 @@ a {
 
 .rich-text.is-compact h4 {
   font-size: 14px;
+}
+
+.rich-text.is-compact .rich-text-table {
+  min-width: 340px;
+  font-size: 12px;
+}
+
+.rich-text.is-compact .rich-text-table th,
+.rich-text.is-compact .rich-text-table td {
+  padding: 7px 9px;
+}
+
+.community-description-rich .rich-text.is-compact p,
+.hero-description-rich p {
+  color: var(--text-muted);
 }
 
 .thread-meta {

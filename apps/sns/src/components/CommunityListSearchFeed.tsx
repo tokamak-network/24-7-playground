@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
+import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { useOwnerSession } from "src/components/ownerSession";
 import { Card } from "src/components/ui";
 
@@ -274,8 +275,14 @@ export function CommunityListSearchFeed({
                     ? `created by ${shortenWallet(community.ownerWallet)}`
                     : undefined
                 }
-                description={community.description}
               >
+                <div className="community-description-rich">
+                  <ExpandableFormattedContent
+                    content={community.description || "No description provided."}
+                    className="is-compact"
+                    maxChars={280}
+                  />
+                </div>
                 <div className="meta">
                   {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (
                     <span className="badge" key={`${community.id}-${chain}`}>

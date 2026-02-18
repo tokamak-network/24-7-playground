@@ -122,6 +122,38 @@ function renderInline(
   return nodes;
 }
 
+function parseTableCells(line: string): string[] | null {
+  const trimmed = line.trim();
+  if (!trimmed.includes("|")) {
+    return null;
+  }
+
+  const looksLikeTableRow =
+    trimmed.startsWith("|") ||
+    trimmed.endsWith("|") ||
+    trimmed.includes(" | ") ||
+    trimmed.includes("| ");
+  if (!looksLikeTableRow) {
+    return null;
+  }
+
+  const normalized = trimmed.replace(/^\|/, "").replace(/\|$/, "");
+  const cells = normalized.split("|").map((cell) => cell.trim());
+  if (cells.length < 2) {
+    return null;
+  }
+
+  return cells;
+}
+
+function isTableSeparatorLine(line: string) {
+  const cells = parseTableCells(line);
+  if (!cells) {
+    return false;
+  }
+  return cells.every((cell) => /^:?-{3,}:?$/.test(cell));
+}
+
 export function FormattedContent({ content, className, mentionLinks }: Props) {
   const lines = String(content || "").replace(/\r\n/g, "\n").split("\n");
   const blocks: ReactNode[] = [];
@@ -179,7 +211,8 @@ export function FormattedContent({ content, className, mentionLinks }: Props) {
     codeLang = "";
   };
 
-  for (const line of lines) {
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    const line = lines[lineIndex];
     const trimmed = line.trim();
 
     if (trimmed.startsWith("```")) {
@@ -203,6 +236,70 @@ export function FormattedContent({ content, className, mentionLinks }: Props) {
     if (!trimmed) {
       flushParagraph();
       flushList();
+      continue;
+    }
+
+    const tableHeaderCells = parseTableCells(trimmed);
+    const tableSeparatorLine = lines[lineIndex + 1] || "";
+    if (tableHeaderCells && isTableSeparatorLine(tableSeparatorLine)) {
+      flushParagraph();
+      flushList();
+
+      const tableBodyRows: string[][] = [];
+      lineIndex += 2;
+
+      while (lineIndex < lines.length) {
+        const tableRow = parseTableCells(lines[lineIndex] || "");
+        if (!tableRow || isTableSeparatorLine(lines[lineIndex] || "")) {
+          lineIndex -= 1;
+          break;
+        }
+        tableBodyRows.push(tableRow);
+        lineIndex += 1;
+      }
+
+      const columnCount = Math.max(
+        tableHeaderCells.length,
+        ...tableBodyRows.map((row) => row.length)
+      );
+      const normalizedHeaders = Array.from({ length: columnCount }, (_, index) =>
+        tableHeaderCells[index] || ""
+      );
+      const normalizedRows = tableBodyRows.map((row) =>
+        Array.from({ length: columnCount }, (_, index) => row[index] || "")
+      );
+      const key = `table-${blocks.length}`;
+
+      blocks.push(
+        <div key={key} className="rich-text-table-wrap">
+          <table className="rich-text-table">
+            <thead>
+              <tr>
+                {normalizedHeaders.map((cell, cellIndex) => (
+                  <th key={`${key}-h-${cellIndex}`}>
+                    {renderInline(cell, `${key}-h-${cellIndex}`, mentionLinks)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {normalizedRows.map((row, rowIndex) => (
+                <tr key={`${key}-r-${rowIndex}`}>
+                  {row.map((cell, cellIndex) => (
+                    <td key={`${key}-r-${rowIndex}-c-${cellIndex}`}>
+                      {renderInline(
+                        cell,
+                        `${key}-r-${rowIndex}-c-${cellIndex}`,
+                        mentionLinks
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
       continue;
     }
 
