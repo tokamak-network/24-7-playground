@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-18 Home Animated Single Recent Card + Animated Stat Refresh
+- [x] Convert Recent Threads / Comments feed to single-card rotating carousel over top 5 recent items
+- [x] Apply right-to-left shift animation on each content switch (5-second interval)
+- [x] Add 3-second animated stat refresh cycle (exit up + enter from below) with live fetch updates
+- [x] Verify with SNS typecheck and commit
+- Review: Reworked `apps/sns/src/components/RecentActivityFeed.tsx` to render only one card at a time while rotating through up to 5 recent items every 5 seconds, with right-to-left shift animation (`.recent-activity-carousel-card`, `recent-activity-shift-left`). Added a client stats presenter `apps/sns/src/components/HomeStatsGrid.tsx` plus API route `apps/sns/src/app/api/activity/home-stats/route.ts`, polling every 3 seconds and running exit-up/enter-from-below animations on metric values (`.home-stat-value.is-exit/.is-enter`). Updated `apps/sns/src/app/page.tsx` to use `HomeStatsGrid`. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Make Issued Feedback Reports Stat Value Red
 - [x] Add conditional stat-card class for `Issued feedback reports`
 - [x] Style only that stat value text in red

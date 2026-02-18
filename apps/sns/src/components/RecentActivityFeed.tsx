@@ -5,10 +5,6 @@ import { CommentFeedCard } from "src/components/CommentFeedCard";
 import { ThreadFeedCard } from "src/components/ThreadFeedCard";
 import type { RecentActivityItem } from "src/lib/recentActivity";
 
-type VisualItem = RecentActivityItem & {
-  phase: "enter" | "stable" | "exit";
-};
-
 type Props = {
   initialItems: RecentActivityItem[];
   limit?: number;
@@ -16,14 +12,10 @@ type Props = {
 
 const DEFAULT_LIMIT = 5;
 const POLL_MS = 5000;
-const ANIMATION_MS = 420;
+const ROTATE_MS = 5000;
 
 function signature(items: RecentActivityItem[]) {
   return items.map((item) => `${item.key}:${item.createdAt}`).join("|");
-}
-
-function toStable(items: RecentActivityItem[]): VisualItem[] {
-  return items.map((item) => ({ ...item, phase: "stable" }));
 }
 
 function trimItems(items: RecentActivityItem[], limit: number) {
@@ -32,17 +24,21 @@ function trimItems(items: RecentActivityItem[], limit: number) {
 
 export function RecentActivityFeed({ initialItems, limit = DEFAULT_LIMIT }: Props) {
   const initial = trimItems(initialItems, limit);
-  const [items, setItems] = useState<VisualItem[]>(toStable(initial));
+  const [items, setItems] = useState<RecentActivityItem[]>(initial);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [cycleKey, setCycleKey] = useState(0);
   const activeItemsRef = useRef<RecentActivityItem[]>(initial);
   const signatureRef = useRef(signature(initial));
-  const settleTimerRef = useRef<number | null>(null);
   const pollTimerRef = useRef<number | null>(null);
+  const rotateTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     const next = trimItems(initialItems, limit);
     activeItemsRef.current = next;
     signatureRef.current = signature(next);
-    setItems(toStable(next));
+    setItems(next);
+    setActiveIndex(0);
+    setCycleKey((prev) => prev + 1);
   }, [initialItems, limit]);
 
   useEffect(() => {
@@ -53,33 +49,11 @@ export function RecentActivityFeed({ initialItems, limit = DEFAULT_LIMIT }: Prop
         return;
       }
 
-      const prev = activeItemsRef.current;
-      const prevKeySet = new Set(prev.map((item) => item.key));
-      const nextKeySet = new Set(next.map((item) => item.key));
-      const addedKeySet = new Set(
-        next.filter((item) => !prevKeySet.has(item.key)).map((item) => item.key)
-      );
-      const removed = prev.filter((item) => !nextKeySet.has(item.key));
-
-      const enteringOrStable: VisualItem[] = next.map((item) => ({
-        ...item,
-        phase: addedKeySet.has(item.key) ? "enter" : "stable",
-      }));
-      const exiting: VisualItem[] = removed.map((item) => ({
-        ...item,
-        phase: "exit",
-      }));
-
       activeItemsRef.current = next;
       signatureRef.current = nextSig;
-      setItems([...enteringOrStable, ...exiting]);
-
-      if (settleTimerRef.current) {
-        window.clearTimeout(settleTimerRef.current);
-      }
-      settleTimerRef.current = window.setTimeout(() => {
-        setItems(toStable(activeItemsRef.current));
-      }, ANIMATION_MS);
+      setItems(next);
+      setActiveIndex(0);
+      setCycleKey((prev) => prev + 1);
     };
 
     const tick = async () => {
@@ -102,56 +76,70 @@ export function RecentActivityFeed({ initialItems, limit = DEFAULT_LIMIT }: Prop
       if (pollTimerRef.current) {
         window.clearInterval(pollTimerRef.current);
       }
-      if (settleTimerRef.current) {
-        window.clearTimeout(settleTimerRef.current);
-      }
     };
   }, [limit]);
 
+  useEffect(() => {
+    const tick = () => {
+      const pool = activeItemsRef.current;
+      if (pool.length <= 1) return;
+      setActiveIndex((prev) => (prev + 1) % pool.length);
+      setCycleKey((prev) => prev + 1);
+    };
+
+    rotateTimerRef.current = window.setInterval(tick, ROTATE_MS);
+    return () => {
+      if (rotateTimerRef.current) {
+        window.clearInterval(rotateTimerRef.current);
+      }
+    };
+  }, []);
+
+  const activeItem =
+    items.length > 0 ? items[activeIndex % Math.max(1, items.length)] : null;
+
+  if (!activeItem) {
+    return <p className="empty">No recent threads or comments yet.</p>;
+  }
+
+  if (activeItem.kind === "comment") {
+    return (
+      <div className="recent-activity-carousel">
+        <CommentFeedCard
+          key={`${activeItem.key}:${cycleKey}`}
+          className="recent-activity-carousel-card"
+          commentId={activeItem.commentId}
+          body={activeItem.body}
+          author={activeItem.author}
+          createdAt={activeItem.createdAt}
+          isIssued={activeItem.isIssued}
+          communityName={activeItem.communityName}
+          communitySlug={activeItem.communitySlug}
+          contextTitle={activeItem.title}
+          contextHref={activeItem.href}
+          maxChars={280}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="recent-activity-list">
-      {items.length ? (
-        items.map((item) => {
-          const isComment = item.kind === "comment";
-          if (isComment) {
-            return (
-              <CommentFeedCard
-                key={`${item.key}:${item.phase}`}
-                className={`recent-activity-item recent-activity-item-${item.phase}`}
-                commentId={item.commentId}
-                body={item.body}
-                author={item.author}
-                createdAt={item.createdAt}
-                isIssued={item.isIssued}
-                communityName={item.communityName}
-                communitySlug={item.communitySlug}
-                contextTitle={item.title}
-                contextHref={item.href}
-                maxChars={280}
-              />
-            );
-          }
-          return (
-            <ThreadFeedCard
-              key={`${item.key}:${item.phase}`}
-              href={item.href}
-              badgeLabel={item.badgeLabel || "discussion"}
-              statusLabel={item.statusLabel}
-              title={item.title}
-              body={item.body}
-              author={item.author}
-              createdAt={item.createdAt}
-              isIssued={item.isIssued}
-              commentCount={item.commentCount || 0}
-              threadId={item.threadId || item.key}
-              communityName={item.communityName}
-              className={`recent-activity-item recent-activity-item-${item.phase}`}
-            />
-          );
-        })
-      ) : (
-        <p className="empty">No recent threads or comments yet.</p>
-      )}
+    <div className="recent-activity-carousel">
+      <ThreadFeedCard
+        key={`${activeItem.key}:${cycleKey}`}
+        href={activeItem.href}
+        badgeLabel={activeItem.badgeLabel || "discussion"}
+        statusLabel={activeItem.statusLabel}
+        title={activeItem.title}
+        body={activeItem.body}
+        author={activeItem.author}
+        createdAt={activeItem.createdAt}
+        isIssued={activeItem.isIssued}
+        commentCount={activeItem.commentCount || 0}
+        threadId={activeItem.threadId || activeItem.key}
+        communityName={activeItem.communityName}
+        className="recent-activity-carousel-card"
+      />
     </div>
   );
 }

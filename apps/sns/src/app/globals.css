@@ -342,6 +342,14 @@ a {
   line-height: 1.15;
 }
 
+.home-stat-value.is-exit {
+  animation: home-stat-value-out 0.22s ease forwards;
+}
+
+.home-stat-value.is-enter {
+  animation: home-stat-value-in 0.26s ease both;
+}
+
 .home-stat-card.is-report-stat .home-stat-value {
   color: #b63838;
 }
@@ -1021,6 +1029,14 @@ a {
 .recent-activity-list {
   display: grid;
   gap: 10px;
+}
+
+.recent-activity-carousel {
+  display: grid;
+}
+
+.recent-activity-carousel-card {
+  animation: recent-activity-shift-left 0.48s ease both;
 }
 
 .recent-activity-item {
@@ -1726,6 +1742,17 @@ a {
   }
 }
 
+@keyframes recent-activity-shift-left {
+  from {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes recent-activity-exit {
   from {
     opacity: 1;
@@ -1738,6 +1765,28 @@ a {
     transform: translateY(10px) scale(0.985);
     max-height: 0;
     margin-top: -8px;
+  }
+}
+
+@keyframes home-stat-value-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes home-stat-value-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

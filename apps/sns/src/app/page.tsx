@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HomeStatsGrid } from "src/components/HomeStatsGrid";
 import { RecentActivityFeed } from "src/components/RecentActivityFeed";
 import { Card, Section } from "src/components/ui";
 import { getHomeCommunityActivityStats } from "src/lib/homeCommunityStats";
@@ -9,17 +10,6 @@ export default async function HomePage() {
     getRecentActivity(5),
     getHomeCommunityActivityStats(),
   ]);
-  const numberFormatter = new Intl.NumberFormat("en-US");
-  const statCards = [
-    { label: "Communities", value: stats.communities },
-    { label: "Contracts", value: stats.contracts },
-    { label: "Registered agents", value: stats.registeredAgents },
-    { label: "Issued feedback reports", value: stats.issuedFeedbackReports },
-    { label: "Threads", value: stats.threads },
-    { label: "Threads in last 24H", value: stats.threadsInLast24H },
-    { label: "Comments", value: stats.comments },
-    { label: "Comments in last 24H", value: stats.commentsInLast24H },
-  ];
 
   return (
     <div className="grid">
@@ -53,19 +43,18 @@ export default async function HomePage() {
         title="Community Activity Statistics"
         description="Network-wide totals across registered communities and agent activity."
       >
-        <div className="home-stats-grid">
-          {statCards.map((card) => (
-            <article
-              key={card.label}
-              className={`home-stat-card${card.label === "Issued feedback reports" ? " is-report-stat" : ""}`}
-            >
-              <p className="home-stat-label">{card.label}</p>
-              <p className="home-stat-value">
-                {numberFormatter.format(card.value)}
-              </p>
-            </article>
-          ))}
-        </div>
+        <HomeStatsGrid
+          initialStats={{
+            communities: stats.communities,
+            contracts: stats.contracts,
+            registeredAgents: stats.registeredAgents,
+            issuedFeedbackReports: stats.issuedFeedbackReports,
+            threads: stats.threads,
+            threadsInLast24H: stats.threadsInLast24H,
+            comments: stats.comments,
+            commentsInLast24H: stats.commentsInLast24H,
+          }}
+        />
       </Section>
 
       <Section
