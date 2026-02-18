@@ -4,7 +4,7 @@ import { prisma } from "src/db";
 import { getAddress, verifyMessage } from "ethers";
 import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
 import { verifyPublicGithubRepository } from "src/lib/github";
-import { buildSystemSnapshotBody, hashSystemBody } from "src/lib/systemThread";
+import { upsertCanonicalSystemThread } from "src/lib/systemThread";
 
 function slugify(value: string) {
   return value
@@ -138,89 +138,6 @@ async function withEtherscanRetry<T>(
     }
   }
   throw lastError;
-}
-
-async function ensureRegistrationSnapshotThread(input: {
-  community: {
-    id: string;
-    name: string;
-    description: string | null;
-    githubRepositoryUrl: string | null;
-  };
-  contracts: Array<{
-    id: string;
-    name: string;
-    address: string;
-    chain: string;
-    abiJson: unknown;
-    sourceJson: unknown;
-    faucetFunction?: string | null;
-  }>;
-  createdContractIds: Set<string>;
-}) {
-  const { community, contracts, createdContractIds } = input;
-
-  const latestSystemThread = await prisma.thread.findFirst({
-    where: {
-      communityId: community.id,
-      type: "SYSTEM",
-    },
-    orderBy: { createdAt: "desc" },
-    select: { id: true, body: true },
-  });
-  const shouldCreateSnapshot =
-    createdContractIds.size > 0 || !latestSystemThread;
-  if (!shouldCreateSnapshot) {
-    return 0;
-  }
-
-  const snapshotType = createdContractIds.size > 0 ? "REGISTRATION" : "BACKFILL";
-  const systemBody = buildSystemSnapshotBody({
-    snapshotType,
-    serviceName: community.name,
-    serviceDescription: community.description,
-    githubRepositoryUrl: community.githubRepositoryUrl,
-    contracts: contracts.map((contract) => ({
-      id: contract.id,
-      name: contract.name,
-      address: contract.address,
-      chain: contract.chain,
-      sourceInfo: contract.sourceJson || {},
-      abiJson: contract.abiJson,
-      faucetFunction: contract.faucetFunction || null,
-      updated: createdContractIds.has(contract.id),
-    })),
-  });
-  const systemHash = hashSystemBody(systemBody);
-  if (
-    latestSystemThread &&
-    hashSystemBody(latestSystemThread.body) === systemHash
-  ) {
-    await prisma.community.update({
-      where: { id: community.id },
-      data: { lastSystemHash: systemHash },
-    });
-    return 0;
-  }
-
-  await prisma.thread.create({
-    data: {
-      communityId: community.id,
-      title:
-        snapshotType === "REGISTRATION"
-          ? `Contracts registered: ${community.name} (${contracts.length} total)`
-          : `Contract registry snapshot backfill: ${community.name}`,
-      body: systemBody,
-      type: "SYSTEM",
-    },
-  });
-
-  await prisma.community.update({
-    where: { id: community.id },
-    data: { lastSystemHash: systemHash },
-  });
-
-  return 1;
 }
 
 export async function POST(request: Request) {
@@ -491,15 +408,48 @@ export async function POST(request: Request) {
       .map((contract) => contract.id)
   );
 
-  const createdSystemThreads = await ensureRegistrationSnapshotThread({
-    community: {
-      id: result.community.id,
-      name: result.community.name,
-      description: result.community.description || null,
-      githubRepositoryUrl: result.community.githubRepositoryUrl || null,
-    },
-    contracts: allContracts,
-    createdContractIds,
+  const createdContracts = allContracts.filter((contract) =>
+    createdContractIds.has(contract.id)
+  );
+  const registrationCommentBody =
+    matchedCommunity && createdContracts.length
+      ? [
+          "## Contract Registry Change",
+          "",
+          `- **Action:** \`Contract Added\``,
+          `- **Count:** \`${createdContracts.length}\``,
+          "",
+          ...createdContracts.map(
+            (contract, index) =>
+              `${index + 1}. \`${contract.name}\` · \`${contract.address}\` · ${contract.chain}`
+          ),
+          "",
+          `- **Applied At:** \`${new Date().toISOString()}\``,
+        ].join("\n")
+      : null;
+
+  const systemThreadSync = await upsertCanonicalSystemThread({
+    communityId: result.community.id,
+    serviceName: result.community.name,
+    serviceDescription: result.community.description || null,
+    githubRepositoryUrl: result.community.githubRepositoryUrl || null,
+    snapshotType: createdContractIds.size
+      ? matchedCommunity
+        ? "UPDATE"
+        : "REGISTRATION"
+      : "BACKFILL",
+    title: `Contract registry: ${result.community.name}`,
+    contracts: allContracts.map((contract) => ({
+      id: contract.id,
+      name: contract.name,
+      address: contract.address,
+      chain: contract.chain,
+      sourceInfo: contract.sourceJson || {},
+      abiJson: contract.abiJson,
+      faucetFunction: contract.faucetFunction || null,
+      updated: createdContractIds.has(contract.id),
+    })),
+    commentBody: registrationCommentBody,
   });
 
   if (!contractsToCreate.length) {
@@ -508,7 +458,7 @@ export async function POST(request: Request) {
       community: result.community,
       contractCount: allContracts.length,
       alreadyRegistered: true,
-      systemThreadsCreated: createdSystemThreads,
+      systemThreadsCreated: systemThreadSync.created ? 1 : 0,
     });
   }
 
@@ -516,6 +466,6 @@ export async function POST(request: Request) {
     contracts: allContracts,
     community: result.community,
     contractCount: allContracts.length,
-    systemThreadsCreated: createdSystemThreads,
+    systemThreadsCreated: systemThreadSync.created ? 1 : 0,
   });
 }

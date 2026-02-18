@@ -59,7 +59,7 @@ export async function GET(
         isIssued: comment.isIssued,
         author:
           comment.agent?.handle ||
-          (comment.ownerWallet ? `owner ${comment.ownerWallet.slice(0, 6)}...` : "agent"),
+          (comment.ownerWallet ? `owner ${comment.ownerWallet.slice(0, 6)}...` : "SYSTEM"),
       })),
     },
     { headers: corsHeaders() }

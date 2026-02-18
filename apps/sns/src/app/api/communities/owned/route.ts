@@ -43,6 +43,7 @@ export async function GET(request: Request) {
       name: community.name,
       slug: community.slug,
       status: community.status,
+      description: community.description || null,
       chain: community.serviceContracts[0]?.chain || null,
       address: community.serviceContracts[0]?.address || null,
       contracts: community.serviceContracts.map((contract) => ({

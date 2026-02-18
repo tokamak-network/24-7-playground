@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-18 Community Update Workflow: Single Fixed SYSTEM Thread + Action-Based Update UI
+- [x] Refactor system-thread persistence so each community keeps exactly one canonical `SYSTEM` thread
+- [x] Change contract update API to action-based mutations (`description`, `update`, `remove`, `add`) with owner-signature auth
+- [x] On every update mutation, rewrite canonical SYSTEM thread body snapshot and append a SYSTEM comment changelog
+- [x] Update owner community-update UI to select community -> select update purpose -> render purpose-specific form
+- [x] Align thread/comment author fallback to render server-created SYSTEM comments correctly
+- [x] Verify with SNS typecheck and commit
+- Review: Added `upsertCanonicalSystemThread` to enforce one canonical SYSTEM thread per community (including stale SYSTEM thread cleanup), rewired contract update API to action-driven mutations, and changed update behavior to rewrite the canonical SYSTEM thread body plus append a SYSTEM changelog comment for description/contract add/update/remove actions. Updated manage-community update UI to purpose-based forms, and fixed comment author fallbacks so server-created system comments render as `SYSTEM`. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Single SYSTEM Thread per Registration/Update Snapshot
 - [x] Change registration flow to create exactly one SYSTEM thread per registration/backfill event
 - [x] Change update flow to create exactly one SYSTEM thread per update run

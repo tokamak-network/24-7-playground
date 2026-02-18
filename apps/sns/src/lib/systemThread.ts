@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { prisma } from "src/db";
 
 function asText(value: unknown, fallback = "unknown") {
   const normalized = String(value ?? "").trim();
@@ -93,6 +94,8 @@ export type SystemThreadContractInput = {
   updated?: boolean;
 };
 
+export type SystemSnapshotType = "REGISTRATION" | "UPDATE" | "BACKFILL";
+
 export function buildSystemBody(input: {
   name: string;
   address: string;
@@ -166,7 +169,7 @@ export function buildSystemBody(input: {
 }
 
 export function buildSystemSnapshotBody(input: {
-  snapshotType: "REGISTRATION" | "UPDATE" | "BACKFILL";
+  snapshotType: SystemSnapshotType;
   serviceName: string;
   serviceDescription?: string | null;
   githubRepositoryUrl?: string | null;
@@ -274,4 +277,102 @@ export function buildSystemSnapshotBody(input: {
 
 export function hashSystemBody(body: string) {
   return crypto.createHash("sha256").update(body).digest("hex");
+}
+
+export async function upsertCanonicalSystemThread(input: {
+  communityId: string;
+  serviceName: string;
+  serviceDescription?: string | null;
+  githubRepositoryUrl?: string | null;
+  contracts: SystemThreadContractInput[];
+  snapshotType: SystemSnapshotType;
+  title: string;
+  commentBody?: string | null;
+}) {
+  const {
+    communityId,
+    serviceName,
+    serviceDescription,
+    githubRepositoryUrl,
+    contracts,
+    snapshotType,
+    title,
+    commentBody,
+  } = input;
+  const snapshotBody = buildSystemSnapshotBody({
+    snapshotType,
+    serviceName,
+    serviceDescription,
+    githubRepositoryUrl,
+    contracts,
+  });
+  const bodyHash = hashSystemBody(snapshotBody);
+
+  const existingSystemThreads = await prisma.thread.findMany({
+    where: { communityId, type: "SYSTEM" },
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+
+  let canonicalThreadId = existingSystemThreads[0]?.id || "";
+  let created = false;
+
+  if (!canonicalThreadId) {
+    const createdThread = await prisma.thread.create({
+      data: {
+        communityId,
+        title,
+        body: snapshotBody,
+        type: "SYSTEM",
+      },
+      select: { id: true },
+    });
+    canonicalThreadId = createdThread.id;
+    created = true;
+  } else {
+    await prisma.thread.update({
+      where: { id: canonicalThreadId },
+      data: {
+        title,
+        body: snapshotBody,
+      },
+    });
+  }
+
+  const staleThreadIds = existingSystemThreads
+    .slice(1)
+    .map((thread) => thread.id)
+    .filter((id) => id !== canonicalThreadId);
+
+  if (staleThreadIds.length > 0) {
+    await prisma.thread.deleteMany({
+      where: {
+        id: {
+          in: staleThreadIds,
+        },
+      },
+    });
+  }
+
+  const normalizedComment = String(commentBody || "").trim();
+  if (normalizedComment) {
+    await prisma.comment.create({
+      data: {
+        threadId: canonicalThreadId,
+        body: normalizedComment,
+      },
+    });
+  }
+
+  await prisma.community.update({
+    where: { id: communityId },
+    data: { lastSystemHash: bodyHash },
+  });
+
+  return {
+    threadId: canonicalThreadId,
+    created,
+    removedThreadCount: staleThreadIds.length,
+    bodyHash,
+  };
 }

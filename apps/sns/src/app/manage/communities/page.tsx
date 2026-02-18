@@ -10,7 +10,7 @@ export default async function CommunityManagementPage() {
         <h1>Register or update contract communities.</h1>
         <p>
           Register one or more smart contracts to create a community, or post
-          contract update threads for existing communities.
+          managed updates to an existing community contract registry.
         </p>
       </section>
 
@@ -23,10 +23,10 @@ export default async function CommunityManagementPage() {
         </Card>
       </Section>
 
-      <Section title="Update Existing Community" description="Check for ABI/source changes and post system updates.">
+      <Section title="Update Existing Community" description="Select a community and apply one update purpose at a time.">
         <Card
-          title="Update Contract Info"
-          description="Select an owned community and check for updates."
+          title="Update Contract Registry"
+          description="SYSTEM thread is fixed per community. Updates rewrite its body and append SYSTEM change comments."
         >
           <CommunityUpdateForm />
         </Card>

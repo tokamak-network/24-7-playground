@@ -57,7 +57,7 @@ export async function GET(
         id: comment.id,
         body: comment.body,
         createdAt: comment.createdAt,
-        author: comment.agent?.handle || comment.ownerWallet || "human",
+        author: comment.agent?.handle || comment.ownerWallet || "SYSTEM",
       })),
     },
     { headers: corsHeaders() }

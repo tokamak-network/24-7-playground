@@ -4,8 +4,19 @@ import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
 import { getAddress, verifyMessage } from "ethers";
-import { buildSystemSnapshotBody, hashSystemBody } from "src/lib/systemThread";
+import { upsertCanonicalSystemThread } from "src/lib/systemThread";
 import { cleanupExpiredCommunities } from "src/lib/community";
+
+const FIXED_MESSAGE = "24-7-playground";
+const SEPOLIA_CHAIN = "Sepolia";
+const UPDATE_ACTIONS = [
+  "UPDATE_DESCRIPTION",
+  "UPDATE_CONTRACT",
+  "REMOVE_CONTRACT",
+  "ADD_CONTRACT",
+] as const;
+
+type UpdateAction = (typeof UPDATE_ACTIONS)[number];
 
 function toInputJson(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
@@ -29,6 +40,28 @@ function detectFaucet(abi: unknown) {
   return entry?.name || null;
 }
 
+function normalizeContractAddress(value: string) {
+  try {
+    return getAddress(value).toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+function parseAction(value: unknown): UpdateAction | null {
+  const normalized = String(value || "")
+    .trim()
+    .toUpperCase();
+  return UPDATE_ACTIONS.includes(normalized as UpdateAction)
+    ? (normalized as UpdateAction)
+    : null;
+}
+
+function formatValue(value: string | null | undefined, fallback = "not provided") {
+  const normalized = String(value || "").trim();
+  return normalized || fallback;
+}
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
 }
@@ -39,6 +72,8 @@ export async function POST(request: Request) {
   const body = await request.json();
   const communityId = String(body.communityId || "").trim();
   const signature = String(body.signature || "").trim();
+  const action = parseAction(body.action);
+
   if (!communityId) {
     return NextResponse.json(
       { error: "communityId is required" },
@@ -48,6 +83,14 @@ export async function POST(request: Request) {
   if (!signature) {
     return NextResponse.json(
       { error: "signature is required" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
+  if (!action) {
+    return NextResponse.json(
+      {
+        error: `action must be one of: ${UPDATE_ACTIONS.join(", ")}`,
+      },
       { status: 400, headers: corsHeaders() }
     );
   }
@@ -73,17 +116,10 @@ export async function POST(request: Request) {
       { status: 403, headers: corsHeaders() }
     );
   }
-  if (!community.serviceContracts.length) {
-    return NextResponse.json(
-      { error: "No contracts are registered for this community" },
-      { status: 400, headers: corsHeaders() }
-    );
-  }
 
-  const authMessage = "24-7-playground";
   let walletAddress = "";
   try {
-    walletAddress = getAddress(verifyMessage(authMessage, signature)).toLowerCase();
+    walletAddress = getAddress(verifyMessage(FIXED_MESSAGE, signature)).toLowerCase();
   } catch {
     return NextResponse.json(
       { error: "Invalid signature" },
@@ -94,97 +130,339 @@ export async function POST(request: Request) {
   const ownerWallet = community.ownerWallet?.toLowerCase() || "";
   if (ownerWallet && ownerWallet !== walletAddress) {
     return NextResponse.json(
-      { error: "Only the community owner can update system threads" },
+      { error: "Only the community owner can update this community" },
       { status: 403, headers: corsHeaders() }
     );
   }
 
-  const pendingUpdates: Array<{
-    contractId: string;
-    abiJson: unknown;
-    sourceInfo: any;
-    faucetFunction: string | null;
-  }> = [];
+  if (!ownerWallet) {
+    await prisma.community.update({
+      where: { id: community.id },
+      data: { ownerWallet: walletAddress },
+    });
+  }
 
-  for (const contract of community.serviceContracts) {
-    let abiJson: unknown;
-    let sourceInfo: any;
-    try {
-      abiJson = await fetchEtherscanAbi(contract.address);
-      sourceInfo = await fetchEtherscanSource(contract.address);
-    } catch (error) {
+  let changedContractCount = 0;
+  const updatedContractIdSet = new Set<string>();
+  let commentBody = "";
+
+  if (action === "UPDATE_DESCRIPTION") {
+    const nextDescription = String(body.description || "").trim();
+    const prevDescription = String(community.description || "").trim();
+
+    if (prevDescription === nextDescription) {
       return NextResponse.json(
         {
-          error:
-            error instanceof Error
-              ? `${contract.address}: ${error.message}`
-              : "ABI fetch failed",
+          updated: false,
+          action,
+          message: "Description is unchanged.",
+        },
+        { headers: corsHeaders() }
+      );
+    }
+
+    await prisma.community.update({
+      where: { id: community.id },
+      data: {
+        description: nextDescription || null,
+      },
+    });
+
+    commentBody = [
+      "## Contract Registry Change",
+      "",
+      "- **Action:** `Service Description Updated`",
+      `- **Before:** ${formatValue(prevDescription)}`,
+      `- **After:** ${formatValue(nextDescription)}`,
+      `- **Applied At:** \`${new Date().toISOString()}\``,
+    ].join("\n");
+  }
+
+  if (action === "UPDATE_CONTRACT") {
+    const contractId = String(body.contractId || "").trim();
+    if (!contractId) {
+      return NextResponse.json(
+        { error: "contractId is required for UPDATE_CONTRACT" },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    const target = community.serviceContracts.find((contract) => contract.id === contractId);
+    if (!target) {
+      return NextResponse.json(
+        { error: "Contract not found in selected community" },
+        { status: 404, headers: corsHeaders() }
+      );
+    }
+
+    const nextName = String(body.name || "").trim() || target.name;
+    const rawNextAddress = String(body.address || "").trim() || target.address;
+    const nextAddress = normalizeContractAddress(rawNextAddress);
+
+    if (!nextAddress) {
+      return NextResponse.json(
+        { error: "Contract address is invalid" },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    const duplicateInCommunity = await prisma.serviceContract.findFirst({
+      where: {
+        communityId: community.id,
+        id: { not: target.id },
+        address: { equals: nextAddress, mode: "insensitive" },
+      },
+      select: { id: true },
+    });
+
+    if (duplicateInCommunity) {
+      return NextResponse.json(
+        { error: "Another contract in this community already uses that address" },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    const duplicateInOtherCommunity = await prisma.serviceContract.findFirst({
+      where: {
+        id: { not: target.id },
+        chain: target.chain,
+        address: { equals: nextAddress, mode: "insensitive" },
+        communityId: { not: community.id },
+      },
+      include: {
+        community: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
+      },
+    });
+
+    if (duplicateInOtherCommunity) {
+      return NextResponse.json(
+        {
+          error: `Address already belongs to another community (${duplicateInOtherCommunity.community?.name || duplicateInOtherCommunity.community?.slug || "unknown"})`,
         },
         { status: 400, headers: corsHeaders() }
       );
     }
 
-    const nextAbi = JSON.stringify(abiJson);
-    const prevAbi = JSON.stringify(contract.abiJson);
-    const nextSource = JSON.stringify(sourceInfo || {});
-    const prevSource = JSON.stringify(contract.sourceJson || {});
-
-    if (nextAbi === prevAbi && nextSource === prevSource) {
-      continue;
+    let abiJson: unknown;
+    let sourceInfo: unknown;
+    try {
+      abiJson = await fetchEtherscanAbi(nextAddress);
+      sourceInfo = await fetchEtherscanSource(nextAddress);
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? `${nextAddress}: ${error.message}`
+              : "ABI/source fetch failed",
+        },
+        { status: 400, headers: corsHeaders() }
+      );
     }
 
-    const faucetFunction = detectFaucet(abiJson);
+    const nameChanged = nextName !== target.name;
+    const addressChanged = nextAddress !== target.address.toLowerCase();
+    const abiChanged = JSON.stringify(abiJson) !== JSON.stringify(target.abiJson);
+    const sourceChanged =
+      JSON.stringify(sourceInfo || {}) !== JSON.stringify(target.sourceJson || {});
 
-    pendingUpdates.push({
-      contractId: contract.id,
-      abiJson,
-      sourceInfo,
-      faucetFunction,
+    if (!nameChanged && !addressChanged && !abiChanged && !sourceChanged) {
+      return NextResponse.json(
+        {
+          updated: false,
+          action,
+          message: "Selected contract has no change.",
+        },
+        { headers: corsHeaders() }
+      );
+    }
+
+    await prisma.serviceContract.update({
+      where: { id: target.id },
+      data: {
+        name: nextName,
+        address: nextAddress,
+        abiJson: toInputJson(abiJson),
+        sourceJson: toInputJson(sourceInfo),
+        faucetFunction: detectFaucet(abiJson),
+      },
     });
+
+    changedContractCount = 1;
+    updatedContractIdSet.add(target.id);
+
+    commentBody = [
+      "## Contract Registry Change",
+      "",
+      "- **Action:** `Contract Updated`",
+      `- **Contract:** \`${target.name}\` -> \`${nextName}\``,
+      `- **Address:** \`${target.address}\` -> \`${nextAddress}\``,
+      `- **Metadata Refresh:** \`${abiChanged || sourceChanged ? "yes" : "no"}\``,
+      `- **Applied At:** \`${new Date().toISOString()}\``,
+    ].join("\n");
   }
 
-  if (!pendingUpdates.length) {
+  if (action === "REMOVE_CONTRACT") {
+    const contractId = String(body.contractId || "").trim();
+    if (!contractId) {
+      return NextResponse.json(
+        { error: "contractId is required for REMOVE_CONTRACT" },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    const target = community.serviceContracts.find((contract) => contract.id === contractId);
+    if (!target) {
+      return NextResponse.json(
+        { error: "Contract not found in selected community" },
+        { status: 404, headers: corsHeaders() }
+      );
+    }
+
+    await prisma.serviceContract.delete({ where: { id: target.id } });
+    changedContractCount = 1;
+
+    commentBody = [
+      "## Contract Registry Change",
+      "",
+      "- **Action:** `Contract Removed`",
+      `- **Contract:** \`${target.name}\``,
+      `- **Address:** \`${target.address}\``,
+      `- **Applied At:** \`${new Date().toISOString()}\``,
+    ].join("\n");
+  }
+
+  if (action === "ADD_CONTRACT") {
+    const name = String(body.name || "").trim() || community.name;
+    const rawAddress = String(body.address || "").trim();
+    const chain = String(body.chain || community.serviceContracts[0]?.chain || SEPOLIA_CHAIN).trim() || SEPOLIA_CHAIN;
+
+    if (!rawAddress) {
+      return NextResponse.json(
+        { error: "address is required for ADD_CONTRACT" },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+    if (chain !== SEPOLIA_CHAIN) {
+      return NextResponse.json(
+        { error: "Only Sepolia is supported for now" },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    const address = normalizeContractAddress(rawAddress);
+    if (!address) {
+      return NextResponse.json(
+        { error: "Contract address is invalid" },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    const existingContract = await prisma.serviceContract.findFirst({
+      where: {
+        chain,
+        address: { equals: address, mode: "insensitive" },
+      },
+      include: {
+        community: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (existingContract?.communityId === community.id) {
+      return NextResponse.json(
+        { error: "This contract is already registered in the selected community" },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    if (existingContract?.communityId && existingContract.communityId !== community.id) {
+      return NextResponse.json(
+        {
+          error: `Address already belongs to another community (${existingContract.community?.name || existingContract.community?.slug || "unknown"})`,
+        },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    let abiJson: unknown;
+    let sourceInfo: unknown;
+    try {
+      abiJson = await fetchEtherscanAbi(address);
+      sourceInfo = await fetchEtherscanSource(address);
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? `${address}: ${error.message}`
+              : "ABI/source fetch failed",
+        },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    const created = await prisma.serviceContract.create({
+      data: {
+        name,
+        address,
+        chain,
+        communityId: community.id,
+        abiJson: toInputJson(abiJson),
+        sourceJson: toInputJson(sourceInfo),
+        faucetFunction: detectFaucet(abiJson),
+      },
+      select: { id: true, name: true, address: true, chain: true },
+    });
+
+    changedContractCount = 1;
+    updatedContractIdSet.add(created.id);
+
+    commentBody = [
+      "## Contract Registry Change",
+      "",
+      "- **Action:** `Contract Added`",
+      `- **Contract:** \`${created.name}\``,
+      `- **Address:** \`${created.address}\``,
+      `- **Chain:** \`${created.chain}\``,
+      `- **Applied At:** \`${new Date().toISOString()}\``,
+    ].join("\n");
+  }
+
+  const refreshedCommunity = await prisma.community.findUnique({
+    where: { id: community.id },
+    include: {
+      serviceContracts: {
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+
+  if (!refreshedCommunity) {
     return NextResponse.json(
-      { updated: false, updatedCount: 0 },
-      { headers: corsHeaders() }
+      { error: "Community not found after update" },
+      { status: 404, headers: corsHeaders() }
     );
   }
 
-  await prisma.$transaction(async (tx) => {
-    for (const item of pendingUpdates) {
-      await tx.serviceContract.update({
-        where: { id: item.contractId },
-        data: {
-          abiJson: toInputJson(item.abiJson),
-          sourceJson: toInputJson(item.sourceInfo),
-          faucetFunction: item.faucetFunction,
-        },
-      });
-    }
-  });
-
-  const allContracts = await prisma.serviceContract.findMany({
-    where: { communityId: community.id },
-    orderBy: { createdAt: "asc" },
-    select: {
-      id: true,
-      name: true,
-      address: true,
-      chain: true,
-      abiJson: true,
-      sourceJson: true,
-      faucetFunction: true,
-    },
-  });
-  const updatedContractIdSet = new Set(
-    pendingUpdates.map((item) => item.contractId)
-  );
-  const snapshotBody = buildSystemSnapshotBody({
+  const systemThreadSync = await upsertCanonicalSystemThread({
+    communityId: refreshedCommunity.id,
+    serviceName: refreshedCommunity.name,
+    serviceDescription: refreshedCommunity.description,
+    githubRepositoryUrl: refreshedCommunity.githubRepositoryUrl,
     snapshotType: "UPDATE",
-    serviceName: community.name,
-    serviceDescription: community.description,
-    githubRepositoryUrl: community.githubRepositoryUrl,
-    contracts: allContracts.map((contract) => ({
+    title: `Contract registry: ${refreshedCommunity.name}`,
+    contracts: refreshedCommunity.serviceContracts.map((contract) => ({
       id: contract.id,
       name: contract.name,
       address: contract.address,
@@ -194,32 +472,18 @@ export async function POST(request: Request) {
       faucetFunction: contract.faucetFunction || null,
       updated: updatedContractIdSet.has(contract.id),
     })),
-  });
-  const bodyHash = hashSystemBody(snapshotBody);
-
-  const thread = await prisma.thread.create({
-    data: {
-      communityId: community.id,
-      title: `Contract update detected: ${community.name} (${pendingUpdates.length} changed)`,
-      body: snapshotBody,
-      type: "SYSTEM",
-    },
-  });
-
-  await prisma.community.update({
-    where: { id: community.id },
-    data: {
-      lastSystemHash: bodyHash,
-      ownerWallet: ownerWallet || walletAddress,
-    },
+    commentBody,
   });
 
   return NextResponse.json(
     {
       updated: true,
-      updatedCount: 1,
-      changedContractCount: pendingUpdates.length,
-      threads: [thread],
+      action,
+      changedContractCount,
+      contractCount: refreshedCommunity.serviceContracts.length,
+      systemThreadId: systemThreadSync.threadId,
+      systemThreadCreated: systemThreadSync.created,
+      removedSystemThreadCount: systemThreadSync.removedThreadCount,
     },
     { headers: corsHeaders() }
   );

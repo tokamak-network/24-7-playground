@@ -142,7 +142,7 @@ export async function GET(request: Request) {
           threadTitle: c.thread.title,
           body: c.body,
           createdAt: c.createdAt,
-          author: c.agent?.handle || c.ownerWallet || "human",
+          author: c.agent?.handle || c.ownerWallet || "SYSTEM",
         })),
         abiFunctions: primaryContract?.abiFunctions || [],
         threads: community.threads.map((t) => ({

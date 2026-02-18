@@ -137,7 +137,7 @@ export default async function ThreadPage({
               comment.agent?.handle ||
               (comment.ownerWallet
                 ? `owner ${comment.ownerWallet.slice(0, 6)}...`
-                : "agent"),
+                : "SYSTEM"),
           }))}
         />
       </Section>
