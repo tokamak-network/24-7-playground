@@ -1,18 +1,73 @@
 "use client";
 
-import { useState } from "react";
-import { Button, Field } from "src/components/ui";
+import { useMemo, useState } from "react";
+import { Field } from "src/components/ui";
+
+type ContractDraft = {
+  name: string;
+  address: string;
+};
+
+function emptyContractDraft(): ContractDraft {
+  return { name: "", address: "" };
+}
 
 export function ContractRegistrationForm() {
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
+  const [serviceName, setServiceName] = useState("");
+  const [description, setDescription] = useState("");
+  const [contracts, setContracts] = useState<ContractDraft[]>([emptyContractDraft()]);
   const [githubRepositoryUrl, setGithubRepositoryUrl] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const activeContractCount = useMemo(
+    () => contracts.filter((contract) => contract.address.trim()).length,
+    [contracts]
+  );
+
+  const updateContract = (
+    index: number,
+    field: keyof ContractDraft,
+    value: string
+  ) => {
+    setContracts((prev) =>
+      prev.map((contract, currentIndex) =>
+        currentIndex === index
+          ? {
+              ...contract,
+              [field]: value,
+            }
+          : contract
+      )
+    );
+  };
+
+  const addContractRow = () => {
+    setContracts((prev) => [...prev, emptyContractDraft()]);
+  };
+
+  const removeContractRow = (index: number) => {
+    setContracts((prev) => {
+      if (prev.length <= 1) return prev;
+      return prev.filter((_, currentIndex) => currentIndex !== index);
+    });
+  };
+
   const submit = async () => {
-    if (!name || !address) {
-      setStatus("Name and address are required.");
+    if (!serviceName.trim()) {
+      setStatus("Service name is required.");
+      return;
+    }
+
+    const preparedContracts = contracts
+      .map((contract) => ({
+        name: contract.name.trim() || serviceName.trim(),
+        address: contract.address.trim(),
+      }))
+      .filter((contract) => contract.address);
+
+    if (!preparedContracts.length) {
+      setStatus("At least one contract address is required.");
       return;
     }
 
@@ -50,8 +105,9 @@ export function ContractRegistrationForm() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name,
-        address,
+        serviceName: serviceName.trim(),
+        description: description.trim(),
+        contracts: preparedContracts,
         chain: "Sepolia",
         signature,
         githubRepositoryUrl,
@@ -86,8 +142,10 @@ export function ContractRegistrationForm() {
       setBusy(false);
       return;
     }
+
+    const count = Number(data.contractCount || activeContractCount || preparedContracts.length);
     setStatus(
-      `Community created: ${data.community?.name || ""} (${data.community?.slug || ""})`
+      `Community updated: ${data.community?.name || ""} (${data.community?.slug || ""}) · ${count} contract${count === 1 ? "" : "s"}`
     );
     setBusy(false);
   };
@@ -103,30 +161,71 @@ export function ContractRegistrationForm() {
       <Field
         label="Service Name"
         placeholder="Vault, Exchange, Lending"
-        onChange={(event) => setName(event.currentTarget.value)}
+        onChange={(event) => setServiceName(event.currentTarget.value)}
+        value={serviceName}
       />
       <Field
-        label="Contract Address"
-        placeholder="0x..."
-        onChange={(event) => setAddress(event.currentTarget.value)}
+        label="Service Description (Optional)"
+        placeholder="Describe what this Ethereum service does"
+        as="textarea"
+        onChange={(event) => setDescription(event.currentTarget.value)}
+        value={description}
       />
-      <Field
-        label="Target Chain"
-        as="select"
-        options={["Sepolia"]}
-      />
+
+      <div className="field">
+        <label>Service Contracts</label>
+        <div className="contract-entry-list">
+          {contracts.map((contract, index) => (
+            <div className="contract-entry-grid" key={`contract-entry-${index}`}>
+              <input
+                placeholder="Contract Name (optional)"
+                value={contract.name}
+                onChange={(event) => updateContract(index, "name", event.currentTarget.value)}
+              />
+              <input
+                placeholder="Contract Address (0x...)"
+                value={contract.address}
+                onChange={(event) =>
+                  updateContract(index, "address", event.currentTarget.value)
+                }
+              />
+              <button
+                type="button"
+                className="button button-secondary contract-entry-remove"
+                onClick={() => removeContractRow(index)}
+                disabled={contracts.length <= 1 || busy}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="contract-entry-actions">
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={addContractRow}
+            disabled={busy}
+          >
+            Add Contract
+          </button>
+        </div>
+      </div>
+
+      <Field label="Target Chain" as="select" options={["Sepolia"]} />
       <Field
         label="GitHub Repository URL (Optional)"
         placeholder="https://github.com/owner/repository"
         onChange={(event) => setGithubRepositoryUrl(event.currentTarget.value)}
+        value={githubRepositoryUrl}
       />
       <div className="status">{status}</div>
       <button
         type="submit"
         className="button"
-        disabled={!name || !address || busy}
+        disabled={!serviceName.trim() || activeContractCount === 0 || busy}
       >
-        {busy ? "Working..." : "Register Contract"}
+        {busy ? "Working..." : "Register Community"}
       </button>
     </form>
   );

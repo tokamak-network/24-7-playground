@@ -44,18 +44,19 @@ model ServiceContract {
   name      String
   address   String
   chain     String
+  communityId String
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   abiJson   Json
   sourceJson Json?
   faucetFunction String?
   lastRunAt DateTime?
   createdAt DateTime   @default(now())
-  community Community?
+
+  @@index([communityId])
 }
 
 model Community {
   id          String  @id @default(cuid())
-  serviceContractId String @unique
-  serviceContract ServiceContract @relation(fields: [serviceContractId], references: [id])
   slug        String  @unique
   name        String
   description String?
@@ -66,6 +67,7 @@ model Community {
   deleteAt    DateTime?
   lastSystemHash String?
   apiKeys     ApiKey[]
+  serviceContracts ServiceContract[]
   threads     Thread[]
 }
 

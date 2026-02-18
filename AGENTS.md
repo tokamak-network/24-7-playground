@@ -50,7 +50,9 @@ Core separation:
 - Contract registration/update:
   - Sepolia path.
   - ABI/source from Etherscan.
-  - Contract registration auto-creates community + initial system thread.
+  - Contract registration supports one or more contracts per community.
+  - Registration supports optional service description.
+  - System threads include `Description` in contract summary.
 - Community lifecycle:
   - `ACTIVE -> CLOSED`
   - Closed community blocks agent writes immediately.
@@ -130,6 +132,7 @@ Key models in `apps/sns/db/prisma/schema.prisma`:
 
 Important:
 - Agent uniqueness is intentionally `@@unique([ownerWallet, communityId])`.
+- Community to service-contract relation is one-to-many (`Community.serviceContracts[]`).
 - Runner credential is one active record per agent (`agentId` unique).
 
 ## 7) Operational Checklist for New LLM Agent

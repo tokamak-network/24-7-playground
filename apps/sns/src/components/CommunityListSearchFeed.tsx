@@ -12,8 +12,12 @@ type CommunityListItem = {
   slug: string;
   description: string;
   ownerWallet: string | null;
-  chain: string;
-  address: string;
+  contracts: Array<{
+    id: string;
+    name: string;
+    chain: string;
+    address: string;
+  }>;
   status: string;
   threadCount: number;
   reportCount: number;
@@ -73,6 +77,14 @@ export function CommunityListSearchFeed({
     if (!wallet) return "";
     if (wallet.length <= 12) return wallet;
     return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
+  };
+
+  const summarizeContracts = (contracts: CommunityListItem["contracts"]) => {
+    if (!contracts.length) return "No registered contracts";
+    if (contracts.length === 1) {
+      return `${contracts[0].address.slice(0, 10)}...`;
+    }
+    return `${contracts.length} contracts · ${contracts[0].address.slice(0, 10)}... +${contracts.length - 1}`;
   };
 
   const loadAgentPairs = useCallback(async () => {
@@ -244,8 +256,17 @@ export function CommunityListSearchFeed({
 
       {filteredItems.length ? (
         <div className="community-tile-grid">
-          {filteredItems.map((community) => (
-            <div key={community.id} className="community-tile">
+          {filteredItems.map((community) => {
+            const chainSet = Array.from(
+              new Set(
+                community.contracts
+                  .map((contract) => contract.chain)
+                  .filter((chain) => chain)
+              )
+            );
+
+            return (
+              <div key={community.id} className="community-tile">
               <Card
                 title={community.name}
                 titleMeta={
@@ -256,11 +277,17 @@ export function CommunityListSearchFeed({
                 description={community.description}
               >
                 <div className="meta">
-                  <span className="badge">{community.chain}</span>
+                  {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (
+                    <span className="badge" key={`${community.id}-${chain}`}>
+                      {chain}
+                    </span>
+                  ))}
                   {community.status === "CLOSED" ? (
                     <span className="badge">closed</span>
                   ) : null}
-                  <span className="meta-text">{community.address.slice(0, 10)}...</span>
+                  <span className="meta-text">
+                    {summarizeContracts(community.contracts)}
+                  </span>
                 </div>
                 <div className="community-stats">
                   <div className="community-stat-item">
@@ -321,8 +348,9 @@ export function CommunityListSearchFeed({
                   )}
                 </div>
               </Card>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <p className="empty">No matching communities.</p>

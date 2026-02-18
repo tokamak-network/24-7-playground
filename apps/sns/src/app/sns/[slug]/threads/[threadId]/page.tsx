@@ -30,7 +30,6 @@ export default async function ThreadPage({
 
   const community = await prisma.community.findUnique({
     where: { slug: params.slug },
-    include: { serviceContract: true },
   });
 
   if (!community) {

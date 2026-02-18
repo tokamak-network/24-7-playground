@@ -54,7 +54,11 @@ export async function POST(request: Request) {
 
   const community = await prisma.community.findUnique({
     where: { id: communityId },
-    include: { serviceContract: true },
+    include: {
+      serviceContracts: {
+        orderBy: { createdAt: "asc" },
+      },
+    },
   });
 
   if (!community) {
@@ -67,6 +71,12 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { error: "Community is closed" },
       { status: 403, headers: corsHeaders() }
+    );
+  }
+  if (!community.serviceContracts.length) {
+    return NextResponse.json(
+      { error: "No contracts are registered for this community" },
+      { status: 400, headers: corsHeaders() }
     );
   }
 
@@ -89,87 +99,112 @@ export async function POST(request: Request) {
     );
   }
 
-  const address = community.serviceContract.address;
-  const chain = community.serviceContract.chain;
+  const pendingUpdates: Array<{
+    contractId: string;
+    contractName: string;
+    address: string;
+    chain: string;
+    abiJson: unknown;
+    sourceInfo: any;
+    faucetFunction: string | null;
+    draftBody: string;
+    draftHash: string;
+  }> = [];
 
-  let abiJson: unknown;
-  let sourceInfo: any;
-  try {
-    abiJson = await fetchEtherscanAbi(address);
-    sourceInfo = await fetchEtherscanSource(address);
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "ABI fetch failed" },
-      { status: 400, headers: corsHeaders() }
-    );
-  }
+  for (const contract of community.serviceContracts) {
+    let abiJson: unknown;
+    let sourceInfo: any;
+    try {
+      abiJson = await fetchEtherscanAbi(contract.address);
+      sourceInfo = await fetchEtherscanSource(contract.address);
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? `${contract.address}: ${error.message}`
+              : "ABI fetch failed",
+        },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
 
-  const nextAbi = JSON.stringify(abiJson);
-  const prevAbi = JSON.stringify(community.serviceContract.abiJson);
-  const nextSource = JSON.stringify(sourceInfo || {});
-  const prevSource = JSON.stringify(community.serviceContract.sourceJson || {});
+    const nextAbi = JSON.stringify(abiJson);
+    const prevAbi = JSON.stringify(contract.abiJson);
+    const nextSource = JSON.stringify(sourceInfo || {});
+    const prevSource = JSON.stringify(contract.sourceJson || {});
 
-  if (nextAbi === prevAbi && nextSource === prevSource) {
-    return NextResponse.json(
-      { updated: false },
-      { headers: corsHeaders() }
-    );
-  }
+    if (nextAbi === prevAbi && nextSource === prevSource) {
+      continue;
+    }
 
-  const faucetFunction = detectFaucet(abiJson);
-  const draftBody = buildSystemBody({
-    name: community.serviceContract.name,
-    address,
-    chain,
-    sourceInfo,
-    abiJson,
-    githubRepositoryUrl: community.githubRepositoryUrl,
-  });
-  const draftHash = hashSystemBody(draftBody);
+    const faucetFunction = detectFaucet(abiJson);
+    const draftBody = buildSystemBody({
+      name: contract.name,
+      address: contract.address,
+      chain: contract.chain,
+      serviceDescription: community.description,
+      sourceInfo,
+      abiJson,
+      githubRepositoryUrl: community.githubRepositoryUrl,
+    });
 
-  const latestSystemThread = await prisma.thread.findFirst({
-    where: { communityId: community.id, type: "SYSTEM" },
-    orderBy: { createdAt: "desc" },
-  });
-  const latestHash = latestSystemThread
-    ? hashSystemBody(latestSystemThread.body)
-    : community.lastSystemHash;
-
-  if (latestHash && latestHash === draftHash) {
-    return NextResponse.json(
-      { updated: false },
-      { headers: corsHeaders() }
-    );
-  }
-
-  await prisma.serviceContract.update({
-    where: { id: community.serviceContract.id },
-    data: {
-      abiJson: toInputJson(abiJson),
-      sourceJson: toInputJson(sourceInfo),
+    pendingUpdates.push({
+      contractId: contract.id,
+      contractName: contract.name,
+      address: contract.address,
+      chain: contract.chain,
+      abiJson,
+      sourceInfo,
       faucetFunction,
-    },
-  });
+      draftBody,
+      draftHash: hashSystemBody(draftBody),
+    });
+  }
 
-  const thread = await prisma.thread.create({
-    data: {
-      communityId: community.id,
-      title: `Contract update detected for ${community.serviceContract.name}`,
-      body: draftBody,
-      type: "SYSTEM",
-    },
-  });
+  if (!pendingUpdates.length) {
+    return NextResponse.json(
+      { updated: false, updatedCount: 0 },
+      { headers: corsHeaders() }
+    );
+  }
+
+  const createdThreads = [];
+  for (const item of pendingUpdates) {
+    await prisma.serviceContract.update({
+      where: { id: item.contractId },
+      data: {
+        abiJson: toInputJson(item.abiJson),
+        sourceJson: toInputJson(item.sourceInfo),
+        faucetFunction: item.faucetFunction,
+      },
+    });
+
+    const thread = await prisma.thread.create({
+      data: {
+        communityId: community.id,
+        title: `Contract update detected for ${item.contractName}`,
+        body: item.draftBody,
+        type: "SYSTEM",
+      },
+    });
+    createdThreads.push(thread);
+  }
 
   await prisma.community.update({
     where: { id: community.id },
     data: {
-      lastSystemHash: draftHash,
+      lastSystemHash: pendingUpdates[pendingUpdates.length - 1].draftHash,
       ownerWallet: ownerWallet || walletAddress,
     },
   });
 
   return NextResponse.json(
-    { updated: true, thread },
+    {
+      updated: true,
+      updatedCount: createdThreads.length,
+      threads: createdThreads,
+    },
     { headers: corsHeaders() }
   );
 }

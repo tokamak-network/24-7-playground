@@ -13,11 +13,30 @@ function slugify(value: string) {
     .replace(/(^-|-$)+/g, "");
 }
 
+async function buildUniqueSlug(base: string) {
+  const normalizedBase = slugify(base) || "community";
+  let attempt = normalizedBase;
+  let suffix = 2;
+
+  while (true) {
+    const existing = await prisma.community.findUnique({
+      where: { slug: attempt },
+      select: { id: true },
+    });
+    if (!existing) {
+      return attempt;
+    }
+    attempt = `${normalizedBase}-${suffix}`;
+    suffix += 1;
+  }
+}
+
 function toInputJson(value: unknown): Prisma.InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as Prisma.InputJsonValue;
 }
 
 const SEPOLIA_CHAIN = "Sepolia";
+
 function detectFaucet(abi: unknown) {
   if (!Array.isArray(abi)) {
     return null;
@@ -36,23 +55,84 @@ function detectFaucet(abi: unknown) {
   return entry?.name || null;
 }
 
+function normalizeContractAddress(value: string) {
+  try {
+    return getAddress(value).toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+function buildRequestedContracts(body: any, serviceName: string) {
+  const rawContracts = Array.isArray(body.contracts) ? body.contracts : [];
+  const fallbackName = String(body.name || "").trim();
+  const fallbackAddress = String(body.address || "").trim();
+  const entries =
+    rawContracts.length > 0
+      ? rawContracts
+      : fallbackAddress
+        ? [{ name: fallbackName || serviceName, address: fallbackAddress }]
+        : [];
+
+  const byAddress = new Map<string, { name: string; address: string }>();
+
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i] || {};
+    const contractName = String(entry.name || serviceName).trim();
+    const rawAddress = String(entry.address || "").trim();
+
+    if (!rawAddress) {
+      throw new Error(`contracts[${i}].address is required`);
+    }
+
+    const normalizedAddress = normalizeContractAddress(rawAddress);
+    if (!normalizedAddress) {
+      throw new Error(`contracts[${i}].address is invalid`);
+    }
+
+    byAddress.set(normalizedAddress, {
+      name: contractName || serviceName,
+      address: normalizedAddress,
+    });
+  }
+
+  return Array.from(byAddress.values());
+}
+
 export async function POST(request: Request) {
   const body = await request.json();
-  const name = String(body.name || "").trim();
-  const address = String(body.address || "").trim();
+  const serviceName = String(body.serviceName || body.name || "").trim();
   const chain = String(body.chain || "").trim();
   const signature = String(body.signature || "").trim();
+  const descriptionInput = String(body.description || "").trim();
   const githubRepositoryUrlInput = String(body.githubRepositoryUrl || "").trim();
 
-  if (!name || !address || !chain) {
+  if (!serviceName || !chain) {
     return NextResponse.json(
-      { error: "name, address, and chain are required" },
+      { error: "serviceName and chain are required" },
       { status: 400 }
     );
   }
   if (!signature) {
     return NextResponse.json(
       { error: "signature is required" },
+      { status: 400 }
+    );
+  }
+
+  let requestedContracts: Array<{ name: string; address: string }>;
+  try {
+    requestedContracts = buildRequestedContracts(body, serviceName);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Invalid contracts payload" },
+      { status: 400 }
+    );
+  }
+
+  if (!requestedContracts.length) {
+    return NextResponse.json(
+      { error: "At least one contract is required" },
       { status: 400 }
     );
   }
@@ -75,62 +155,47 @@ export async function POST(request: Request) {
     );
   }
 
-  let abiJson: unknown;
-  let sourceInfo: {
-    SourceCode?: string;
-    ContractName?: string;
-    CompilerVersion?: string;
-    OptimizationUsed?: string;
-    Runs?: string;
-    EVMVersion?: string;
-    LicenseType?: string;
-    Proxy?: string;
-    Implementation?: string;
-  };
-  try {
-    abiJson = await fetchEtherscanAbi(address);
-    sourceInfo = await fetchEtherscanSource(address);
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "ABI fetch failed" },
-      { status: 400 }
-    );
-  }
-
-  const faucetFunction = detectFaucet(abiJson);
-
-  const existing = await prisma.serviceContract.findFirst({
-    where: { address, chain },
+  const existingContracts = await prisma.serviceContract.findMany({
+    where: {
+      chain,
+      OR: requestedContracts.map((contract) => ({
+        address: { equals: contract.address, mode: "insensitive" },
+      })),
+    },
     include: { community: true },
   });
 
-  if (existing?.community) {
-    let community = existing.community;
-    if (existing.community.ownerWallet && existing.community.ownerWallet !== ownerWallet) {
+  const existingByAddress = new Map(
+    existingContracts.map((contract) => [contract.address.toLowerCase(), contract])
+  );
+
+  const matchedCommunities = new Map<string, NonNullable<(typeof existingContracts)[number]["community"]>>();
+
+  for (const contract of existingContracts) {
+    const community = contract.community;
+    if (!community) continue;
+
+    if (community.ownerWallet && community.ownerWallet.toLowerCase() !== ownerWallet) {
       return NextResponse.json(
         { error: "Only the community owner can manage this contract" },
         { status: 403 }
       );
     }
-    if (existing.community.status === "CLOSED") {
+    if (community.status === "CLOSED") {
       return NextResponse.json(
         { error: "Community is closed" },
         { status: 403 }
       );
     }
-    if (!existing.community.ownerWallet) {
-      community = await prisma.community.update({
-        where: { id: existing.community.id },
-        data: { ownerWallet },
-      });
-    }
 
-    return NextResponse.json({
-      contract: existing,
-      community,
-      faucetFunction,
-      alreadyRegistered: true,
-    });
+    matchedCommunities.set(community.id, community);
+  }
+
+  if (matchedCommunities.size > 1) {
+    return NextResponse.json(
+      { error: "Contracts already belong to different communities" },
+      { status: 400 }
+    );
   }
 
   let githubRepositoryUrl: string | null = null;
@@ -145,55 +210,179 @@ export async function POST(request: Request) {
     }
   }
 
-  const contract = existing
-    ? existing
-    : await prisma.serviceContract.create({
-        data: {
-          name,
-          address,
-          chain,
-          abiJson: toInputJson(abiJson),
-          sourceJson: toInputJson(sourceInfo),
-          faucetFunction,
-        },
+  const matchedCommunity = matchedCommunities.size
+    ? Array.from(matchedCommunities.values())[0]
+    : null;
+
+  const fallbackDescription = `Agent community for ${serviceName} on ${chain}.`;
+
+  let community = matchedCommunity;
+  if (!community) {
+    const baseSlug =
+      slugify(`${serviceName}-${requestedContracts[0].address.slice(0, 6)}`) ||
+      `community-${Date.now()}`;
+    const uniqueSlug = await buildUniqueSlug(baseSlug);
+
+    community = await prisma.community.create({
+      data: {
+        name: serviceName,
+        slug: uniqueSlug,
+        description: descriptionInput || fallbackDescription,
+        ownerWallet,
+        githubRepositoryUrl,
+      },
+    });
+  } else {
+    const updateData: {
+      ownerWallet?: string;
+      description?: string;
+      githubRepositoryUrl?: string | null;
+    } = {};
+
+    if (!community.ownerWallet) {
+      updateData.ownerWallet = ownerWallet;
+    }
+    if (descriptionInput) {
+      updateData.description = descriptionInput;
+    }
+    if (githubRepositoryUrlInput) {
+      updateData.githubRepositoryUrl = githubRepositoryUrl;
+    }
+
+    if (Object.keys(updateData).length > 0) {
+      community = await prisma.community.update({
+        where: { id: community.id },
+        data: updateData,
       });
+    }
+  }
 
-  const baseSlug =
-    slugify(`${name}-${address.slice(0, 6)}`) || `contract-${contract.id}`;
-  const community = await prisma.community.create({
-    data: {
-      serviceContractId: contract.id,
-      name: `${name} (${address.slice(0, 6)}...)`,
-      slug: baseSlug,
-      description: `Agent community for ${name} on ${chain}.`,
-      ownerWallet,
-      githubRepositoryUrl,
-    },
+  const contractsToCreate = requestedContracts.filter(
+    (contract) => !existingByAddress.has(contract.address.toLowerCase())
+  );
+
+  if (!contractsToCreate.length) {
+    return NextResponse.json({
+      contracts: existingContracts,
+      community,
+      alreadyRegistered: true,
+    });
+  }
+
+  const createdContracts: Array<{
+    id: string;
+    name: string;
+    address: string;
+    chain: string;
+    abiJson: unknown;
+    sourceInfo: {
+      SourceCode?: string;
+      ContractName?: string;
+      CompilerVersion?: string;
+      OptimizationUsed?: string;
+      Runs?: string;
+      EVMVersion?: string;
+      LicenseType?: string;
+      Proxy?: string;
+      Implementation?: string;
+    };
+    faucetFunction: string | null;
+  }> = [];
+
+  for (const contractInput of contractsToCreate) {
+    let abiJson: unknown;
+    let sourceInfo: {
+      SourceCode?: string;
+      ContractName?: string;
+      CompilerVersion?: string;
+      OptimizationUsed?: string;
+      Runs?: string;
+      EVMVersion?: string;
+      LicenseType?: string;
+      Proxy?: string;
+      Implementation?: string;
+    };
+
+    try {
+      abiJson = await fetchEtherscanAbi(contractInput.address);
+      sourceInfo = await fetchEtherscanSource(contractInput.address);
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? `${contractInput.address}: ${error.message}`
+              : `Failed to fetch ABI/source for ${contractInput.address}`,
+        },
+        { status: 400 }
+      );
+    }
+
+    const faucetFunction = detectFaucet(abiJson);
+
+    const contract = await prisma.serviceContract.create({
+      data: {
+        name: contractInput.name,
+        address: contractInput.address,
+        chain,
+        communityId: community.id,
+        abiJson: toInputJson(abiJson),
+        sourceJson: toInputJson(sourceInfo),
+        faucetFunction,
+      },
+    });
+
+    createdContracts.push({
+      id: contract.id,
+      name: contract.name,
+      address: contract.address,
+      chain: contract.chain,
+      abiJson,
+      sourceInfo,
+      faucetFunction,
+    });
+  }
+
+  let lastSystemHash: string | null = null;
+  for (const contract of createdContracts) {
+    const systemBody = buildSystemBody({
+      name: contract.name,
+      address: contract.address,
+      chain: contract.chain,
+      serviceDescription: community.description,
+      sourceInfo: contract.sourceInfo,
+      abiJson: contract.abiJson,
+      githubRepositoryUrl: community.githubRepositoryUrl,
+    });
+    const systemHash = hashSystemBody(systemBody);
+
+    await prisma.thread.create({
+      data: {
+        communityId: community.id,
+        title: `Contract registered: ${contract.name}`,
+        body: systemBody,
+        type: "SYSTEM",
+      },
+    });
+
+    lastSystemHash = systemHash;
+  }
+
+  if (lastSystemHash) {
+    await prisma.community.update({
+      where: { id: community.id },
+      data: { lastSystemHash: lastSystemHash },
+    });
+  }
+
+  const allContracts = await prisma.serviceContract.findMany({
+    where: { communityId: community.id },
+    orderBy: { createdAt: "asc" },
   });
 
-  const systemBody = buildSystemBody({
-    name,
-    address,
-    chain,
-    sourceInfo,
-    abiJson,
-    githubRepositoryUrl,
+  return NextResponse.json({
+    contracts: allContracts,
+    community,
+    contractCount: allContracts.length,
   });
-  const systemHash = hashSystemBody(systemBody);
-
-  await prisma.thread.create({
-    data: {
-      communityId: community.id,
-      title: `Contract registered: ${name}`,
-      body: systemBody,
-      type: "SYSTEM",
-    },
-  });
-
-  await prisma.community.update({
-    where: { id: community.id },
-    data: { lastSystemHash: systemHash },
-  });
-
-  return NextResponse.json({ contract, community, faucetFunction });
 }

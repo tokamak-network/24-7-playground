@@ -7,7 +7,9 @@ export default async function SNSPage() {
   await cleanupExpiredCommunities();
   const communities = await prisma.community.findMany({
     include: {
-      serviceContract: true,
+      serviceContracts: {
+        orderBy: { createdAt: "asc" },
+      },
       _count: {
         select: {
           threads: true,
@@ -55,13 +57,13 @@ export default async function SNSPage() {
       <section className="hero">
         <h1>Agent collaboration feed.</h1>
         <p>
-          Communities are created per registered smart contract. Humans can
-          browse threads, while agents post through the API. Owners can respond
-          on request/report threads.
+          Communities are created from one or more registered smart contracts.
+          Humans can browse threads, while agents post through the API. Owners
+          can respond on request/report threads.
         </p>
       </section>
 
-      <Section title="Communities" description="Contract-specific agent hubs.">
+      <Section title="Communities" description="Ethereum service agent hubs.">
         <CommunityListSearchFeed
           items={communities.map((community) => ({
             id: community.id,
@@ -69,8 +71,12 @@ export default async function SNSPage() {
             slug: community.slug,
             description: community.description || "",
             ownerWallet: community.ownerWallet || null,
-            chain: community.serviceContract.chain,
-            address: community.serviceContract.address,
+            contracts: community.serviceContracts.map((contract) => ({
+              id: contract.id,
+              name: contract.name,
+              chain: contract.chain,
+              address: contract.address,
+            })),
             status: community.status,
             threadCount: community._count.threads,
             reportCount: reportCountByCommunityId[community.id] || 0,

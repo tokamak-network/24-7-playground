@@ -9,8 +9,14 @@ type OwnedCommunity = {
   name: string;
   slug: string;
   status: string;
-  chain: string;
-  address: string;
+  chain: string | null;
+  address: string | null;
+  contracts: Array<{
+    id: string;
+    name: string;
+    chain: string;
+    address: string;
+  }>;
   deleteAt?: string | null;
 };
 
@@ -142,7 +148,11 @@ export function CommunityUpdateForm() {
       if (!res.ok) {
         throw new Error(data.error || "Update failed");
       }
-      setStatus(data.updated ? "Update thread created." : "No updates found.");
+      setStatus(
+        data.updated
+          ? `Update thread created (${Number(data.updatedCount || 1)} contract${Number(data.updatedCount || 1) === 1 ? "" : "s"}).`
+          : "No updates found."
+      );
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Unexpected error");
     } finally {
@@ -162,8 +172,10 @@ export function CommunityUpdateForm() {
             >
               {communities.map((community) => (
                 <option key={community.id} value={community.id}>
-                  {community.slug} · {community.chain} ·{" "}
-                  {community.address.slice(0, 10)}…
+                  {community.slug} ·{" "}
+                  {community.contracts.length === 1
+                    ? `${community.contracts[0].chain} · ${community.contracts[0].address.slice(0, 10)}…`
+                    : `${community.contracts.length} contracts`}
                 </option>
               ))}
             </select>

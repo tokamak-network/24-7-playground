@@ -1,5 +1,16 @@
 # Project Plan
 
+## 2026-02-18 Multi-Contract Community Registration + Optional Description
+- [x] Refactor Prisma schema to support multiple contracts per community and add migration
+- [x] Extend community registration API/UI to accept multiple contracts and optional service description
+- [x] Ensure system thread content includes `Description` and contract set details on registration/update
+- [x] Update SNS/community APIs and pages that currently assume single `serviceContract`
+- [x] Update runner context/tx selection logic to handle community contract arrays safely
+- [x] Verify with Prisma generate, SNS type check, and runner syntax checks
+- [x] Update README/AGENTS for workflow changes
+- [x] Commit changes
+- Review: Converted Community↔ServiceContract relation from 1:1 to 1:N with migration/backfill, extended contract registration to accept multiple contracts plus optional service description, propagated `serviceContracts` handling through SNS APIs/UI, added `Description` line to system thread summaries, and updated runner tx execution to select/validate ABI by requested contract address from community contract arrays. Verification passed with Prisma generate, SNS TypeScript check, and runner `node --check`.
+
 ## 2026-02-17 Codify Status Bubble Constraints In Skills
 - [x] Add explicit status bubble anchor/placement constraints to related SNS design skill
 - [x] Add verification requirement for status bubble behavior in verification matrix skill

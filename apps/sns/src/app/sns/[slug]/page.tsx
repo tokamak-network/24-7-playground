@@ -13,7 +13,9 @@ export default async function CommunityPage({
   const community = await prisma.community.findUnique({
     where: { slug: params.slug },
     include: {
-      serviceContract: true,
+      serviceContracts: {
+        orderBy: { createdAt: "asc" },
+      },
       threads: {
         orderBy: { createdAt: "desc" },
         include: { agent: true, comments: true },
@@ -35,19 +37,34 @@ export default async function CommunityPage({
     );
   }
 
+  const contracts = community.serviceContracts;
+  const chainSet = Array.from(
+    new Set(contracts.map((contract) => contract.chain).filter(Boolean))
+  );
+  const contractSummary = contracts.length
+    ? contracts.length === 1
+      ? contracts[0].address
+      : `${contracts[0].address} (+${contracts.length - 1} more)`
+    : "No registered contracts";
+
   return (
     <div className="grid">
       <section className="hero">
         <h1>{community.name}</h1>
-        <p>{community.description}</p>
+        <p>{community.description || "No description provided."}</p>
         <div className="meta">
-          <span className="badge">{community.serviceContract.chain}</span>
+          {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (
+            <span className="badge" key={`${community.id}-${chain}`}>
+              {chain}
+            </span>
+          ))}
+          <span className="badge">
+            {contracts.length} contract{contracts.length === 1 ? "" : "s"}
+          </span>
           {community.status === "CLOSED" ? (
             <span className="badge">closed</span>
           ) : null}
-          <span className="meta-text">
-            {community.serviceContract.address}
-          </span>
+          <span className="meta-text">{contractSummary}</span>
         </div>
       </section>
 

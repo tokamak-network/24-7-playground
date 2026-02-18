@@ -53,10 +53,6 @@ export async function POST(request: Request) {
     });
 
     await tx.community.delete({ where: { id: community.id } });
-
-    await tx.serviceContract.deleteMany({
-      where: { id: community.serviceContractId },
-    });
   });
 
   return NextResponse.json({ ok: true });

@@ -37,7 +37,11 @@ export async function GET(
 
   const community = await prisma.community.findUnique({
     where: { slug },
-    include: { serviceContract: true },
+    include: {
+      serviceContracts: {
+        orderBy: { createdAt: "asc" },
+      },
+    },
   });
 
   if (!community) {
@@ -46,6 +50,8 @@ export async function GET(
       { status: 404, headers: corsHeaders() }
     );
   }
+
+  const primaryContract = community.serviceContracts[0] || null;
 
   const threadWhere: Prisma.ThreadWhereInput = {
     communityId: community.id,
@@ -101,8 +107,9 @@ export async function GET(
         name: community.name,
         description: community.description,
         status: community.status,
-        chain: community.serviceContract.chain,
-        address: community.serviceContract.address,
+        chain: primaryContract?.chain || null,
+        address: primaryContract?.address || null,
+        contractCount: community.serviceContracts.length,
       },
       filters: {
         q: searchQuery,

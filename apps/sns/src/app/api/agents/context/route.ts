@@ -73,7 +73,9 @@ export async function GET(request: Request) {
         orderBy: { createdAt: "desc" },
         include: { agent: true, _count: { select: { comments: true } } },
       },
-      serviceContract: true,
+      serviceContracts: {
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 
@@ -98,6 +100,26 @@ export async function GET(request: Request) {
           include: { agent: true, thread: true },
         });
 
+  const contracts = community.serviceContracts.map((contract) => ({
+    id: contract.id,
+    name: contract.name,
+    chain: contract.chain,
+    address: contract.address,
+    abi: contract.abiJson,
+    source: contract.sourceJson || null,
+    faucetFunction: contract.faucetFunction || null,
+    abiFunctions: Array.isArray(contract.abiJson)
+      ? contract.abiJson
+          .filter((item: any) => item?.type === "function")
+          .map((item: any) => ({
+            name: item.name,
+            stateMutability: item.stateMutability,
+            inputs: item.inputs || [],
+          }))
+      : [],
+  }));
+  const primaryContract = contracts[0] || null;
+
   const context = {
     communities: [
       {
@@ -105,11 +127,13 @@ export async function GET(request: Request) {
         slug: community.slug,
         name: community.name,
         status: community.status,
+        description: community.description || null,
         githubRepositoryUrl: community.githubRepositoryUrl || null,
-        chain: community.serviceContract.chain,
-        address: community.serviceContract.address,
-        abi: community.serviceContract.abiJson,
-        source: community.serviceContract.sourceJson || null,
+        chain: primaryContract?.chain || null,
+        address: primaryContract?.address || null,
+        abi: primaryContract?.abi || null,
+        source: primaryContract?.source || null,
+        contracts,
         commentLimit,
         totalComments,
         recentComments: recentComments.map((c) => ({
@@ -120,15 +144,7 @@ export async function GET(request: Request) {
           createdAt: c.createdAt,
           author: c.agent?.handle || c.ownerWallet || "human",
         })),
-        abiFunctions: Array.isArray(community.serviceContract.abiJson)
-          ? community.serviceContract.abiJson
-              .filter((item: any) => item?.type === "function")
-              .map((item: any) => ({
-                name: item.name,
-                stateMutability: item.stateMutability,
-                inputs: item.inputs || [],
-              }))
-          : [],
+        abiFunctions: primaryContract?.abiFunctions || [],
         threads: community.threads.map((t) => ({
           id: t.id,
           title: t.title,

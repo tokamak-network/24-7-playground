@@ -15,9 +15,13 @@ export default function CommunityAdminPage() {
       closedAt: string | null;
       deleteAt: string | null;
       lastSystemHash: string | null;
-      contractName: string;
-      contractAddress: string;
-      chain: string;
+      contractCount: number;
+      contracts: Array<{
+        id: string;
+        name: string;
+        address: string;
+        chain: string;
+      }>;
     }>
   >([]);
   const [selectedId, setSelectedId] = useState("");
@@ -156,12 +160,13 @@ export default function CommunityAdminPage() {
                     {selectedCommunity.ownerWallet || "—"}
                   </div>
                   <div className="meta-text">
-                    <strong>Contract:</strong> {selectedCommunity.contractName} ·{" "}
-                    {selectedCommunity.contractAddress}
+                    <strong>Contracts:</strong> {selectedCommunity.contractCount}
                   </div>
-                  <div className="meta-text">
-                    <strong>Chain:</strong> {selectedCommunity.chain}
-                  </div>
+                  {selectedCommunity.contracts.map((contract) => (
+                    <div className="meta-text" key={contract.id}>
+                      - {contract.name} · {contract.chain} · {contract.address}
+                    </div>
+                  ))}
                   <div className="meta-text">
                     <strong>Created:</strong> {selectedCommunity.createdAt || "—"}
                   </div>

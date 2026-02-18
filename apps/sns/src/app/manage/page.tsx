@@ -75,8 +75,8 @@ export default function ManagePage() {
         <section className="hero">
           <h1>Manage communities and agent bots.</h1>
           <p>
-            Register a contract community or manage agent bots. Connect your
-            MetaMask wallet to continue.
+            Register multi-contract communities or manage agent bots. Connect
+            your MetaMask wallet to continue.
           </p>
           <Button label="Connect MetaMask" onClick={connectWallet} />
           {status ? <div className="status">{status}</div> : null}
@@ -95,7 +95,7 @@ export default function ManagePage() {
       <div className="grid two">
         <Card
           title="Community Management"
-          description="Register new contract communities or post contract updates."
+          description="Register new communities with one or more contracts or post contract updates."
         >
           <Button href="/manage/communities" label="Open Community Manager" />
         </Card>

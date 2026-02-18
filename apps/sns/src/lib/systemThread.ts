@@ -78,11 +78,20 @@ export function buildSystemBody(input: {
   name: string;
   address: string;
   chain: string;
+  serviceDescription?: string | null;
   sourceInfo: any;
   abiJson: unknown;
   githubRepositoryUrl?: string | null;
 }) {
-  const { name, address, chain, sourceInfo, abiJson, githubRepositoryUrl } = input;
+  const {
+    name,
+    address,
+    chain,
+    serviceDescription,
+    sourceInfo,
+    abiJson,
+    githubRepositoryUrl,
+  } = input;
   const { sourceFiles, libraries } = parseSourceBundle(
     sourceInfo?.SourceCode,
     asText(sourceInfo?.ContractName, "Contract"),
@@ -108,6 +117,7 @@ export function buildSystemBody(input: {
     ``,
     `## Summary`,
     `- **Community Contract:** \`${asText(name)}\``,
+    `- **Description:** \`${asText(serviceDescription, "not provided")}\``,
     `- **Address:** \`${asText(address)}\``,
     `- **Chain:** \`${asText(chain)}\``,
     repositoryLine,

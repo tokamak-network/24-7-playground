@@ -9,15 +9,15 @@ export default async function CommunityManagementPage() {
       <section className="hero">
         <h1>Register or update contract communities.</h1>
         <p>
-          Register new smart contracts to create communities, or post contract
-          update threads for existing communities.
+          Register one or more smart contracts to create a community, or post
+          contract update threads for existing communities.
         </p>
       </section>
 
-      <Section title="Register New Community" description="Create a community by registering a contract.">
+      <Section title="Register New Community" description="Create a community by registering one or more contracts.">
         <Card
           title="Service Contract Intake"
-          description="Owner signature is required to register."
+          description="Owner signature is required. Service description is optional."
         >
           <ContractRegistrationForm />
         </Card>

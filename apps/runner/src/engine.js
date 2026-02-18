@@ -693,10 +693,42 @@ class RunnerEngine {
 
         if (actionType === "tx") {
           const requestedAddress = String(action.contractAddress || "").trim();
-          const communityAddress = String(community.address || "").trim();
+          const contracts = Array.isArray(community.contracts)
+            ? community.contracts.filter(
+                (contract) =>
+                  contract &&
+                  typeof contract === "object" &&
+                  String(contract.address || "").trim()
+              )
+            : [];
+          const fallbackContract = {
+            name: null,
+            chain: community.chain || null,
+            address: community.address || null,
+            abi: Array.isArray(community.abi) ? community.abi : [],
+            source: community.source || null,
+            abiFunctions: Array.isArray(community.abiFunctions)
+              ? community.abiFunctions
+              : [],
+          };
+          const selectedContract = requestedAddress
+            ? contracts.find(
+                (contract) =>
+                  String(contract.address || "").trim().toLowerCase() ===
+                  requestedAddress.toLowerCase()
+              ) ||
+              (fallbackContract.address &&
+              String(fallbackContract.address).toLowerCase() ===
+                requestedAddress.toLowerCase()
+                ? fallbackContract
+                : null)
+            : contracts[0] || fallbackContract;
+          const selectedAddress = String(
+            (selectedContract && selectedContract.address) || ""
+          ).trim();
           const functionName = String(action.functionName || "").trim();
-          const allowedFunction = Array.isArray(community.abiFunctions)
-            ? community.abiFunctions.some(
+          const allowedFunction = Array.isArray(selectedContract?.abiFunctions)
+            ? selectedContract.abiFunctions.some(
                 (fn) => fn && String(fn.name || "") === functionName
               )
             : false;
@@ -704,19 +736,22 @@ class RunnerEngine {
           let txResult;
           if (!config.execution.privateKey || !config.execution.alchemyApiKey) {
             txResult = { error: "Execution wallet or Alchemy key missing." };
-          } else if (!Array.isArray(community.abi) || !community.abi.length) {
-            txResult = { error: "Contract ABI not available." };
-          } else if (
-            requestedAddress &&
-            communityAddress &&
-            requestedAddress.toLowerCase() !== communityAddress.toLowerCase()
-          ) {
+          } else if (requestedAddress && !selectedContract) {
             txResult = { error: "Contract address not allowed." };
+          } else if (!selectedAddress) {
+            txResult = { error: "Contract address not available." };
+          } else if (!Array.isArray(selectedContract?.abi) || !selectedContract.abi.length) {
+            txResult = { error: "Contract ABI not available." };
           } else if (!functionName || !allowedFunction) {
             txResult = { error: "Function not allowed." };
           } else {
             try {
-              txResult = await this.#executeTxAction(config, community, action);
+              txResult = await this.#executeTxAction(
+                config,
+                community,
+                selectedContract,
+                action
+              );
             } catch (error) {
               txResult = { error: toErrorMessage(error, "Tx failed") };
             }
@@ -729,7 +764,7 @@ class RunnerEngine {
             type: "tx_feedback",
             communitySlug: community.slug,
             threadId: action.threadId || null,
-            contractAddress: community.address || null,
+            contractAddress: selectedAddress || null,
             functionName: action.functionName || null,
             args: Array.isArray(action.args) ? action.args : [],
             value: action.value ?? null,
@@ -1013,10 +1048,11 @@ class RunnerEngine {
     }
   }
 
-  async #executeTxAction(config, community, action) {
+  async #executeTxAction(config, community, contractContext, action) {
     trace(this.logger, "tx-action:start", {
       config,
       community,
+      contractContext,
       action,
     });
     if (!config.execution.privateKey || !config.execution.alchemyApiKey) {
@@ -1024,14 +1060,18 @@ class RunnerEngine {
         "TX action requires execution.privateKey and execution.alchemyApiKey"
       );
     }
-    if (!Array.isArray(community.abi) || !community.abi.length) {
+    if (!contractContext || !String(contractContext.address || "").trim()) {
+      throw new Error("Community contract address is not available");
+    }
+    if (!Array.isArray(contractContext.abi) || !contractContext.abi.length) {
       throw new Error("Community ABI is not available");
     }
 
     const rpcUrl = `https://eth-sepolia.g.alchemy.com/v2/${config.execution.alchemyApiKey}`;
     const provider = new JsonRpcProvider(rpcUrl);
     const wallet = new Wallet(config.execution.privateKey, provider);
-    const contract = new Contract(String(community.address || ""), community.abi, wallet);
+    const contractAddress = String(contractContext.address || "").trim();
+    const contract = new Contract(contractAddress, contractContext.abi, wallet);
     const functionName = String(action.functionName || "").trim();
     if (!functionName) {
       throw new Error("Missing functionName for tx action");
@@ -1048,6 +1088,7 @@ class RunnerEngine {
       const result = await contract[functionName](...args);
       const output = {
         type: "call",
+        contractAddress,
         functionName,
         args,
         result: toJsonSafe(result),
@@ -1060,6 +1101,7 @@ class RunnerEngine {
     const receipt = await tx.wait(1);
     const output = {
       type: "tx",
+      contractAddress,
       functionName,
       args,
       hash: tx.hash,

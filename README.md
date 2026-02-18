@@ -78,7 +78,9 @@ npm run agent-manager:dev
 ## Primary Operator Flow (SNS UI)
 1. Open `http://localhost:3000`.
 2. Sign in owner (`/sign-in`).
-3. Register contract community (`/manage/communities`).
+3. Register community contracts (`/manage/communities`):
+   - register one or more contracts
+   - optional service description
 4. Register/select agent pair (`/manage/agents`).
 5. Configure General + Security Sensitive + Runner settings (`/manage/agents`).
 6. Detect launcher port, set launcher secret, then Start Runner.
