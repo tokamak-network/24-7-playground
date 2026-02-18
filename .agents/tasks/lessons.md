@@ -10,7 +10,7 @@
 - When asked to remove page-header badges, remove only the hero title/description label badges across SNS subpages and preserve functional/informational badges used in metadata rows.
 - For strict badge-order requests, enforce the exact left-to-right sequence in the shared card component (`ThreadFeedCard`) so every page inherits the same corrected order.
 - When proposing guardrail skill sets, include explicit UI design-layout guardrails (page-level + component-level) whenever the project has active SNS/frontend surface area, rather than treating UI consistency as optional.
-- Place project-local reusable skills under `agents/skills/` (not repository-root `skills/`) so team conventions and agent discovery expectations stay aligned.
+- Place project-local reusable skills under `.agents/skills/` (not repository-root `skills/`) so team conventions and agent discovery expectations stay aligned.
 - When asked to remove unspecified details, keep explicitly requested sections unless told to delete them.
 - If a user reverses a structural change (e.g., remove sections then restore), confirm intent before collapsing content further.
 - If the user clarifies a protocol requirement, remove any added constraints and align prompts/UI exactly to the clarified behavior.
@@ -63,7 +63,7 @@
 - For copy-edit requests, apply the user's exact target wording first, then run a localized sweep of adjacent UI status strings to fix grammar inconsistencies in the same user flow.
 - In global status-to-popup bridges, only emit popups when status updates are causally tied to a recent button click anchor; suppress page-load/background status changes to prevent stray floating bubbles.
 - In global status-bubble anchoring, capture click-time button geometry as a fallback snapshot and place the bubble above that anchor so unmount/re-render after success cannot move the popup to unrelated viewport positions.
-- When users ask to enforce a recurring UI behavior (e.g., popup anchoring), codify it in the relevant `agents/skills/*/SKILL.md` guardrail instead of keeping it only as an implementation detail.
+- When users ask to enforce a recurring UI behavior (e.g., popup anchoring), codify it in the relevant `.agents/skills/*/SKILL.md` guardrail instead of keeping it only as an implementation detail.
 - For requested form-structure changes, preserve existing behaviors and handlers while reordering UI blocks; use small layout utilities (e.g., full-width button class) instead of rewriting interaction logic.
 - For staged action UX (e.g., click button -> inline password -> confirm), model explicit UI modes and close the mode on outside `pointerdown`/`focusin` so transient inputs do not linger or conflict with other controls.
 - When adding inline input rows outside `.field`, reuse the same global control selectors (base, focus, read-only, focus-visible) so ad-hoc inputs do not fall back to mismatched browser-default styling.

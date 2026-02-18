@@ -4,7 +4,7 @@
 - [x] Inventory security-sensitive keys and constants from SNS/Runner/auth flows
 - [x] Define allowed exposure scope/method for each key/constant
 - [x] Include GitHub token handling rule explicitly
-- [x] Update `agents/skills/security-boundary-guardrails/SKILL.md`
+- [x] Update `.agents/skills/security-boundary-guardrails/SKILL.md`
 - [x] Commit changes
 - Review: Expanded the skill into an authoritative inventory + exposure-control matrix covering Tier A secrets (`llmApiKey`, execution key, Alchemy key, `githubIssueToken`, runner token, API key, session/admin/launcher secrets), Tier B auth material (nonce/timestamp/signature/challenge), and Tier C security constants (TTLs, origin constraints, chain constraints, auth header contract), plus boundary-by-boundary exposure rules and forbidden outcomes.
 
@@ -201,7 +201,7 @@
 - [x] Add SNS design layout guardrail skill covering page layout + component layout
 - [x] Run structural validation checks for newly added skill files
 - [x] Commit all guardrail skill changes
-- Review: Added nine project guardrail skills under `agents/skills/` covering triage, security boundaries, runner liveness, auth/permissions, schema migrations, API contracts, verification matrix, docs sync, and SNS design layout consistency (page + component level). Verified skill file structure/frontmatter with repository-local checks before commit.
+- Review: Added nine project guardrail skills under `.agents/skills/` covering triage, security boundaries, runner liveness, auth/permissions, schema migrations, API contracts, verification matrix, docs sync, and SNS design layout consistency (page + component level). Verified skill file structure/frontmatter with repository-local checks before commit.
 
 ## 2026-02-17 Comment Layout Unification + Community Pill
 - [x] Introduce shared SNS comment card component
@@ -1747,21 +1747,21 @@ Runner vs Agent Manager Bot Parity Pass Review (2026-02-17):
 
 ## 2026-02-17 Runner-Agent / Runner-SNS Communication Protocol Skill
 - [x] Audit current runner-agent and runner-SNS protocol behavior from code
-- [x] Create/define a dedicated protocol skill spec under `agents/skills/`
+- [x] Create/define a dedicated protocol skill spec under `.agents/skills/`
 - [x] Reinforce related existing skills with explicit protocol-skill linkage
 - [x] Validate skill document structure/consistency
 - [x] Add review notes to this plan section
 - [x] Commit changes
 
 Runner-Agent / Runner-SNS Communication Protocol Skill Review (2026-02-17):
-- Added new skill: `agents/skills/runner-communication-protocol-guardrails/SKILL.md`
+- Added new skill: `.agents/skills/runner-communication-protocol-guardrails/SKILL.md`
   - Encodes protocol contract for `Runner <-> Agent` (prompt/JSON action schema/parser fallback/log semantics).
   - Encodes protocol contract for `Runner <-> SNS` (headers, nonce flow, signature payload, write routes, server-side checks).
 - Reinforced related skills:
-  - `agents/skills/upgrade-scope-triage/SKILL.md`: added companion-skill routing rule for protocol-level changes.
-  - `agents/skills/api-contract-guardrails/SKILL.md`: added requirement to pair protocol guardrails for runner protocol changes.
-  - `agents/skills/runner-liveness-guardrails/SKILL.md`: added runner-agent protocol semantics preservation rule.
+  - `.agents/skills/upgrade-scope-triage/SKILL.md`: added companion-skill routing rule for protocol-level changes.
+  - `.agents/skills/api-contract-guardrails/SKILL.md`: added requirement to pair protocol guardrails for runner protocol changes.
+  - `.agents/skills/runner-liveness-guardrails/SKILL.md`: added runner-agent protocol semantics preservation rule.
 - Validation:
-  - `rg -n "^name:|^description:" agents/skills/*/SKILL.md` passed.
-  - `rg -n "runner-communication-protocol-guardrails" agents/skills -S` passed.
+  - `rg -n "^name:|^description:" .agents/skills/*/SKILL.md` passed.
+  - `rg -n "runner-communication-protocol-guardrails" .agents/skills -S` passed.
   - `git diff -- ...` reviewed for intended scope only.

@@ -8,7 +8,7 @@ description: Keep operator and handover documentation aligned with behavior chan
 ## Update requirements
 - Update `README.md` when setup/run/operational behavior changes.
 - Update `AGENTS.md` when architecture truth, security invariants, or validation checklist changes.
-- Update `agents/tasks/todo.md` with checklist progress and a final review note.
+- Update `.agents/tasks/todo.md` with checklist progress and a final review note.
 
 ## Content quality rules
 - Document only confirmed behavior from code and checks.
