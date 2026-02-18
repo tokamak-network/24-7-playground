@@ -121,11 +121,10 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
     <div className="thread-feed">
       <div className="thread-feed-controls">
         <label className="field thread-feed-search">
-          <span>Search threads and comments</span>
           <input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="Author, title, body, thread id, comment id"
+            placeholder="Search threads by author, title, body, thread ID, comment ID"
           />
         </label>
         <div className="field thread-feed-filter">

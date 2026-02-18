@@ -54,6 +54,7 @@ export function CommunityUpdateForm() {
   const [addAddress, setAddAddress] = useState("");
   const [busy, setBusy] = useState(false);
   const [checkBusy, setCheckBusy] = useState(false);
+  const [updateCheckCompleted, setUpdateCheckCompleted] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
 
   const normalizeAddress = (value: string) => {
@@ -190,6 +191,7 @@ export function CommunityUpdateForm() {
   }, [purpose, selectedContract]);
 
   useEffect(() => {
+    setUpdateCheckCompleted(false);
     setUpdateReady(false);
   }, [purpose, selectedId, selectedContractId, updateName, updateAddress]);
 
@@ -229,6 +231,7 @@ export function CommunityUpdateForm() {
     }
 
     setCheckBusy(true);
+    setUpdateCheckCompleted(false);
     setStatus("Checking contract update...");
     setUpdateReady(false);
 
@@ -260,6 +263,7 @@ export function CommunityUpdateForm() {
       }
 
       if (!data.canUpdate) {
+        setUpdateCheckCompleted(true);
         setUpdateReady(false);
         setStatus(
           data.message ||
@@ -275,11 +279,13 @@ export function CommunityUpdateForm() {
       if (differences.abiChanged) changedLabels.push("ABI");
       if (differences.sourceChanged) changedLabels.push("source");
 
+      setUpdateCheckCompleted(true);
       setUpdateReady(true);
       setStatus(
         `Update available${changedLabels.length ? ` (${changedLabels.join(", ")} changed)` : ""}. Click Apply Update.`
       );
     } catch (error) {
+      setUpdateCheckCompleted(false);
       setUpdateReady(false);
       setStatus(error instanceof Error ? error.message : "Unexpected error");
     } finally {
@@ -321,10 +327,12 @@ export function CommunityUpdateForm() {
         setStatus("Contract address is required.");
         return;
       }
+      if (!updateCheckCompleted) {
+        setStatus("Run Check Update first.");
+        return;
+      }
       if (!updateReady) {
-        setStatus(
-          "Run Check Update first. Apply Update is enabled only when a mismatch is detected."
-        );
+        setStatus("No applicable update detected.");
         return;
       }
       payload.contractId = selectedContractId;
@@ -401,6 +409,7 @@ export function CommunityUpdateForm() {
         setAddAddress("");
       }
       if (purpose === "UPDATE_CONTRACT") {
+        setUpdateCheckCompleted(false);
         setUpdateReady(false);
       }
     } catch (error) {
@@ -417,13 +426,28 @@ export function CommunityUpdateForm() {
     !checkBusy;
 
   const primaryLabel =
-    busy
-      ? "Working..."
-      : purpose === "REMOVE_CONTRACT"
-        ? "Remove Contract"
-        : purpose === "ADD_CONTRACT"
-          ? "Add Contract"
-          : "Apply Update";
+    purpose === "UPDATE_CONTRACT"
+      ? checkBusy
+        ? "Checking..."
+        : busy
+          ? "Working..."
+          : updateCheckCompleted
+            ? "Apply Update"
+            : "Check Update"
+      : busy
+        ? "Working..."
+        : purpose === "REMOVE_CONTRACT"
+          ? "Remove Contract"
+          : purpose === "ADD_CONTRACT"
+            ? "Add Contract"
+            : "Apply Update";
+
+  const primaryDisabled =
+    purpose === "UPDATE_CONTRACT"
+      ? checkBusy ||
+        busy ||
+        (!updateCheckCompleted ? !canCheckUpdate : !updateReady)
+      : busy || checkBusy;
 
   return (
     <div className="form">
@@ -532,31 +556,27 @@ export function CommunityUpdateForm() {
           {status ? <div className="status">{status}</div> : null}
 
           {purpose === "UPDATE_CONTRACT" ? (
-            <div className="manager-inline-field">
-              <Button
-                label={checkBusy ? "Checking..." : "Check Update"}
-                type="button"
-                onClick={checkUpdate}
-                variant="secondary"
-                disabled={!canCheckUpdate}
-              />
-              {updateReady ? (
-                <Button
-                  label={primaryLabel}
-                  type="button"
-                  onClick={submit}
-                  variant="secondary"
-                  disabled={busy || checkBusy}
-                />
-              ) : null}
-            </div>
+            <button
+              type="button"
+              className="button button-secondary button-block"
+              onClick={() => {
+                if (!updateCheckCompleted) {
+                  void checkUpdate();
+                  return;
+                }
+                void submit();
+              }}
+              disabled={primaryDisabled}
+            >
+              {primaryLabel}
+            </button>
           ) : (
             <Button
               label={primaryLabel}
               type="button"
               onClick={submit}
               variant="secondary"
-              disabled={busy || checkBusy}
+              disabled={primaryDisabled}
             />
           )}
         </>

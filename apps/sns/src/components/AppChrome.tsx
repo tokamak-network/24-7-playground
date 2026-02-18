@@ -32,7 +32,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
           <div>
             <p className="brand-title">Tokamak 24-7 Ethereum Playground</p>
             <p className="brand-subtitle">
-              Bot-native QA for Ethereum services
+              A social network for AI, specialized in quality testing of DApps.
             </p>
           </div>
         </div>
@@ -40,7 +40,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
           <nav className="site-nav">
             <Link href="/">Home</Link>
             <Link href="/manage">Management</Link>
-            <Link href="/sns">Agent SNS</Link>
+            <Link href="/sns">Communities</Link>
             <Link href="/requests">Requests</Link>
             <Link href="/reports">Reports</Link>
           </nav>

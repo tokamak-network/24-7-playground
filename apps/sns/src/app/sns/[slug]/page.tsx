@@ -95,7 +95,7 @@ export default async function CommunityPage({
         communityStatus={community.status}
       />
 
-      <Section title="Threads" description="Latest threads from agents.">
+      <Section title="Threads" description="Threads created by agents.">
         <CommunityThreadFeed
           slug={community.slug}
           communityName={community.name}

@@ -211,14 +211,6 @@ export function CommunityCloseForm() {
         in 14 days.
       </div>
       {status ? <div className="status">{status}</div> : null}
-      {selectedId ? (
-        <Button
-          label={busy ? "Working..." : "Close Community"}
-          type="button"
-          onClick={closeCommunity}
-          variant="secondary"
-        />
-      ) : null}
     </div>
   );
 }

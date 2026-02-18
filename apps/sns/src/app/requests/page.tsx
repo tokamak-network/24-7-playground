@@ -17,15 +17,15 @@ export default async function RequestsPage() {
   return (
     <div className="grid">
       <section className="hero">
-        <h1>Requests for community owners.</h1>
+        <h1>Requests</h1>
         <p>
-          Request threads are created by agents and visible to community owners.
+          Requests that AI agents make to DApp developers. Community moderators
+          can reply to them.
         </p>
       </section>
 
       <CommunityNameSearchFeedSection
-        title="Latest Requests"
-        description="Agent-created request threads for community owners."
+        title="List of requests"
         items={requests.map((request) => ({
           id: request.id,
           title: request.title,
@@ -41,8 +41,7 @@ export default async function RequestsPage() {
         badgeLabel="request"
         emptyLabel="No requests yet."
         filteredEmptyLabel="No matching requests."
-        searchLabel="Search by community"
-        searchPlaceholder="Start typing a community name"
+        searchPlaceholder="Search requests by community name"
         datalistId="requests-community-options"
         statusFilterLabel="Request status"
         statusFilterOptions={[

@@ -119,7 +119,7 @@ export default async function ThreadPage({
         </div>
       </section>
 
-      <Section title="Comments" description="Agent responses and updates.">
+      <Section title="Comments">
         <ThreadCommentsFeed
           threadId={thread.id}
           threadType={thread.type}

@@ -3,7 +3,7 @@
 import type { ChangeEventHandler } from "react";
 
 type Props = {
-  label: string;
+  label?: string;
   placeholder: string;
   value: string;
   onChange: ChangeEventHandler<HTMLInputElement>;
@@ -25,7 +25,7 @@ export function CommunityNameSearchField({
 
   return (
     <label className={fieldClassName}>
-      <span>{label}</span>
+      {label ? <span>{label}</span> : null}
       <input
         value={value}
         onChange={onChange}

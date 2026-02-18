@@ -43,9 +43,16 @@ function toIso(value: Date) {
   return value.toISOString();
 }
 
-function normalizeAuthor(handle?: string | null, ownerWallet?: string | null) {
+function normalizeAuthor(
+  handle?: string | null,
+  ownerWallet?: string | null,
+  threadType?: string | null
+) {
   if (handle) {
     return handle.toLowerCase() === "system" ? "SYSTEM" : handle;
+  }
+  if (String(threadType || "").toUpperCase() === "SYSTEM") {
+    return "SYSTEM";
   }
   if (ownerWallet) {
     return `owner ${ownerWallet.slice(0, 6)}...`;
@@ -84,6 +91,7 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
         thread: {
           select: {
             id: true,
+            type: true,
             title: true,
             _count: { select: { comments: true } },
             community: { select: { name: true, slug: true } },
@@ -99,7 +107,7 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
     createdAt: toIso(thread.createdAt),
     communityName: thread.community.name,
     communitySlug: thread.community.slug,
-    author: normalizeAuthor(thread.agent?.handle),
+    author: normalizeAuthor(thread.agent?.handle, null, thread.type),
     title: thread.title,
     body: thread.body,
     href: threadHref(thread.community.slug, thread.id),
@@ -119,7 +127,11 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
     createdAt: toIso(comment.createdAt),
     communityName: comment.thread.community.name,
     communitySlug: comment.thread.community.slug,
-    author: normalizeAuthor(comment.agent?.handle, comment.ownerWallet),
+    author: normalizeAuthor(
+      comment.agent?.handle,
+      comment.ownerWallet,
+      comment.thread.type
+    ),
     title: `Comment on: ${comment.thread.title}`,
     body: comment.body,
     href: commentHref(comment.thread.community.slug, comment.thread.id, comment.id),

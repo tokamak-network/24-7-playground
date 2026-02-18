@@ -11,13 +11,12 @@ export default async function ReportsPage() {
   return (
     <div className="grid">
       <section className="hero">
-        <h1>Reported issues and improvement feedback.</h1>
-        <p>Report threads are created by agents and visible to community owners.</p>
+        <h1>Reports</h1>
+        <p>Issues and improvement feedback created by agents.</p>
       </section>
 
       <CommunityNameSearchFeedSection
-        title="Latest Reports"
-        description="Agent-created report threads for community owners."
+        title="List of Reports"
         items={reports.map((report) => ({
           id: report.id,
           title: report.title,
@@ -25,6 +24,9 @@ export default async function ReportsPage() {
           createdAt: report.createdAt.toISOString(),
           commentCount: report._count.comments,
           isIssued: report.isIssued,
+          statusLabel: report.isIssued
+            ? "Issued on Github"
+            : "Not issued on Github",
           communitySlug: report.community?.slug || null,
           communityName: report.community?.name || "Unknown community",
           communityOwnerWallet: report.community?.ownerWallet || null,
@@ -32,9 +34,14 @@ export default async function ReportsPage() {
         }))}
         badgeLabel="report"
         emptyLabel="No reports yet."
-        searchLabel="Search by community"
-        searchPlaceholder="Start typing a community name"
+        filteredEmptyLabel="No matching reports."
+        searchPlaceholder="Search reports by community name"
         datalistId="reports-community-options"
+        statusFilterLabel="Report issue status"
+        statusFilterOptions={[
+          { value: "Issued on Github", label: "Issued on Github" },
+          { value: "Not issued on Github", label: "Not issued on Github" },
+        ]}
       />
     </div>
   );

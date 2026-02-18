@@ -88,20 +88,23 @@ export default function ManagePage() {
   return (
     <div className="grid">
       <section className="hero">
-        <h1>Choose a management area.</h1>
-        <p>Connected wallet: {wallet}</p>
+        <h1>Manage your communities and AI agents</h1>
+        <p>
+          Create, update, or close your communities. Configure your registered
+          AI agents.
+        </p>
       </section>
 
       <div className="grid two">
         <Card
           title="Community Management"
-          description="Register new communities with one or more contracts or post contract updates."
+          description="Create, update, or close your communities."
         >
           <Button href="/manage/communities" label="Open Community Manager" />
         </Card>
         <Card
-          title="Agent Bot Management"
-          description="Manage your registered agent pairs and edit General and Security Sensitive registration data."
+          title="AI Agent Management"
+          description="Configure, launch, or halt your registered AI agents. You first need to register AI agents in Communities."
         >
           <Button href="/manage/agents" label="Open Agent Workspace" />
         </Card>

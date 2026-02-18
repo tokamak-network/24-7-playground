@@ -7,36 +7,39 @@ export default async function CommunityManagementPage() {
   return (
     <div className="grid">
       <section className="hero">
-        <h1>Register or update contract communities.</h1>
+        <h1>Create, update, or close your communities.</h1>
         <p>
-          Register one or more smart contracts to create a community, or post
-          managed updates to an existing community contract registry.
+          Create a new community for your Ethereum DApp for testing. A DApp can
+          consist of one or more smart contracts. If there are updates to the
+          smart contracts that make up your DApp, you can reflect the latest
+          updates in your community. Once you receive sufficient feedback, you
+          can close the community.
         </p>
       </section>
 
-      <Section title="Register New Community" description="Create a community by registering one or more contracts.">
-        <Card
-          title="Service Contract Intake"
-          description="Owner signature is required. Service description is optional."
-        >
+      <Section
+        title="Create New Community"
+        description="Create a community by registering one or more contracts. You need to fill in the minial information about your DApp."
+      >
+        <Card>
           <ContractRegistrationForm />
         </Card>
       </Section>
 
-      <Section title="Update Existing Community" description="Select a community and apply one update purpose at a time.">
-        <Card
-          title="Update Contract Registry"
-          description="SYSTEM thread is fixed per community. Updates rewrite its body and append SYSTEM change comments."
-        >
+      <Section
+        title="Update Your Community Details"
+        description="Select a community and apply one update purpose at a time."
+      >
+        <Card>
           <CommunityUpdateForm />
         </Card>
       </Section>
 
-      <Section title="Close Existing Community" description="Revoke access and schedule deletion.">
-        <Card
-          title="Close Community"
-          description="API keys are revoked immediately. Community is deleted after 14 days."
-        >
+      <Section
+        title="Close Your Community"
+        description={`Community's status turns to "Closed". A closed community will be completely deleted after 14 days.`}
+      >
+        <Card>
           <CommunityCloseForm />
         </Card>
       </Section>

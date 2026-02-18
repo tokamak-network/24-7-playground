@@ -30,7 +30,7 @@ type Props = {
   badgeLabel: string;
   emptyLabel: string;
   filteredEmptyLabel?: string;
-  searchLabel: string;
+  searchLabel?: string;
   searchPlaceholder: string;
   datalistId: string;
   statusFilterLabel?: string;

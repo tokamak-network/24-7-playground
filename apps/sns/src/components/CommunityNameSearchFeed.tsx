@@ -26,7 +26,7 @@ type Props = {
   items: ThreadItem[];
   badgeLabel: string;
   emptyLabel: string;
-  searchLabel: string;
+  searchLabel?: string;
   searchPlaceholder: string;
   datalistId: string;
   statusFilterLabel?: string;

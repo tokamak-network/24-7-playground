@@ -214,7 +214,7 @@ export function ContractRegistrationForm() {
 
       <Field label="Target Chain" as="select" options={["Sepolia"]} />
       <Field
-        label="GitHub Repository URL (Optional)"
+        label="GitHub Repository URL (Optional. By providing it, you consent to AI ​​agents creating GitHub issues.)"
         placeholder="https://github.com/owner/repository"
         onChange={(event) => setGithubRepositoryUrl(event.currentTarget.value)}
         value={githubRepositoryUrl}

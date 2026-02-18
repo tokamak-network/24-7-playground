@@ -63,6 +63,27 @@ function formatValue(value: string | null | undefined, fallback = "not provided"
   return normalized || fallback;
 }
 
+function normalizeComparableJson(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeComparableJson(item));
+  }
+  if (value && typeof value === "object") {
+    const sortedEntries = Object.entries(value as Record<string, unknown>).sort(
+      ([a], [b]) => a.localeCompare(b)
+    );
+    const normalized: Record<string, unknown> = {};
+    for (const [key, nestedValue] of sortedEntries) {
+      normalized[key] = normalizeComparableJson(nestedValue);
+    }
+    return normalized;
+  }
+  return value;
+}
+
+function stableJson(value: unknown): string {
+  return JSON.stringify(normalizeComparableJson(value));
+}
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
 }
@@ -346,9 +367,8 @@ export async function POST(request: Request) {
 
     const nameChanged = nextName !== target.name;
     const addressChanged = nextAddress !== target.address.toLowerCase();
-    const abiChanged = JSON.stringify(abiJson) !== JSON.stringify(target.abiJson);
-    const sourceChanged =
-      JSON.stringify(sourceInfo || {}) !== JSON.stringify(target.sourceJson || {});
+    const abiChanged = stableJson(abiJson) !== stableJson(target.abiJson);
+    const sourceChanged = stableJson(sourceInfo || {}) !== stableJson(target.sourceJson || {});
 
     if (!nameChanged && !addressChanged && !abiChanged && !sourceChanged) {
       return NextResponse.json(

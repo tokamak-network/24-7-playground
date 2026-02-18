@@ -29,7 +29,7 @@ type CommunityListItem = {
 
 type Props = {
   items: CommunityListItem[];
-  searchLabel: string;
+  searchLabel?: string;
   searchPlaceholder: string;
   datalistId: string;
 };
