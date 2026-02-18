@@ -31,6 +31,13 @@ const {
 const DEFAULT_INTERVAL_SEC = 60;
 const DEFAULT_COMMENT_LIMIT = 50;
 const PROMPTS_DIR = path.resolve(__dirname, "..", "prompts");
+const SUPPLEMENT_PROMPTS_DIR = path.join(PROMPTS_DIR, "supplements");
+const SUPPLEMENTARY_PROMPT_FILES = Object.freeze({
+  "attack-defense": "attack-defense.md",
+  optimization: "optimization.md",
+  "ux-improvement": "ux-improvement.md",
+  "scalability-compatibility": "scalability-compatibility.md",
+});
 
 function normalizePositiveInt(value, fallback) {
   const parsed = Number(value);
@@ -51,6 +58,17 @@ function normalizeOptionalPositiveInt(value) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) return null;
   return Math.floor(parsed);
+}
+
+function normalizeSupplementaryPromptProfile(value) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (!normalized) return "";
+  if (!Object.prototype.hasOwnProperty.call(SUPPLEMENTARY_PROMPT_FILES, normalized)) {
+    return "";
+  }
+  return normalized;
 }
 
 function defaultSystemPrompt() {
@@ -82,6 +100,41 @@ function readPromptFile(fileName, fallback) {
   } catch {
     return fallback;
   }
+}
+
+function readSupplementarySystemPrompt(profile) {
+  const normalized = normalizeSupplementaryPromptProfile(profile);
+  if (!normalized) return "";
+  const fileName = SUPPLEMENTARY_PROMPT_FILES[normalized];
+  if (!fileName) return "";
+  try {
+    const absolutePath = path.join(SUPPLEMENT_PROMPTS_DIR, fileName);
+    return fs.readFileSync(absolutePath, "utf8").trim();
+  } catch {
+    return "";
+  }
+}
+
+function composeSystemPrompt(baseSystemPrompt, supplementaryProfile, extraSystemPrompt) {
+  const sections = [String(baseSystemPrompt || "").trim()].filter(Boolean);
+  const supplementaryPrompt = readSupplementarySystemPrompt(supplementaryProfile);
+  if (supplementaryPrompt) {
+    sections.push(
+      ["Supplementary analysis profile guidance:", supplementaryPrompt].join("\n")
+    );
+  }
+  const extra = String(extraSystemPrompt || "").trim();
+  if (extra) {
+    sections.push(["Additional runtime system guidance:", extra].join("\n"));
+  }
+  return sections.join("\n\n");
+}
+
+function composeUserPromptTemplate(baseUserTemplate, extraUserTemplate) {
+  const base = String(baseUserTemplate || "").trim();
+  const extra = String(extraUserTemplate || "").trim();
+  if (!extra) return base;
+  return [base, "Additional runtime user guidance:", extra].join("\n\n");
 }
 
 function parseDecision(output) {
@@ -260,6 +313,13 @@ function normalizeConfig(input) {
     prompts: {
       system: String(promptInput.system || "").trim(),
       user: String(promptInput.user || "").trim(),
+      supplementaryProfile: normalizeSupplementaryPromptProfile(
+        runnerFromEncoded.supplementaryPromptProfile ??
+          runnerFromEncoded.analysisProfile ??
+          runtimeInput.supplementaryPromptProfile ??
+          promptInput.supplementaryPromptProfile ??
+          promptInput.supplementaryProfile
+      ),
     },
   };
 }
@@ -292,6 +352,7 @@ function redactConfig(config) {
     prompts: {
       hasSystemPrompt: Boolean(config.prompts.system),
       hasUserPrompt: Boolean(config.prompts.user),
+      supplementaryProfile: config.prompts.supplementaryProfile || null,
     },
     auth: {
       hasRunnerToken: Boolean(config.runnerToken),
@@ -494,14 +555,22 @@ class RunnerEngine {
         throw new Error("No community assigned for this runner");
       }
 
-      const system = config.prompts.system || defaultSystemPrompt();
-      const userTemplate = config.prompts.user || defaultUserPromptTemplate();
+      const system = composeSystemPrompt(
+        defaultSystemPrompt(),
+        config.prompts.supplementaryProfile,
+        config.prompts.system
+      );
+      const userTemplate = composeUserPromptTemplate(
+        defaultUserPromptTemplate(),
+        config.prompts.user
+      );
       const user = userTemplate.replace(
         "{{context}}",
         JSON.stringify(contextData.context)
       );
       trace(this.logger, "cycle:prompt", {
         system,
+        supplementaryProfile: config.prompts.supplementaryProfile || null,
         userTemplate,
         user,
       });

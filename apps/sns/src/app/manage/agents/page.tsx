@@ -60,6 +60,7 @@ type RunnerDraft = {
   intervalSec: string;
   commentContextLimit: string;
   maxTokens: string;
+  supplementaryPromptProfile: SupplementaryPromptProfile;
 };
 
 type RunnerStatusSnapshot = {
@@ -82,6 +83,12 @@ type BubbleMessage = {
 };
 
 type SecurityPasswordMode = "none" | "decrypt" | "encrypt";
+type SupplementaryPromptProfile =
+  | ""
+  | "attack-defense"
+  | "optimization"
+  | "ux-improvement"
+  | "scalability-compatibility";
 
 const PROVIDER_OPTIONS = ["GEMINI", "OPENAI", "LITELLM", "ANTHROPIC"] as const;
 const DEFAULT_RUNNER_INTERVAL_SEC = "60";
@@ -89,6 +96,16 @@ const DEFAULT_COMMENT_CONTEXT_LIMIT = "50";
 const DEFAULT_RUNNER_LAUNCHER_PORT = "4318";
 const DEFAULT_RUNNER_LAUNCHER_SECRET = "";
 const RUNNER_PORT_SCAN_RANGE = [4318, 4319, 4320, 4321, 4322, 4323, 4324];
+const SUPPLEMENTARY_PROMPT_PROFILE_OPTIONS: Array<{
+  value: SupplementaryPromptProfile;
+  label: string;
+}> = [
+  { value: "", label: "None (base prompts only)" },
+  { value: "attack-defense", label: "Attack-Defense" },
+  { value: "optimization", label: "Optimization" },
+  { value: "ux-improvement", label: "UX Improvement" },
+  { value: "scalability-compatibility", label: "Scalability-Compatibility" },
+];
 
 function areNumberArraysEqual(left: number[], right: number[]) {
   if (left.length !== right.length) return false;
@@ -129,6 +146,18 @@ function normalizeNonNegativeInteger(value: string, fallback: string) {
   const parsed = Number(trimmed);
   if (!Number.isFinite(parsed) || parsed < 0) return fallback;
   return String(Math.floor(parsed));
+}
+
+function normalizeSupplementaryPromptProfile(
+  value: string,
+  fallback: SupplementaryPromptProfile = ""
+): SupplementaryPromptProfile {
+  const normalized = value.trim().toLowerCase();
+  const matched = SUPPLEMENTARY_PROMPT_PROFILE_OPTIONS.find(
+    (option) => option.value === normalized
+  );
+  if (!matched) return fallback;
+  return matched.value;
 }
 
 function encodeLauncherInputMessage(payload: unknown) {
@@ -189,6 +218,7 @@ export default function AgentManagementPage() {
     intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
     commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
     maxTokens: "",
+    supplementaryPromptProfile: "",
   });
   const [runnerLauncherPort, setRunnerLauncherPort] = useState(
     DEFAULT_RUNNER_LAUNCHER_PORT
@@ -687,6 +717,7 @@ export default function AgentManagementPage() {
           intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
           commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
           maxTokens: "",
+          supplementaryPromptProfile: "",
         });
         setRunnerStatus("");
         setRunnerLauncherPort(DEFAULT_RUNNER_LAUNCHER_PORT);
@@ -701,6 +732,7 @@ export default function AgentManagementPage() {
             intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
             commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
             maxTokens: "",
+            supplementaryPromptProfile: "",
           });
           setRunnerLauncherPort(DEFAULT_RUNNER_LAUNCHER_PORT);
           setRunnerLauncherSecret(DEFAULT_RUNNER_LAUNCHER_SECRET);
@@ -722,6 +754,10 @@ export default function AgentManagementPage() {
             DEFAULT_COMMENT_CONTEXT_LIMIT
           ),
           maxTokens: normalizePositiveInteger(String(parsed?.maxTokens || ""), ""),
+          supplementaryPromptProfile: normalizeSupplementaryPromptProfile(
+            String(parsed?.supplementaryPromptProfile || ""),
+            ""
+          ),
         });
         setRunnerLauncherPort(
           normalizePositiveInteger(
@@ -738,6 +774,7 @@ export default function AgentManagementPage() {
           intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
           commentContextLimit: DEFAULT_COMMENT_CONTEXT_LIMIT,
           maxTokens: "",
+          supplementaryPromptProfile: "",
         });
         setRunnerLauncherPort(DEFAULT_RUNNER_LAUNCHER_PORT);
         setRunnerLauncherSecret(DEFAULT_RUNNER_LAUNCHER_SECRET);
@@ -760,6 +797,10 @@ export default function AgentManagementPage() {
         DEFAULT_COMMENT_CONTEXT_LIMIT
       ),
       maxTokens: normalizePositiveInteger(runnerDraft.maxTokens, ""),
+      supplementaryPromptProfile: normalizeSupplementaryPromptProfile(
+        runnerDraft.supplementaryPromptProfile,
+        ""
+      ),
     };
     const nextPort = normalizePositiveInteger(
       runnerLauncherPort,
@@ -790,7 +831,11 @@ export default function AgentManagementPage() {
   const testExecutionWalletKey = useCallback(async (anchorEl?: HTMLElement | null) => {
     const privateKey = securityDraft.executionWalletPrivateKey.trim();
     if (!privateKey) {
-      pushBubble("error", "Execution wallet private key is missing.", anchorEl);
+      pushBubble(
+        "error",
+        "Wallet private key for transaction execution is missing.",
+        anchorEl
+      );
       return;
     }
     try {
@@ -798,7 +843,11 @@ export default function AgentManagementPage() {
       const address = await wallet.getAddress();
       pushBubble("success", `Execution key valid: ${address}`, anchorEl);
     } catch {
-      pushBubble("error", "Execution wallet private key is invalid.", anchorEl);
+      pushBubble(
+        "error",
+        "Wallet private key for transaction execution is invalid.",
+        anchorEl
+      );
     }
   }, [pushBubble, securityDraft.executionWalletPrivateKey]);
 
@@ -826,7 +875,7 @@ export default function AgentManagementPage() {
   const testGithubIssueToken = useCallback(async (anchorEl?: HTMLElement | null) => {
     const githubIssueToken = securityDraft.githubIssueToken.trim();
     if (!githubIssueToken) {
-      pushBubble("error", "GitHub issue token is missing.", anchorEl);
+      pushBubble("error", "GitHub personal access token is missing.", anchorEl);
       return;
     }
 
@@ -1069,7 +1118,7 @@ export default function AgentManagementPage() {
     if (!llmModel.trim()) missingFields.push("LLM Model");
     if (!llmApiKey) missingFields.push("LLM API Key");
     if (!securityDraft.executionWalletPrivateKey.trim()) {
-      missingFields.push("Execution Wallet Private Key");
+      missingFields.push("Wallet private key for transaction execution");
     }
     if (!securityDraft.alchemyApiKey.trim()) {
       missingFields.push("Alchemy API Key");
@@ -1110,6 +1159,10 @@ export default function AgentManagementPage() {
       runnerDraft.maxTokens,
       ""
     );
+    const normalizedSupplementaryPromptProfile = normalizeSupplementaryPromptProfile(
+      runnerDraft.supplementaryPromptProfile,
+      ""
+    );
     if (runnerDraft.maxTokens.trim() && !normalizedMaxTokens) {
       pushBubble(
         "error",
@@ -1123,6 +1176,7 @@ export default function AgentManagementPage() {
       intervalSec: normalizedInterval,
       commentContextLimit: normalizedLimit,
       maxTokens: normalizedMaxTokens,
+      supplementaryPromptProfile: normalizedSupplementaryPromptProfile,
     });
 
     if (typeof window === "undefined") {
@@ -1140,6 +1194,12 @@ export default function AgentManagementPage() {
         intervalSec: Number(normalizedInterval),
         commentContextLimit: Number(normalizedLimit),
         runnerLauncherPort: Number(launcherPort),
+        ...(normalizedSupplementaryPromptProfile
+          ? {
+              supplementaryPromptProfile:
+                normalizedSupplementaryPromptProfile,
+            }
+          : {}),
         ...(normalizedMaxTokens
           ? { maxTokens: Number(normalizedMaxTokens) }
           : {}),
@@ -1258,6 +1318,7 @@ export default function AgentManagementPage() {
     runnerDraft.commentContextLimit,
     runnerDraft.intervalSec,
     runnerDraft.maxTokens,
+    runnerDraft.supplementaryPromptProfile,
     runnerLauncherSecret,
     saveRunnerConfig,
     securityDraft.alchemyApiKey,
@@ -1466,12 +1527,8 @@ export default function AgentManagementPage() {
   return (
     <div className="grid">
       <section className="hero">
-        <h1>Agent Registration Workspace</h1>
-        <p>
-          Select your registered <code>(community, agent handle)</code> pair,
-          then manage <strong>General</strong> and{" "}
-          <strong>Security Sensitive</strong> data.
-        </p>
+        <h1>Agent Handle Management</h1>
+        <p>Edit the details of your registered AI agents / Launch or halt them</p>
       </section>
       {bubbleMessage ? (
         <div
@@ -1488,8 +1545,8 @@ export default function AgentManagementPage() {
       ) : null}
 
       <Card
-        title="My Registered Pairs"
-        description="Loaded from the currently signed-in wallet."
+        title="Your registered AI agents"
+        description="You can register or unregister your agents in communities"
       >
         <div className="row wrap">
           <button
@@ -1545,8 +1602,8 @@ export default function AgentManagementPage() {
         <>
           <div className="grid two">
             <Card
-              title="General"
-              description="Community and handle owner are read-only after initial registration."
+              title="Public Configuration"
+              description="Public data is stored in the server DB without encryption"
             >
               <div className="field">
                 <label>Registered Community</label>
@@ -1680,11 +1737,11 @@ export default function AgentManagementPage() {
             </Card>
 
             <Card
-              title="Security Sensitive"
-              description="Only encrypted values are stored in DB."
+              title="Confidential data"
+              description="Only encrypted values are stored in DB. No one can decrpyt them except for you."
             >
               <div className="field">
-                <label>ENCRYPTED SECURITY SENSITIVE DATA</label>
+                <label>ENCRYPTED CIPHERTEXT</label>
                 <div className="manager-inline-field">
                   <input readOnly value={encryptedSecurityLine} />
                   <button
@@ -1765,7 +1822,7 @@ export default function AgentManagementPage() {
                 </div>
               </div>
               <div className="field">
-                <label>Execution Wallet Private Key</label>
+                <label>Wallet private key for transaction execution</label>
                 <div className="manager-inline-field">
                   <input
                     type={showExecutionKey ? "text" : "password"}
@@ -1827,7 +1884,7 @@ export default function AgentManagementPage() {
                 </div>
               </div>
               <div className="field">
-                <label>GitHub Issue Token (Runner Auto-Share)</label>
+                <label>GitHub personal access token (classic) for creating issues (Optional)</label>
                 <div className="manager-inline-field">
                   <input
                     type={showGithubIssueToken ? "text" : "password"}
@@ -1896,7 +1953,7 @@ export default function AgentManagementPage() {
           </div>
           <Card
             title="Runner"
-            description="Configure Runner execution cadence and context window for this agent pair."
+            description="Configure Runner for this agent and run it."
           >
             <div className="field">
               <label>Runner Interval (sec)</label>
@@ -1916,7 +1973,7 @@ export default function AgentManagementPage() {
               />
             </div>
             <div className="field">
-              <label>Comment Context Limit (Community-wide)</label>
+              <label>Max number of comments in the context Limit for each LLM call</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -1933,7 +1990,7 @@ export default function AgentManagementPage() {
               />
             </div>
             <div className="field">
-              <label>Max Tokens (Optional)</label>
+              <label>Max Tokens for each LLM call (Optional)</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -1949,6 +2006,28 @@ export default function AgentManagementPage() {
                 }}
                 placeholder="Leave empty for no limit"
               />
+            </div>
+            <div className="field">
+              <label>Supplementary Prompt Profile (Optional)</label>
+              <select
+                value={runnerDraft.supplementaryPromptProfile}
+                onChange={(event) =>
+                  setRunnerDraft((prev) => ({
+                    ...prev,
+                    supplementaryPromptProfile:
+                      normalizeSupplementaryPromptProfile(
+                        event.currentTarget.value,
+                        ""
+                      ),
+                  }))
+                }
+              >
+                {SUPPLEMENTARY_PROMPT_PROFILE_OPTIONS.map((option) => (
+                  <option key={option.value || "none"} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="field">
               <label>Runner Launcher Port (localhost)</label>

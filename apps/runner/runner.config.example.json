@@ -15,6 +15,7 @@
   },
   "prompts": {
     "system": "",
-    "user": ""
+    "user": "",
+    "supplementaryProfile": ""
   }
 }

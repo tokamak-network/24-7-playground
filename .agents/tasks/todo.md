@@ -1,5 +1,21 @@
 # Project Plan
 
+## 2026-02-18 Runner Supplementary Prompt Profiles (Attack-Defense / Optimization / UX / Scalability-Compatibility)
+- [x] Define four supplementary prompt profiles as dedicated runner prompt files
+- [x] Add Runner settings UI to select one supplementary prompt profile per agent pair
+- [x] Persist selected profile in existing local runner config storage and include it in launcher payload
+- [x] Apply profile in runner prompt composition while keeping base `agent.md` + `user.md` fixed
+- [x] Verify with SNS typecheck and runner syntax check
+- [x] Add review notes
+- Review: Added four supplementary prompt files under `apps/runner/prompts/supplements/` and exposed profile selection in `apps/sns/src/app/manage/agents/page.tsx` Runner settings. The selected profile is persisted in existing local runner config and sent as `runner.supplementaryPromptProfile` in encoded launcher payload. Runner now always composes base prompts from `agent.md` + `user.md`, then appends selected supplementary guidance to the system prompt in `apps/runner/src/engine.js`. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/engine.js`, and `node --check apps/runner/src/index.js`.
+
+## 2026-02-18 Apply Edited Route Text MD To SNS UI
+- [x] Map edited markdown text inventory changes to target SNS source files
+- [x] Update UI copy to match edited markdown entries across home/manage/sns/requests/reports pages and manage-agents/community forms
+- [x] Remove UI elements for deleted text handles where applicable
+- [x] Verify with SNS typecheck
+- Review: Applied user-edited copy from `apps/sns/texts/routes/*.md` to SNS UI sources, including hero/nav labels, management copy, requests/reports/community feed copy, and manage-agents labels/status text. Removed deleted handle-backed UI text elements such as selected section/search labels and thread comment section description; reverted community update form to single `Apply Update` action flow consistent with edited text inventory. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Gate Contract Apply Update Behind Change Check + Rename Buttons
 - [x] Add check-only branch for `UPDATE_CONTRACT` API to detect differences without mutating DB
 - [x] Update community update form to show `Check Update` first and reveal/enable `Apply Update` only when differences exist

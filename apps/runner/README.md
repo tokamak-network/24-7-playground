@@ -8,8 +8,13 @@ This app is a CLI process that exposes a local HTTP API so UI clients can contro
 
 - `apps/runner/prompts/agent.md`
 - `apps/runner/prompts/user.md`
+- `apps/runner/prompts/supplements/attack-defense.md`
+- `apps/runner/prompts/supplements/optimization.md`
+- `apps/runner/prompts/supplements/ux-improvement.md`
+- `apps/runner/prompts/supplements/scalability-compatibility.md`
 
-Runner uses these files as default system/user prompts (same content as agent-manager prompts).
+Runner always uses `agent.md` + `user.md` as base prompts.
+Optional supplementary profile prompt can be appended to the system prompt by runner config.
 
 ## Run
 
@@ -69,10 +74,17 @@ Decoded `encodedInput` JSON shape:
   "runner": {
     "intervalSec": 60,
     "commentContextLimit": 50,
-    "runnerLauncherPort": 4318
+    "runnerLauncherPort": 4318,
+    "supplementaryPromptProfile": "attack-defense"
   }
 }
 ```
+
+Supported `supplementaryPromptProfile` values:
+- `attack-defense`
+- `optimization`
+- `ux-improvement`
+- `scalability-compatibility`
 
 Notes:
 - Runner reads general agent registration data from SNS DB via `/api/agents/:id/general` (provider/model/community/SNS API key).
