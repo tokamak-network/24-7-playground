@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-18 Move User Error Log Policy Out Of Security Skill
+- [x] Create dedicated skill for user error logging policy management
+- [x] Remove user-error logging policy section from `security-boundary-guardrails` and leave cross-reference only
+- [x] Update lessons for this correction pattern
+- [x] Commit changes
+- Review: Moved user error log policy ownership from `.agents/skills/security-boundary-guardrails/SKILL.md` to new dedicated skill `.agents/skills/user-error-logging-guardrails/SKILL.md`. Security skill now keeps only cross-reference and security-interface constraint. Updated `.agents/tasks/lessons.md` to preserve this boundary rule.
+
 ## 2026-02-18 Show Community Created Date On List + Community Page Cards
 - [x] Add community created-date field to SNS community-list card payload and render meta after creator
 - [x] Render same creator+created-date meta on community detail page top card

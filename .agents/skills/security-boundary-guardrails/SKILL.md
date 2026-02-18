@@ -110,27 +110,11 @@ Implementation contract:
 - Policy rejection should be fail-closed with `403`.
 - Any value change must be applied in `TEMP_COMMUNITY_CREATION_POLICY` and reflected here by source-reference update (no value table duplication).
 
-## 8) User Error Log Collection Policy (Managed In This Skill)
-This section is the policy source of truth for which user error log types SNS must collect.
+## 8) User Error Logging Policy Location
+User error log collection policy is intentionally managed outside this security-boundary skill.
 
-### Required log types
-| Log `source` value | Trigger condition | Minimum required fields | Sensitive handling notes |
-|---|---|---|---|
-| `window.error` | Browser runtime uncaught error event | `source`, `message`, `pathname`, `url`, `context.filename`, `context.lineno`, `context.colno` | Never include secrets/tokens/private keys in `message`/`context` |
-| `window.unhandledrejection` | Browser unhandled promise rejection | `source`, `message`, `pathname`, `url` | `context` is allowed only as sanitized preview-safe JSON |
-| `next.error-boundary` | Next.js app-level error boundary fallback render | `source`, `message`, `pathname`, `url` | `stack` optional; do not include server secrets in client-sent data |
-| `status-bubble` | Global SNS status bubble emits error-kind message | `source`, `message`, `pathname`, `url` | Message should remain user-facing error text only |
-| `manage-agents-bubble` | Manage Agents page local bubble emits error-kind message | `source`, `message`, `pathname`, `url` | Do not attach decrypted security-sensitive payloads |
+Authoritative skill:
+- `.agents/skills/user-error-logging-guardrails/SKILL.md`
 
-### Collection boundary rules
-- These logs are for dev maintenance only and must remain fail-open (logging failure must not break UX).
-- `walletAddress` may be included for triage, but no secret material is allowed.
-- `context` must be size-limited and serialization-safe.
-- Keep dedupe/rate-limiting to reduce DoS/noise from repeated client errors.
-
-### Sync rule (non-negotiable)
-- When adding/removing/renaming any user error log source in code, update this section first in the same change.
-- Producer/ingest implementations must stay aligned with this policy:
-  - producers: `apps/sns/src/components/UserErrorLogger.tsx`, `apps/sns/src/components/StatusBubbleBridge.tsx`, `apps/sns/src/app/manage/agents/page.tsx`, `apps/sns/src/app/error.tsx`
-  - ingest: `apps/sns/src/app/api/logs/user-errors/route.ts`
-  - persistence: `apps/sns/src/lib/userErrorLogServer.ts`
+Security interface rule:
+- User error logging implementation must still comply with this skill's secret exposure and log redaction constraints (Tier A/B boundaries and forbidden outcomes).

@@ -1,6 +1,6 @@
 # Lessons
 
-- If the user asks to manage collected error-log categories in skill policy, define an explicit authoritative source-type matrix in `.agents/skills/security-boundary-guardrails/SKILL.md` and require code/skill sync in the same change.
+- Keep user-error logging policy in a dedicated observability/logging skill (not `security-boundary-guardrails`), and leave only cross-boundary security constraints in the security skill.
 - For global status bubbles with auto-dismiss timers, wire explicit hover-reset behavior for both the originating trigger control and the bubble surface when users ask for dismiss-countdown control.
 - When users request single-source constants, remove duplicated value tables from skill docs and keep skills pointing to the authoritative code/DB source locations instead.
 - For anti-DoS admission policies, keep temporary qualification constants in a dedicated code policy module and mirror the same values in `.agents/skills/security-boundary-guardrails/SKILL.md` as the source-of-truth table.
