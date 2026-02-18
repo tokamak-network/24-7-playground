@@ -17,6 +17,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function asJson(value: unknown, fallback = "{}") {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return fallback;
+  }
+}
+
 function parseSourceBundle(rawSource: unknown, contractName: string) {
   const sourceText = String(rawSource ?? "").trim();
   if (!sourceText) {
@@ -73,6 +81,17 @@ function parseSourceBundle(rawSource: unknown, contractName: string) {
     libraries: null as Record<string, unknown> | null,
   };
 }
+
+export type SystemThreadContractInput = {
+  id?: string;
+  name: string;
+  address: string;
+  chain: string;
+  sourceInfo: any;
+  abiJson: unknown;
+  faucetFunction?: string | null;
+  updated?: boolean;
+};
 
 export function buildSystemBody(input: {
   name: string;
@@ -143,6 +162,113 @@ export function buildSystemBody(input: {
     `\`\`\`json`,
     abiPretty,
     `\`\`\``,
+  ].join("\n");
+}
+
+export function buildSystemSnapshotBody(input: {
+  snapshotType: "REGISTRATION" | "UPDATE" | "BACKFILL";
+  serviceName: string;
+  serviceDescription?: string | null;
+  githubRepositoryUrl?: string | null;
+  contracts: SystemThreadContractInput[];
+}) {
+  const {
+    snapshotType,
+    serviceName,
+    serviceDescription,
+    githubRepositoryUrl,
+    contracts,
+  } = input;
+  const normalizedContracts = contracts.map((contract) => ({
+    ...contract,
+    name: asText(contract.name),
+    address: asText(contract.address),
+    chain: asText(contract.chain),
+    faucetFunction: String(contract.faucetFunction || "").trim() || null,
+    updated: Boolean(contract.updated),
+  }));
+  const chainSet = Array.from(
+    new Set(normalizedContracts.map((contract) => contract.chain))
+  );
+  const updatedCount = normalizedContracts.filter((contract) => contract.updated).length;
+  const repositoryLine = githubRepositoryUrl
+    ? `[${githubRepositoryUrl}](${githubRepositoryUrl})`
+    : "`not provided`";
+
+  const contractIndexRows = normalizedContracts.length
+    ? normalizedContracts.map((contract, index) =>
+        `| ${index + 1} | ${contract.name} | \`${contract.address}\` | ${contract.chain} | ${contract.updated ? "yes" : "no"} |`
+      )
+    : ["| - | - | - | - | - |"];
+
+  const detailSections = normalizedContracts.flatMap((contract, index) => {
+    const { sourceFiles, libraries } = parseSourceBundle(
+      contract.sourceInfo?.SourceCode,
+      asText(contract.sourceInfo?.ContractName, contract.name),
+    );
+    const sourceSection =
+      sourceFiles.length > 0
+        ? sourceFiles.flatMap(({ path, content }) => [
+            `##### \`${path}\``,
+            "```solidity",
+            content,
+            "```",
+            "",
+          ])
+        : ["`unavailable`", ""];
+    const librariesSection = libraries
+      ? ["```json", asJson(libraries), "```", ""]
+      : ["`not specified`", ""];
+
+    return [
+      `### ${index + 1}. ${contract.name}`,
+      `- **Address:** \`${contract.address}\``,
+      `- **Chain:** \`${contract.chain}\``,
+      `- **Included as updated:** \`${contract.updated ? "yes" : "no"}\``,
+      `- **Faucet Function:** \`${contract.faucetFunction || "not detected"}\``,
+      "",
+      "#### Build Metadata",
+      `- **Contract Name:** \`${asText(contract.sourceInfo?.ContractName, contract.name)}\``,
+      `- **Compiler:** \`${asText(contract.sourceInfo?.CompilerVersion)}\``,
+      `- **Optimization:** \`${asText(contract.sourceInfo?.OptimizationUsed)}\``,
+      `- **Runs:** \`${asText(contract.sourceInfo?.Runs)}\``,
+      `- **EVM Version:** \`${asText(contract.sourceInfo?.EVMVersion)}\``,
+      `- **License:** \`${asText(contract.sourceInfo?.LicenseType)}\``,
+      `- **Proxy:** \`${asText(contract.sourceInfo?.Proxy)}\``,
+      `- **Implementation:** \`${asText(contract.sourceInfo?.Implementation)}\``,
+      "",
+      "#### Source Code",
+      ...sourceSection,
+      "#### Libraries",
+      ...librariesSection,
+      "#### ABI",
+      "```json",
+      asJson(contract.abiJson, "[]"),
+      "```",
+      "",
+    ];
+  });
+
+  return [
+    "# Contract Registry Snapshot",
+    "",
+    "## Summary",
+    `- **Snapshot Type:** \`${snapshotType}\``,
+    `- **Service Name:** \`${asText(serviceName)}\``,
+    `- **Description:** \`${asText(serviceDescription, "not provided")}\``,
+    `- **Repository:** ${repositoryLine}`,
+    `- **Total Contracts:** \`${normalizedContracts.length}\``,
+    `- **Updated Contracts:** \`${updatedCount}\``,
+    `- **Chains:** \`${chainSet.join(", ") || "unknown"}\``,
+    `- **Generated At:** \`${new Date().toISOString()}\``,
+    "",
+    "## Contract Index",
+    "| # | Contract | Address | Chain | Updated |",
+    "| --- | --- | --- | --- | --- |",
+    ...contractIndexRows,
+    "",
+    "## Contract Details",
+    ...detailSections,
   ].join("\n");
 }
 

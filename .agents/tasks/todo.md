@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-18 Single SYSTEM Thread per Registration/Update Snapshot
+- [x] Change registration flow to create exactly one SYSTEM thread per registration/backfill event
+- [x] Change update flow to create exactly one SYSTEM thread per update run
+- [x] Redesign system-thread body format to include all registered contracts in one readable snapshot
+- [x] Align update status UI message with thread count and changed-contract count
+- [x] Verify with SNS typecheck
+- [x] Commit changes
+- Review: Replaced per-contract SYSTEM thread creation with one snapshot thread per registration/update operation. Added `buildSystemSnapshotBody` to render a single formatted markdown snapshot containing summary, contract index table, and full per-contract metadata/source/ABI sections. Registration now creates one snapshot thread when new contracts are added (or backfills one if missing), and update now creates one snapshot thread even when multiple contracts change. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Fix Partial Community Registration (NOTOK popup + Missing SYSTEM threads + Wrong contract count)
 - [x] Reproduce/trace registration failure path for multi-contract input and identify partial-write points
 - [x] Refactor `/api/contracts/register` to avoid partial writes when Etherscan fetch fails

@@ -4,7 +4,7 @@ import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
 import { getAddress, verifyMessage } from "ethers";
-import { buildSystemBody, hashSystemBody } from "src/lib/systemThread";
+import { buildSystemSnapshotBody, hashSystemBody } from "src/lib/systemThread";
 import { cleanupExpiredCommunities } from "src/lib/community";
 
 function toInputJson(value: unknown): Prisma.InputJsonValue {
@@ -101,14 +101,9 @@ export async function POST(request: Request) {
 
   const pendingUpdates: Array<{
     contractId: string;
-    contractName: string;
-    address: string;
-    chain: string;
     abiJson: unknown;
     sourceInfo: any;
     faucetFunction: string | null;
-    draftBody: string;
-    draftHash: string;
   }> = [];
 
   for (const contract of community.serviceContracts) {
@@ -139,26 +134,12 @@ export async function POST(request: Request) {
     }
 
     const faucetFunction = detectFaucet(abiJson);
-    const draftBody = buildSystemBody({
-      name: contract.name,
-      address: contract.address,
-      chain: contract.chain,
-      serviceDescription: community.description,
-      sourceInfo,
-      abiJson,
-      githubRepositoryUrl: community.githubRepositoryUrl,
-    });
 
     pendingUpdates.push({
       contractId: contract.id,
-      contractName: contract.name,
-      address: contract.address,
-      chain: contract.chain,
       abiJson,
       sourceInfo,
       faucetFunction,
-      draftBody,
-      draftHash: hashSystemBody(draftBody),
     });
   }
 
@@ -169,32 +150,66 @@ export async function POST(request: Request) {
     );
   }
 
-  const createdThreads = [];
-  for (const item of pendingUpdates) {
-    await prisma.serviceContract.update({
-      where: { id: item.contractId },
-      data: {
-        abiJson: toInputJson(item.abiJson),
-        sourceJson: toInputJson(item.sourceInfo),
-        faucetFunction: item.faucetFunction,
-      },
-    });
+  await prisma.$transaction(async (tx) => {
+    for (const item of pendingUpdates) {
+      await tx.serviceContract.update({
+        where: { id: item.contractId },
+        data: {
+          abiJson: toInputJson(item.abiJson),
+          sourceJson: toInputJson(item.sourceInfo),
+          faucetFunction: item.faucetFunction,
+        },
+      });
+    }
+  });
 
-    const thread = await prisma.thread.create({
-      data: {
-        communityId: community.id,
-        title: `Contract update detected for ${item.contractName}`,
-        body: item.draftBody,
-        type: "SYSTEM",
-      },
-    });
-    createdThreads.push(thread);
-  }
+  const allContracts = await prisma.serviceContract.findMany({
+    where: { communityId: community.id },
+    orderBy: { createdAt: "asc" },
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      chain: true,
+      abiJson: true,
+      sourceJson: true,
+      faucetFunction: true,
+    },
+  });
+  const updatedContractIdSet = new Set(
+    pendingUpdates.map((item) => item.contractId)
+  );
+  const snapshotBody = buildSystemSnapshotBody({
+    snapshotType: "UPDATE",
+    serviceName: community.name,
+    serviceDescription: community.description,
+    githubRepositoryUrl: community.githubRepositoryUrl,
+    contracts: allContracts.map((contract) => ({
+      id: contract.id,
+      name: contract.name,
+      address: contract.address,
+      chain: contract.chain,
+      sourceInfo: contract.sourceJson || {},
+      abiJson: contract.abiJson,
+      faucetFunction: contract.faucetFunction || null,
+      updated: updatedContractIdSet.has(contract.id),
+    })),
+  });
+  const bodyHash = hashSystemBody(snapshotBody);
+
+  const thread = await prisma.thread.create({
+    data: {
+      communityId: community.id,
+      title: `Contract update detected: ${community.name} (${pendingUpdates.length} changed)`,
+      body: snapshotBody,
+      type: "SYSTEM",
+    },
+  });
 
   await prisma.community.update({
     where: { id: community.id },
     data: {
-      lastSystemHash: pendingUpdates[pendingUpdates.length - 1].draftHash,
+      lastSystemHash: bodyHash,
       ownerWallet: ownerWallet || walletAddress,
     },
   });
@@ -202,8 +217,9 @@ export async function POST(request: Request) {
   return NextResponse.json(
     {
       updated: true,
-      updatedCount: createdThreads.length,
-      threads: createdThreads,
+      updatedCount: 1,
+      changedContractCount: pendingUpdates.length,
+      threads: [thread],
     },
     { headers: corsHeaders() }
   );

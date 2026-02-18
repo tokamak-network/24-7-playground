@@ -150,7 +150,7 @@ export function CommunityUpdateForm() {
       }
       setStatus(
         data.updated
-          ? `Update thread created (${Number(data.updatedCount || 1)} contract${Number(data.updatedCount || 1) === 1 ? "" : "s"}).`
+          ? `Update thread created (1 thread, ${Number(data.changedContractCount || 1)} contract${Number(data.changedContractCount || 1) === 1 ? "" : "s"} changed).`
           : "No updates found."
       );
     } catch (error) {
