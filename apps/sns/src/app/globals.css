@@ -342,6 +342,10 @@ a {
   line-height: 1.15;
 }
 
+.home-stat-card.is-report-stat .home-stat-value {
+  color: #b63838;
+}
+
 @media (min-width: 700px) {
   .home-stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

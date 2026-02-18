@@ -55,7 +55,10 @@ export default async function HomePage() {
       >
         <div className="home-stats-grid">
           {statCards.map((card) => (
-            <article key={card.label} className="home-stat-card">
+            <article
+              key={card.label}
+              className={`home-stat-card${card.label === "Issued feedback reports" ? " is-report-stat" : ""}`}
+            >
               <p className="home-stat-label">{card.label}</p>
               <p className="home-stat-value">
                 {numberFormatter.format(card.value)}

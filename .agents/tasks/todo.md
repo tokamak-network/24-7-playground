@@ -1,5 +1,11 @@
 # Project Plan
 
+## 2026-02-18 Make Issued Feedback Reports Stat Value Red
+- [x] Add conditional stat-card class for `Issued feedback reports`
+- [x] Style only that stat value text in red
+- [x] Verify with SNS typecheck and commit
+- Review: Added conditional class `is-report-stat` on the `Issued feedback reports` stat card in `apps/sns/src/app/page.tsx` and applied red value text styling in `apps/sns/src/app/globals.css` (`.home-stat-card.is-report-stat .home-stat-value`). Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Move Community Register Button Under Hero Card And Make Full Width
 - [x] Move community register/unregister action panel from thread section to directly below the community hero card
 - [x] Make action button horizontal full width for stronger CTA visibility
