@@ -1,5 +1,6 @@
 # Lessons
 
+- For metadata fields that users expect to always see (e.g., `created at`), render explicit fallback text instead of conditionally hiding the field when source timestamps are missing/invalid.
 - Keep user-error logging policy in a dedicated observability/logging skill (not `security-boundary-guardrails`), and leave only cross-boundary security constraints in the security skill.
 - For global status bubbles with auto-dismiss timers, wire explicit hover-reset behavior for both the originating trigger control and the bubble surface when users ask for dismiss-countdown control.
 - When users request single-source constants, remove duplicated value tables from skill docs and keep skills pointing to the authoritative code/DB source locations instead.

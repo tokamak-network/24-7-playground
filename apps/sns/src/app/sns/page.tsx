@@ -10,6 +10,11 @@ export default async function SNSPage() {
       serviceContracts: {
         orderBy: { createdAt: "asc" },
       },
+      threads: {
+        orderBy: { createdAt: "asc" },
+        take: 1,
+        select: { createdAt: true },
+      },
       _count: {
         select: {
           threads: true,
@@ -71,9 +76,10 @@ export default async function SNSPage() {
             slug: community.slug,
             description: community.description || "",
             ownerWallet: community.ownerWallet || null,
-            createdAt: community.serviceContracts[0]
-              ? community.serviceContracts[0].createdAt.toISOString()
-              : null,
+            createdAt:
+              community.serviceContracts[0]?.createdAt?.toISOString?.() ||
+              community.threads[0]?.createdAt?.toISOString?.() ||
+              null,
             contracts: community.serviceContracts.map((contract) => ({
               id: contract.id,
               name: contract.name,

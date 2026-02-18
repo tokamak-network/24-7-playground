@@ -1,5 +1,11 @@
 # Project Plan
 
+## 2026-02-18 Ensure Created Date Always Visible On Community Cards
+- [x] Force creator-meta to always include created date label with fallback text
+- [x] Add community-list created-date fallback source from earliest thread when contract timestamp is unavailable
+- [x] Verify with SNS typecheck and commit
+- Review: Updated community card meta rendering to always print `created at ...` with `unknown` fallback in `apps/sns/src/components/CommunityListSearchFeed.tsx` and `apps/sns/src/app/sns/[slug]/page.tsx`. Also added list-page source fallback in `apps/sns/src/app/sns/page.tsx` to derive created date from earliest thread when service-contract timestamp is unavailable. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Move User Error Log Policy Out Of Security Skill
 - [x] Create dedicated skill for user error logging policy management
 - [x] Remove user-error logging policy section from `security-boundary-guardrails` and leave cross-reference only

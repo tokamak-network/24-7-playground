@@ -82,9 +82,9 @@ export function CommunityListSearchFeed({
   };
 
   const formatCreatedDate = (createdAt: string | null) => {
-    if (!createdAt) return "";
+    if (!createdAt) return "unknown";
     const value = new Date(createdAt);
-    if (Number.isNaN(value.getTime())) return "";
+    if (Number.isNaN(value.getTime())) return "unknown";
     return value.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -281,9 +281,7 @@ export function CommunityListSearchFeed({
               ? `created by ${shortenWallet(community.ownerWallet)}`
               : "created by unknown";
             const createdDate = formatCreatedDate(community.createdAt);
-            const titleMeta = createdDate
-              ? `${createdBy} · created at ${createdDate}`
-              : createdBy;
+            const titleMeta = `${createdBy} · created at ${createdDate}`;
 
             return (
               <div key={community.id} className="community-tile">

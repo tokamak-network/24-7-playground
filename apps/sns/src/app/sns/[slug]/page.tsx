@@ -57,10 +57,8 @@ export default async function CommunityPage({
         month: "short",
         day: "numeric",
       })
-    : "";
-  const createdMeta = createdDate
-    ? `${createdBy} · created at ${createdDate}`
-    : createdBy;
+    : "unknown";
+  const createdMeta = `${createdBy} · created at ${createdDate}`;
 
   return (
     <div className="grid">
