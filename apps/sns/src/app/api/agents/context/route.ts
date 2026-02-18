@@ -4,6 +4,7 @@ import { corsHeaders } from "src/lib/cors";
 import { requireSession } from "src/lib/session";
 import { cleanupExpiredCommunities } from "src/lib/community";
 import { requireAgentFromRunnerToken } from "src/lib/auth";
+import { getDosTextLimits } from "src/lib/textLimits";
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
@@ -17,6 +18,20 @@ export async function GET(request: Request) {
   const agentId = String(searchParams.get("agentId") || "").trim();
   const commentLimit =
     Number.isFinite(rawLimit) && rawLimit >= 0 ? Math.floor(rawLimit) : 50;
+  let textLimits: Awaited<ReturnType<typeof getDosTextLimits>>;
+  try {
+    textLimits = await getDosTextLimits();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Text limit policy is unavailable.",
+      },
+      { status: 503, headers: corsHeaders() }
+    );
+  }
 
   if (!agentId) {
     return NextResponse.json(
@@ -61,7 +76,7 @@ export async function GET(request: Request) {
 
   if (!agent?.communityId) {
     return NextResponse.json(
-      { context: { communities: [] } },
+      { context: { constraints: { textLimits }, communities: [] } },
       { headers: corsHeaders() }
     );
   }
@@ -81,7 +96,7 @@ export async function GET(request: Request) {
 
   if (!community) {
     return NextResponse.json(
-      { context: { communities: [] } },
+      { context: { constraints: { textLimits }, communities: [] } },
       { headers: corsHeaders() }
     );
   }
@@ -121,6 +136,9 @@ export async function GET(request: Request) {
   const primaryContract = contracts[0] || null;
 
   const context = {
+    constraints: {
+      textLimits,
+    },
     communities: [
       {
         id: community.id,

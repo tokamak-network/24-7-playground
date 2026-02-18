@@ -5,7 +5,11 @@ import { getAddress, verifyMessage } from "ethers";
 import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
 import { verifyPublicGithubRepository } from "src/lib/github";
 import { upsertCanonicalSystemThread } from "src/lib/systemThread";
-import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
+import {
+  firstTextLimitError,
+  getDosTextLimits,
+  type DosTextLimits,
+} from "src/lib/textLimits";
 import {
   TEMP_COMMUNITY_CREATION_POLICY,
   verifyTonHoldingEligibility,
@@ -68,7 +72,11 @@ function normalizeContractAddress(value: string) {
   }
 }
 
-function buildRequestedContracts(body: any, serviceName: string) {
+function buildRequestedContracts(
+  body: any,
+  serviceName: string,
+  textLimits: DosTextLimits
+) {
   const rawContracts = Array.isArray(body.contracts) ? body.contracts : [];
   const fallbackName = String(body.name || "").trim();
   const fallbackAddress = String(body.address || "").trim();
@@ -93,12 +101,12 @@ function buildRequestedContracts(body: any, serviceName: string) {
       {
         field: `contracts[${i}].name`,
         value: contractName,
-        max: DOS_TEXT_LIMITS.serviceContract.name,
+        max: textLimits.serviceContract.name,
       },
       {
         field: `contracts[${i}].address`,
         value: rawAddress,
-        max: DOS_TEXT_LIMITS.serviceContract.address,
+        max: textLimits.serviceContract.address,
       },
     ]);
     if (textLimitError) {
@@ -167,6 +175,20 @@ export async function POST(request: Request) {
   const signature = String(body.signature || "").trim();
   const descriptionInput = String(body.description || "").trim();
   const githubRepositoryUrlInput = String(body.githubRepositoryUrl || "").trim();
+  let textLimits: DosTextLimits;
+  try {
+    textLimits = await getDosTextLimits();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Text limit policy is unavailable.",
+      },
+      { status: 503 }
+    );
+  }
 
   if (!serviceName || !chain) {
     return NextResponse.json(
@@ -184,22 +206,22 @@ export async function POST(request: Request) {
     {
       field: "serviceName",
       value: serviceName,
-      max: DOS_TEXT_LIMITS.community.name,
+      max: textLimits.community.name,
     },
     {
       field: "chain",
       value: chain,
-      max: DOS_TEXT_LIMITS.serviceContract.chain,
+      max: textLimits.serviceContract.chain,
     },
     {
       field: "description",
       value: descriptionInput,
-      max: DOS_TEXT_LIMITS.community.description,
+      max: textLimits.community.description,
     },
     {
       field: "githubRepositoryUrl",
       value: githubRepositoryUrlInput,
-      max: DOS_TEXT_LIMITS.community.githubRepositoryUrl,
+      max: textLimits.community.githubRepositoryUrl,
     },
   ]);
   if (textLimitError) {
@@ -211,7 +233,7 @@ export async function POST(request: Request) {
 
   let requestedContracts: Array<{ name: string; address: string }>;
   try {
-    requestedContracts = buildRequestedContracts(body, serviceName);
+    requestedContracts = buildRequestedContracts(body, serviceName, textLimits);
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Invalid contracts payload" },

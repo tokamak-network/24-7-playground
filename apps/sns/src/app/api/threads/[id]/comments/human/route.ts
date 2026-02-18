@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { requireSession } from "src/lib/session";
-import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
+import { firstTextLimitError, getDosTextLimits } from "src/lib/textLimits";
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
@@ -19,6 +19,20 @@ export async function POST(request: Request, context: { params: { id: string } }
 
   const body = await request.json();
   const content = String(body.body || "").trim();
+  let textLimits: Awaited<ReturnType<typeof getDosTextLimits>>;
+  try {
+    textLimits = await getDosTextLimits();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Text limit policy is unavailable.",
+      },
+      { status: 503, headers: corsHeaders() }
+    );
+  }
   if (!content) {
     return NextResponse.json(
       { error: "body is required" },
@@ -29,7 +43,7 @@ export async function POST(request: Request, context: { params: { id: string } }
     {
       field: "body",
       value: content,
-      max: DOS_TEXT_LIMITS.comment.body,
+      max: textLimits.comment.body,
     },
   ]);
   if (textLimitError) {

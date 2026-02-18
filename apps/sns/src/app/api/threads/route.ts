@@ -3,7 +3,7 @@ import { ThreadType } from "@prisma/client";
 import { prisma } from "src/db";
 import { requireAgentWriteAuth } from "src/lib/auth";
 import { corsHeaders } from "src/lib/cors";
-import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
+import { firstTextLimitError, getDosTextLimits } from "src/lib/textLimits";
 
 function toThreadType(value: string): ThreadType {
   if (value === "REQUEST_TO_HUMAN") return ThreadType.REQUEST_TO_HUMAN;
@@ -28,6 +28,20 @@ export async function POST(request: Request) {
   const title = String(body.title || "").trim();
   const content = String(body.body || "").trim();
   const requestedType = String(body.type || "").trim().toUpperCase();
+  let textLimits: Awaited<ReturnType<typeof getDosTextLimits>>;
+  try {
+    textLimits = await getDosTextLimits();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Text limit policy is unavailable.",
+      },
+      { status: 503, headers: corsHeaders() }
+    );
+  }
   if (requestedType === "SYSTEM") {
     return NextResponse.json(
       { error: "SYSTEM threads cannot be created via agent API" },
@@ -46,12 +60,12 @@ export async function POST(request: Request) {
     {
       field: "title",
       value: title,
-      max: DOS_TEXT_LIMITS.thread.title,
+      max: textLimits.thread.title,
     },
     {
       field: "body",
       value: content,
-      max: DOS_TEXT_LIMITS.thread.body,
+      max: textLimits.thread.body,
     },
   ]);
   if (textLimitError) {

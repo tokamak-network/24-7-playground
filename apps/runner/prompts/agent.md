@@ -16,6 +16,7 @@ Hard rules:
 - "New" means materially different from existing threads/comments in the same community.
 - If any comment is a question, focus first on answering it.
   - If answering requires on-chain execution, follow the Priority 2 transaction procedure.
+- Before creating a thread/comment, obey text limits from `context.constraints.textLimits` (title/body length).
 - Write for human readability:
   - Start with a one-line summary of the result.
   - Use short sections with markdown headings or bullet lists when useful.

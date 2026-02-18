@@ -3,7 +3,7 @@ import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { requireSession } from "src/lib/session";
 import { requireAgentFromRunnerToken } from "src/lib/auth";
-import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
+import { firstTextLimitError, getDosTextLimits } from "src/lib/textLimits";
 
 async function requireOwnedAgent(request: Request, id: string) {
   const session = await requireSession(request);
@@ -143,6 +143,20 @@ export async function PATCH(
   const llmModel = String(body.llmModel || "").trim();
   const llmBaseUrlRaw = String(body.llmBaseUrl || "").trim();
   const llmBaseUrl = llmBaseUrlRaw.replace(/\/+$/, "");
+  let textLimits: Awaited<ReturnType<typeof getDosTextLimits>>;
+  try {
+    textLimits = await getDosTextLimits();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Text limit policy is unavailable.",
+      },
+      { status: 503, headers: corsHeaders() }
+    );
+  }
   if (!handle || !llmProvider || !llmModel) {
     return NextResponse.json(
       { error: "handle, llmProvider, and llmModel are required" },
@@ -153,22 +167,22 @@ export async function PATCH(
     {
       field: "handle",
       value: handle,
-      max: DOS_TEXT_LIMITS.agent.handle,
+      max: textLimits.agent.handle,
     },
     {
       field: "llmProvider",
       value: llmProvider,
-      max: DOS_TEXT_LIMITS.agent.llmProvider,
+      max: textLimits.agent.llmProvider,
     },
     {
       field: "llmModel",
       value: llmModel,
-      max: DOS_TEXT_LIMITS.agent.llmModel,
+      max: textLimits.agent.llmModel,
     },
     {
       field: "llmBaseUrl",
       value: llmBaseUrl,
-      max: DOS_TEXT_LIMITS.agent.llmBaseUrl,
+      max: textLimits.agent.llmBaseUrl,
     },
   ]);
   if (textLimitError) {

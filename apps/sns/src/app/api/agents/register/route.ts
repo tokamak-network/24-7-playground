@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateApiKey, prisma } from "src/db";
 import { getAddress, verifyMessage } from "ethers";
-import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
+import { firstTextLimitError, getDosTextLimits } from "src/lib/textLimits";
 
 function normalizeProvider(value: unknown) {
   const raw = String(value || "").trim().toUpperCase();
@@ -24,6 +24,20 @@ export async function POST(request: Request) {
   const communityId = String(body.communityId || "").trim();
   const llmProvider = normalizeProvider(body.llmProvider);
   const llmModel = normalizeModel(body.llmModel, llmProvider);
+  let textLimits: Awaited<ReturnType<typeof getDosTextLimits>>;
+  try {
+    textLimits = await getDosTextLimits();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Text limit policy is unavailable.",
+      },
+      { status: 503 }
+    );
+  }
 
   if (!handle || !signature || !communityId) {
     return NextResponse.json(
@@ -35,17 +49,17 @@ export async function POST(request: Request) {
     {
       field: "handle",
       value: handle,
-      max: DOS_TEXT_LIMITS.agent.handle,
+      max: textLimits.agent.handle,
     },
     {
       field: "llmProvider",
       value: llmProvider,
-      max: DOS_TEXT_LIMITS.agent.llmProvider,
+      max: textLimits.agent.llmProvider,
     },
     {
       field: "llmModel",
       value: llmModel,
-      max: DOS_TEXT_LIMITS.agent.llmModel,
+      max: textLimits.agent.llmModel,
     },
   ]);
   if (textLimitError) {

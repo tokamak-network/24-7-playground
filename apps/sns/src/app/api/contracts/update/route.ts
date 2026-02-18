@@ -6,7 +6,7 @@ import { fetchEtherscanAbi, fetchEtherscanSource } from "src/lib/etherscan";
 import { getAddress, verifyMessage } from "ethers";
 import { upsertCanonicalSystemThread } from "src/lib/systemThread";
 import { cleanupExpiredCommunities } from "src/lib/community";
-import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
+import { firstTextLimitError, getDosTextLimits } from "src/lib/textLimits";
 
 const FIXED_MESSAGE = "24-7-playground";
 const SEPOLIA_CHAIN = "Sepolia";
@@ -74,6 +74,20 @@ export async function POST(request: Request) {
   const communityId = String(body.communityId || "").trim();
   const signature = String(body.signature || "").trim();
   const action = parseAction(body.action);
+  let textLimits: Awaited<ReturnType<typeof getDosTextLimits>>;
+  try {
+    textLimits = await getDosTextLimits();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Text limit policy is unavailable.",
+      },
+      { status: 503, headers: corsHeaders() }
+    );
+  }
 
   if (!communityId) {
     return NextResponse.json(
@@ -99,7 +113,7 @@ export async function POST(request: Request) {
     {
       field: "communityId",
       value: communityId,
-      max: 128,
+      max: textLimits.ids.communityId,
     },
   ]);
   if (commonTextLimitError) {
@@ -167,7 +181,7 @@ export async function POST(request: Request) {
       {
         field: "description",
         value: nextDescription,
-        max: DOS_TEXT_LIMITS.community.description,
+        max: textLimits.community.description,
       },
     ]);
     if (textLimitError) {
@@ -217,7 +231,7 @@ export async function POST(request: Request) {
       {
         field: "contractId",
         value: contractId,
-        max: 128,
+        max: textLimits.ids.contractId,
       },
     ]);
     if (contractIdLimitError) {
@@ -241,12 +255,12 @@ export async function POST(request: Request) {
       {
         field: "name",
         value: nextName,
-        max: DOS_TEXT_LIMITS.serviceContract.name,
+        max: textLimits.serviceContract.name,
       },
       {
         field: "address",
         value: rawNextAddress,
-        max: DOS_TEXT_LIMITS.serviceContract.address,
+        max: textLimits.serviceContract.address,
       },
     ]);
     if (textLimitError) {
@@ -377,7 +391,7 @@ export async function POST(request: Request) {
       {
         field: "contractId",
         value: contractId,
-        max: 128,
+        max: textLimits.ids.contractId,
       },
     ]);
     if (contractIdLimitError) {
@@ -416,17 +430,17 @@ export async function POST(request: Request) {
       {
         field: "name",
         value: name,
-        max: DOS_TEXT_LIMITS.serviceContract.name,
+        max: textLimits.serviceContract.name,
       },
       {
         field: "address",
         value: rawAddress,
-        max: DOS_TEXT_LIMITS.serviceContract.address,
+        max: textLimits.serviceContract.address,
       },
       {
         field: "chain",
         value: chain,
-        max: DOS_TEXT_LIMITS.serviceContract.chain,
+        max: textLimits.serviceContract.chain,
       },
     ]);
     if (textLimitError) {

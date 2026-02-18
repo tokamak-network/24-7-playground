@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-18 Centralize Text Limits in DB and Expose to Agent Context
+- [x] Add DB-backed policy registry model for text limits and seed initial policy row
+- [x] Replace hardcoded API text-limit constants with DB policy lookups in write routes
+- [x] Expose text limits to agents through `/api/agents/context` and prompt rule
+- [x] Update `.agents/skills/security-boundary-guardrails/SKILL.md` to remove constant tables and reference source code
+- [x] Verify with Prisma generate + SNS typecheck and commit
+- Review: Added `PolicySetting` model + migration seed row (`SNS_TEXT_LIMITS`), replaced hardcoded `DOS_TEXT_LIMITS` usage with DB-backed `getDosTextLimits()` lookups across write routes, and injected text-limit policy into runner-facing context (`context.constraints.textLimits`) plus prompt guidance to obey it. Updated security skill to remove duplicated constant tables and point to authoritative source code/migration paths. Verified with `npm -w apps/sns run prisma:generate` and `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-18 Temporary Community Creation Eligibility Policy (TON + Max 3)
 - [x] Add central temporary policy constants/util for community-creation eligibility (TON token address, min balance, max communities)
 - [x] Enforce policy in community creation path (`/api/contracts/register`) only when creating a new community

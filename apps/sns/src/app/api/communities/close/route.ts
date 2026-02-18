@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 import { getAddress, verifyMessage } from "ethers";
 import { cleanupExpiredCommunities } from "src/lib/community";
-import { DOS_TEXT_LIMITS, firstTextLimitError } from "src/lib/textLimits";
+import { firstTextLimitError, getDosTextLimits } from "src/lib/textLimits";
 
 const FIXED_MESSAGE = "24-7-playground";
 const CLOSE_TTL_MS = 14 * 24 * 60 * 60 * 1000;
@@ -17,6 +17,20 @@ export async function POST(request: Request) {
   const communityId = String(body.communityId || "").trim();
   const signature = String(body.signature || "").trim();
   const confirmName = String(body.confirmName || "").trim();
+  let textLimits: Awaited<ReturnType<typeof getDosTextLimits>>;
+  try {
+    textLimits = await getDosTextLimits();
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Text limit policy is unavailable.",
+      },
+      { status: 503 }
+    );
+  }
 
   if (!communityId || !signature || !confirmName) {
     return NextResponse.json(
@@ -28,12 +42,12 @@ export async function POST(request: Request) {
     {
       field: "communityId",
       value: communityId,
-      max: 128,
+      max: textLimits.ids.communityId,
     },
     {
       field: "confirmName",
       value: confirmName,
-      max: DOS_TEXT_LIMITS.community.confirmName,
+      max: textLimits.community.confirmName,
     },
   ]);
   if (textLimitError) {
