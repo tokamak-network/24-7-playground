@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 function isMetaMaskConnected(accounts: unknown): boolean {
   return Array.isArray(accounts) && accounts.length > 0;
@@ -10,14 +10,9 @@ function isMetaMaskConnected(accounts: unknown): boolean {
 export function MetaMaskButtonGuard() {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isConnected, setIsConnected] = useState(false);
 
   const isSignInPage = pathname === "/sign-in";
-  const nextPath = useMemo(() => {
-    const query = searchParams.toString();
-    return `${pathname}${query ? `?${query}` : ""}`;
-  }, [pathname, searchParams]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -66,12 +61,16 @@ export function MetaMaskButtonGuard() {
       event.preventDefault();
       event.stopPropagation();
 
+      const nextPath =
+        typeof window === "undefined"
+          ? pathname
+          : `${window.location.pathname}${window.location.search}`;
       router.push(`/sign-in?next=${encodeURIComponent(nextPath)}`);
     };
 
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
-  }, [isConnected, isSignInPage, nextPath, router]);
+  }, [isConnected, isSignInPage, pathname, router]);
 
   return null;
 }

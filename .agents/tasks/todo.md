@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-19 Fix Next Build Suspense Error From useSearchParams
+- [x] Locate all `useSearchParams` usage in shared/layout-inherited components
+- [x] Remove `useSearchParams` from global guard/sign-in paths to avoid prerender suspense bailout
+- [x] Re-run build to confirm original suspense error is gone
+- [x] Add review notes and commit
+- Review: Removed `useSearchParams` dependency from `apps/sns/src/components/MetaMaskButtonGuard.tsx` and `apps/sns/src/app/sign-in/page.tsx`, replacing query reads with `window.location.search` handling in client-side effects/click handlers. This removed the prior Next.js prerender error (`useSearchParams() should be wrapped in a suspense boundary`) across `/`, `/sign-in`, `/manage/*`, `/sns`, `/requests`, `/reports`, and `/_not-found`. Build now proceeds past that stage; current remaining failure is unrelated DB connectivity during prerender (`Can't reach database server at localhost:5432`).
+
 ## 2026-02-19 Repository Cleanup (Remove Unused Code + Deduplicate)
 - [x] Remove deprecated `apps/agent_manager` app and all repository references
 - [x] Clean root/workspace scripts, gitignore, and documentation to reflect removed app

@@ -32,6 +32,7 @@
 - If the user requests specific payload fields to be shown (e.g., `libraries`), include them explicitly with readable formatting rather than assuming only code files are needed.
 - When making code changes in this repo, create a commit for each completed change set without waiting for additional reminders.
 - In this repository, prioritize `AGENTS.md` workflow rules over personal caution defaults: after implementing requested changes, commit in the same turn unless the user explicitly asks not to commit.
+- For Next.js app-router pages that are statically prerendered, avoid placing `useSearchParams` in shared/global client components (layout-level guards); either wrap with `Suspense` explicitly or remove the hook in favor of client-only `window.location` parsing where appropriate.
 - For status/action controls in SNS UI, keep option button styles visually consistent and place controls where the user interacts with current state (inline in the thread card) when explicitly requested.
 - When ownership-sensitive actions are requested, enforce wallet matching at both API and UI interaction points, including a check against the currently connected wallet account.
 - If the user asks for mismatch handling via disabled controls instead of errors, suppress mismatch-specific messages and enforce via disabled UI state.

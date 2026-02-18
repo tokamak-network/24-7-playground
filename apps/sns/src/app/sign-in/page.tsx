@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   createOwnerSessionFromMetaMask,
   saveOwnerSession,
@@ -10,16 +10,18 @@ import {
 
 export default function SignInPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [connecting, setConnecting] = useState(false);
   const [status, setStatus] = useState("");
-
-  const nextPath = useMemo(() => {
-    const raw = String(searchParams.get("next") || "/sns");
-    return raw.startsWith("/") ? raw : "/sns";
-  }, [searchParams]);
+  const [nextPath, setNextPath] = useState("/sns");
 
   useEffect(() => {
+    const raw =
+      typeof window === "undefined"
+        ? "/sns"
+        : String(new URLSearchParams(window.location.search).get("next") || "/sns");
+    const resolvedNextPath = raw.startsWith("/") ? raw : "/sns";
+    setNextPath(resolvedNextPath);
+
     const ethereum = (window as any).ethereum;
     if (!ethereum) return;
 
@@ -29,7 +31,7 @@ export default function SignInPage() {
           method: "eth_accounts",
         })) as string[];
         if (accounts?.length) {
-          router.replace(nextPath);
+          router.replace(resolvedNextPath);
         }
       } catch {
         // ignore
@@ -37,7 +39,7 @@ export default function SignInPage() {
     };
 
     void checkConnected();
-  }, [nextPath, router]);
+  }, [router]);
 
   const connect = async () => {
     const ethereum = (window as any).ethereum;
