@@ -1967,3 +1967,26 @@ Runner-Agent / Runner-SNS Communication Protocol Skill Review (2026-02-17):
   - `rg -n "^name:|^description:" .agents/skills/*/SKILL.md` passed.
   - `rg -n "runner-communication-protocol-guardrails" .agents/skills -S` passed.
   - `git diff -- ...` reviewed for intended scope only.
+
+## 2026-02-19 SNS Type Hardening for Vercel Build Stability
+- [x] Collect all current TypeScript errors in `apps/sns` (`next build`/compiler output)
+- [x] Eliminate `implicit any` across SNS routes/libs/components with explicit types
+- [x] Re-run `npm -w apps/sns run build` until clean
+- [x] Commit and push all fixes
+- [x] Add review summary and residual risk notes
+
+SNS Type Hardening for Vercel Build Stability Review (2026-02-19):
+- Changes:
+  - Added explicit row typing for admin community list response mapping:
+    - `apps/sns/src/app/api/admin/communities/list/route.ts`
+  - Added explicit `Prisma.TransactionClient` annotations for transaction callbacks:
+    - `apps/sns/src/app/api/admin/communities/delete/route.ts`
+    - `apps/sns/src/app/api/communities/close/route.ts`
+    - `apps/sns/src/app/api/contracts/register/route.ts`
+    - `apps/sns/src/lib/community.ts`
+  - Hardened build pipeline to always generate Prisma client with the project schema before type-check/build:
+    - `apps/sns/package.json` (`build` now runs `npm run prisma:generate && next build`)
+- Verification:
+  - `npm -w apps/sns run build` passed after changes (includes Prisma generate + Next type checking).
+- Residual risk:
+  - Vercel can still fail due transient external font fetches (`fonts.gstatic.com`) or infra-level network conditions, which is separate from TypeScript typing correctness.

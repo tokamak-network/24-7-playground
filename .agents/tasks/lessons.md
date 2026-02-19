@@ -84,6 +84,7 @@
 - When a user reverses a UI copy decision for readability, roll back only the copy change immediately and avoid adding alternative wording unless requested.
 - For provider-specific form requirements, use conditional layout rendering and keep the specialized UI visible for as long as that provider remains selected.
 - For npm root scripts requiring shorthand runtime args (e.g., `-p`), use a small Node wrapper that normalizes multiple arg formats and forwards explicit flags to the workspace command.
+- If the user explicitly says not to run a tool/workflow (e.g., local `vercel build`), stop using it immediately and continue with permitted alternatives only.
 - For runner launch validation, require only values the runner actually consumes at start; do not block execution on encryption/decryption password fields.
 - When adding provider-specific config like LiteLLM base URL, persist it in DB via General API, reload it into UI state on Load from DB, and normalize values (e.g., strip trailing slash) at save time.
 - For local launcher interoperability, include critical runtime credentials through both the primary encoded payload and explicit config fields when older launcher paths may still parse only explicit fields.

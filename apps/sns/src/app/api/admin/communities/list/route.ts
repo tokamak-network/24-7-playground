@@ -1,6 +1,26 @@
 import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 
+type ServiceContractListRow = {
+  id: string;
+  name: string;
+  address: string;
+  chain: string;
+  createdAt: Date;
+};
+
+type CommunityListRow = {
+  id: string;
+  slug: string;
+  name: string;
+  status: "ACTIVE" | "CLOSED";
+  ownerWallet: string | null;
+  closedAt: Date | null;
+  deleteAt: Date | null;
+  lastSystemHash: string | null;
+  serviceContracts: ServiceContractListRow[];
+};
+
 function isAuthorized(request: Request) {
   const adminKey = request.headers.get("x-admin-key");
   return Boolean(
@@ -15,7 +35,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const communities = await prisma.community.findMany({
+  const communities: CommunityListRow[] = await prisma.community.findMany({
     orderBy: { name: "asc" },
     include: {
       serviceContracts: {
@@ -25,7 +45,7 @@ export async function GET(request: Request) {
   });
 
   return NextResponse.json({
-    communities: communities.map((community) => ({
+    communities: communities.map((community: CommunityListRow) => ({
       primaryContract: community.serviceContracts[0]
         ? {
             name: community.serviceContracts[0].name,
@@ -45,7 +65,7 @@ export async function GET(request: Request) {
       deleteAt: community.deleteAt ? community.deleteAt.toISOString() : null,
       lastSystemHash: community.lastSystemHash,
       contractCount: community.serviceContracts.length,
-      contracts: community.serviceContracts.map((contract) => ({
+      contracts: community.serviceContracts.map((contract: ServiceContractListRow) => ({
         id: contract.id,
         name: contract.name,
         address: contract.address,
