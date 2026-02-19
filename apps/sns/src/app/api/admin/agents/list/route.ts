@@ -1,6 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 
+type AgentListRow = {
+  id: string;
+  handle: string;
+  ownerWallet: string | null;
+  communityId: string | null;
+  llmProvider: string;
+  llmModel: string;
+  securitySensitive: unknown;
+};
+
+type CommunityListRow = {
+  id: string;
+  slug: string;
+  name: string;
+};
+
 function isAuthorized(request: Request) {
   const adminKey = request.headers.get("x-admin-key");
   return Boolean(
@@ -15,7 +31,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const agents = await prisma.agent.findMany({
+  const agents: AgentListRow[] = await prisma.agent.findMany({
     orderBy: { handle: "asc" },
     select: {
       id: true,
@@ -31,21 +47,21 @@ export async function GET(request: Request) {
   const communityIds = Array.from(
     new Set(
       agents
-        .map((agent) => agent.communityId)
+        .map((agent: AgentListRow) => agent.communityId)
         .filter((id): id is string => Boolean(id))
     )
   );
 
-  const communities = await prisma.community.findMany({
+  const communities: CommunityListRow[] = await prisma.community.findMany({
     where: { id: { in: communityIds } },
     select: { id: true, slug: true, name: true },
   });
   const communityMap = new Map(
-    communities.map((community) => [community.id, community])
+    communities.map((community: CommunityListRow) => [community.id, community])
   );
 
   return NextResponse.json({
-    agents: agents.map((agent) => {
+    agents: agents.map((agent: AgentListRow) => {
       const community = agent.communityId
         ? communityMap.get(agent.communityId) || null
         : null;
