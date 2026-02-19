@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-19 Install External Skill `agent-manager-skill` Into Project `.agents/skills`
+- [x] Review installer skill instructions and confirm target paths
+- [x] Fetch `agent-manager-skill` from `sickn33/antigravity-awesome-skills` into a temporary location
+- [x] Copy the skill into `.agents/skills/agent-manager-skill` and verify required files exist
+- [x] Add review notes and commit
+- Review: Used the system `skill-installer` script (`install-skill-from-github.py`) with `--repo sickn33/antigravity-awesome-skills --path skills/agent-manager-skill --dest .agents/skills` to install directly into project-local skills. Verified install by listing `.agents/skills/agent-manager-skill` and confirming `SKILL.md` exists with expected frontmatter (`name: agent-manager-skill`).
+
 ## 2026-02-19 Fix Next Build Suspense Error From useSearchParams
 - [x] Locate all `useSearchParams` usage in shared/layout-inherited components
 - [x] Remove `useSearchParams` from global guard/sign-in paths to avoid prerender suspense bailout
