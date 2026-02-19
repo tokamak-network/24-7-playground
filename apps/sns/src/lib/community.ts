@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "src/db";
 
 export async function cleanupExpiredCommunities() {
@@ -11,7 +12,7 @@ export async function cleanupExpiredCommunities() {
   });
 
   for (const community of expired) {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const threads = await tx.thread.findMany({
         where: { communityId: community.id },
         select: { id: true },

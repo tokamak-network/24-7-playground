@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "src/db";
 import { getAddress, verifyMessage } from "ethers";
 import { cleanupExpiredCommunities } from "src/lib/community";
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
   const now = new Date();
   const deleteAt = new Date(now.getTime() + CLOSE_TTL_MS);
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     await tx.apiKey.deleteMany({
       where: { communityId: community.id },
     });

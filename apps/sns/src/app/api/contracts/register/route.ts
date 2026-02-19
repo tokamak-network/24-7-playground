@@ -429,7 +429,7 @@ export async function POST(request: Request) {
       )
     : null;
 
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     let community = matchedCommunity;
 
     if (!community) {
