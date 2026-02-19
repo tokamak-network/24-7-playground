@@ -68,12 +68,18 @@ function secureCompare(left, right) {
   return crypto.timingSafeEqual(leftBuffer, rightBuffer);
 }
 
-function normalizePath(urlString) {
+function parseRequestMeta(urlString) {
   try {
     const parsed = new URL(urlString, "http://localhost");
-    return parsed.pathname;
+    return {
+      route: parsed.pathname,
+      searchParams: parsed.searchParams,
+    };
   } catch {
-    return "/";
+    return {
+      route: "/",
+      searchParams: new URLSearchParams(),
+    };
   }
 }
 
@@ -91,6 +97,193 @@ async function readJsonBody(request) {
     parsed,
   });
   return parsed;
+}
+
+function normalizeAgentId(value) {
+  return String(value || "").trim();
+}
+
+class MultiAgentRunnerManager {
+  constructor(logger = console) {
+    this.logger = logger;
+    this.engines = new Map();
+  }
+
+  #defaultStatus() {
+    return {
+      running: false,
+      startedAt: null,
+      lastRunAt: null,
+      lastSuccessAt: null,
+      lastError: null,
+      cycleCount: 0,
+      lastActionCount: 0,
+      lastLlmOutput: null,
+      config: null,
+    };
+  }
+
+  #activeStatuses() {
+    const entries = [];
+    for (const [agentId, engine] of this.engines.entries()) {
+      const status = engine.getStatus();
+      if (!status || !status.running) {
+        this.engines.delete(agentId);
+        continue;
+      }
+      entries.push({ agentId, status });
+    }
+    return entries;
+  }
+
+  getStatus(options = {}) {
+    const selectedAgentId = normalizeAgentId(options.agentId);
+    const active = this.#activeStatuses();
+    const runningAny = active.length > 0;
+    const runningAgentIds = active.map((entry) => entry.agentId);
+    const selected =
+      selectedAgentId
+        ? active.find((entry) => entry.agentId === selectedAgentId) || null
+        : null;
+    const selectedStatus = selected ? selected.status : null;
+    const primaryStatus =
+      selectedAgentId
+        ? selectedStatus || this.#defaultStatus()
+        : active.length === 1
+          ? active[0].status
+          : this.#defaultStatus();
+    const running = selectedAgentId
+      ? Boolean(selectedStatus && selectedStatus.running)
+      : runningAny;
+    return {
+      ...primaryStatus,
+      running,
+      runningAny,
+      selectedAgentId: selectedAgentId || null,
+      selectedAgentRunning: Boolean(selectedStatus && selectedStatus.running),
+      selectedAgentStatus: selectedStatus,
+      agentCount: active.length,
+      runningAgentIds,
+      agents: active.map((entry) => ({
+        agentId: entry.agentId,
+        ...entry.status,
+      })),
+      config:
+        selectedAgentId
+          ? selectedStatus
+            ? selectedStatus.config || null
+            : null
+          : active.length === 1
+            ? active[0].status.config || null
+            : null,
+    };
+  }
+
+  async start(configInput) {
+    const agentId = normalizeAgentId(configInput && configInput.agentId);
+    if (!agentId) {
+      throw new Error("agentId is required");
+    }
+    const existing = this.engines.get(agentId);
+    if (existing && existing.getStatus().running) {
+      throw new Error(`Runner is already running for agent ${agentId}`);
+    }
+    const engine = existing || new RunnerEngine(this.logger);
+    await engine.start(configInput);
+    this.engines.set(agentId, engine);
+    return this.getStatus({ agentId });
+  }
+
+  stop(options = {}) {
+    const agentId = normalizeAgentId(options.agentId);
+    if (agentId) {
+      const engine = this.engines.get(agentId);
+      if (engine) {
+        engine.stop();
+        this.engines.delete(agentId);
+      }
+      return this.getStatus({ agentId });
+    }
+
+    for (const [entryAgentId, engine] of this.engines.entries()) {
+      engine.stop();
+      this.engines.delete(entryAgentId);
+    }
+    return this.getStatus();
+  }
+
+  updateConfig(configPatch) {
+    const requestedAgentId = normalizeAgentId(configPatch && configPatch.agentId);
+    const active = this.#activeStatuses();
+    const agentId =
+      requestedAgentId || (active.length === 1 ? active[0].agentId : "");
+    if (!agentId) {
+      throw new Error("agentId is required for /runner/config when multiple agents are running");
+    }
+    const engine = this.engines.get(agentId);
+    if (!engine || !engine.getStatus().running) {
+      throw new Error(`Runner is not running for agent ${agentId}`);
+    }
+    engine.updateConfig(configPatch);
+    return this.getStatus({ agentId });
+  }
+
+  async runOnceWithConfig(configInput) {
+    const engine = new RunnerEngine(this.logger);
+    return engine.runOnceWithConfig(configInput);
+  }
+
+  async runOnce(options = {}) {
+    const agentId = normalizeAgentId(options.agentId);
+    if (agentId) {
+      const engine = this.engines.get(agentId);
+      if (!engine || !engine.getStatus().running) {
+        throw new Error(`Runner is not running for agent ${agentId}`);
+      }
+      return engine.runOnce();
+    }
+
+    const active = this.#activeStatuses();
+    if (!active.length) {
+      return {
+        ok: true,
+        skipped: true,
+        reason: "No running agents",
+        results: [],
+      };
+    }
+
+    const results = await Promise.all(
+      active.map(async (entry) => {
+        try {
+          const engine = this.engines.get(entry.agentId);
+          if (!engine) {
+            return {
+              agentId: entry.agentId,
+              ok: false,
+              error: "Runner engine not available",
+            };
+          }
+          const result = await engine.runOnce();
+          return {
+            agentId: entry.agentId,
+            ok: Boolean(result && result.ok),
+            result,
+          };
+        } catch (error) {
+          return {
+            agentId: entry.agentId,
+            ok: false,
+            error: toErrorMessage(error, "run-once failed"),
+          };
+        }
+      })
+    );
+    return {
+      ok: results.every((item) => item.ok),
+      results,
+    };
+  }
 }
 
 async function startServer(options) {
@@ -111,7 +304,7 @@ async function startServer(options) {
   }
   process.env.RUNNER_PORT = String(port);
 
-  const engine = new RunnerEngine(console);
+  const manager = new MultiAgentRunnerManager(console);
   const server = http.createServer(async (request, response) => {
     const requestOrigin = normalizeOrigin(request.headers.origin, "");
     const originAllowed = !requestOrigin || requestOrigin === allowedOrigin;
@@ -134,7 +327,7 @@ async function startServer(options) {
       return;
     }
 
-    const route = normalizePath(request.url || "/");
+    const { route, searchParams } = parseRequestMeta(request.url || "/");
     trace("request", {
       method: request.method,
       url: request.url,
@@ -178,10 +371,11 @@ async function startServer(options) {
       }
 
       if (request.method === "GET" && route === "/runner/status") {
+        const requestedAgentId = normalizeAgentId(searchParams.get("agentId"));
         jsonResponse(
           response,
           200,
-          { ok: true, status: engine.getStatus() },
+          { ok: true, status: manager.getStatus({ agentId: requestedAgentId }) },
           { route, method: request.method, allowedOrigin }
         );
         return;
@@ -189,7 +383,8 @@ async function startServer(options) {
 
       if (request.method === "POST" && route === "/runner/start") {
         const body = await readJsonBody(request);
-        await engine.start(body.config || body);
+        const config = body.config || body;
+        const status = await manager.start(config);
         logSummary(
           console,
           `launcher start request accepted (route=${route}, method=${request.method})`
@@ -200,7 +395,7 @@ async function startServer(options) {
           {
             ok: true,
             message: "Runner started",
-            status: engine.getStatus(),
+            status,
           },
           { route, method: request.method, body, allowedOrigin }
         );
@@ -208,7 +403,15 @@ async function startServer(options) {
       }
 
       if (request.method === "POST" && route === "/runner/stop") {
-        engine.stop();
+        const body = await readJsonBody(request);
+        const requestedAgentId =
+          normalizeAgentId(
+            (body && body.agentId) || (body && body.config && body.config.agentId)
+          ) ||
+          normalizeAgentId(searchParams.get("agentId"));
+        const status = manager.stop(
+          requestedAgentId ? { agentId: requestedAgentId } : {}
+        );
         logSummary(
           console,
           `launcher stop request accepted (route=${route}, method=${request.method})`
@@ -218,8 +421,8 @@ async function startServer(options) {
           200,
           {
             ok: true,
-            message: "Runner stopped",
-            status: engine.getStatus(),
+            message: requestedAgentId ? "Runner stopped" : "All runners stopped",
+            status,
           },
           { route, method: request.method, allowedOrigin }
         );
@@ -228,7 +431,7 @@ async function startServer(options) {
 
       if (request.method === "POST" && route === "/runner/config") {
         const body = await readJsonBody(request);
-        const nextStatus = engine.updateConfig(body.config || body);
+        const nextStatus = manager.updateConfig(body.config || body);
         logSummary(
           console,
           `launcher config updated (route=${route}, method=${request.method})`
@@ -248,9 +451,13 @@ async function startServer(options) {
 
       if (request.method === "POST" && route === "/runner/run-once") {
         const body = await readJsonBody(request);
+        const requestedAgentId =
+          normalizeAgentId((body && body.agentId) || searchParams.get("agentId"));
         const result = body && (body.config || body.snsBaseUrl)
-          ? await engine.runOnceWithConfig(body.config || body)
-          : await engine.runOnce();
+          ? await manager.runOnceWithConfig(body.config || body)
+          : await manager.runOnce(
+              requestedAgentId ? { agentId: requestedAgentId } : {}
+            );
         logSummary(
           console,
           `launcher run-once completed (route=${route}, method=${request.method}, ok=${Boolean(result && result.ok)})`
@@ -258,7 +465,11 @@ async function startServer(options) {
         jsonResponse(
           response,
           200,
-          { ok: true, result, status: engine.getStatus() },
+          {
+            ok: true,
+            result,
+            status: manager.getStatus({ agentId: requestedAgentId }),
+          },
           { route, method: request.method, body, allowedOrigin }
         );
         return;
@@ -329,11 +540,11 @@ function printHelp() {
       "",
       "Launcher API routes (serve):",
       "  GET  /health",
-      "  GET  /runner/status",
+      "  GET  /runner/status?agentId=<id>",
       "  POST /runner/start      { config: RunnerConfig }",
-      "  POST /runner/stop",
-      "  POST /runner/config     { config: Partial<RunnerConfig> }",
-      "  POST /runner/run-once   { config?: RunnerConfig }",
+      "  POST /runner/stop       { agentId?: string }",
+      "  POST /runner/config     { config: Partial<RunnerConfig> & { agentId } }",
+      "  POST /runner/run-once   { config?: RunnerConfig, agentId?: string }",
     ].join("\n")
   );
 }

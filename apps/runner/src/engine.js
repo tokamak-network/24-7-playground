@@ -361,8 +361,44 @@ function redactConfig(config) {
   };
 }
 
+function resolveLoggerAgentId(logger) {
+  if (!logger || typeof logger !== "object") return "";
+  const value = logger.__runnerAgentId;
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function withLoggerAgentId(logger, agentId) {
+  const scoped = Object.create(logger && typeof logger === "object" ? logger : console);
+  Object.defineProperty(scoped, "__runnerAgentId", {
+    value: String(agentId || "").trim(),
+    writable: true,
+    enumerable: false,
+    configurable: true,
+  });
+  return scoped;
+}
+
 function trace(logger, label, payload) {
-  logJson(logger, `[runner][engine] ${label}`, payload);
+  const scopedAgentId = resolveLoggerAgentId(logger);
+  if (!scopedAgentId) {
+    logJson(logger, `[runner][engine] ${label}`, payload);
+    return;
+  }
+  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+    if (typeof payload.agentId === "string" && payload.agentId.trim()) {
+      logJson(logger, `[runner][engine] ${label}`, payload);
+      return;
+    }
+    logJson(logger, `[runner][engine] ${label}`, {
+      agentId: scopedAgentId,
+      ...payload,
+    });
+    return;
+  }
+  logJson(logger, `[runner][engine] ${label}`, {
+    agentId: scopedAgentId,
+    payload,
+  });
 }
 
 class RunnerEngine {
@@ -381,6 +417,7 @@ class RunnerEngine {
       lastActionCount: 0,
       lastLlmOutput: null,
     };
+    this.logAgentId = "";
   }
 
   getStatus() {
@@ -396,7 +433,8 @@ class RunnerEngine {
     }
     trace(this.logger, "start:input", { configInput });
     this.config = normalizeConfig(configInput);
-    process.env.RUNNER_AGENT_ID = this.config.agentId;
+    this.logAgentId = this.config.agentId;
+    this.logger = withLoggerAgentId(this.logger, this.logAgentId);
     trace(this.logger, "start:normalized-config", { config: this.config });
     this.state.running = true;
     this.state.startedAt = new Date().toISOString();
@@ -424,7 +462,6 @@ class RunnerEngine {
       this.timer = null;
     }
     this.state.running = false;
-    delete process.env.RUNNER_AGENT_ID;
     logSummary(this.logger, "runner stopped");
   }
 
@@ -442,6 +479,8 @@ class RunnerEngine {
       prompts: { ...this.config.prompts, ...(patchInput.prompts || {}) },
     };
     this.config = normalizeConfig(merged);
+    this.logAgentId = this.config.agentId;
+    this.logger = withLoggerAgentId(this.logger, this.logAgentId);
     trace(this.logger, "update-config:normalized-config", { config: this.config });
     if (this.state.running) {
       if (this.timer) {

@@ -3,6 +3,7 @@
 Local launcher for the agent runner bot.
 
 This app is a CLI process that exposes a local HTTP API so UI clients can control runner execution on the user's machine.
+One launcher instance can run multiple agents concurrently on the same port.
 
 ## Prompt files
 
@@ -40,13 +41,13 @@ npm -w apps/runner run serve -- --host 127.0.0.1 --port 4318
 ## Local API
 
 - `GET /health`
-- `GET /runner/status`
+- `GET /runner/status?agentId=<id>`
 - `POST /runner/start`
 - `POST /runner/stop`
 - `POST /runner/config`
 - `POST /runner/run-once`
 
-All responses are JSON. CORS is enabled (`*`) for local browser calls.
+All responses are JSON. CORS allows only the configured origin (`RUNNER_ALLOWED_ORIGIN` or `--allow-origin`).
 
 ## Start Payload (`POST /runner/start`)
 
@@ -60,6 +61,25 @@ All responses are JSON. CORS is enabled (`*`) for local browser calls.
   }
 }
 ```
+
+## Stop Payload (`POST /runner/stop`)
+
+```json
+{
+  "agentId": "agent-registration-id"
+}
+```
+
+- If `agentId` is provided, only that agent runtime is stopped.
+- If omitted, all running agent runtimes are stopped.
+
+## Status Response Notes (`GET /runner/status`)
+
+- `status.runningAny`: whether any agent runtime is active.
+- `status.agentCount`: number of active agent runtimes.
+- `status.runningAgentIds`: active agent IDs.
+- `status.agents[]`: per-agent runtime states.
+- `status.running`: selected-agent running state when `agentId` query is provided; otherwise overall running state.
 
 Decoded `encodedInput` JSON shape:
 

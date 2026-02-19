@@ -69,6 +69,8 @@ type RunnerStatusSnapshot = {
   runningForSelectedAgent: boolean;
   runningForOtherAgent: boolean;
   statusAgentId: string;
+  runningAgentIds: string[];
+  runningAgentCount: number;
 };
 
 type BubbleKind = "success" | "error" | "info";
@@ -944,10 +946,19 @@ export default function AgentManagementPage() {
       }
 
       try {
-        const response = await fetch(`http://127.0.0.1:${launcherPort}/runner/status`, {
-          method: "GET",
-          headers: { "x-runner-secret": launcherSecret },
-        });
+        const statusQuery = new URLSearchParams();
+        if (selectedAgentId.trim()) {
+          statusQuery.set("agentId", selectedAgentId.trim());
+        }
+        const response = await fetch(
+          `http://127.0.0.1:${launcherPort}/runner/status${
+            statusQuery.toString() ? `?${statusQuery.toString()}` : ""
+          }`,
+          {
+            method: "GET",
+            headers: { "x-runner-secret": launcherSecret },
+          }
+        );
         if (!response.ok) {
           const message = await readError(response);
           setRunnerRunning(false);
@@ -958,24 +969,58 @@ export default function AgentManagementPage() {
           return null;
         }
         const data = await response.json().catch(() => ({}));
-        const rawRunning = Boolean(data?.status?.running);
-        const statusAgentId = String(data?.status?.config?.agentId || "").trim();
+        const runningAgentIds = Array.isArray(data?.status?.runningAgentIds)
+          ? data.status.runningAgentIds
+              .map((item: unknown) => String(item || "").trim())
+              .filter(Boolean)
+          : [];
+        const runningAgentCount = Number.isFinite(Number(data?.status?.agentCount))
+          ? Number(data.status.agentCount)
+          : runningAgentIds.length;
+        const rawRunning = Boolean(
+          data?.status?.runningAny ?? data?.status?.running
+        );
+        const statusAgentIdFromLegacy = String(
+          data?.status?.config?.agentId || ""
+        ).trim();
         const hasSelectedAgent = Boolean(selectedAgentId);
+        const selectedAgentRunningFromStatus = Boolean(
+          data?.status?.selectedAgentRunning
+        );
+        const selectedAgentRunningFromList =
+          hasSelectedAgent &&
+          runningAgentIds.some((item: string) => item === selectedAgentId);
         const runningForSelectedAgent =
-          rawRunning && hasSelectedAgent && statusAgentId === selectedAgentId;
+          hasSelectedAgent &&
+          (selectedAgentRunningFromStatus ||
+            selectedAgentRunningFromList ||
+            (rawRunning && statusAgentIdFromLegacy === selectedAgentId));
+        const statusAgentId =
+          (hasSelectedAgent
+            ? runningAgentIds.find((item: string) => item !== selectedAgentId)
+            : runningAgentIds[0]) ||
+          statusAgentIdFromLegacy;
         const runningForOtherAgent =
           rawRunning && hasSelectedAgent && !runningForSelectedAgent;
 
         setRunnerRunning(runningForSelectedAgent);
         if (runningForSelectedAgent) {
-          setRunnerStatus(
-            `Runner is running on localhost:${launcherPort} for selected agent.`
-          );
+          if (runningAgentCount > 1) {
+            setRunnerStatus(
+              `Runner is running on localhost:${launcherPort} for selected agent and ${
+                runningAgentCount - 1
+              } more agent(s).`
+            );
+          } else {
+            setRunnerStatus(
+              `Runner is running on localhost:${launcherPort} for selected agent.`
+            );
+          }
         } else if (runningForOtherAgent) {
           setRunnerStatus(
-            `Runner is running on localhost:${launcherPort} for another agent${
-              statusAgentId ? ` (${statusAgentId})` : ""
-            }.`
+            `Runner is running on localhost:${launcherPort} for ${
+              runningAgentCount || runningAgentIds.length || 1
+            } other agent(s)${statusAgentId ? ` (${statusAgentId})` : ""}.`
           );
         } else if (rawRunning) {
           setRunnerStatus(`Runner is running on localhost:${launcherPort}.`);
@@ -989,6 +1034,9 @@ export default function AgentManagementPage() {
           runningForSelectedAgent,
           runningForOtherAgent,
           statusAgentId,
+          runningAgentIds,
+          runningAgentCount:
+            runningAgentCount || runningAgentIds.length || (rawRunning ? 1 : 0),
         };
       } catch {
         setRunnerRunning(false);
@@ -1222,16 +1270,6 @@ export default function AgentManagementPage() {
         pushBubble("error", message, anchorEl);
         return;
       }
-      if (preflightStatus.runningForOtherAgent) {
-        const message = `Cannot start on localhost:${launcherPort}. Another agent is already running${
-          preflightStatus.statusAgentId
-            ? ` (${preflightStatus.statusAgentId})`
-            : ""
-        }.`;
-        setRunnerStatus(message);
-        pushBubble("error", message, anchorEl);
-        return;
-      }
       if (preflightStatus.runningForSelectedAgent) {
         const message = `Runner is already running on localhost:${launcherPort} for selected agent.`;
         setRunnerStatus(message);
@@ -1290,10 +1328,25 @@ export default function AgentManagementPage() {
         pushBubble("error", message, anchorEl);
         return;
       }
-      setRunnerStatus(`Runner started on localhost:${launcherPort}.`);
+      const responseData = await response.json().catch(() => ({}));
+      const runningCount = Number.isFinite(
+        Number(responseData?.status?.agentCount)
+      )
+        ? Number(responseData.status.agentCount)
+        : 1;
+      setRunnerStatus(
+        `Runner started on localhost:${launcherPort} (${Math.max(
+          runningCount,
+          1
+        )} active agent(s)).`
+      );
       setRunnerRunning(true);
       saveRunnerConfig();
-      pushBubble("success", `Runner started on localhost:${launcherPort}.`, anchorEl);
+      pushBubble(
+        "success",
+        `Runner started on localhost:${launcherPort}.`,
+        anchorEl
+      );
     } catch {
       const message =
         "Could not reach local runner launcher. Start apps/runner first.";
@@ -1371,9 +1424,17 @@ export default function AgentManagementPage() {
           return;
         }
         if (!preflightStatus.runningForSelectedAgent) {
-          const message = `Cannot stop runner on localhost:${launcherPort}. It is not running for selected agent${
-            preflightStatus.statusAgentId
-              ? ` (${preflightStatus.statusAgentId})`
+          const otherCount = Math.max(
+            preflightStatus.runningAgentCount - 1,
+            0
+          );
+          const message = `Cannot stop runner on localhost:${launcherPort}. Selected agent is not running${
+            otherCount > 0
+              ? ` (${otherCount} other agent(s) active${
+                  preflightStatus.statusAgentId
+                    ? `: ${preflightStatus.statusAgentId}`
+                    : ""
+                })`
               : ""
           }.`;
           setRunnerStatus(message);
@@ -1382,19 +1443,40 @@ export default function AgentManagementPage() {
           return;
         }
 
-        const response = await fetch(`http://127.0.0.1:${launcherPort}/runner/stop`, {
-          method: "POST",
-          headers: { "x-runner-secret": launcherSecret },
-        });
+        const response = await fetch(
+          `http://127.0.0.1:${launcherPort}/runner/stop`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-runner-secret": launcherSecret,
+            },
+            body: JSON.stringify({ agentId: selectedAgentId }),
+          }
+        );
         if (!response.ok) {
           const message = await readError(response);
           setRunnerStatus(message);
           pushBubble("error", message, anchorEl);
           return;
         }
+        const responseData = await response.json().catch(() => ({}));
+        const remainingCount = Number.isFinite(
+          Number(responseData?.status?.agentCount)
+        )
+          ? Number(responseData.status.agentCount)
+          : 0;
         setRunnerRunning(false);
-        setRunnerStatus(`Runner stopped on localhost:${launcherPort}.`);
-        pushBubble("success", `Runner stopped on localhost:${launcherPort}.`, anchorEl);
+        setRunnerStatus(
+          remainingCount > 0
+            ? `Runner stopped for selected agent on localhost:${launcherPort}. ${remainingCount} other agent(s) still running.`
+            : `Runner stopped for selected agent on localhost:${launcherPort}.`
+        );
+        pushBubble(
+          "success",
+          `Runner stopped on localhost:${launcherPort}.`,
+          anchorEl
+        );
       } catch {
         const message =
           "Could not reach local runner launcher. Start apps/runner first.";

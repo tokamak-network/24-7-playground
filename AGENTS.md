@@ -77,9 +77,9 @@ Core separation:
   - Security-sensitive payload supports optional GitHub issue token for runner report auto-share.
   - Local launcher detection and Start/Stop controls.
   - Runner control safety checks:
-    - `/runner/status` is treated as running only when `status.config.agentId` matches current `selectedAgentId`.
-    - Start preflight blocks launch when selected port is already occupied by another agent.
-    - Stop preflight only sends `/runner/stop` when selected agent owns the running instance on that port.
+    - `/runner/status?agentId=<selectedAgentId>` is used to resolve selected-agent running state while preserving overall `runningAny`/`agentCount`.
+    - Start preflight allows additional start when other agents are already active on the same launcher port, but blocks duplicate start for the selected agent.
+    - Stop preflight only sends `/runner/stop` with `{ agentId: selectedAgentId }` when the selected agent is active.
     - Detected-port refresh preserves explicit user-selected port and defaults only when no selection exists.
   - Runner logs are port-scoped by default with instance metadata (`instanceId/port/pid/agentId`) and daily rotation/retention.
 - SNS user error logging:
@@ -152,16 +152,17 @@ Important:
    - runner credential issue + runner start
    - SNS write path (nonce/signature)
    - admin paths
-   - multi-instance runner control E2E:
-     - ports `4391/4392` + agents `A/B` cross-select/start/stop
-     - verify start/stop preflight blocking on agent mismatch
-     - verify per-port log separation and metadata stamping
+   - single-launcher multi-agent runner control E2E:
+     - one port (`4318`) + agents `A/B` sequential start, verify both stay active
+     - verify selected-agent stop only stops target agent while others continue
+     - verify status (`runningAny`, `agentCount`, `runningAgentIds`) matches actual active set
+     - verify log metadata still stamps `instanceId/port/pid/agentId`
 
 ## 8) Known Fragile Areas
 - Wallet extension state changes can invalidate expected session UX.
 - Session restore vs active connected wallet mismatch can regress quickly.
 - LLM output structure varies; parsing/error-handling must stay defensive.
-- Local launcher multi-instance operation still requires strict control-target matching and explicit port/secret management.
+- Local launcher single-instance multi-agent control requires strict selected-agent targeting (`agentId`) for stop/config/status flows.
 - Cross-origin local dev requires strict `SNS_APP_ORIGIN` (legacy alias `AGENT_MANAGER_ORIGIN`) and launcher origin alignment.
 
 ## 9) Non-Negotiable Project Rules

@@ -7,6 +7,16 @@
 - [x] Add review notes and commit
 - Review: Used the system `skill-installer` script (`install-skill-from-github.py`) with `--repo sickn33/antigravity-awesome-skills --path skills/agent-manager-skill --dest .agents/skills` to install directly into project-local skills. Verified install by listing `.agents/skills/agent-manager-skill` and confirming `SKILL.md` exists with expected frontmatter (`name: agent-manager-skill`).
 
+## 2026-02-19 Single Runner Multi-Agent Runtime Redesign (Agent Manager Skill)
+- [x] Classify upgrade scope/risk and lock compatible API migration strategy for `apps/runner` + `apps/sns`
+- [x] Refactor `apps/runner` launcher to manage multiple per-agent engine instances in one process
+- [x] Extend `/runner/status|start|stop|config|run-once` contract with additive multi-agent fields while preserving legacy callers
+- [x] Update `apps/sns/src/app/manage/agents/page.tsx` runner control flow to support multi-agent start/stop/status on a single launcher port
+- [x] Update runner/operator docs (`apps/runner/README.md`, `AGENTS.md`, and root docs if needed) to reflect single-instance multi-agent behavior
+- [x] Run verification matrix (SNS typecheck + runner syntax checks + targeted behavioral validation)
+- [x] Add review notes and commit
+- Review: Replaced launcher single-engine assumption with `MultiAgentRunnerManager` in `apps/runner/src/index.js`, keeping one local runner process while allowing multiple agent runtimes in-memory. Added additive status contract fields (`runningAny`, `agentCount`, `runningAgentIds`, `agents`, selected-agent fields) and agent-targeted stop/config semantics without breaking legacy no-arg stop behavior. Updated `apps/sns/src/app/manage/agents/page.tsx` to query `/runner/status?agentId=...`, allow concurrent starts on same port, and stop only the selected agent via `{ agentId }`. Updated `apps/runner/src/engine.js` logging scope to avoid global `RUNNER_AGENT_ID` dependence under concurrent multi-agent cycles. Synced docs in `apps/runner/README.md` and `AGENTS.md`. Verification: `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node apps/runner/src/index.js help`, and live launcher API probes on port `4399` for `/runner/status`, `/runner/status?agentId=agent-A`, `/runner/stop`, `/runner/config` error path.
+
 ## 2026-02-19 Fix Next Build Suspense Error From useSearchParams
 - [x] Locate all `useSearchParams` usage in shared/layout-inherited components
 - [x] Remove `useSearchParams` from global guard/sign-in paths to avoid prerender suspense bailout
