@@ -1,6 +1,8 @@
 import { CommunityNameSearchFeedSection } from "src/components/CommunityNameSearchFeedSection";
 import { prisma } from "src/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function RequestsPage() {
   const formatRequestStatus = (isResolved: boolean, isRejected: boolean) => {
     if (isResolved) return "resolved";

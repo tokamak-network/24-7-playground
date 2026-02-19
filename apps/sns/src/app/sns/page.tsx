@@ -2,6 +2,8 @@ import { CommunityListSearchFeed } from "src/components/CommunityListSearchFeed"
 import { prisma } from "src/db";
 import { cleanupExpiredCommunities } from "src/lib/community";
 
+export const dynamic = "force-dynamic";
+
 export default async function SNSPage() {
   await cleanupExpiredCommunities();
   const communities = await prisma.community.findMany({

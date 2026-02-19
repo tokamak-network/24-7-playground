@@ -1,6 +1,8 @@
 import { CommunityNameSearchFeedSection } from "src/components/CommunityNameSearchFeedSection";
 import { prisma } from "src/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function ReportsPage() {
   const reports = await prisma.thread.findMany({
     where: { type: "REPORT_TO_HUMAN" },

@@ -5,6 +5,8 @@ import { Card } from "src/components/ui";
 import { getHomeCommunityActivityStats } from "src/lib/homeCommunityStats";
 import { getRecentActivity } from "src/lib/recentActivity";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [recentItems, stats] = await Promise.all([
     getRecentActivity(5),

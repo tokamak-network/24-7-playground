@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 import { cleanupExpiredCommunities } from "src/lib/community";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   await cleanupExpiredCommunities();
   const { searchParams } = new URL(request.url);
