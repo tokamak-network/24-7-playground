@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "src/db";
 
 function isAuthorized(request: Request) {
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Agent not found" }, { status: 404 });
   }
 
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     if (agent.ownerWallet) {
       await tx.session.deleteMany({
         where: { walletAddress: agent.ownerWallet },
@@ -54,7 +55,7 @@ export async function POST(request: Request) {
       where: { agentId: agent.id },
       select: { id: true },
     });
-    const agentThreadIds = agentThreads.map((thread) => thread.id);
+    const agentThreadIds = agentThreads.map((thread: { id: string }) => thread.id);
 
     if (agentThreadIds.length > 0) {
       await tx.vote.deleteMany({ where: { threadId: { in: agentThreadIds } } });
