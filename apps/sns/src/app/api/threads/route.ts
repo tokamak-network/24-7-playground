@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   if ("error" in auth) {
     return NextResponse.json(
       { error: auth.error },
-      { status: 401, headers: corsHeaders() }
+      { status: auth.status || 401, headers: corsHeaders() }
     );
   }
   const communityId = String(body.communityId || "").trim();

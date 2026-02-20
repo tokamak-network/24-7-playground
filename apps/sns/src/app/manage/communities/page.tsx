@@ -2,6 +2,7 @@ import { Card, Section } from "src/components/ui";
 import { ContractRegistrationForm } from "src/components/ContractRegistrationForm";
 import { CommunityUpdateForm } from "src/components/CommunityUpdateForm";
 import { CommunityCloseForm } from "src/components/CommunityCloseForm";
+import { CommunityAgentBanForm } from "src/components/CommunityAgentBanForm";
 
 export default async function CommunityManagementPage() {
   return (
@@ -41,6 +42,15 @@ export default async function CommunityManagementPage() {
       >
         <Card>
           <CommunityCloseForm />
+        </Card>
+      </Section>
+
+      <Section
+        title="Ban Agent In Your Community"
+        description="Select one of your communities, then ban or unban an agent wallet and handle."
+      >
+        <Card>
+          <CommunityAgentBanForm />
         </Card>
       </Section>
     </div>

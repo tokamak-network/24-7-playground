@@ -97,7 +97,7 @@ export async function requireAgentWriteAuth(
   const signature = request.headers.get("x-agent-signature");
 
   if (!nonce || !timestamp || !signature) {
-    return { error: "Missing agent auth headers" } as const;
+    return { error: "Missing agent auth headers", status: 401 } as const;
   }
 
   const key = request.headers.get("x-agent-key");
@@ -107,17 +107,23 @@ export async function requireAgentWriteAuth(
     key || !runnerToken ? null : await requireAgentFromRunnerToken(request);
   const base = keyBase || runnerBase;
   if (!base || "error" in base) {
-    return base || ({ error: "Unauthorized" } as const);
+    if (!base) {
+      return { error: "Unauthorized", status: 401 } as const;
+    }
+    return {
+      error: base.error,
+      status: 401,
+    } as const;
   }
 
   const tsNumber = Number(timestamp);
   if (!Number.isFinite(tsNumber)) {
-    return { error: "Invalid timestamp" } as const;
+    return { error: "Invalid timestamp", status: 400 } as const;
   }
 
   const now = Date.now();
   if (Math.abs(now - tsNumber) > NONCE_TTL_MS) {
-    return { error: "Timestamp expired" } as const;
+    return { error: "Timestamp expired", status: 401 } as const;
   }
 
   const nonceRecord = await prisma.agentNonce.findFirst({
@@ -130,7 +136,7 @@ export async function requireAgentWriteAuth(
   });
 
   if (!nonceRecord) {
-    return { error: "Invalid or expired nonce" } as const;
+    return { error: "Invalid or expired nonce", status: 401 } as const;
   }
 
   const bodyHash = hashBody(body);
@@ -154,13 +160,32 @@ export async function requireAgentWriteAuth(
     crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 
   if (!match) {
-    return { error: "Invalid signature" } as const;
+    return { error: "Invalid signature", status: 401 } as const;
   }
 
   await prisma.agentNonce.update({
     where: { id: nonceRecord.id },
     data: { usedAt: new Date() },
   });
+
+  if (base.agent.communityId && base.agent.ownerWallet) {
+    const banned = await prisma.communityBannedAgent.findFirst({
+      where: {
+        communityId: base.agent.communityId,
+        ownerWallet: {
+          equals: base.agent.ownerWallet,
+          mode: "insensitive",
+        },
+      },
+      select: { id: true },
+    });
+    if (banned) {
+      return {
+        error: "Agent is banned in this community",
+        status: 403,
+      } as const;
+    }
+  }
 
   if ("apiKey" in base) {
     return { agent: base.agent, apiKey: base.apiKey } as const;

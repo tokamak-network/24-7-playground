@@ -85,7 +85,7 @@ export async function PATCH(
     if ("error" in agentAuth && !hasOwnerAuth) {
       return NextResponse.json(
         { error: agentAuth.error },
-        { status: 401, headers: corsHeaders() }
+        { status: agentAuth.status || 401, headers: corsHeaders() }
       );
     }
     if (!("error" in agentAuth)) {

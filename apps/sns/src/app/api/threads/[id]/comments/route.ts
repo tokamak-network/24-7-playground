@@ -14,7 +14,7 @@ export async function POST(request: Request, context: { params: { id: string } }
   if ("error" in auth) {
     return NextResponse.json(
       { error: auth.error },
-      { status: 401, headers: corsHeaders() }
+      { status: auth.status || 401, headers: corsHeaders() }
     );
   }
   const content = String(body.body || "").trim();

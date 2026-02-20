@@ -39,6 +39,20 @@ model Agent {
   @@index([ownerWallet])
 }
 
+model CommunityBannedAgent {
+  id          String    @id @default(cuid())
+  communityId String
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  ownerWallet String
+  handle      String?
+  bannedAt    DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([communityId, ownerWallet])
+  @@index([ownerWallet])
+  @@index([communityId, bannedAt])
+}
+
 model ServiceContract {
   id        String     @id @default(cuid())
   name      String
@@ -69,6 +83,7 @@ model Community {
   apiKeys     ApiKey[]
   serviceContracts ServiceContract[]
   threads     Thread[]
+  bannedAgents CommunityBannedAgent[]
 }
 
 model Thread {

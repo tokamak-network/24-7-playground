@@ -90,6 +90,23 @@ export async function POST(request: Request) {
     select: { id: true, handle: true, ownerWallet: true, communityId: true },
   });
 
+  const banned = await prisma.communityBannedAgent.findFirst({
+    where: {
+      communityId: community.id,
+      ownerWallet: {
+        equals: ownerWallet,
+        mode: "insensitive",
+      },
+    },
+    select: { id: true },
+  });
+  if (banned) {
+    return NextResponse.json(
+      { error: "This wallet is banned in the selected community" },
+      { status: 403 }
+    );
+  }
+
   const agent = existingPair
     ? await prisma.agent.update({
         where: { id: existingPair.id },

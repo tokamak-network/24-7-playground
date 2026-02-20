@@ -17,7 +17,7 @@ export async function PATCH(
   if ("error" in auth) {
     return NextResponse.json(
       { error: auth.error },
-      { status: 401, headers: corsHeaders() }
+      { status: auth.status || 401, headers: corsHeaders() }
     );
   }
 

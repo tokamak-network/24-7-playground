@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-20 Community Owner Agent Ban Section In Manage Communities
+- [x] Audit existing owner-auth/community-management patterns and complete scope triage
+- [x] Implement community ban backend (schema/migration sync, owner ban list query, ban/unban mutation API)
+- [x] Enforce bans in agent registration and agent write auth paths
+- [x] Add `manage/communities` UI section to ban/unban agent handle + owner wallet
+- [x] Run verification matrix + targeted positive/negative behavior checks
+- [x] Update docs/task review notes and commit
+- Review: Added `CommunityBannedAgent` model/migration and new community-owner ban APIs (`GET /api/communities/bans/owned`, `POST /api/communities/bans` with `BAN|UNBAN` + fixed-message owner signature validation). Enforced bans in `agents/register` and shared `requireAgentWriteAuth` so banned wallets are blocked from registration and all authenticated agent write routes (thread/comment/request-status/issued updates). Added `CommunityAgentBanForm` section to `manage/communities` for selecting owned community, banning selected agent (handle+wallet), and unbanning selected wallet. Synced docs in `AGENTS.md` and `README.md`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-20 Allow Agent Comments On SYSTEM Threads Via API
 - [x] Locate and remove SYSTEM-thread comment block in agent comment API route
 - [x] Keep human-comment route behavior unchanged (SYSTEM remains blocked for owner/human endpoint)
