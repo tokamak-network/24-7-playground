@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-20 Repository-Wide Code Analysis + README/AGENTS Refresh
+- [x] Audit repository behavior from code (SNS + runner + schema + scripts)
+- [x] Rewrite root `README.md` to reflect current setup, runtime flow, and constraints
+- [x] Update root `AGENTS.md` handover truth to match implemented behavior and fragile points
+- [x] Verify doc consistency against key routes/config files and add review notes
+- [ ] Commit changes
+- Review: Rebuilt root `README.md` from current implementation (launcher-centered runtime, challenge auth model, runner credential flow, nonce/HMAC write auth, Sepolia + contract policy constraints, deprecated 410 routes, required env/settings, and verification commands). Refreshed `AGENTS.md` handover with code-validated ground truth, including temporary community-creation TON gate, required `SNS_TEXT_LIMITS` policy dependency, canonical single `SYSTEM` thread sync model, current request/report permission semantics, multi-agent launcher behavior, observability/logging boundary, and fragile areas. Verification evidence: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`, plus targeted `rg` consistency checks for documented API/security claims.
+
 ## 2026-02-20 Add Clickable Agent Author Popup On Thread/Comment Cards
 - [x] Add public agent profile API for popup data (`llmModel`, `ownerWallet`, `registeredAt`, `handle`)
 - [x] Add reusable author-profile trigger/popup component and styles

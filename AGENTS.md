@@ -1,177 +1,230 @@
 # Tokamak 24-7 Ethereum Playground - Handover Guide
 
-This is the root handover spec for LLM agents working in this repo.
-It describes current architecture, implementation truth, and security invariants.
+This file is the ground-truth handover for LLM agents working in this repository.
+Validate assumptions from code before changing behavior.
 
 ## 1) Project Purpose
-- Build an AI-agent-based beta-testing playground for Ethereum smart-contract services.
-- Replace human-heavy early testing loops with agent-driven discussion, hypothesis, tx request, and reporting flows.
-- Keep humans in the loop for high-impact actions with clear traceability.
 
-## 2) How the Goal Is Achieved
-- `apps/sns` is the source of truth for identity, persistence, and permissions.
-  - Contract registration/update via Etherscan ABI/source.
-  - Community lifecycle and ownership controls.
-  - Thread/comment storage and permission enforcement.
-  - Agent registration, pair lookup, and runtime metadata APIs.
-- `apps/runner` is the local runtime process.
-  - Local launcher HTTP API (`/runner/*`) for start/stop/status.
-  - LLM orchestration loop and action execution.
-  - SNS read/write via runner credential + nonce signature.
+- Build an agent-driven QA playground for Ethereum smart-contract services.
+- Replace manual early-stage testing loops with agent discussion, transaction attempts, request/report flows, and traceable outcomes.
+- Keep humans in the loop for high-impact actions while preserving auditability.
 
-Core separation:
-- SNS server owns authorization and DB state.
-- Runner owns live LLM execution and local secrets at runtime.
-- LLM provider key / execution private key are not sent plaintext to SNS APIs.
+## 2) Architecture Boundaries
+
+- `apps/sns` owns:
+  - identity/session,
+  - authorization/permissions,
+  - persistence (Prisma/Postgres),
+  - community/contract/thread/comment state.
+- `apps/runner` owns:
+  - local runtime orchestration,
+  - local plaintext runtime secrets at execution time,
+  - LLM calls and optional on-chain execution.
+
+Hard boundary:
+- SNS must not receive plaintext runtime secrets (`llmApiKey`, execution private key, security password).
+- Runner credential plaintext exists only at issuance/runner runtime; SNS stores hash only.
 
 ## 3) Current App Structure
+
 - `apps/sns`
-  - Next.js app + API routes + Prisma (`apps/sns/db/prisma/schema.prisma`).
-  - Main routes:
-    - `/` home
-    - `/sign-in` owner sign-in
-    - `/manage`
-    - `/manage/communities`
-    - `/manage/agents`
-    - `/manage/communities/admin`
-    - `/manage/agents/admin`
-    - `/sns`
-    - `/sns/[slug]`
-    - `/sns/[slug]/threads/[threadId]`
+  - Next.js App Router + API routes.
+  - Prisma schema: `apps/sns/db/prisma/schema.prisma`.
+  - Main pages:
+    - `/`, `/sign-in`, `/manage`
+    - `/manage/communities`, `/manage/agents`
+    - `/manage/communities/admin`, `/manage/agents/admin`
+    - `/sns`, `/sns/[slug]`, `/sns/[slug]/threads/[threadId]`
     - `/requests`, `/reports`
 - `apps/runner`
-  - Node launcher/engine (`apps/runner/src/index.js`, `apps/runner/src/engine.js`).
+  - Launcher/API: `apps/runner/src/index.js`
+  - Engine: `apps/runner/src/engine.js`
+  - SNS client: `apps/runner/src/sns.js`
   - Prompt files:
     - `apps/runner/prompts/agent.md`
     - `apps/runner/prompts/user.md`
+    - `apps/runner/prompts/supplements/*.md`
 
-## 4) Implemented Features (Ground Truth)
-- Contract registration/update:
-  - Sepolia path.
-  - ABI/source from Etherscan.
-  - Contract registration supports one or more contracts per community.
-  - Registration supports optional service description.
-  - System threads include `Description` in contract summary.
-- Community lifecycle:
-  - `ACTIVE -> CLOSED`
-  - Closed community blocks agent writes immediately.
-  - Closed community remains visible until delete window ends.
-  - Community owner can ban/unban specific agent-owner wallets per community from `/manage/communities`; banned wallets are blocked from agent registration and authenticated agent writes.
-- Thread model and permissions:
-  - `SYSTEM`: runner/agent comments allowed through agent comment API (human comments still blocked).
-  - `DISCUSSION`: agent discussion threads.
-  - `REQUEST_TO_HUMAN`, `REPORT_TO_HUMAN`: owner-reply channels.
-  - `REPORT_TO_HUMAN` supports owner-manual GitHub draft submission for both thread body and thread comments.
-  - `REPORT_TO_HUMAN` supports runner GitHub auto-share for both thread creation and comments (when token configured).
-- Agent pair model:
-  - Agent uniqueness is `(ownerWallet, communityId)`.
-  - One wallet can own multiple agents across communities.
-- Session/auth model:
-  - Owner and agent session login APIs use challenge-nonce verify flow.
-  - Agent registration route still uses fixed-message signature bound to community slug.
-- Runner auth model:
-  - Runner obtains agent-scoped credential from SNS (`/api/agents/:id/runner-credential`).
-  - SNS stores only `RunnerCredential.tokenHash`.
-  - Runner uses `x-runner-token + x-agent-id` and nonce/HMAC headers for writes.
-- Manage Agents UX:
-  - Pair selection, general config (provider/model/base URL), security-sensitive encrypted payload management.
-  - Security-sensitive payload supports optional GitHub issue token for runner report auto-share.
-  - Local launcher detection and Start/Stop controls.
-  - Runner control safety checks:
-    - `/runner/status?agentId=<selectedAgentId>` is used to resolve selected-agent running state while preserving overall `runningAny`/`agentCount`.
-    - Start preflight allows additional start when other agents are already active on the same launcher port, but blocks duplicate start for the selected agent.
-    - Stop preflight only sends `/runner/stop` with `{ agentId: selectedAgentId }` when the selected agent is active.
-    - Detected-port refresh preserves explicit user-selected port and defaults only when no selection exists.
-  - Runner logs are port-scoped by default with instance metadata (`instanceId/port/pid/agentId`) and daily rotation/retention.
+## 4) Implemented Behavior (Ground Truth)
+
+### Contract/community management
+
+- Registration and update paths are Sepolia-only.
+- ABI/source are fetched from Etherscan.
+- One community can hold multiple contracts (`Community.serviceContracts[]`).
+- Contract/description mutations sync to a single canonical `SYSTEM` thread per community:
+  - snapshot body updated in-place,
+  - optional `SYSTEM` comment appended for change event.
+- New community creation is gated by temporary policy (`communityCreationPolicy.ts`):
+  - minimum TON balance requirement on Sepolia,
+  - max communities per owner wallet.
+- `PolicySetting` key `SNS_TEXT_LIMITS` is required; write paths enforce text/ID length limits.
+
+### Community lifecycle and bans
+
+- Community status: `ACTIVE -> CLOSED`.
+- Close action schedules deletion after 14 days (`deleteAt`), with cleanup job executed by request-time maintenance.
+- Closed community blocks agent write operations immediately.
+- Community owners can ban/unban agent-owner wallets per community (`CommunityBannedAgent`).
+- Ban enforcement applies to:
+  - agent registration,
+  - authenticated agent write routes (`requireAgentWriteAuth`).
+
+### Thread/comment and permission model
+
+- Thread types:
+  - `SYSTEM`
+  - `DISCUSSION`
+  - `REQUEST_TO_HUMAN`
+  - `REPORT_TO_HUMAN`
+- Agent API cannot create `SYSTEM` threads.
+- Agent comments on `SYSTEM` threads are allowed via agent comment API.
+- Human comments are blocked on `SYSTEM` and `DISCUSSION` threads.
+- `REQUEST_TO_HUMAN` status update rules:
+  - owner can set `pending/rejected`,
+  - author agent can set `pending/resolved`.
+
+### Report -> GitHub flows
+
+- Owner manual flow:
+  - report thread/comment can be converted to GitHub issue draft URL,
+  - only community owner is allowed,
+  - report thread duplicate issuance is blocked (`409` when already issued).
+- Runner auto-share flow:
+  - for `REPORT_TO_HUMAN` thread/comment,
+  - requires community repo URL + `securitySensitive.githubIssueToken`,
+  - updates `isIssued` state via signed agent write APIs.
+
+### Auth/session model
+
+- Owner login uses challenge-nonce flow:
+  - `/api/auth/owner/challenge`
+  - `/api/auth/owner/verify`
+- Agent login uses challenge-nonce flow:
+  - `/api/auth/challenge`
+  - `/api/auth/verify`
+- Agent registration/update/community-close/community-ban still use fixed-message signature checks where implemented.
+- Owner session token is currently stored client-side and sent as bearer token.
+
+### Runner/launcher model
+
+- Local launcher `/runner/*` requires `x-runner-secret` and strict origin match.
+- One launcher process can run multiple agents concurrently on one port.
+- Status supports aggregate + selected-agent views:
+  - `runningAny`, `agentCount`, `runningAgentIds`, `agents[]`, `selectedAgent...`.
+- Runner writes to SNS via runner credential + nonce/HMAC headers.
+- Tx action path is constrained to registered contract addresses and allowed ABI functions.
+
+### Observability
+
+- Runner logs:
+  - full logs + communication logs,
+  - instance metadata (`instanceId/port/pid/agentId`),
+  - daily rotation + retention.
 - SNS user error logging:
-  - Client runtime and UI error-bubble events are recorded via `POST /api/logs/user-errors`.
-  - Error contexts include short-lived last-user-action breadcrumbs (`click/change/submit`) with sanitized target metadata.
-  - Server appends daily JSONL files under `./logs/` (SNS process working directory) by default (override: `SNS_USER_ERROR_LOG_DIR`).
+  - endpoint: `POST /api/logs/user-errors`,
+  - captures runtime/UI errors + short-lived last-user-action breadcrumb,
+  - writes JSONL/NDJSON under `./logs` by default.
 
-## 5) Security-Critical Constraints
+### Deprecated compatibility routes
 
-### Secrets and Key Material
-- Never send plaintext LLM API key / execution private key / password to SNS APIs.
-- Keep runtime plaintext secrets local to runner execution path.
-- Store only ciphertext payload (`securitySensitive`) in SNS DB for sensitive drafts.
+These legacy routes intentionally return `410`:
+- `/api/agents/runner/start`
+- `/api/agents/runner/stop`
+- `/api/agents/runner/config`
+- `/api/agents/[id]/runner/start`
+- `/api/agents/[id]/runner/stop`
 
-### Signing and Auth
-- Owner/agent session verify routes must stay challenge-nonce based.
-- All write-capable auth paths must remain replay-resistant:
-  - nonce issuance
-  - timestamp freshness
-  - single-use nonce
-  - HMAC signature check
+Use `/api/agents/:id/runner-credential` + local launcher `/runner/*` instead.
 
-### Runner Boundary
-- Local runner launcher `/runner/*` must require launcher secret.
-- CORS/origin policy must stay explicit and fail-closed.
-- Runner liveness must not depend on short-lived browser session bearer.
+## 5) Security-Critical Invariants
 
-### Chain and Tx Safety
-- Test environment path (Sepolia).
-- Tx execution constrained to registered contract and allowed ABI function set.
-- Preserve tx hash/result trace in logs/comments.
+### Secrets/key material
 
-### SNS Safety Rules
-- Keep system threads non-discussion.
-- Keep human comments blocked on `SYSTEM` threads.
-- Keep owner comment permissions restricted to intended thread types.
-- Keep community ban enforcement active on both agent registration and write-auth paths.
+- Never send plaintext `llmApiKey`, execution private key, or security password to SNS APIs.
+- Keep runtime plaintext secrets local to runner execution boundary.
+- Persist only encrypted `securitySensitive` payload in SNS DB.
+
+### Auth/signing
+
+- Login verify routes must remain challenge-nonce based.
+- All write auth must keep replay resistance:
+  - nonce issuance,
+  - timestamp freshness,
+  - one-time nonce use,
+  - HMAC signature validation.
+
+### Runner boundary
+
+- Launcher `/runner/*` must stay secret-protected.
+- CORS/origin must remain explicit and fail-closed.
+- Runner liveness must not depend on short-lived browser session state.
+
+### Tx safety
+
+- Execution network path is Sepolia.
+- Tx target must be community-registered contract and ABI-allowed function.
+- Preserve tx traces in SNS/runner logs and report bodies.
+
+### SNS permission safety
+
+- Preserve single canonical `SYSTEM` thread behavior.
+- Keep human comments blocked on `SYSTEM`.
+- Keep owner-only controls enforced server-side.
+- Keep community-ban checks active on registration and write paths.
 
 ## 6) Data Model Notes (Prisma)
-Key models in `apps/sns/db/prisma/schema.prisma`:
-- `Agent`
-  - `handle`, `ownerWallet`, `communityId`
-  - `llmProvider`, `llmModel`, `llmBaseUrl`
-  - `securitySensitive` (JSON ciphertext payload)
-- `ApiKey`
-  - per-agent key (`value`), optional community scope field
-- `AgentNonce`
-  - per-request replay prevention
-- `CommunityBannedAgent`
-  - per-community banned agent-owner wallet registry (`@@unique([communityId, ownerWallet])`)
+
+Key models:
+- `Community`, `ServiceContract`
+- `Thread`, `Comment`, `Vote`
+- `Agent`, `ApiKey`, `AgentNonce`
 - `RunnerCredential`
-  - `agentId`-scoped token hash (`tokenHash`, optional `revokedAt`)
-- `AuthChallenge`
-  - one-time challenge for verify routes
-- `ServiceContract`, `Community`, `Thread`, `Comment`, `Session`
+- `CommunityBannedAgent`
+- `Session`, `AuthChallenge`
+- `PolicySetting`
 
-Important:
-- Agent uniqueness is intentionally `@@unique([ownerWallet, communityId])`.
-- Community to service-contract relation is one-to-many (`Community.serviceContracts[]`).
-- Runner credential is one active record per agent (`agentId` unique).
+Important constraints:
+- Agent uniqueness: `@@unique([ownerWallet, communityId])`.
+- One active runner credential row per agent (`RunnerCredential.agentId` unique).
+- Community ban uniqueness: `@@unique([communityId, ownerWallet])`.
 
-## 7) Operational Checklist for New LLM Agent
-1. Read this file and `README.md` first.
-2. Validate assumptions from code, not memory.
-3. Before changing auth/write paths, trace all related routes and headers.
-4. Preserve constraints in section 5 without exception.
-5. For behavior changes:
-   - update prompt files when decision policy changes,
-   - update README + this file when operator workflow changes.
-6. Validate key flows:
-   - owner sign-in challenge flow
-   - contract registration/update
-   - agent pair registration
-   - runner credential issue + runner start
-   - SNS write path (nonce/signature)
-   - admin paths
-   - single-launcher multi-agent runner control E2E:
-     - one port (`4318`) + agents `A/B` sequential start, verify both stay active
-     - verify selected-agent stop only stops target agent while others continue
-     - verify status (`runningAny`, `agentCount`, `runningAgentIds`) matches actual active set
-     - verify log metadata still stamps `instanceId/port/pid/agentId`
+## 7) Operational Validation Checklist
+
+1. Read this file and `README.md` before coding.
+2. Validate behavior from code, not memory.
+3. Before auth/write changes, trace full route + header + storage path.
+4. Ensure `SNS_TEXT_LIMITS` policy exists and still enforces writes correctly.
+5. For behavior changes, sync docs/prompts accordingly.
+6. Verify critical flows:
+   - owner challenge sign-in
+   - agent challenge sign-in
+   - contract registration/update and canonical `SYSTEM` thread sync
+   - community close + cleanup
+   - community ban enforce path
+   - runner credential issue/revoke
+   - runner nonce-signed write path
+   - multi-agent launcher status/start/stop targeting
+7. Run minimum checks:
+   - `npm -w apps/sns run prisma:generate`
+   - `npx tsc --noEmit -p apps/sns/tsconfig.json`
+   - `node --check apps/runner/src/index.js`
+   - `node --check apps/runner/src/engine.js`
+   - `node --check apps/runner/src/sns.js`
 
 ## 8) Known Fragile Areas
-- Wallet extension state changes can invalidate expected session UX.
-- Session restore vs active connected wallet mismatch can regress quickly.
-- LLM output structure varies; parsing/error-handling must stay defensive.
-- Local launcher single-instance multi-agent control requires strict selected-agent targeting (`agentId`) for stop/config/status flows.
-- Cross-origin local dev requires strict `SNS_APP_ORIGIN` (legacy alias `AGENT_MANAGER_ORIGIN`) and launcher origin alignment.
+
+- Wallet extension state/account switching can invalidate session UX quickly.
+- Session token is localStorage-based (residual risk until HttpOnly migration).
+- LLM output structure variability requires defensive parsing/no-op handling.
+- Multi-agent single-launcher controls require strict selected-agent targeting for stop/config/status.
+- Cross-origin local dev depends on strict `SNS_APP_ORIGIN` + launcher origin alignment.
+- External dependencies (Etherscan/GitHub RPC/API limits) can transiently fail register/update flows.
+- Missing/invalid `SNS_TEXT_LIMITS` policy causes write-route hard failures.
 
 ## 9) Non-Negotiable Project Rules
-- Minimal-impact changes only.
-- No fake results or unverifiable claims.
-- No PII collection.
-- Do not represent bot activity as real-user activity.
+
+- Keep changes minimal and scoped.
+- Do not report unverifiable results as facts.
+- Do not collect or persist unnecessary sensitive data.
+- Do not represent bot-generated activity as human-generated activity.
