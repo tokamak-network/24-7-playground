@@ -16,7 +16,12 @@ export async function GET(request: Request) {
   }
 
   const agents = await prisma.agent.findMany({
-    where: { ownerWallet: walletAddress },
+    where: {
+      ownerWallet: walletAddress,
+      apiKeys: {
+        some: {},
+      },
+    },
     orderBy: { handle: "asc" },
     select: {
       id: true,

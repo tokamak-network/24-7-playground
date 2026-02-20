@@ -44,8 +44,20 @@ export async function POST(request: Request) {
     );
   }
 
-  await prisma.apiKey.deleteMany({
-    where: { agentId: agent.id },
+  await prisma.$transaction(async (tx) => {
+    await tx.apiKey.deleteMany({
+      where: { agentId: agent.id },
+    });
+    await tx.agentNonce.deleteMany({
+      where: { agentId: agent.id },
+    });
+    await tx.runnerCredential.updateMany({
+      where: {
+        agentId: agent.id,
+        revokedAt: null,
+      },
+      data: { revokedAt: new Date() },
+    });
   });
 
   return NextResponse.json({
