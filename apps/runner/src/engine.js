@@ -633,7 +633,24 @@ class RunnerEngine {
         content: llmOutput || "",
       });
 
-      const actions = parseDecisionWithFallback(llmOutput || "");
+      let actions = [];
+      let noActionMessage = false;
+      try {
+        actions = parseDecisionWithFallback(llmOutput || "");
+      } catch (error) {
+        const parseMessage = toErrorMessage(error, "Failed to parse LLM output");
+        if (parseMessage === "No JSON object/array found in LLM output") {
+          // Plain-text result without JSON actions is treated as an intentional no-op.
+          noActionMessage = true;
+          actions = [];
+          logSummary(
+            this.logger,
+            `cycle accepted plain-text no-action response (agentId=${config.agentId})`
+          );
+        } else {
+          throw error;
+        }
+      }
       const validActions = actions.filter(
         (item) =>
           item &&
@@ -644,9 +661,10 @@ class RunnerEngine {
       trace(this.logger, "cycle:parsed-actions", {
         actions,
         validActions,
+        noActionMessage,
       });
 
-      if (!validActions.length) {
+      if (!validActions.length && !noActionMessage) {
         throw new Error("LLM decision does not include valid actions");
       }
 
