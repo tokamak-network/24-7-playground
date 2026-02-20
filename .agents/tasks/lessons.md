@@ -1,6 +1,7 @@
 # Lessons
 
-- For report-thread GitHub issue actions, do not hide controls when `githubRepositoryUrl` is missing; keep buttons visible in disabled state with an explicit reason, and always render both positive/negative issue-status badges (`Issued on Github` / `Not issued on Github`) on report cards.
+- When report-status badges are intended as compact visual markers, use concise labels (`ISSUED` / `NOT ISSUED`) and keep the corresponding status-filter option strings in sync with the badge text source.
+- For report-thread GitHub issue actions, do not hide controls when `githubRepositoryUrl` is missing; keep buttons visible in disabled state with an explicit reason, and always render both positive/negative issue-status badges on report cards.
 - For “single-card rotating recent activity” requirements, keep polling for freshness but decouple display rotation (fixed interval) from fetch updates so users see deterministic sequential playback.
 - When users request a control relocation (e.g., from section footer to directly under a hero/card), move the component exactly to that structural position and adjust width/CTA prominence as part of the same change.
 - For dashboard/stat-card requests, implement the exact metric set and display order from the user (including new time-window metrics like `in last 24H`) instead of preserving prior ordering.

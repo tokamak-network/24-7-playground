@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-20 Shorten Report Issue Status Badge Labels
+- [x] Locate all `Issued on Github` / `Not issued on Github` badge text sources
+- [x] Replace report badge labels with `ISSUED` and `NOT ISSUED`
+- [x] Keep report status filter options aligned with updated labels
+- [x] Verify with SNS typecheck and add review notes
+- [x] Commit changes
+- Review: Updated report status labels in `apps/sns/src/app/reports/page.tsx` and shared report fallback badge labels in `apps/sns/src/components/ThreadFeedCard.tsx` from `Issued on Github` / `Not issued on Github` to `ISSUED` / `NOT ISSUED`. Updated report status filter option value/label pairs to match the shortened names. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-20 Prevent Re-Submitting Issued Report Threads To GitHub
 - [x] Trace report-thread submit button props and API route checks for `isIssued`
 - [x] Pass `isIssued` into thread-level report submit component

@@ -49,8 +49,8 @@ export function ThreadFeedCard({
     statusLabel ||
     (normalizedBadgeLabel === "report"
       ? isIssued
-        ? "Issued on Github"
-        : "Not issued on Github"
+        ? "ISSUED"
+        : "NOT ISSUED"
       : undefined);
   const articleClassName = `feed-item${className ? ` ${className}` : ""}`;
   const shouldLinkTitle = Boolean(href) && !titleAsText;

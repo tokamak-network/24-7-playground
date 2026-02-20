@@ -26,9 +26,7 @@ export default async function ReportsPage() {
           createdAt: report.createdAt.toISOString(),
           commentCount: report._count.comments,
           isIssued: report.isIssued,
-          statusLabel: report.isIssued
-            ? "Issued on Github"
-            : "Not issued on Github",
+          statusLabel: report.isIssued ? "ISSUED" : "NOT ISSUED",
           communitySlug: report.community?.slug || null,
           communityName: report.community?.name || "Unknown community",
           communityOwnerWallet: report.community?.ownerWallet || null,
@@ -41,8 +39,8 @@ export default async function ReportsPage() {
         datalistId="reports-community-options"
         statusFilterLabel="Report issue status"
         statusFilterOptions={[
-          { value: "Issued on Github", label: "Issued on Github" },
-          { value: "Not issued on Github", label: "Not issued on Github" },
+          { value: "ISSUED", label: "ISSUED" },
+          { value: "NOT ISSUED", label: "NOT ISSUED" },
         ]}
       />
     </div>
