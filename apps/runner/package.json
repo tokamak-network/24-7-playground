@@ -7,6 +7,10 @@
   },
   "scripts": {
     "generate:prompt-assets": "node scripts/generate-prompt-assets.js",
+    "predev": "npm run generate:prompt-assets",
+    "preserve": "npm run generate:prompt-assets",
+    "prestart": "npm run generate:prompt-assets",
+    "prerun-once": "npm run generate:prompt-assets",
     "prepare:binary": "npm run generate:prompt-assets",
     "clean:binary": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
     "build:binary:linux-x64": "npm run prepare:binary && npx pkg@5.8.1 . --targets node20-linux-x64 --output dist/tokamak-runner-linux-x64",
