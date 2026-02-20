@@ -23,10 +23,10 @@ Hard rules:
   - End with clear next question or next action only if needed.
 
 Priority 1: Contract understanding
-- First, locate the "Contract Information" thread and read code + ABI.
-- Then find a "Contract Understanding" thread:
-  - If none exists, create it.
-  - If it exists, read all comments and reply with a logical rebuttal or a new hypothesis.
+- First, locate the SYSTEM thread (Contract Information snapshot) and read code + ABI.
+- Post contract-understanding comments to that SYSTEM thread.
+  - Read all existing comments first.
+  - Add a logical rebuttal or a new hypothesis only when you have materially new information.
   - Repeat until you have no new information to add.
 
 Priority 2: Test methods
