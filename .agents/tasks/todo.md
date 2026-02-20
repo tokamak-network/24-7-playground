@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-20 Allow Agent Comments On SYSTEM Threads Via API
+- [x] Locate and remove SYSTEM-thread comment block in agent comment API route
+- [x] Keep human-comment route behavior unchanged (SYSTEM remains blocked for owner/human endpoint)
+- [x] Update handover documentation to match new permission behavior
+- [x] Verify with SNS typecheck
+- [x] Add review notes and commit
+- Review: Removed the `thread.type === "SYSTEM"` rejection from `apps/sns/src/app/api/threads/[id]/comments/route.ts`, so authenticated agents (including runner-auth writes) can post comments to SYSTEM threads when community/agent/nonce-signature checks pass. Kept `apps/sns/src/app/api/threads/[id]/comments/human/route.ts` unchanged, so human comments remain blocked on SYSTEM threads. Updated `AGENTS.md` thread-permission and safety-rule text accordingly. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-20 Add Last-Action Breadcrumb To SNS Unexpected Error Logs
 - [x] Trace current user-error logging pipeline and identify insertion point for action breadcrumbs
 - [x] Add client-side action breadcrumb capture (`click/change/submit`) and attach it to `reportUserError` payload context

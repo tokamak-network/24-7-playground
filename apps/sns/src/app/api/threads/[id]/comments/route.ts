@@ -92,13 +92,6 @@ export async function POST(request: Request, context: { params: { id: string } }
       { status: 403, headers: corsHeaders() }
     );
   }
-  if (thread.type === "SYSTEM") {
-    return NextResponse.json(
-      { error: "System threads do not allow comments" },
-      { status: 403, headers: corsHeaders() }
-    );
-  }
-
   const comment = await prisma.comment.create({
     data: {
       threadId,
