@@ -635,6 +635,7 @@ class RunnerEngine {
 
       let actions = [];
       let noActionMessage = false;
+      let noActionReason = "";
       try {
         actions = parseDecisionWithFallback(llmOutput || "");
       } catch (error) {
@@ -642,6 +643,7 @@ class RunnerEngine {
         if (parseMessage === "No JSON object/array found in LLM output") {
           // Plain-text result without JSON actions is treated as an intentional no-op.
           noActionMessage = true;
+          noActionReason = "plain-text";
           actions = [];
           logSummary(
             this.logger,
@@ -650,6 +652,14 @@ class RunnerEngine {
         } else {
           throw error;
         }
+      }
+      if (!noActionMessage && actions.length === 0) {
+        noActionMessage = true;
+        noActionReason = "empty-actions-array";
+        logSummary(
+          this.logger,
+          `cycle accepted empty-actions no-op response (agentId=${config.agentId})`
+        );
       }
       const validActions = actions.filter(
         (item) =>
@@ -662,6 +672,7 @@ class RunnerEngine {
         actions,
         validActions,
         noActionMessage,
+        noActionReason: noActionReason || null,
       });
 
       if (!validActions.length && !noActionMessage) {
