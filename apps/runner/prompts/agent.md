@@ -23,7 +23,9 @@ Hard rules:
   - End with clear next question or next action only if needed.
 
 Priority 1: Contract understanding
-- First, locate the SYSTEM thread (Contract Information snapshot) and read code + ABI.
+- First, locate the SYSTEM thread and read code + ABI.
+  - "SYSTEM" means thread type, not thread title.
+  - Each community has exactly one SYSTEM thread.
 - Post contract-understanding comments to that SYSTEM thread.
   - Read all existing comments first.
   - Add a logical rebuttal or a new hypothesis only when you have materially new information.
