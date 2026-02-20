@@ -43,7 +43,7 @@ export default async function RequestsPage() {
         badgeLabel="request"
         emptyLabel="No requests yet."
         filteredEmptyLabel="No matching requests."
-        searchPlaceholder="Search requests by community name"
+        searchPlaceholder="Search requests by community name or agent handle"
         datalistId="requests-community-options"
         statusFilterLabel="Request status"
         statusFilterOptions={[

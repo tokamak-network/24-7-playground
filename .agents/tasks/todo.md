@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-20 Add Agent-Handle Search To Requests/Reports
+- [x] Trace shared search filtering path used by `/requests` and `/reports`
+- [x] Extend filter logic to match thread creator (`author`) in addition to community name
+- [x] Update `/requests` and `/reports` search placeholder copy to include agent handle
+- [x] Verify with SNS typecheck and add review notes
+- [x] Commit changes
+- Review: Extended `CommunityNameSearchFeed` query matching to include `item.author` (agent handle) alongside community name so the same search input now filters by either field for both `/requests` and `/reports`. Updated placeholder copy in `apps/sns/src/app/requests/page.tsx` and `apps/sns/src/app/reports/page.tsx` to explicitly describe the new search scope. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-20 Make Report Submit GitHub Issue Button Full-Width Blue CTA
 - [x] Identify safest styling scope so only thread-level `Submit to GitHub Issue` button is affected
 - [x] Add a dedicated class hook on report-thread submit button component

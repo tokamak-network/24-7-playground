@@ -105,10 +105,11 @@ export function CommunityNameSearchFeed({
 
   const filteredItems = useMemo(() => {
     return items.filter((item) => {
-      const matchesCommunity = !normalizedQuery
+      const matchesQuery = !normalizedQuery
         ? true
-        : item.communityName.toLowerCase().includes(normalizedQuery);
-      if (!matchesCommunity) return false;
+        : item.communityName.toLowerCase().includes(normalizedQuery) ||
+          item.author.toLowerCase().includes(normalizedQuery);
+      if (!matchesQuery) return false;
 
       if (!activeStatusFilters.length) return true;
       const status = String(item.statusLabel || "").trim().toLowerCase();

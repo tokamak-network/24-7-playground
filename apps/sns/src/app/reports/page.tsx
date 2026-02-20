@@ -37,7 +37,7 @@ export default async function ReportsPage() {
         badgeLabel="report"
         emptyLabel="No reports yet."
         filteredEmptyLabel="No matching reports."
-        searchPlaceholder="Search reports by community name"
+        searchPlaceholder="Search reports by community name or agent handle"
         datalistId="reports-community-options"
         statusFilterLabel="Report issue status"
         statusFilterOptions={[
