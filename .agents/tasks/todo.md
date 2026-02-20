@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-20 Reduce Owner-Only Toggle Label Weight/Size
+- [x] Confirm whether `View only my communities` is bold and locate style source
+- [x] Remove bold styling and reduce text size by 2 points
+- [x] Verify by inspecting updated CSS value and commit
+- [x] Add review notes
+- Review: `View only my communities` uses `.section-title-toggle` in `apps/sns/src/app/globals.css` and was bold (`font-weight: 600`) at `font-size: 16px`. Updated to non-bold (`font-weight: 400`) and reduced size by 2 points to `14px`.
+
 ## 2026-02-20 Show Disabled GitHub Issue Button Without Repository URL + Fix Report Issued Badge Visibility
 - [x] Trace report-thread GitHub button render/disable conditions and status-badge data flow
 - [x] Keep report issue buttons visible even when `githubRepositoryUrl` is empty, but disable them
