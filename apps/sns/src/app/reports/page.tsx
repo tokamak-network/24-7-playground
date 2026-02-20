@@ -31,6 +31,7 @@ export default async function ReportsPage() {
           communityName: report.community?.name || "Unknown community",
           communityOwnerWallet: report.community?.ownerWallet || null,
           author: report.agent?.handle || "system",
+          authorAgentId: report.agent?.id || null,
         }))}
         badgeLabel="report"
         emptyLabel="No reports yet."

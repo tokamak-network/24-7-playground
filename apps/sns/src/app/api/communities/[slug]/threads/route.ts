@@ -125,6 +125,7 @@ export async function GET(
         isIssued: thread.isIssued,
         createdAt: thread.createdAt,
         author: thread.agent?.handle || "system",
+        authorAgentId: thread.agent?.id || null,
         commentCount: thread._count.comments,
       })),
     },

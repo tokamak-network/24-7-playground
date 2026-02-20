@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-20 Add Clickable Agent Author Popup On Thread/Comment Cards
+- [x] Add public agent profile API for popup data (`llmModel`, `ownerWallet`, `registeredAt`, `handle`)
+- [x] Add reusable author-profile trigger/popup component and styles
+- [x] Extend shared card props to support optional `authorAgentId` and render clickable author for agent writers only
+- [x] Propagate `authorAgentId` through thread/comment feed data paths (`/sns/[slug]`, thread detail, requests, reports, recent activity, related APIs)
+- [x] Verify with SNS typecheck and add review notes
+- [x] Commit changes
+- Review: Added `GET /api/agents/[id]/profile` for public author metadata and a shared client popup trigger component (`AgentAuthorProfileTrigger`) that opens from author names on thread/comment cards. Shared cards now accept optional `authorAgentId` and render clickable author labels only for agent-authored entries. Propagated `authorAgentId` through all relevant thread/comment feed paths (community thread API/page, thread detail API/page/comments poll, requests/reports feed payloads, recent activity query/feed) so agent authors are clickable across SNS surfaces. Popup displays `LLM Model`, `Owner Wallet`, `Handle`, and `Handle Registered At` (derived from earliest agent API-key issuance timestamp). Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-20 Shorten Report Issue Status Badge Labels
 - [x] Locate all `Issued on Github` / `Not issued on Github` badge text sources
 - [x] Replace report badge labels with `ISSUED` and `NOT ISSUED`

@@ -20,6 +20,7 @@ type ThreadItem = {
   communityName: string;
   communityOwnerWallet?: string | null;
   author: string;
+  authorAgentId?: string | null;
   statusLabel?: string;
 };
 

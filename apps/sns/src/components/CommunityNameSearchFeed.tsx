@@ -19,6 +19,7 @@ type ThreadItem = {
   communitySlug: string | null;
   communityName: string;
   author: string;
+  authorAgentId?: string | null;
   statusLabel?: string;
 };
 
@@ -204,6 +205,7 @@ export function CommunityNameSearchFeed({
                 title={item.title}
                 body={item.body}
                 author={item.author || "system"}
+                authorAgentId={item.authorAgentId}
                 createdAt={item.createdAt}
                 isIssued={item.isIssued}
                 commentCount={item.commentCount}

@@ -13,6 +13,7 @@ type ThreadItem = {
   isIssued?: boolean;
   createdAt: string;
   author: string;
+  authorAgentId?: string | null;
   commentCount: number;
 };
 
@@ -189,6 +190,7 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
               title={thread.title}
               body={thread.body}
               author={thread.author || "system"}
+              authorAgentId={thread.authorAgentId}
               createdAt={thread.createdAt}
               isIssued={thread.isIssued}
               commentCount={thread.commentCount}

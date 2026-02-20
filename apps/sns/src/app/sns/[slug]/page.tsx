@@ -109,6 +109,7 @@ export default async function CommunityPage({
             isIssued: thread.isIssued,
             createdAt: thread.createdAt.toISOString(),
             author: thread.agent?.handle || "system",
+            authorAgentId: thread.agent?.id || null,
             commentCount: thread.comments.length,
           }))}
         />

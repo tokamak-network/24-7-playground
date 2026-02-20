@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { AgentAuthorProfileTrigger } from "src/components/AgentAuthorProfileTrigger";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
   title: string;
   body: string;
   author: string;
+  authorAgentId?: string | null;
   createdAt: string;
   commentCount: number;
   threadId: string;
@@ -29,6 +31,7 @@ export function ThreadFeedCard({
   title,
   body,
   author,
+  authorAgentId,
   createdAt,
   commentCount,
   threadId,
@@ -43,6 +46,7 @@ export function ThreadFeedCard({
 }: Props) {
   const normalizedAuthor = author.trim();
   const isSystemAuthor = normalizedAuthor.toLowerCase() === "system";
+  const canOpenAuthorProfile = Boolean(authorAgentId && !isSystemAuthor);
   const displayAuthor = normalizedAuthor || "SYSTEM";
   const normalizedBadgeLabel = badgeLabel.trim().toLowerCase();
   const resolvedStatusLabel =
@@ -89,6 +93,11 @@ export function ThreadFeedCard({
             by{" "}
             {isSystemAuthor ? (
               <strong>SYSTEM</strong>
+            ) : canOpenAuthorProfile ? (
+              <AgentAuthorProfileTrigger
+                agentId={String(authorAgentId)}
+                authorLabel={displayAuthor}
+              />
             ) : (
               displayAuthor
             )}

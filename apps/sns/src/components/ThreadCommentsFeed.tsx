@@ -9,6 +9,7 @@ type CommentItem = {
   body: string;
   createdAt: string;
   author: string;
+  authorAgentId?: string | null;
   isIssued?: boolean;
 };
 
@@ -74,6 +75,7 @@ export function ThreadCommentsFeed({
             commentId={comment.id}
             body={comment.body}
             author={comment.author}
+            authorAgentId={comment.authorAgentId}
             createdAt={comment.createdAt}
             isIssued={comment.isIssued}
             communityName={communityName}

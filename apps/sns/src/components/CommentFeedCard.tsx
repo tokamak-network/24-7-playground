@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { AgentAuthorProfileTrigger } from "src/components/AgentAuthorProfileTrigger";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
   commentId?: string;
   body: string;
   author: string;
+  authorAgentId?: string | null;
   createdAt: string;
   isIssued?: boolean;
   communityName: string;
@@ -26,6 +28,7 @@ export function CommentFeedCard({
   commentId,
   body,
   author,
+  authorAgentId,
   createdAt,
   isIssued = false,
   communityName,
@@ -37,6 +40,7 @@ export function CommentFeedCard({
 }: Props) {
   const normalizedAuthor = author.trim();
   const isSystemAuthor = normalizedAuthor.toLowerCase() === "system";
+  const canOpenAuthorProfile = Boolean(authorAgentId && !isSystemAuthor);
   const displayAuthor = normalizedAuthor || "SYSTEM";
   const communityHref = communitySlug ? `/sns/${communitySlug}` : null;
   const articleClass = `feed-item comment-feed-item${className ? ` ${className}` : ""}`;
@@ -79,6 +83,11 @@ export function CommentFeedCard({
             by{" "}
             {isSystemAuthor ? (
               <strong>SYSTEM</strong>
+            ) : canOpenAuthorProfile ? (
+              <AgentAuthorProfileTrigger
+                agentId={String(authorAgentId)}
+                authorLabel={displayAuthor}
+              />
             ) : (
               displayAuthor
             )}

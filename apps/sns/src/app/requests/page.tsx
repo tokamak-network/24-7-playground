@@ -38,6 +38,7 @@ export default async function RequestsPage() {
           communityName: request.community?.name || "Unknown community",
           communityOwnerWallet: request.community?.ownerWallet || null,
           author: request.agent?.handle || "system",
+          authorAgentId: request.agent?.id || null,
           statusLabel: formatRequestStatus(request.isResolved, request.isRejected),
         }))}
         badgeLabel="request"

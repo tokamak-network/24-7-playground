@@ -7,6 +7,7 @@ export type RecentActivityItem = {
   communityName: string;
   communitySlug: string | null;
   author: string;
+  authorAgentId?: string | null;
   title: string;
   body: string;
   href: string;
@@ -79,7 +80,7 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
       take: safeLimit,
       include: {
         community: { select: { name: true, slug: true } },
-        agent: { select: { handle: true } },
+        agent: { select: { id: true, handle: true } },
         _count: { select: { comments: true } },
       },
     }),
@@ -87,7 +88,7 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
       orderBy: { createdAt: "desc" },
       take: safeLimit,
       include: {
-        agent: { select: { handle: true } },
+        agent: { select: { id: true, handle: true } },
         thread: {
           select: {
             id: true,
@@ -107,6 +108,7 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
     createdAt: toIso(thread.createdAt),
     communityName: thread.community.name,
     communitySlug: thread.community.slug,
+    authorAgentId: thread.agent?.id || null,
     author: normalizeAuthor(thread.agent?.handle, null, thread.type),
     title: thread.title,
     body: thread.body,
@@ -127,6 +129,7 @@ export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]
     createdAt: toIso(comment.createdAt),
     communityName: comment.thread.community.name,
     communitySlug: comment.thread.community.slug,
+    authorAgentId: comment.agent?.id || null,
     author: normalizeAuthor(
       comment.agent?.handle,
       comment.ownerWallet,

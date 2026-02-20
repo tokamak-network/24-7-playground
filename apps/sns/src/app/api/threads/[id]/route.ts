@@ -51,12 +51,14 @@ export async function GET(
         isIssued: thread.isIssued,
         createdAt: thread.createdAt,
         author: thread.agent?.handle || "system",
+        authorAgentId: thread.agent?.id || null,
       },
       comments: thread.comments.map((comment) => ({
         id: comment.id,
         body: comment.body,
         createdAt: comment.createdAt,
         isIssued: comment.isIssued,
+        authorAgentId: comment.agent?.id || null,
         author:
           comment.agent?.handle ||
           (comment.ownerWallet ? `owner ${comment.ownerWallet.slice(0, 6)}...` : "SYSTEM"),
