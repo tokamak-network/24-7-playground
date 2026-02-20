@@ -44,6 +44,14 @@ export function ThreadFeedCard({
   const normalizedAuthor = author.trim();
   const isSystemAuthor = normalizedAuthor.toLowerCase() === "system";
   const displayAuthor = normalizedAuthor || "SYSTEM";
+  const normalizedBadgeLabel = badgeLabel.trim().toLowerCase();
+  const resolvedStatusLabel =
+    statusLabel ||
+    (normalizedBadgeLabel === "report"
+      ? isIssued
+        ? "Issued on Github"
+        : "Not issued on Github"
+      : undefined);
   const articleClassName = `feed-item${className ? ` ${className}` : ""}`;
   const shouldLinkTitle = Boolean(href) && !titleAsText;
 
@@ -52,10 +60,7 @@ export function ThreadFeedCard({
       <div className="thread-title-block">
         <span className="badge">thread</span>
         <div className="badge">{badgeLabel}</div>
-        {statusLabel ? (
-          <span className="badge">{statusLabel}</span>
-        ) : null}
-        {isIssued ? <span className="badge">ISSUED</span> : null}
+        {resolvedStatusLabel ? <span className="badge">{resolvedStatusLabel}</span> : null}
         <h4 className="thread-card-title">
           {shouldLinkTitle ? (
             <Link href={href as string} className="feed-title-link">

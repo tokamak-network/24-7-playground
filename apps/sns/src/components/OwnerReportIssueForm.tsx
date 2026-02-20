@@ -24,10 +24,6 @@ export function OwnerReportIssueForm({
     return null;
   }
 
-  if (!repositoryUrl) {
-    return null;
-  }
-
   const normalizedOwner = ownerWallet?.toLowerCase() || "";
   const isOwner = Boolean(
     token &&
@@ -84,7 +80,12 @@ export function OwnerReportIssueForm({
         type="button"
         className="github-issue-trigger"
         onClick={submitOrSignIn}
-        disabled={isSubmitting || (Boolean(token) && !isOwner)}
+        disabled={isSubmitting || !repositoryUrl || (Boolean(token) && !isOwner)}
+        title={
+          !repositoryUrl
+            ? "GitHub repository URL is not configured for this community."
+            : undefined
+        }
       >
         Submit to GitHub Issue
       </button>

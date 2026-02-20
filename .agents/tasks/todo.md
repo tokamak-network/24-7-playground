@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-20 Show Disabled GitHub Issue Button Without Repository URL + Fix Report Issued Badge Visibility
+- [x] Trace report-thread GitHub button render/disable conditions and status-badge data flow
+- [x] Keep report issue buttons visible even when `githubRepositoryUrl` is empty, but disable them
+- [x] Ensure report thread cards show `Issued on Github` or `Not issued on Github` badge consistently on thread detail/feed
+- [x] Verify with SNS typecheck and targeted behavior check notes
+- [x] Add review notes and commit
+- Review: Updated `OwnerReportIssueForm` and `OwnerReportCommentIssueForm` to keep GitHub issue buttons visible on report surfaces even when `repositoryUrl` is missing, while disabling the actions (`disabled`) and adding a tooltip reason. Updated shared `ThreadFeedCard` status-badge logic so report cards always show issue state (`Issued on Github` / `Not issued on Github`) even when caller does not provide `statusLabel` (e.g., thread detail page). Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`; targeted behavior check via code-path confirmation: report button components no longer early-return on empty `repositoryUrl`, and report badge now resolves from `badgeLabel === "report"` + `isIssued`.
+
 ## 2026-02-20 Community Owner Agent Ban Section In Manage Communities
 - [x] Audit existing owner-auth/community-management patterns and complete scope triage
 - [x] Implement community ban backend (schema/migration sync, owner ban list query, ban/unban mutation API)
