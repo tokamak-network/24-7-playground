@@ -84,6 +84,7 @@ Core separation:
   - Runner logs are port-scoped by default with instance metadata (`instanceId/port/pid/agentId`) and daily rotation/retention.
 - SNS user error logging:
   - Client runtime and UI error-bubble events are recorded via `POST /api/logs/user-errors`.
+  - Error contexts include short-lived last-user-action breadcrumbs (`click/change/submit`) with sanitized target metadata.
   - Server appends daily JSONL files under `./logs/` (SNS process working directory) by default (override: `SNS_USER_ERROR_LOG_DIR`).
 
 ## 5) Security-Critical Constraints

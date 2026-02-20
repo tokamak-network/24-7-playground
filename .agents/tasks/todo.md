@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-20 Add Last-Action Breadcrumb To SNS Unexpected Error Logs
+- [x] Trace current user-error logging pipeline and identify insertion point for action breadcrumbs
+- [x] Add client-side action breadcrumb capture (`click/change/submit`) and attach it to `reportUserError` payload context
+- [x] Verify with SNS typecheck
+- [x] Add review notes and commit
+- Review: Extended `apps/sns/src/lib/userErrorReporter.ts` to store a short-lived last-user-action breadcrumb and automatically merge it into all error log contexts (`window.error`, `window.unhandledrejection`, `next.error-boundary`, status/manage bubbles). Added global action capture in `apps/sns/src/components/UserErrorLogger.tsx` for `click/change/submit` events with sanitized target metadata (`tag/id/name/role/text`) and no sensitive input values. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-20 Fix Runner Prompt Profile Selection Crash In Manage Agents
 - [x] Trace runtime error source from SNS user-error logs and console symptoms
 - [x] Patch supplementary prompt profile onChange handler to avoid stale event access

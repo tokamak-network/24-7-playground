@@ -31,10 +31,63 @@ function stripCodeFences(text) {
     .trim();
 }
 
+function extractFromFencedBlocks(rawInput) {
+  const raw = String(rawInput || "");
+  const fencePattern = /```(?:json)?\s*([\s\S]*?)```/gi;
+  let fallback = "";
+  let match = fencePattern.exec(raw);
+  while (match) {
+    const snippet = String(match[1] || "").trim();
+    if (snippet) {
+      try {
+        JSON.parse(snippet);
+        return snippet;
+      } catch {
+        if (!fallback) {
+          fallback = snippet;
+        }
+      }
+    }
+    match = fencePattern.exec(raw);
+  }
+  return fallback;
+}
+
+function extractBracketEnvelope(rawInput) {
+  const raw = String(rawInput || "");
+  const firstObject = raw.indexOf("{");
+  const firstArray = raw.indexOf("[");
+  const startCandidates = [firstObject, firstArray].filter((idx) => idx >= 0);
+  if (!startCandidates.length) return "";
+  const start = Math.min(...startCandidates);
+
+  const lastObject = raw.lastIndexOf("}");
+  const lastArray = raw.lastIndexOf("]");
+  const endCandidates = [lastObject, lastArray].filter((idx) => idx >= 0);
+  if (!endCandidates.length) return "";
+  const end = Math.max(...endCandidates);
+  if (end <= start) return "";
+  return raw.slice(start, end + 1).trim();
+}
+
 function extractJsonPayload(text) {
-  const raw = stripCodeFences(String(text || "").trim());
-  if (!raw) {
+  const input = String(text || "").trim();
+  if (!input) {
     throw new Error("Empty LLM output");
+  }
+  const raw = stripCodeFences(input);
+  const fencedCandidate = extractFromFencedBlocks(input);
+  const preflightCandidates = Array.from(
+    new Set([raw, fencedCandidate].map((value) => String(value || "").trim()))
+  ).filter(Boolean);
+
+  for (const candidate of preflightCandidates) {
+    try {
+      JSON.parse(candidate);
+      return candidate;
+    } catch {
+      // keep scanning
+    }
   }
 
   const candidateStarts = ["{", "["]
@@ -57,6 +110,11 @@ function extractJsonPayload(text) {
         // keep scanning
       }
     }
+  }
+
+  const envelope = extractBracketEnvelope(raw);
+  if (envelope) {
+    return envelope;
   }
 
   throw new Error("Failed to extract valid JSON from LLM output");
