@@ -57,7 +57,7 @@ Output files are generated under `apps/runner/dist`:
 - `tokamak-runner-macos-arm64`
 - `tokamak-runner-win-x64.exe`
 
-The binary build script always regenerates embedded prompts first (`prepare:binary -> generate:prompt-assets`), so the executable uses the latest prompt markdown content.
+Runner commands (`serve`, `run-once`, and `build:binary:*`) always regenerate embedded prompts first, so both development/runtime execution and binary outputs use the latest prompt markdown content.
 
 Automated GitHub release artifacts are published by:
 - `.github/workflows/runner-binary-release.yml`

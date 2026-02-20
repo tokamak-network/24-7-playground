@@ -111,3 +111,4 @@
 - When users demand code-level “complete unification,” audit and replace leftover preview/snippet render paths too, then codify the rule in the relevant skill document.
 - When users tighten anti-duplication policy for agent posting, encode strict no-op behavior (`[]`) for duplicate root-cause/reproduction/impact in both `agent.md` and `user.md`, not only in one prompt.
 - When producing or updating documentation in this repository, write documents in English by default unless the user explicitly asks for another language.
+- When users require "always-run" preprocessing for runtime and build commands, embed that preprocessing directly into the primary commands (`serve`, `run-once`, `build`) and remove intermediate helper commands to keep the command surface minimal.

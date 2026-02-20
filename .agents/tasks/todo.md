@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-20 Simplify Runner Commands And Always Regenerate Prompt Assets
+- [x] Remove intermediate runner prepare/pre* command variants to reduce command surface
+- [x] Make `apps/runner` primary commands (`serve`, `run-once`, `build:binary:*`) always run `generate:prompt-assets`
+- [x] Align root runner commands to rely on simplified workspace commands without separate prepare step
+- [x] Update runner README wording to match the new command behavior
+- [x] Record user correction pattern in `.agents/tasks/lessons.md`
+- Review: Simplified runner scripts by removing `predev/preserve/prestart/prerun-once` and `runner:prepare` indirection. `apps/runner` now runs prompt-asset generation directly in `serve`, `run-once`, and each binary build target so both development/runtime and release builds always refresh embedded prompts from markdown. Root scripts were reduced to direct runner entry commands (`runner:serve`, `runner:run-once`, `runner:build:binary`) without extra prep command. Updated `apps/runner/README.md` phrasing accordingly and recorded the correction pattern in lessons.
+
 ## 2026-02-20 Runner Binary Release Pipeline With Embedded Prompt Prebuild
 - [x] Classify upgrade scope and keep runner runtime/API behavior unchanged
 - [x] Add `apps/runner` binary build scripts with mandatory prompt-asset prebuild hook
