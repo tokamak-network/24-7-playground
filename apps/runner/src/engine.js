@@ -378,6 +378,12 @@ function withLoggerAgentId(logger, agentId) {
   return scoped;
 }
 
+function formatAgentSummaryTag(agentId, agentHandle) {
+  const normalizedAgentId = String(agentId || "").trim() || "-";
+  const normalizedAgentHandle = String(agentHandle || "").trim() || "-";
+  return `agentId=${normalizedAgentId}, agentHandle=${normalizedAgentHandle}`;
+}
+
 function trace(logger, label, payload) {
   const scopedAgentId = resolveLoggerAgentId(logger);
   if (!scopedAgentId) {
@@ -418,6 +424,7 @@ class RunnerEngine {
       lastLlmOutput: null,
     };
     this.logAgentId = "";
+    this.logAgentHandle = "";
   }
 
   getStatus() {
@@ -434,6 +441,7 @@ class RunnerEngine {
     trace(this.logger, "start:input", { configInput });
     this.config = normalizeConfig(configInput);
     this.logAgentId = this.config.agentId;
+    this.logAgentHandle = "";
     this.logger = withLoggerAgentId(this.logger, this.logAgentId);
     trace(this.logger, "start:normalized-config", { config: this.config });
     this.state.running = true;
@@ -441,7 +449,7 @@ class RunnerEngine {
     this.state.lastError = null;
     logSummary(
       this.logger,
-      `runner started (agentId=${this.config.agentId}, intervalSec=${this.config.runtime.intervalSec}, commentLimit=${this.config.runtime.commentLimit}, maxTokens=${this.config.runtime.maxTokens || "unlimited"})`
+      `runner started (${formatAgentSummaryTag(this.config.agentId, this.logAgentHandle)}, intervalSec=${this.config.runtime.intervalSec}, commentLimit=${this.config.runtime.commentLimit}, maxTokens=${this.config.runtime.maxTokens || "unlimited"})`
     );
     await this.runOnce();
 
@@ -480,6 +488,7 @@ class RunnerEngine {
     };
     this.config = normalizeConfig(merged);
     this.logAgentId = this.config.agentId;
+    this.logAgentHandle = "";
     this.logger = withLoggerAgentId(this.logger, this.logAgentId);
     trace(this.logger, "update-config:normalized-config", { config: this.config });
     if (this.state.running) {
@@ -521,7 +530,7 @@ class RunnerEngine {
     trace(this.logger, "cycle:start", { config });
     logSummary(
       this.logger,
-      `cycle started (nextCycle=${this.state.cycleCount + 1}, agentId=${config.agentId})`
+      `cycle started (nextCycle=${this.state.cycleCount + 1}, ${formatAgentSummaryTag(config.agentId, this.logAgentHandle)})`
     );
     this.inFlight = true;
     this.state.lastRunAt = new Date().toISOString();
@@ -536,6 +545,7 @@ class RunnerEngine {
         generalData && generalData.agent && typeof generalData.agent === "object"
           ? generalData.agent
           : null;
+      this.logAgentHandle = generalAgent ? String(generalAgent.handle || "").trim() : "";
       const generalCommunity =
         generalData &&
         generalData.community &&
@@ -647,7 +657,7 @@ class RunnerEngine {
           actions = [];
           logSummary(
             this.logger,
-            `cycle accepted plain-text no-action response (agentId=${config.agentId})`
+            `cycle accepted plain-text no-action response (${formatAgentSummaryTag(config.agentId, this.logAgentHandle)})`
           );
         } else {
           throw error;
@@ -658,7 +668,7 @@ class RunnerEngine {
         noActionReason = "empty-actions-array";
         logSummary(
           this.logger,
-          `cycle accepted empty-actions no-op response (agentId=${config.agentId})`
+          `cycle accepted empty-actions no-op response (${formatAgentSummaryTag(config.agentId, this.logAgentHandle)})`
         );
       }
       const validActions = actions.filter(
