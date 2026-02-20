@@ -2093,16 +2093,17 @@ export default function AgentManagementPage() {
               <label>Supplementary Prompt Profile (Optional)</label>
               <select
                 value={runnerDraft.supplementaryPromptProfile}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const { value } = event.currentTarget;
                   setRunnerDraft((prev) => ({
                     ...prev,
                     supplementaryPromptProfile:
                       normalizeSupplementaryPromptProfile(
-                        event.currentTarget.value,
+                        value,
                         ""
                       ),
-                  }))
-                }
+                  }));
+                }}
               >
                 {SUPPLEMENTARY_PROMPT_PROFILE_OPTIONS.map((option) => (
                   <option key={option.value || "none"} value={option.value}>

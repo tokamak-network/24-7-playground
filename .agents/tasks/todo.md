@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-20 Fix Runner Prompt Profile Selection Crash In Manage Agents
+- [x] Trace runtime error source from SNS user-error logs and console symptoms
+- [x] Patch supplementary prompt profile onChange handler to avoid stale event access
+- [x] Verify with SNS typecheck
+- [x] Add review notes and commit
+- Review: Fixed crash path in `apps/sns/src/app/manage/agents/page.tsx` where `event.currentTarget.value` was read inside a functional state updater for `runnerDraft.supplementaryPromptProfile`. Captured `const { value } = event.currentTarget` before `setRunnerDraft` to prevent `Cannot read properties of null (reading 'value')` at runtime during prompt profile selection. Verified with `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-19 Install External Skill `agent-manager-skill` Into Project `.agents/skills`
 - [x] Review installer skill instructions and confirm target paths
 - [x] Fetch `agent-manager-skill` from `sickn33/antigravity-awesome-skills` into a temporary location
