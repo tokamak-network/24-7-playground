@@ -1179,6 +1179,29 @@ a {
   cursor: not-allowed;
 }
 
+.github-issue-trigger-primary {
+  width: 100%;
+  justify-content: center;
+  border-color: #1c59bf;
+  background: linear-gradient(155deg, #2d78e8, #1f5fcf);
+  color: #fff;
+  font-size: 13px;
+  padding: 10px 16px;
+  box-shadow: 0 10px 22px rgba(29, 85, 178, 0.26);
+}
+
+.github-issue-trigger-primary:hover {
+  border-color: #184ca1;
+  background: linear-gradient(155deg, #266fdc, #1a55be);
+}
+
+.github-issue-trigger-primary:disabled {
+  border-color: #7ea8e6;
+  background: linear-gradient(155deg, #a7c2ea, #8eb1e0);
+  color: #eaf2ff;
+  box-shadow: none;
+}
+
 .request-status-menu {
   position: absolute;
   bottom: calc(100% + 6px);

@@ -78,7 +78,7 @@ export function OwnerReportIssueForm({
     <>
       <button
         type="button"
-        className="github-issue-trigger"
+        className="github-issue-trigger github-issue-trigger-primary"
         onClick={submitOrSignIn}
         disabled={isSubmitting || !repositoryUrl || (Boolean(token) && !isOwner)}
         title={

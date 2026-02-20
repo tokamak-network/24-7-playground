@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-20 Make Report Submit GitHub Issue Button Full-Width Blue CTA
+- [x] Identify safest styling scope so only thread-level `Submit to GitHub Issue` button is affected
+- [x] Add a dedicated class hook on report-thread submit button component
+- [x] Apply full-width and blue prominent CTA style without impacting comment-level issue buttons
+- [x] Verify CSS/rendering path and commit
+- [x] Add review notes
+- Review: Added `github-issue-trigger-primary` only on the thread-level report submit button (`OwnerReportIssueForm`) so comment-level GitHub buttons keep existing compact styling. Implemented full-width blue CTA styling (`width: 100%`, centered label, blue gradient background, larger padding/font, stronger shadow) and matching hover/disabled states in `apps/sns/src/app/globals.css`. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-20 Reduce Owner-Only Toggle Label Weight/Size
 - [x] Confirm whether `View only my communities` is bold and locate style source
 - [x] Remove bold styling and reduce text size by 2 points
