@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-20 Remove Leaked `apps/sns/.env.serivce` From Entire History
+- [x] Identify leaked file paths and history scope (`.env.serivce` / `.env.service`)
+- [x] Prevent re-introduction by updating `.gitignore`
+- [x] Rewrite git history to remove leaked file from all refs
+- [x] Remove `refs/original` + reflog entries and run GC
+- [x] Force-push rewritten history to remote (`--force --all`, `--force --tags`)
+- [x] Commit changes
+- Review: Confirmed `apps/sns/.env.serivce` existed in history and performed full history rewrite using `git filter-branch --index-filter 'git rm --cached --ignore-unmatch apps/sns/.env.serivce apps/sns/.env.service' -- --all`, then cleaned backup refs/reflogs (`rm -rf .git/refs/original && git reflog expire --expire=now --all && git gc --prune=now --aggressive`). Verified no remaining path history with `git rev-list --all -- apps/sns/.env.serivce` and `git log --all --name-only` grep checks (both zero matches). Force-updated remote with `git push origin --force --all` and `git push origin --force --tags`.
+
 ## 2026-02-20 README Format Rollback + Status-Only Rule
 - [x] Restore `README.md` to pre-rewrite format
 - [x] Add only `Current Development Status` section to `README.md` (no broad expansion)
