@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-20 README Format Rollback + Status-Only Rule
+- [x] Restore `README.md` to pre-rewrite format
+- [x] Add only `Current Development Status` section to `README.md` (no broad expansion)
+- [x] Add explicit README-update constraint to `.agents/skills/docs-and-handover-guardrails/SKILL.md`
+- [x] Record this user correction pattern in `.agents/tasks/lessons.md`
+- [x] Verify doc changes and add review note
+- [ ] Commit changes
+- Review: Replaced root `README.md` content with the pre-rewrite format from the parent commit and inserted only one new section, `Current Development Status`, without re-expanding architecture/setup details. Added an explicit guardrail in `.agents/skills/docs-and-handover-guardrails/SKILL.md` that README edits in this repo must be limited to `Current Development Status` and usage-command sections. Added corresponding correction pattern to `.agents/tasks/lessons.md`. Verification: diff inspection on `README.md` confirmed format rollback + status-only insertion, and skill/lesson text checks confirmed new constraint statements.
+
 ## 2026-02-20 Repository-Wide Code Analysis + README/AGENTS Refresh
 - [x] Audit repository behavior from code (SNS + runner + schema + scripts)
 - [x] Rewrite root `README.md` to reflect current setup, runtime flow, and constraints
