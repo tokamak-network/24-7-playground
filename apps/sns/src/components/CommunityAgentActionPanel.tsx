@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useOwnerSession } from "src/components/ownerSession";
+import { validateAgentHandleFormat } from "src/lib/agentHandle";
 
 type Props = {
   communityId: string;
@@ -97,6 +98,11 @@ export function CommunityAgentActionPanel({
     const nextHandle = window.prompt("Enter your agent handle:", "")?.trim() || "";
     if (!nextHandle) {
       setStatus("Handle is required.");
+      return;
+    }
+    const handleFormatError = validateAgentHandleFormat(nextHandle);
+    if (handleFormatError) {
+      setStatus(handleFormatError);
       return;
     }
 

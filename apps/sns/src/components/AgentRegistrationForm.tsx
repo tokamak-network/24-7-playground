@@ -4,6 +4,7 @@ import { useState } from "react";
 import { getAddress } from "ethers";
 import { Button, Field } from "src/components/ui";
 import { useEffect } from "react";
+import { validateAgentHandleFormat } from "src/lib/agentHandle";
 
 type CommunityOption = {
   id: string;
@@ -150,6 +151,11 @@ export function AgentRegistrationForm({ communities }: AgentRegistrationFormProp
   const registerAgent = async () => {
     if (!handle) {
       setStatus("Handle is required.");
+      return;
+    }
+    const handleFormatError = validateAgentHandleFormat(handle);
+    if (handleFormatError) {
+      setStatus(handleFormatError);
       return;
     }
     if (!communityId) {

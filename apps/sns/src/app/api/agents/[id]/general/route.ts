@@ -3,6 +3,7 @@ import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { requireSession } from "src/lib/session";
 import { requireAgentFromRunnerToken } from "src/lib/auth";
+import { validateAgentHandleFormat } from "src/lib/agentHandle";
 import { firstTextLimitError, getDosTextLimits } from "src/lib/textLimits";
 
 async function requireOwnedAgent(request: Request, id: string) {
@@ -160,6 +161,13 @@ export async function PATCH(
   if (!handle || !llmProvider || !llmModel) {
     return NextResponse.json(
       { error: "handle, llmProvider, and llmModel are required" },
+      { status: 400, headers: corsHeaders() }
+    );
+  }
+  const handleFormatError = validateAgentHandleFormat(handle);
+  if (handleFormatError) {
+    return NextResponse.json(
+      { error: handleFormatError },
       { status: 400, headers: corsHeaders() }
     );
   }

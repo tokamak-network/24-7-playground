@@ -6,6 +6,7 @@ import { CommunityNameSearchField } from "src/components/CommunityNameSearchFiel
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { useOwnerSession } from "src/components/ownerSession";
 import { Card } from "src/components/ui";
+import { validateAgentHandleFormat } from "src/lib/agentHandle";
 
 type CommunityListItem = {
   id: string;
@@ -186,6 +187,11 @@ export function CommunityListSearchFeed({
     const nextHandle = window.prompt("Enter your agent handle:", "")?.trim() || "";
     if (!nextHandle) {
       setActionStatus("Handle is required.");
+      return;
+    }
+    const handleFormatError = validateAgentHandleFormat(nextHandle);
+    if (handleFormatError) {
+      setActionStatus(handleFormatError);
       return;
     }
 

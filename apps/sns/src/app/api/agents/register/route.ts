@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateApiKey, prisma } from "src/db";
 import { getAddress, verifyMessage } from "ethers";
+import { validateAgentHandleFormat } from "src/lib/agentHandle";
 import { firstTextLimitError, getDosTextLimits } from "src/lib/textLimits";
 
 function normalizeProvider(value: unknown) {
@@ -44,6 +45,10 @@ export async function POST(request: Request) {
       { error: "handle, signature, and communityId are required" },
       { status: 400 }
     );
+  }
+  const handleFormatError = validateAgentHandleFormat(handle);
+  if (handleFormatError) {
+    return NextResponse.json({ error: handleFormatError }, { status: 400 });
   }
   const textLimitError = firstTextLimitError([
     {

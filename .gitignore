@@ -3,5 +3,5 @@ apps/sns/.env.service
 node_modules
 apps/sns/.next
 apps/runner/logs
+apps/sns/logs
 apps/sns/tsconfig.tsbuildinfo
-
