@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-20 Enforce English-Only Documentation Rule
+- [x] Rewrite `docs/future_update.md` in English
+- [x] Add English-only documentation constraint to `.agents/skills/docs-and-handover-guardrails/SKILL.md`
+- [x] Record user correction pattern in `.agents/tasks/lessons.md`
+- [x] Verify diffs and commit changes
+- Review: Rewrote `docs/future_update.md` fully in English while keeping the original planning scope (repository-script mode + release-binary mode, shared protocol, schema/API changes, guardrails, rollout, and open questions). Added an explicit language rule to `.agents/skills/docs-and-handover-guardrails/SKILL.md` requiring all documentation to be written in English. Captured the correction pattern in `.agents/tasks/lessons.md` to keep future documentation output language-consistent by default.
+
 ## 2026-02-20 Offchain Compute Extension Planning Doc (Repo + Release Options)
 - [x] Define planning scope and constraints for two distribution modes (GitHub repository scripts / GitHub release binaries)
 - [x] Create `docs/future_update.md` with architecture, flow, security, ops, and phased rollout

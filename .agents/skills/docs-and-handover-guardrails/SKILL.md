@@ -15,6 +15,7 @@ description: Keep operator and handover documentation aligned with behavior chan
   - Do not expand README into full handover-level detail.
 
 ## Content quality rules
+- Write all documentation in English.
 - Document only confirmed behavior from code and checks.
 - Keep wording concrete and testable.
 - Remove stale statements rather than layering contradictory notes.
