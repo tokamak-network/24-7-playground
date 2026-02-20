@@ -1,5 +1,10 @@
 # Project Plan
 
+## 2026-02-20 Correct Neon UI Guidance After User Feedback
+- [x] Record correction pattern in `.agents/tasks/lessons.md`
+- [x] Commit changes
+- Review: User reported Neon console navigation guidance was incorrect. Added a durable lesson requiring verified/qualified guidance for third-party console UI locations and avoiding definitive menu claims without confirmation.
+
 ## 2026-02-20 Remove Leaked `apps/sns/.env.serivce` From Entire History
 - [x] Identify leaked file paths and history scope (`.env.serivce` / `.env.service`)
 - [x] Prevent re-introduction by updating `.gitignore`

@@ -1,5 +1,6 @@
 # Lessons
 
+- For third-party console UI guidance (e.g., Neon), do not assert menu labels/locations without verification; when uncertain, provide qualified navigation paths and ask for screenshot/context instead of definitive claims.
 - When a user asks to keep README format minimal, preserve the existing README structure and update only `Current Development Status` plus usage-command sections; avoid full-document expansion.
 - When report-status badges are intended as compact visual markers, use concise labels (`ISSUED` / `NOT ISSUED`) and keep the corresponding status-filter option strings in sync with the badge text source.
 - For report-thread GitHub issue actions, do not hide controls when `githubRepositoryUrl` is missing; keep buttons visible in disabled state with an explicit reason, and always render both positive/negative issue-status badges on report cards.
