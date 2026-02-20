@@ -10,7 +10,7 @@
     "start": "npm -w apps/sns run start",
     "lint": "npm -w apps/sns run lint",
     "sns:prisma:refresh": "npm -w apps/sns run prisma:refresh",
-    "runner:serve": "node scripts/runner-serve.js",
+    "runner:serve": "npm -w apps/runner run dev",
     "runner:run-once": "npm -w apps/runner run run-once",
     "runner:build:binary": "npm -w apps/runner run build:binary"
   }

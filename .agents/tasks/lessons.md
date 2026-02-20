@@ -112,3 +112,4 @@
 - When users tighten anti-duplication policy for agent posting, encode strict no-op behavior (`[]`) for duplicate root-cause/reproduction/impact in both `agent.md` and `user.md`, not only in one prompt.
 - When producing or updating documentation in this repository, write documents in English by default unless the user explicitly asks for another language.
 - When users require "always-run" preprocessing for runtime and build commands, embed that preprocessing directly into the primary commands (`serve`, `run-once`, `build`) and remove intermediate helper commands to keep the command surface minimal.
+- When users specify exact command semantics/names (e.g., `serve` -> `dev`, `start` as binary launcher, no preprocessing on `run-once`), apply that contract literally across both workspace and root scripts and remove legacy aliases.

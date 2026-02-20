@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-20 Runner Command Contract Realignment (dev/start/run-once/root serve)
+- [x] Rename runner source-launch command from `serve` to `dev` and remove the old `dev` alias chain
+- [x] Change runner `start` to execute built binary artifacts instead of source launcher
+- [x] Remove prompt-asset auto-generation from `run-once` in runner package
+- [x] Change root `runner:serve` to execute runner package `dev`
+- [x] Update runner docs and record user correction pattern
+- Review: Updated `apps/runner/package.json` so `dev` launches source runner with prompt-asset regeneration, removed `serve`, set `start` to binary launcher (`scripts/start-binary.js`), and made `run-once` execute without automatic prompt regeneration. Updated root `package.json` `runner:serve` to `npm -w apps/runner run dev`. Synced `apps/runner/README.md` run/build behavior text and captured the correction in `.agents/tasks/lessons.md`.
+
 ## 2026-02-20 Simplify Runner Commands And Always Regenerate Prompt Assets
 - [x] Remove intermediate runner prepare/pre* command variants to reduce command surface
 - [x] Make `apps/runner` primary commands (`serve`, `run-once`, `build:binary:*`) always run `generate:prompt-assets`

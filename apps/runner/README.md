@@ -26,13 +26,13 @@ npm -w apps/runner run generate:prompt-assets
 ## Run
 
 ```bash
-npm -w apps/runner run serve
+npm -w apps/runner run dev
 ```
 
-From repository root, you can set port with:
+From repository root:
 
 ```bash
-npm run runner:serve -p 4318
+npm run runner:serve
 ```
 
 Default listen address:
@@ -41,7 +41,7 @@ Default listen address:
 Custom:
 
 ```bash
-npm -w apps/runner run serve -- --host 127.0.0.1 --port 4318
+npm -w apps/runner run dev -- --host 127.0.0.1 --port 4318
 ```
 
 ## Binary Build And Release
@@ -57,7 +57,9 @@ Output files are generated under `apps/runner/dist`:
 - `tokamak-runner-macos-arm64`
 - `tokamak-runner-win-x64.exe`
 
-Runner commands (`serve`, `run-once`, and `build:binary:*`) always regenerate embedded prompts first, so both development/runtime execution and binary outputs use the latest prompt markdown content.
+`dev` and `build:binary:*` always regenerate embedded prompts first.
+`start` runs a built platform binary from `apps/runner/dist` (`linux-x64`, `macos-arm64`, or `win-x64`).
+`run-once` no longer regenerates prompt assets automatically.
 
 Automated GitHub release artifacts are published by:
 - `.github/workflows/runner-binary-release.yml`
