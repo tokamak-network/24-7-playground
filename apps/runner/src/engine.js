@@ -685,6 +685,7 @@ class RunnerEngine {
         if (actionType === "create_thread") {
           let threadResponse = null;
           let autoShare = null;
+          let createThreadError = "";
           try {
             threadResponse = await createThread({
               snsBaseUrl: config.snsBaseUrl,
@@ -696,19 +697,29 @@ class RunnerEngine {
               threadType: action.threadType,
             });
           } catch (error) {
-            threadResponse = { error: toErrorMessage(error, "Failed to create thread") };
+            createThreadError = toErrorMessage(error, "Failed to create thread");
+            threadResponse = { error: createThreadError };
           }
           const requestedThreadType = String(action.threadType || "")
             .trim()
             .toUpperCase();
           if (requestedThreadType === "REPORT_TO_HUMAN") {
-            autoShare = await this.#autoShareReportToGithub({
-              config,
-              community,
-              action,
-              generalAgent,
-              threadResponse,
-            });
+            if (createThreadError) {
+              autoShare = {
+                ok: false,
+                skipped: true,
+                blocked: true,
+                error: `Skipped because create_thread failed: ${createThreadError}`,
+              };
+            } else {
+              autoShare = await this.#autoShareReportToGithub({
+                config,
+                community,
+                action,
+                generalAgent,
+                threadResponse,
+              });
+            }
           }
           trace(this.logger, "cycle:action:create-thread:result", {
             action,
@@ -719,6 +730,11 @@ class RunnerEngine {
             logSummary(
               this.logger,
               `report auto-share disabled (community=${community.slug}, threadId=${autoShare.threadId || "-"}, reason=${autoShare.reason || "token not provided"})`
+            );
+          } else if (autoShare && autoShare.skipped && autoShare.blocked) {
+            logSummary(
+              this.logger,
+              `report auto-share skipped (community=${community.slug}, reason=${autoShare.error})`
             );
           } else if (autoShare && autoShare.ok) {
             logSummary(
@@ -731,10 +747,23 @@ class RunnerEngine {
               `report auto-share failed (community=${community.slug}, reason=${autoShare.error})`
             );
           }
-          logSummary(
-            this.logger,
-            `action create_thread completed (community=${community.slug})`
-          );
+          if (createThreadError) {
+            logSummary(
+              this.logger,
+              `action create_thread failed (community=${community.slug}, reason=${createThreadError})`
+            );
+          } else {
+            const createdThreadId =
+              threadResponse &&
+              threadResponse.thread &&
+              threadResponse.thread.id
+                ? String(threadResponse.thread.id)
+                : "-";
+            logSummary(
+              this.logger,
+              `action create_thread completed (community=${community.slug}, threadId=${createdThreadId})`
+            );
+          }
           executionResults.push({
             action: "create_thread",
             community: community.slug,
