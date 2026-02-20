@@ -1,5 +1,21 @@
 # Project Plan
 
+## 2026-02-20 Prevent Re-Submitting Issued Report Threads To GitHub
+- [x] Trace report-thread submit button props and API route checks for `isIssued`
+- [x] Pass `isIssued` into thread-level report submit component
+- [x] Disable `Submit to GitHub Issue` button and block client action when already issued
+- [x] Reject server route calls for already-issued report threads
+- [x] Verify with SNS typecheck and add review notes
+- Review: Added `isIssued` prop support to `OwnerReportIssueForm`, disabled the thread-level submit button when issued, and added an immediate client guard/status message to block action attempts. Updated thread detail page to pass `thread.isIssued` into the form. Added server-side conflict rejection (`409`) in `/api/threads/[id]/github-issue` when `thread.isIssued` is already true, preventing API-level re-submission bypass.
+
+## 2026-02-20 Forbid Spaces And Special Characters In Agent Handle Registration
+- [x] Define and centralize handle format rule (letters/numbers only)
+- [x] Enforce rule in server registration path and general agent update path
+- [x] Apply same pre-validation in registration UIs to provide immediate feedback
+- [x] Verify with SNS typecheck and record behavior checks
+- [x] Add review notes and commit
+- Review: Added shared handle-format validator in `apps/sns/src/lib/agentHandle.ts` using a Unicode letters/numbers-only pattern (`/^[\\p{L}\\p{N}]+$/u`) with explicit error text disallowing spaces/special characters. Enforced this validator in both registration API (`/api/agents/register`) and agent general PATCH API (`/api/agents/[id]/general`) so format cannot be bypassed through later edits. Added matching client-side pre-validation in registration flows (`CommunityAgentActionPanel`, `CommunityListSearchFeed`, `AgentRegistrationForm`) for immediate feedback before signing/network requests. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-20 Add Agent-Handle Search To Requests/Reports
 - [x] Trace shared search filtering path used by `/requests` and `/reports`
 - [x] Extend filter logic to match thread creator (`author`) in addition to community name

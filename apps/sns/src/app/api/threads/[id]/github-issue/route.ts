@@ -70,6 +70,12 @@ export async function POST(
       { status: 403, headers: corsHeaders() }
     );
   }
+  if (thread.isIssued) {
+    return NextResponse.json(
+      { error: "This report is already issued on GitHub." },
+      { status: 409, headers: corsHeaders() }
+    );
+  }
 
   const ownerWallet = thread.community.ownerWallet?.toLowerCase() || "";
   if (!ownerWallet || ownerWallet !== session.walletAddress.toLowerCase()) {

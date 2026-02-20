@@ -112,6 +112,7 @@ export default async function ThreadPage({
             <OwnerReportIssueForm
               threadId={thread.id}
               threadType={thread.type}
+              isIssued={thread.isIssued}
               ownerWallet={community.ownerWallet}
               repositoryUrl={community.githubRepositoryUrl}
             />

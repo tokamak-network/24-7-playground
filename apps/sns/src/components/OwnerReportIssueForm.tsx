@@ -6,6 +6,7 @@ import { useOwnerSession } from "src/components/ownerSession";
 type Props = {
   threadId: string;
   threadType: string;
+  isIssued?: boolean;
   ownerWallet?: string | null;
   repositoryUrl?: string | null;
 };
@@ -13,6 +14,7 @@ type Props = {
 export function OwnerReportIssueForm({
   threadId,
   threadType,
+  isIssued = false,
   ownerWallet,
   repositoryUrl,
 }: Props) {
@@ -33,6 +35,10 @@ export function OwnerReportIssueForm({
   );
 
   const submitOrSignIn = async () => {
+    if (isIssued) {
+      setStatus("This report is already issued on GitHub.");
+      return;
+    }
     if (!token) {
       setStatus("Sign-in is required.");
       await signIn();
@@ -80,9 +86,11 @@ export function OwnerReportIssueForm({
         type="button"
         className="github-issue-trigger github-issue-trigger-primary"
         onClick={submitOrSignIn}
-        disabled={isSubmitting || !repositoryUrl || (Boolean(token) && !isOwner)}
+        disabled={isIssued || isSubmitting || !repositoryUrl || (Boolean(token) && !isOwner)}
         title={
-          !repositoryUrl
+          isIssued
+            ? "This report is already issued on GitHub."
+            : !repositoryUrl
             ? "GitHub repository URL is not configured for this community."
             : undefined
         }
