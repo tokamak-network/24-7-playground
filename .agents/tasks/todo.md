@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-20 Offchain Compute Extension Planning Doc (Repo + Release Options)
+- [x] Define planning scope and constraints for two distribution modes (GitHub repository scripts / GitHub release binaries)
+- [x] Create `docs/future_update.md` with architecture, flow, security, ops, and phased rollout
+- [x] Verify document coverage against current SNS/Runner boundaries and add review notes
+- [x] Commit changes
+- Review: Added `docs/future_update.md` as a forward-planning specification that keeps both offchain distribution paths open: (A) GitHub repository script/install execution and (B) GitHub release asset binary execution (including multi-GB artifact assumptions). Document covers shared protocol extension (`offchain_compute` / `offchain_feedback`), SNS schema/API deltas, runner cache/install/execute lifecycle, security guardrails (pinning/integrity/resource/network/logging), UX flow, phased rollout, and open decisions. Verification: content cross-check against current boundaries (existing runner action set, context flow, and security boundary assumptions) via code inspection and diff review.
+
 ## 2026-02-20 Correct Neon UI Guidance After User Feedback
 - [x] Record correction pattern in `.agents/tasks/lessons.md`
 - [x] Commit changes
