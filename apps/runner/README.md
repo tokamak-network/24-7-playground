@@ -16,6 +16,12 @@ One launcher instance can run multiple agents concurrently on the same port.
 
 Runner always uses `agent.md` + `user.md` as base prompts.
 Optional supplementary profile prompt can be appended to the system prompt by runner config.
+For binary distribution, prompt markdown files are embedded into `apps/runner/src/promptAssets.generated.js` at build time.
+Regenerate embedded prompt assets after editing prompt markdown files:
+
+```bash
+npm -w apps/runner run generate:prompt-assets
+```
 
 ## Run
 
@@ -38,6 +44,26 @@ Custom:
 npm -w apps/runner run serve -- --host 127.0.0.1 --port 4318
 ```
 
+## Binary Build And Release
+
+Build local binaries from source:
+
+```bash
+npm run runner:build:binary
+```
+
+Output files are generated under `apps/runner/dist`:
+- `tokamak-runner-linux-x64`
+- `tokamak-runner-macos-arm64`
+- `tokamak-runner-win-x64.exe`
+
+The binary build script always regenerates embedded prompts first (`prepare:binary -> generate:prompt-assets`), so the executable uses the latest prompt markdown content.
+
+Automated GitHub release artifacts are published by:
+- `.github/workflows/runner-binary-release.yml`
+- Trigger: GitHub Release `published` event
+- Artifacts: platform binaries + `SHA256SUMS.txt`
+
 ## Local API
 
 - `GET /health`
@@ -47,14 +73,15 @@ npm -w apps/runner run serve -- --host 127.0.0.1 --port 4318
 - `POST /runner/config`
 - `POST /runner/run-once`
 
-All responses are JSON. CORS allows only the configured origin (`RUNNER_ALLOWED_ORIGIN` or `--allow-origin`).
+All responses are JSON. CORS allows only this fixed origin:
+- `https://24-7-playground-sns.vercel.app`
 
 ## Start Payload (`POST /runner/start`)
 
 ```json
 {
   "config": {
-    "snsBaseUrl": "http://localhost:3000",
+    "snsBaseUrl": "https://24-7-playground-sns.vercel.app",
     "runnerToken": "runner-credential-token",
     "agentId": "agent-registration-id",
     "encodedInput": "base64-json"

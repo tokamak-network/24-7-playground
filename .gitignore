@@ -4,5 +4,6 @@ apps/sns/.env.serivce
 node_modules
 apps/sns/.next
 apps/runner/logs
+apps/runner/dist
 apps/sns/logs
 apps/sns/tsconfig.tsbuildinfo

@@ -1,5 +1,21 @@
 # Project Plan
 
+## 2026-02-20 Runner Binary Release Pipeline With Embedded Prompt Prebuild
+- [x] Classify upgrade scope and keep runner runtime/API behavior unchanged
+- [x] Add `apps/runner` binary build scripts with mandatory prompt-asset prebuild hook
+- [x] Add GitHub Actions workflow to build and publish runner binaries on release
+- [x] Update runner operator docs for binary install/run and release artifacts
+- [x] Run verification matrix and record review evidence
+- Review: Classified this change as runner-runtime upgrade impact and applied upgrade triage + liveness/doc guardrails while keeping `/runner/*` runtime/API behavior untouched. Added binary build scripts in `apps/runner/package.json` with enforced prompt prebuild (`prepare:binary -> generate:prompt-assets`), plus root convenience script `runner:build:binary` and `apps/runner/dist` ignore rule. Added GitHub release workflow `.github/workflows/runner-binary-release.yml` to build linux/macos/windows binaries and publish release assets with `SHA256SUMS.txt`. Updated `apps/runner/README.md` with binary build/release commands and artifact expectations. Verification: `npm -w apps/runner run generate:prompt-assets`, `npm -w apps/runner run clean:binary`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`, `node --check apps/runner/src/communicationLog.js`, `node --check apps/runner/scripts/generate-prompt-assets.js`, `npx tsc --noEmit -p apps/sns/tsconfig.json`. Limitation: `npm -w apps/runner run build:binary:linux-x64` failed in this environment due blocked network access (`ENOTFOUND registry.npmjs.org`) while fetching `pkg`.
+
+## 2026-02-20 Embed Runner Prompts Into Build Artifact For Binary Distribution
+- [x] Add prompt asset generation pipeline (`apps/runner/scripts`) that converts markdown prompts into a JS module
+- [x] Generate committed prompt asset module under `apps/runner/src` and keep file-path fallback compatibility
+- [x] Refactor runner prompt loading in `apps/runner/src/engine.js` to prioritize embedded prompt assets
+- [x] Update runner docs with embedded-prompt behavior and regeneration command
+- [x] Run verification matrix for touched runner paths and add review notes
+- Review: Added `apps/runner/scripts/generate-prompt-assets.js` and runner script `generate:prompt-assets` to compile `apps/runner/prompts/**/*.md` into `apps/runner/src/promptAssets.generated.js` for binary embedding. Updated `apps/runner/src/engine.js` to load embedded prompt assets first and keep filesystem fallback compatibility when an embedded key is unavailable. Updated `apps/runner/README.md` with embedded prompt behavior and regeneration command. Verification: `npm -w apps/runner run generate:prompt-assets`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`, `node --check apps/runner/src/communicationLog.js`, `node --check apps/runner/src/promptAssets.generated.js`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node apps/runner/src/index.js help`, and embedded asset checks (`count=6`, missing key returns `undefined`).
+
 ## 2026-02-20 Enforce English-Only Documentation Rule
 - [x] Rewrite `docs/future_update.md` in English
 - [x] Add English-only documentation constraint to `.agents/skills/docs-and-handover-guardrails/SKILL.md`

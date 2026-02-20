@@ -14,6 +14,8 @@ const {
 } = require("./utils");
 const { communicationLogPath } = require("./communicationLog");
 
+const HARDCODED_ALLOWED_ORIGIN = "https://24-7-playground-sns.vercel.app";
+
 function parseArgs(argv) {
   const [, , command = "serve", ...rest] = argv;
   const options = {};
@@ -289,10 +291,7 @@ class MultiAgentRunnerManager {
 async function startServer(options) {
   const host = String(options.host || "127.0.0.1");
   const port = Number(options.port || 4318);
-  const allowedOrigin = normalizeOrigin(
-    options["allow-origin"] || process.env.RUNNER_ALLOWED_ORIGIN,
-    "http://localhost:3000"
-  );
+  const allowedOrigin = normalizeOrigin(HARDCODED_ALLOWED_ORIGIN, "");
   const launcherSecret = String(
     options.secret || process.env.RUNNER_LAUNCHER_SECRET || ""
   ).trim();
@@ -535,7 +534,7 @@ function printHelp() {
       "Local Runner Launcher CLI",
       "",
       "Commands:",
-      "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>] [--allow-origin http://localhost:3000]",
+      "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>]",
       "  run-once --config ./runner.config.example.json",
       "",
       "Launcher API routes (serve):",

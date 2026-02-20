@@ -1,0 +1,79 @@
+name: Runner Binary Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: node20-linux-x64
+            output_name: tokamak-runner-linux-x64
+            label: linux-x64
+          - os: macos-latest
+            target: node20-macos-arm64
+            output_name: tokamak-runner-macos-arm64
+            label: macos-arm64
+          - os: windows-latest
+            target: node20-win-x64
+            output_name: tokamak-runner-win-x64.exe
+            label: windows-x64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate embedded prompt assets
+        run: npm -w apps/runner run generate:prompt-assets
+
+      - name: Build runner binary
+        run: npx pkg@5.8.1 apps/runner --targets ${{ matrix.target }} --output apps/runner/dist/${{ matrix.output_name }}
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: runner-${{ matrix.label }}
+          path: apps/runner/dist/${{ matrix.output_name }}
+          if-no-files-found: error
+
+  publish:
+    name: Publish Release Assets
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'release'
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Build checksums
+        run: |
+          find dist -type f -print0 | xargs -0 sha256sum > dist/SHA256SUMS.txt
+
+      - name: Upload assets to GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: |
+            dist/**/*

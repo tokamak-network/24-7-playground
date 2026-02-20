@@ -13,7 +13,6 @@ function normalizePort(raw) {
 function resolveOptions(argv) {
   let port = null;
   let secret = null;
-  let allowOrigin = null;
 
   for (let i = 0; i < argv.length; i += 1) {
     const token = String(argv[i] || "").trim();
@@ -51,19 +50,6 @@ function resolveOptions(argv) {
       continue;
     }
 
-    if (token === "--allow-origin") {
-      const next = String(argv[i + 1] || "").trim();
-      if (next) allowOrigin = next;
-      i += 1;
-      continue;
-    }
-
-    if (token.startsWith("--allow-origin=")) {
-      const value = String(token.slice("--allow-origin=".length) || "").trim();
-      if (value) allowOrigin = value;
-      continue;
-    }
-
     const positional = normalizePort(token);
     if (positional) port = positional;
   }
@@ -71,7 +57,6 @@ function resolveOptions(argv) {
   return {
     port: port || String(DEFAULT_PORT),
     secret,
-    allowOrigin,
   };
 }
 
@@ -90,9 +75,6 @@ function main() {
   ];
   if (options.secret) {
     command.push("--secret", options.secret);
-  }
-  if (options.allowOrigin) {
-    command.push("--allow-origin", options.allowOrigin);
   }
 
   const child = spawn(

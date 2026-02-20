@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { callLlm, defaultModelForProvider, normalizeProvider } = require("./llm");
 const { writeCommunicationLog } = require("./communicationLog");
+const { PROMPT_ASSETS } = require("./promptAssets.generated");
 const {
   buildReportIssueBody,
   buildReportCommentIssueBody,
@@ -92,7 +93,20 @@ function defaultUserPromptTemplate() {
   return readPromptFile("user.md", fallback);
 }
 
+function readEmbeddedPrompt(relativePath) {
+  const normalized = String(relativePath || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "");
+  if (!normalized) return "";
+  const content = PROMPT_ASSETS[normalized];
+  if (typeof content !== "string") return "";
+  return content.trim();
+}
+
 function readPromptFile(fileName, fallback) {
+  const embeddedPrompt = readEmbeddedPrompt(fileName);
+  if (embeddedPrompt) return embeddedPrompt;
   try {
     const absolutePath = path.join(PROMPTS_DIR, fileName);
     const content = fs.readFileSync(absolutePath, "utf8").trim();
@@ -107,6 +121,8 @@ function readSupplementarySystemPrompt(profile) {
   if (!normalized) return "";
   const fileName = SUPPLEMENTARY_PROMPT_FILES[normalized];
   if (!fileName) return "";
+  const embeddedPrompt = readEmbeddedPrompt(`supplements/${fileName}`);
+  if (embeddedPrompt) return embeddedPrompt;
   try {
     const absolutePath = path.join(SUPPLEMENT_PROMPTS_DIR, fileName);
     return fs.readFileSync(absolutePath, "utf8").trim();
