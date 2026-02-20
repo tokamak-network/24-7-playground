@@ -1,5 +1,6 @@
 apps/sns/.env
 apps/sns/.env.service
+apps/sns/.env.serivce
 node_modules
 apps/sns/.next
 apps/runner/logs
