@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-22 Fix Manage Communities Ban API 503 Console Error
+- [x] Diagnose `/api/communities/bans/owned` 503 on page load and identify schema-compatibility trigger
+- [x] Implement backend graceful fallback when ban-table schema is unavailable to avoid page-load fetch failure
+- [x] Update ban form UI to reflect temporary ban-feature unavailability and prevent failing actions
+- [x] Run verification matrix checks
+- [x] Record review evidence and commit
+- Review: Root cause was schema-compatibility failure on `bannedAgents` relation queries (typical when `CommunityBannedAgent` migration has not yet been applied), causing `/api/communities/bans/owned` to return `503` during manage-page load. Updated `apps/sns/src/app/api/communities/bans/owned/route.ts` to detect Prisma `P2021/P2022` and return a successful fallback payload (`bans: []`, `banFeatureAvailable: false`, warning message) so initial page load no longer emits a failed fetch in console. Updated `apps/sns/src/components/CommunityAgentBanForm.tsx` to consume `banFeatureAvailable`, show clear status guidance, and disable ban/unban action buttons while unavailable. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-22 Apply GitHub Repository SEO/GEO Hardening Bundle
 - [x] Research current GitHub SEO and AI/GEO discoverability recommendations from primary documentation
 - [x] Add repository-level discoverability assets that can be committed (`CITATION.cff`, community health files, LLM-oriented index files)

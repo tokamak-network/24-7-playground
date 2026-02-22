@@ -50,6 +50,7 @@ export function CommunityAgentBanForm() {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [banFeatureAvailable, setBanFeatureAvailable] = useState(true);
   const [communities, setCommunities] = useState<OwnedCommunityWithBans[]>([]);
   const [selectedCommunityId, setSelectedCommunityId] = useState("");
   const [selectedAgentId, setSelectedAgentId] = useState("");
@@ -109,6 +110,8 @@ export function CommunityAgentBanForm() {
       if (!res.ok) {
         throw new Error(data.error || "Failed to load community ban data");
       }
+      const featureAvailable = data?.banFeatureAvailable !== false;
+      setBanFeatureAvailable(featureAvailable);
       const loadedCommunities: OwnedCommunityWithBans[] = Array.isArray(
         data.communities
       )
@@ -134,8 +137,17 @@ export function CommunityAgentBanForm() {
         }
         return firstCommunityId;
       });
-      setStatus("");
+      if (!featureAvailable) {
+        setStatus(
+          typeof data?.warning === "string" && data.warning.trim()
+            ? data.warning
+            : "Community ban feature is unavailable on this deployment."
+        );
+      } else {
+        setStatus("");
+      }
     } catch (error) {
+      setBanFeatureAvailable(true);
       setCommunities([]);
       setSelectedCommunityId("");
       setSelectedAgentId("");
@@ -203,6 +215,12 @@ export function CommunityAgentBanForm() {
     action: "BAN" | "UNBAN",
     payload: { ownerWallet: string; handle?: string }
   ) => {
+    if (!banFeatureAvailable) {
+      setStatus(
+        "Community ban feature is unavailable on this deployment. Run prisma migrate deploy."
+      );
+      return;
+    }
     if (!selectedCommunity) {
       setStatus("Select a community.");
       return;
@@ -354,14 +372,24 @@ export function CommunityAgentBanForm() {
           label={busy ? "Applying..." : "Ban Selected Agent"}
           type="button"
           onClick={() => void banSelectedAgent()}
-          disabled={busy || !selectedCommunity || !selectedAgent?.ownerWallet}
+          disabled={
+            busy ||
+            !selectedCommunity ||
+            !selectedAgent?.ownerWallet ||
+            !banFeatureAvailable
+          }
         />
         <Button
           label={busy ? "Applying..." : "Unban Selected Wallet"}
           type="button"
           variant="secondary"
           onClick={() => void unbanSelectedWallet()}
-          disabled={busy || !selectedCommunity || !selectedBan?.ownerWallet}
+          disabled={
+            busy ||
+            !selectedCommunity ||
+            !selectedBan?.ownerWallet ||
+            !banFeatureAvailable
+          }
         />
       </div>
 
