@@ -34,24 +34,36 @@ function stripCodeFences(text) {
 
 function extractFromFencedBlocks(rawInput) {
   const raw = String(rawInput || "");
-  const fencePattern = /```(?:json)?\s*([\s\S]*?)```/gi;
-  let fallback = "";
+  const fencePattern = /```([a-zA-Z0-9_-]+)?\s*([\s\S]*?)```/g;
+  const candidates = [];
   let match = fencePattern.exec(raw);
   while (match) {
-    const snippet = String(match[1] || "").trim();
+    const language = String(match[1] || "")
+      .trim()
+      .toLowerCase();
+    const snippet = String(match[2] || "").trim();
     if (snippet) {
-      try {
-        JSON.parse(snippet);
-        return snippet;
-      } catch {
-        if (!fallback) {
-          fallback = snippet;
-        }
-      }
+      candidates.push({ language, snippet });
     }
     match = fencePattern.exec(raw);
   }
-  return fallback;
+  return candidates;
+}
+
+function selectBestEffortFencedCandidate(candidates) {
+  if (!Array.isArray(candidates) || !candidates.length) return "";
+  const jsonTagged = candidates.find(
+    (candidate) => candidate && candidate.language === "json" && candidate.snippet
+  );
+  if (jsonTagged) return jsonTagged.snippet;
+  const likelyDecision = candidates.find(
+    (candidate) =>
+      candidate &&
+      typeof candidate.snippet === "string" &&
+      /"action"\s*:|communitySlug|threadId|threadType/.test(candidate.snippet)
+  );
+  if (likelyDecision) return likelyDecision.snippet;
+  return "";
 }
 
 function extractBracketEnvelope(rawInput) {
@@ -71,15 +83,90 @@ function extractBracketEnvelope(rawInput) {
   return raw.slice(start, end + 1).trim();
 }
 
+function looksLikeJsonStart(rawInput, startIndex) {
+  const raw = String(rawInput || "");
+  const token = raw[startIndex];
+  if (token !== "{" && token !== "[") return false;
+
+  let cursor = startIndex + 1;
+  while (cursor < raw.length && /\s/.test(raw[cursor])) {
+    cursor += 1;
+  }
+  if (cursor >= raw.length) return false;
+  const next = raw[cursor];
+
+  if (token === "{") {
+    return next === "\"" || next === "}" || next === "[";
+  }
+  if (token === "[") {
+    return (
+      next === "{" ||
+      next === "[" ||
+      next === "]" ||
+      next === "\"" ||
+      next === "-" ||
+      (next >= "0" && next <= "9") ||
+      next === "t" ||
+      next === "f" ||
+      next === "n"
+    );
+  }
+  return false;
+}
+
+function extractBalancedJsonSnippet(rawInput, startIndex) {
+  const raw = String(rawInput || "");
+  if (startIndex < 0 || startIndex >= raw.length) return "";
+  const opener = raw[startIndex];
+  const closer = opener === "{" ? "}" : opener === "[" ? "]" : "";
+  if (!closer) return "";
+
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+
+  for (let i = startIndex; i < raw.length; i += 1) {
+    const ch = raw[i];
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (ch === "\\") {
+        escape = true;
+      } else if (ch === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === "\"") {
+      inString = true;
+      continue;
+    }
+    if (ch === opener) {
+      depth += 1;
+      continue;
+    }
+    if (ch === closer) {
+      depth -= 1;
+      if (depth === 0) {
+        return raw.slice(startIndex, i + 1).trim();
+      }
+    }
+  }
+  return "";
+}
+
 function extractJsonPayload(text) {
   const input = String(text || "").trim();
   if (!input) {
     throw new Error("Empty LLM output");
   }
   const raw = stripCodeFences(input);
-  const fencedCandidate = extractFromFencedBlocks(input);
+  const fencedBlocks = extractFromFencedBlocks(input);
+  const fencedCandidates = fencedBlocks.map((candidate) => candidate.snippet);
+  const bestEffortFenced = selectBestEffortFencedCandidate(fencedBlocks);
   const preflightCandidates = Array.from(
-    new Set([raw, fencedCandidate].map((value) => String(value || "").trim()))
+    new Set([...fencedCandidates, raw].map((value) => String(value || "").trim()))
   ).filter(Boolean);
 
   for (const candidate of preflightCandidates) {
@@ -91,34 +178,45 @@ function extractJsonPayload(text) {
     }
   }
 
-  const candidateStarts = ["{", "["]
-    .map((token) => raw.indexOf(token))
-    .filter((idx) => idx >= 0)
-    .sort((a, b) => a - b);
-
-  if (!candidateStarts.length) {
-    throw new Error("No JSON object/array found in LLM output");
-  }
-
-  for (const start of candidateStarts) {
-    for (let end = raw.length; end > start; end -= 1) {
-      const snippet = raw.slice(start, end).trim();
-      if (!snippet) continue;
-      try {
-        JSON.parse(snippet);
-        return snippet;
-      } catch {
-        // keep scanning
-      }
+  const candidateStarts = [];
+  for (let i = 0; i < raw.length; i += 1) {
+    const ch = raw[i];
+    if ((ch === "{" || ch === "[") && looksLikeJsonStart(raw, i)) {
+      candidateStarts.push(i);
     }
   }
 
-  const envelope = extractBracketEnvelope(raw);
-  if (envelope) {
-    return envelope;
+  if (!candidateStarts.length) {
+    if (bestEffortFenced) {
+      return bestEffortFenced;
+    }
+    throw new Error("No JSON object/array found in LLM output");
   }
 
-  throw new Error("Failed to extract valid JSON from LLM output");
+  let bestEffortRaw = "";
+  for (const start of candidateStarts) {
+    const snippet = extractBalancedJsonSnippet(raw, start);
+    if (!snippet) continue;
+    if (!bestEffortRaw) {
+      bestEffortRaw = snippet;
+    }
+    try {
+      JSON.parse(snippet);
+      return snippet;
+    } catch {
+      // keep scanning
+    }
+  }
+
+  if (bestEffortFenced) {
+    return bestEffortFenced;
+  }
+  if (bestEffortRaw) {
+    return bestEffortRaw;
+  }
+  const envelope = extractBracketEnvelope(raw);
+  if (envelope) return envelope;
+  throw new Error("No JSON object/array found in LLM output");
 }
 
 function toErrorMessage(error, fallback) {

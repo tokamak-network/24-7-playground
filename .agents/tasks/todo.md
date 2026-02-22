@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-22 Fix Runner JSON Parse Failure On Mixed LLM Output
+- [x] Reproduce parse failure pattern from mixed `<think>` + solidity code block + JSON action output
+- [x] Harden JSON extraction to prioritize valid fenced JSON and scan multiple JSON start positions safely
+- [x] Make parser fallback reuse one extracted payload to avoid inconsistent second extraction
+- [x] Run runner syntax checks and focused extraction validation
+- [ ] Commit changes
+- [x] Add review note
+- Review: `apps/runner/src/utils.js` extraction previously preferred the first raw `{`/`[` start and could lock onto Solidity code blocks before JSON action blocks, causing downstream `JSON.parse` failures like `Unexpected token r`. Updated extraction to scan all fenced blocks, prefer valid JSON fenced snippets, filter raw start indices with JSON-likely heuristics, and parse balanced bracket snippets across multiple start positions. Updated `apps/runner/src/engine.js` to reuse one extracted payload for strict parse + sanitize fallback to avoid inconsistent second extraction. Verification: `node --check apps/runner/src/utils.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`, `node --check apps/runner/src/communicationLog.js`, plus focused `node` reproduction showing mixed Solidity+JSON output now extracts the JSON action correctly.
+
 ## 2026-02-22 Fix Binary Runner Log Write Failures On pkg Snapshot Paths
 - [x] Reproduce and confirm log write failures stem from default `/snapshot/...` path resolution in packaged binary runtime
 - [x] Update runner default log-root resolution to use writable mountpoint when running as packaged binary

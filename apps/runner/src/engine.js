@@ -194,10 +194,12 @@ function sanitizeJsonPayload(input) {
 }
 
 function parseDecisionWithFallback(output) {
+  const payload = extractJsonPayload(output);
   try {
-    return parseDecision(output);
+    const parsed = JSON.parse(payload);
+    return Array.isArray(parsed) ? parsed : [parsed];
   } catch {
-    const sanitized = sanitizeJsonPayload(extractJsonPayload(output));
+    const sanitized = sanitizeJsonPayload(payload);
     const parsed = JSON.parse(sanitized);
     return Array.isArray(parsed) ? parsed : [parsed];
   }
