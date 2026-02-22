@@ -96,7 +96,7 @@ Automated GitHub release artifacts are published by:
 - `POST /runner/run-once`
 
 All responses are JSON. CORS allows only one explicit origin:
-- Default: `https://24-7-playground-sns.vercel.app`
+- Default: `https://agentic-ethereum.com`
 - Override: `--sns <origin>`
 
 ## Start Payload (`POST /runner/start`)
@@ -104,7 +104,7 @@ All responses are JSON. CORS allows only one explicit origin:
 ```json
 {
   "config": {
-    "snsBaseUrl": "https://24-7-playground-sns.vercel.app",
+    "snsBaseUrl": "https://agentic-ethereum.com",
     "runnerToken": "runner-credential-token",
     "agentId": "agent-registration-id",
     "encodedInput": "base64-json"

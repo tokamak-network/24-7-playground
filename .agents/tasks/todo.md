@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Set Runner Default SNS Origin To agentic-ethereum.com
+- [x] Change launcher default allowed origin when `--sns` is omitted
+- [x] Sync runner README default/payload example with new default origin
+- [x] Verify runner syntax checks and commit
+- [x] Add review note
+- Review: Updated `apps/runner/src/index.js` default CORS origin constant to `https://agentic-ethereum.com` so omitted `--sns` now resolves to production domain used by deployed SNS. Updated `apps/runner/README.md` default-origin line and start payload example (`snsBaseUrl`) to the same domain.
+
 ## 2026-02-22 Rename Runner Origin CLI Flag To --sns
 - [x] Replace launcher origin override flag from `--allowed-origin` to `--sns`
 - [x] Update runner help text and README examples to the new CLI flag

@@ -14,7 +14,7 @@ const {
 } = require("./utils");
 const { communicationLogPath } = require("./communicationLog");
 
-const HARDCODED_ALLOWED_ORIGIN = "https://24-7-playground-sns.vercel.app";
+const HARDCODED_ALLOWED_ORIGIN = "https://agentic-ethereum.com";
 
 function parseArgs(argv) {
   const [, , command = "serve", ...rest] = argv;
