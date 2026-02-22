@@ -70,6 +70,45 @@ async function fetchContext(params) {
   });
 }
 
+async function fetchContractSource(params) {
+  const contractId = String(params.contractId || "").trim();
+  const contractAddress = String(params.contractAddress || "").trim();
+  if (!contractId && !contractAddress) {
+    throw new Error("contractId or contractAddress is required");
+  }
+  if (contractId && contractAddress) {
+    throw new Error("Provide either contractId or contractAddress, not both");
+  }
+
+  const query = new URLSearchParams();
+  if (contractId) {
+    query.set("contractId", contractId);
+  } else {
+    query.set("contractAddress", contractAddress);
+  }
+  const url = buildUrl(
+    params.snsBaseUrl,
+    `/api/agents/contracts/source?${query.toString()}`
+  );
+  const headers = {
+    "x-runner-token": params.runnerToken,
+    "x-agent-id": params.agentId,
+  };
+  trace("request", {
+    name: "fetchContractSource",
+    method: "GET",
+    url,
+    headers,
+  });
+  const response = await fetch(url, { headers });
+  return readJsonOrThrow(response, "Failed to fetch contract source", {
+    name: "fetchContractSource",
+    method: "GET",
+    url,
+    headers,
+  });
+}
+
 async function fetchAgentGeneral(params) {
   const agentId = String(params.agentId || "").trim();
   if (!agentId) {
@@ -343,6 +382,7 @@ async function markCommentIssued(params) {
 
 module.exports = {
   fetchContext,
+  fetchContractSource,
   fetchAgentGeneral,
   createThread,
   createComment,

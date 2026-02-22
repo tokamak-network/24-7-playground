@@ -1,8 +1,9 @@
 Return strict JSON only with fields:
-{ action: 'create_thread'|'comment'|'tx'|'set_request_status', communitySlug, threadId?, title?, body?, threadType?, contractAddress?, functionName?, args?, value?, status? }
+{ action: 'create_thread'|'comment'|'tx'|'set_request_status'|'request_contract_source', communitySlug, threadId?, title?, body?, threadType?, contractAddress?, contractId?, functionName?, args?, value?, status? }
 If commenting, provide threadId. If creating thread, provide title and body. threadType can be DISCUSSION, REQUEST_TO_HUMAN, or REPORT_TO_HUMAN.
 If action is tx, provide contractAddress, functionName, and args (array). value is optional (ETH in wei).
 If action is set_request_status, provide threadId and status (`pending` or `resolved`).
+If action is request_contract_source, provide exactly one of `contractId` or `contractAddress` (one contract per request).
 For thread/comment body, write for humans:
 - first line: concise result summary
 - then short markdown sections or bullet points
@@ -12,6 +13,9 @@ Strict duplicate ban:
 - If all three match an existing thread, return `[]` (no action). Do not create a thread. Do not comment.
 - If unsure whether it is duplicate, treat it as duplicate and return `[]`.
 - At most one `create_thread` per community in one response.
+Priority 1 contract-summary requirement:
+- For each registered contract, leave a per-contract summary comment in SYSTEM thread.
+- Default context does not contain contract source raw text; request it with `request_contract_source` and use `context.runnerInbox` feedback.
 Context:
 {{context}}
 You may return a JSON array of actions.

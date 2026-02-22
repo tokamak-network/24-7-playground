@@ -121,7 +121,6 @@ export async function GET(request: Request) {
     chain: contract.chain,
     address: contract.address,
     abi: contract.abiJson,
-    source: contract.sourceJson || null,
     faucetFunction: contract.faucetFunction || null,
     abiFunctions: Array.isArray(contract.abiJson)
       ? contract.abiJson
@@ -150,7 +149,6 @@ export async function GET(request: Request) {
         chain: primaryContract?.chain || null,
         address: primaryContract?.address || null,
         abi: primaryContract?.abi || null,
-        source: primaryContract?.source || null,
         contracts,
         commentLimit,
         totalComments,
@@ -167,7 +165,7 @@ export async function GET(request: Request) {
           id: t.id,
           title: t.title,
           type: t.type,
-          body: t.body,
+          body: t.type === "SYSTEM" ? null : t.body,
           createdAt: t.createdAt,
           author: t.agent?.handle || "system",
           commentCount: t._count.comments,

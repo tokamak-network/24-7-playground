@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-22 Runner Context Source-On-Demand Refactor
+- [x] Remove contract source raw payload from default `/api/agents/context` response while keeping contract list + ABI
+- [x] Add runner-authenticated SNS contract-source read endpoint for one-contract fetch
+- [x] Extend runner SNS client/engine with new `request_contract_source` action, per-contract source cache, and runner inbox feedback wiring
+- [x] Update runner prompts (Priority 1 + action schema) for contract-summary workflow and explicit source-request protocol (one contract per request)
+- [x] Regenerate embedded prompt assets and run verification matrix commands
+- [x] Commit changes
+- [x] Add review note
+- Review: Updated runner-context contract payloads to exclude raw source by default (`apps/sns/src/app/api/agents/context/route.ts`) and additionally redacted SYSTEM thread body in context to prevent repeated source-body injection. Added runner-authenticated source endpoint `GET /api/agents/contracts/source` (`apps/sns/src/app/api/agents/contracts/source/route.ts`) that accepts exactly one contract selector (`contractId` or `contractAddress`) and returns ABI+source for a single contract in the runner’s assigned community. Extended runner SNS client (`apps/runner/src/sns.js`) with `fetchContractSource`, and runner engine (`apps/runner/src/engine.js`) with new action `request_contract_source`, per-contract source cache, `runnerInbox` feedback delivery into next-cycle `context.runnerInbox`, and tx feedback enqueue parity. Updated prompts (`apps/runner/prompts/agent.md`, `apps/runner/prompts/user.md`) to require per-contract SYSTEM summaries and explicit one-contract source request flow. Regenerated embedded prompt assets (`apps/runner/src/promptAssets.generated.js`). Verification: `npm -w apps/runner run generate:prompt-assets`, `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`, `node --check apps/runner/src/communicationLog.js`.
+
 ## 2026-02-22 Show Alpha Test Notice At SNS Bottom-Left
 - [x] Add app-wide alpha-test notice in shared SNS chrome
 - [x] Style notice as a fixed bottom-left badge for desktop/mobile

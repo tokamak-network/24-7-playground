@@ -15,6 +15,7 @@ const {
   createComment,
   createThread,
   fetchAgentGeneral,
+  fetchContractSource,
   fetchContext,
   markCommentIssued,
   markThreadIssued,
@@ -31,6 +32,8 @@ const {
 
 const DEFAULT_INTERVAL_SEC = 60;
 const DEFAULT_COMMENT_LIMIT = 50;
+const MAX_RUNNER_INBOX_ITEMS = 10;
+const MAX_CONTRACT_SOURCE_CACHE_ITEMS = 100;
 const PROMPTS_DIR = path.resolve(__dirname, "..", "prompts");
 const SUPPLEMENT_PROMPTS_DIR = path.join(PROMPTS_DIR, "supplements");
 const SUPPLEMENTARY_PROMPT_FILES = Object.freeze({
@@ -77,7 +80,7 @@ function defaultSystemPrompt() {
     "You are a smart contract auditor and beta tester.",
     "Return strict JSON only.",
     "JSON schema:",
-    "{ action: 'create_thread'|'comment'|'tx'|'set_request_status', communitySlug, threadId?, title?, body?, threadType?, contractAddress?, functionName?, args?, value?, status? }",
+    "{ action: 'create_thread'|'comment'|'tx'|'set_request_status'|'request_contract_source', communitySlug, threadId?, title?, body?, threadType?, contractAddress?, contractId?, functionName?, args?, value?, status? }",
     "threadType can be DISCUSSION, REQUEST_TO_HUMAN, or REPORT_TO_HUMAN.",
   ].join("\n");
   return readPromptFile("agent.md", fallback);
@@ -443,6 +446,49 @@ class RunnerEngine {
     };
     this.logAgentId = "";
     this.logAgentHandle = "";
+    this.runnerInbox = [];
+    this.contractSourceCache = new Map();
+  }
+
+  #clearRuntimeCaches() {
+    this.runnerInbox = [];
+    this.contractSourceCache.clear();
+  }
+
+  #enqueueRunnerInbox(payload) {
+    if (!payload || typeof payload !== "object") return;
+    this.runnerInbox.push(toJsonSafe(payload));
+    if (this.runnerInbox.length > MAX_RUNNER_INBOX_ITEMS) {
+      this.runnerInbox = this.runnerInbox.slice(-MAX_RUNNER_INBOX_ITEMS);
+    }
+  }
+
+  #consumeRunnerInbox() {
+    if (!Array.isArray(this.runnerInbox) || !this.runnerInbox.length) {
+      return [];
+    }
+    const queued = this.runnerInbox.slice();
+    this.runnerInbox = [];
+    return queued;
+  }
+
+  #getCachedContractSource(contractId) {
+    const key = String(contractId || "").trim();
+    if (!key) return null;
+    return this.contractSourceCache.get(key) || null;
+  }
+
+  #setCachedContractSource(contractId, payload) {
+    const key = String(contractId || "").trim();
+    if (!key) return;
+    this.contractSourceCache.set(key, toJsonSafe(payload));
+    if (this.contractSourceCache.size <= MAX_CONTRACT_SOURCE_CACHE_ITEMS) {
+      return;
+    }
+    const oldestKey = this.contractSourceCache.keys().next();
+    if (!oldestKey.done) {
+      this.contractSourceCache.delete(oldestKey.value);
+    }
   }
 
   getStatus() {
@@ -458,6 +504,7 @@ class RunnerEngine {
     }
     trace(this.logger, "start:input", { configInput });
     this.config = normalizeConfig(configInput);
+    this.#clearRuntimeCaches();
     this.logAgentId = this.config.agentId;
     this.logAgentHandle = "";
     this.logger = withLoggerAgentId(this.logger, this.logAgentId);
@@ -488,6 +535,7 @@ class RunnerEngine {
       this.timer = null;
     }
     this.state.running = false;
+    this.#clearRuntimeCaches();
     logSummary(this.logger, "runner stopped");
   }
 
@@ -505,6 +553,7 @@ class RunnerEngine {
       prompts: { ...this.config.prompts, ...(patchInput.prompts || {}) },
     };
     this.config = normalizeConfig(merged);
+    this.#clearRuntimeCaches();
     this.logAgentId = this.config.agentId;
     this.logAgentHandle = "";
     this.logger = withLoggerAgentId(this.logger, this.logAgentId);
@@ -621,6 +670,16 @@ class RunnerEngine {
       if (!communities.length) {
         throw new Error("No community assigned for this runner");
       }
+
+      const runnerInbox = this.#consumeRunnerInbox();
+      if (
+        !contextData.context ||
+        typeof contextData.context !== "object" ||
+        Array.isArray(contextData.context)
+      ) {
+        contextData.context = { communities };
+      }
+      contextData.context.runnerInbox = runnerInbox;
 
       const system = composeSystemPrompt(
         defaultSystemPrompt(),
@@ -885,6 +944,186 @@ class RunnerEngine {
           continue;
         }
 
+        if (actionType === "request_contract_source") {
+          const requestedContractId = String(action.contractId || "").trim();
+          const requestedAddress = String(action.contractAddress || "").trim();
+          const communityContracts = Array.isArray(community.contracts)
+            ? community.contracts.filter(
+                (contract) =>
+                  contract &&
+                  typeof contract === "object" &&
+                  (String(contract.id || "").trim() ||
+                    String(contract.address || "").trim())
+              )
+            : [];
+          const selectedContract = requestedContractId
+            ? communityContracts.find(
+                (contract) =>
+                  String(contract.id || "").trim() === requestedContractId
+              ) || null
+            : requestedAddress
+              ? communityContracts.find(
+                  (contract) =>
+                    String(contract.address || "").trim().toLowerCase() ===
+                    requestedAddress.toLowerCase()
+                ) || null
+              : null;
+          const resolvedContractId = String(
+            (selectedContract && selectedContract.id) || requestedContractId || ""
+          ).trim();
+          const resolvedContractAddress = String(
+            (selectedContract && selectedContract.address) || requestedAddress || ""
+          ).trim();
+
+          let feedbackPayload;
+          if (!requestedContractId && !requestedAddress) {
+            feedbackPayload = {
+              type: "contract_source_feedback",
+              communitySlug: community.slug,
+              contractId: null,
+              contractAddress: null,
+              cached: false,
+              result: {
+                ok: false,
+                error: "contractId or contractAddress is required.",
+              },
+            };
+          } else if (requestedContractId && requestedAddress) {
+            feedbackPayload = {
+              type: "contract_source_feedback",
+              communitySlug: community.slug,
+              contractId: null,
+              contractAddress: null,
+              cached: false,
+              result: {
+                ok: false,
+                error:
+                  "Only one contract is allowed per request. Provide either contractId or contractAddress.",
+              },
+            };
+          } else if (!selectedContract) {
+            feedbackPayload = {
+              type: "contract_source_feedback",
+              communitySlug: community.slug,
+              contractId: resolvedContractId || null,
+              contractAddress: resolvedContractAddress || null,
+              cached: false,
+              result: {
+                ok: false,
+                error: "Contract not found in this community context.",
+              },
+            };
+          } else {
+            const cached = this.#getCachedContractSource(resolvedContractId);
+            if (cached) {
+              feedbackPayload = {
+                type: "contract_source_feedback",
+                communitySlug: community.slug,
+                contractId: resolvedContractId || null,
+                contractAddress: resolvedContractAddress || null,
+                cached: true,
+                result: cached,
+              };
+            } else {
+              try {
+                const sourceResponse = await fetchContractSource({
+                  snsBaseUrl: config.snsBaseUrl,
+                  runnerToken: config.runnerToken,
+                  agentId: config.agentId,
+                  contractId: resolvedContractId || undefined,
+                  contractAddress:
+                    resolvedContractId || !resolvedContractAddress
+                      ? undefined
+                      : resolvedContractAddress,
+                });
+                const fetchedContract =
+                  sourceResponse &&
+                  sourceResponse.contract &&
+                  typeof sourceResponse.contract === "object"
+                    ? sourceResponse.contract
+                    : null;
+                const resultPayload = {
+                  ok: true,
+                  contract: {
+                    id: String(
+                      (fetchedContract && fetchedContract.id) || resolvedContractId
+                    ).trim(),
+                    name: String(
+                      (fetchedContract && fetchedContract.name) ||
+                        selectedContract.name ||
+                        ""
+                    ).trim(),
+                    chain: String(
+                      (fetchedContract && fetchedContract.chain) ||
+                        selectedContract.chain ||
+                        ""
+                    ).trim(),
+                    address: String(
+                      (fetchedContract && fetchedContract.address) ||
+                        resolvedContractAddress
+                    ).trim(),
+                  },
+                  source:
+                    fetchedContract && Object.prototype.hasOwnProperty.call(fetchedContract, "source")
+                      ? fetchedContract.source
+                      : null,
+                };
+                this.#setCachedContractSource(resultPayload.contract.id, resultPayload);
+                feedbackPayload = {
+                  type: "contract_source_feedback",
+                  communitySlug: community.slug,
+                  contractId: resultPayload.contract.id || null,
+                  contractAddress: resultPayload.contract.address || null,
+                  cached: false,
+                  result: resultPayload,
+                };
+              } catch (error) {
+                feedbackPayload = {
+                  type: "contract_source_feedback",
+                  communitySlug: community.slug,
+                  contractId: resolvedContractId || null,
+                  contractAddress: resolvedContractAddress || null,
+                  cached: false,
+                  result: {
+                    ok: false,
+                    error: toErrorMessage(
+                      error,
+                      "Failed to fetch contract source from SNS"
+                    ),
+                  },
+                };
+              }
+            }
+          }
+
+          const feedbackSafe = toJsonSafe(feedbackPayload);
+          this.#enqueueRunnerInbox(feedbackSafe);
+          writeCommunicationLog(this.logger, {
+            createdAt: new Date().toISOString(),
+            direction: "runner_to_agent",
+            actionTypes: ["request_contract_source"],
+            agentId: config.agentId,
+            content: JSON.stringify(feedbackSafe, null, 2),
+          });
+          if (feedbackSafe && feedbackSafe.result && feedbackSafe.result.ok) {
+            logSummary(
+              this.logger,
+              `action request_contract_source completed (community=${community.slug}, contractId=${feedbackSafe.contractId || "-"}, cached=${feedbackSafe.cached ? "yes" : "no"})`
+            );
+          } else {
+            logSummary(
+              this.logger,
+              `action request_contract_source failed (community=${community.slug}, reason=${(feedbackSafe && feedbackSafe.result && feedbackSafe.result.error) || "unknown"})`
+            );
+          }
+          executionResults.push({
+            action: "request_contract_source",
+            community: community.slug,
+            result: feedbackSafe,
+          });
+          continue;
+        }
+
         if (actionType === "tx") {
           const requestedAddress = String(action.contractAddress || "").trim();
           const contracts = Array.isArray(community.contracts)
@@ -971,6 +1210,7 @@ class RunnerEngine {
             agentId: config.agentId,
             content: JSON.stringify(feedbackPayload, null, 2),
           });
+          this.#enqueueRunnerInbox(feedbackPayload);
           logSummary(
             this.logger,
             `action tx completed (community=${community.slug}, function=${String(action.functionName || "")})`
