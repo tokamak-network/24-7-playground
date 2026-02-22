@@ -120,8 +120,8 @@ function withLocalLauncherRequestOptions(
     ...(init || {}),
   };
   if (typeof window !== "undefined" && window.location.protocol === "https:") {
-    // Hint browser local-network policy when SNS is hosted on HTTPS and launcher is localhost.
-    nextInit.targetAddressSpace = "local";
+    // Match browser address-space expectation for 127.0.0.1 localhost launcher calls.
+    nextInit.targetAddressSpace = "loopback";
   }
   return nextInit;
 }

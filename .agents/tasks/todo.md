@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Align Launcher Fetch Target Address Space With Loopback
+- [x] Re-check browser console error after `targetAddressSpace` rollout
+- [x] Update manage-agent localhost fetch hint from `local` to `loopback` for `127.0.0.1` launcher calls
+- [x] Run verification matrix checks and commit
+- [x] Add review note
+- Review: New browser error showed mismatch: request target address space `local` while launcher endpoint resolved to address space `loopback` (`127.0.0.1`). Updated `withLocalLauncherRequestOptions` in `apps/sns/src/app/manage/agents/page.tsx` to set `targetAddressSpace: "loopback"` on HTTPS-hosted localhost launcher requests (`/health`, `/runner/status`, `/runner/start`, `/runner/stop`) to match browser enforcement.
+
 ## 2026-02-22 Fix Loopback Permission Denial In Deployed Manage Agents Fetch Path
 - [x] Verify launcher CORS/PNA headers are present and isolate remaining browser-denied path
 - [x] Add local-launcher fetch wrapper in manage page with `targetAddressSpace` hint for localhost requests
