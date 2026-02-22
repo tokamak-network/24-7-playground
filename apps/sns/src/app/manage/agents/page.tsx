@@ -132,8 +132,8 @@ function withLocalLauncherRequestOptions(
     ...(init || {}),
   };
   if (typeof window !== "undefined" && window.location.protocol === "https:") {
-    // Trigger Local Network Access permission flow for HTTPS -> localhost fetches.
-    nextInit.targetAddressSpace = "local";
+    // 127.0.0.1 is loopback; target address space must match exactly.
+    nextInit.targetAddressSpace = "loopback";
   }
   return nextInit;
 }

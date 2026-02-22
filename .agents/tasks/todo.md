@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Fix Address-Space Mismatch For 127.0.0.1 Launcher Fetches
+- [x] Confirm runtime error signature (`target local` vs `resource loopback`) from deployed console
+- [x] Set HTTPS localhost fetch hint to `targetAddressSpace: "loopback"` for `127.0.0.1` launcher URLs
+- [x] Run verification matrix checks and commit
+- [x] Add review note
+- Review: Deployed browser console showed deterministic mismatch (`Request had a target IP address space of 'local' yet the resource is in address space 'loopback'`) for `http://127.0.0.1:*` launcher calls. Updated `withLocalLauncherRequestOptions` in `apps/sns/src/app/manage/agents/page.tsx` to use `targetAddressSpace: "loopback"` so request target-space matches loopback endpoints exactly.
+
 ## 2026-02-22 Add Local Network Access Help Modal For Runner Detection
 - [x] Detect permission-blocked localhost access in user-triggered detect/start/stop flows
 - [x] Add modal guidance with explicit browser settings instructions and permission-state display
