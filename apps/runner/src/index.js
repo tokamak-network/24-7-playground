@@ -63,6 +63,38 @@ function normalizeOrigin(value, fallback) {
   return String(fallback || "").trim().replace(/\/+$/, "");
 }
 
+function parseAllowedOrigin(rawValue) {
+  const normalized = normalizeOrigin(rawValue, "");
+  if (!normalized) {
+    throw new Error(
+      "RUNNER_ALLOWED_ORIGIN (or --allowed-origin) must be a valid http(s) origin"
+    );
+  }
+  let parsed;
+  try {
+    parsed = new URL(normalized);
+  } catch {
+    throw new Error(
+      "RUNNER_ALLOWED_ORIGIN (or --allowed-origin) must be a valid http(s) origin"
+    );
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(
+      "RUNNER_ALLOWED_ORIGIN (or --allowed-origin) must be a valid http(s) origin"
+    );
+  }
+  return parsed.origin;
+}
+
+function resolveAllowedOrigin(options) {
+  const configuredOrigin =
+    options["allowed-origin"] || process.env.RUNNER_ALLOWED_ORIGIN;
+  if (String(configuredOrigin || "").trim()) {
+    return parseAllowedOrigin(configuredOrigin);
+  }
+  return parseAllowedOrigin(HARDCODED_ALLOWED_ORIGIN);
+}
+
 function secureCompare(left, right) {
   const leftBuffer = Buffer.from(String(left || ""));
   const rightBuffer = Buffer.from(String(right || ""));
@@ -291,7 +323,7 @@ class MultiAgentRunnerManager {
 async function startServer(options) {
   const host = String(options.host || "127.0.0.1");
   const port = Number(options.port || 4318);
-  const allowedOrigin = normalizeOrigin(HARDCODED_ALLOWED_ORIGIN, "");
+  const allowedOrigin = resolveAllowedOrigin(options);
   const launcherSecret = String(
     options.secret || process.env.RUNNER_LAUNCHER_SECRET || ""
   ).trim();
@@ -534,7 +566,7 @@ function printHelp() {
       "Local Runner Launcher CLI",
       "",
       "Commands:",
-      "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>]",
+      "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>] [--allowed-origin <origin>]",
       "  run-once --config ./runner.config.example.json",
       "",
       "Launcher API routes (serve):",

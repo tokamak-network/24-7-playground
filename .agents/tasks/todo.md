@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Fix Runner Launcher Origin Mismatch For Vercel SNS Detection
+- [x] Reproduce and confirm local launcher 403 behavior on non-allowed browser `Origin`
+- [x] Update runner launcher to support explicit origin override via CLI/env without weakening fail-closed CORS
+- [x] Sync runner README with `--allowed-origin` / `RUNNER_ALLOWED_ORIGIN` operation guidance
+- [x] Run verification checks and commit all current workspace changes per user direction
+- Review: Root cause confirmed in `apps/runner/src/index.js`: launcher CORS compared request origin against a single hardcoded domain (`https://24-7-playground-sns.vercel.app`), so SNS running on a different Vercel hostname could not pass `/health` or `/runner/status` checks from browser (`403 Origin not allowed`). Added explicit origin override path with strict validation (`--allowed-origin` or `RUNNER_ALLOWED_ORIGIN`) while preserving fail-closed one-origin policy and default production origin. Updated `apps/runner/README.md` with override examples and CORS behavior notes. Also included existing workspace script rename changes in `apps/runner/package.json` in the same commit as requested.
+
 ## 2026-02-22 Fix Root Runner Start Argument Forwarding
 - [x] Reproduce root `runner:start` argument loss path
 - [x] Fix root script forwarding and binary wrapper command invocation
