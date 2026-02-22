@@ -84,6 +84,18 @@ type BubbleMessage = {
   placement: BubblePlacement;
 };
 
+type LocalNetworkPermissionState =
+  | "granted"
+  | "denied"
+  | "prompt"
+  | "unknown";
+
+type LocalNetworkHelpModalState = {
+  open: boolean;
+  permissionState: LocalNetworkPermissionState;
+  launcherPort: string;
+};
+
 type SecurityPasswordMode = "none" | "decrypt" | "encrypt";
 type SupplementaryPromptProfile =
   | ""
@@ -126,9 +138,7 @@ function withLocalLauncherRequestOptions(
   return nextInit;
 }
 
-async function readLocalNetworkPermissionState(): Promise<
-  "granted" | "denied" | "prompt" | "unknown"
-> {
+async function readLocalNetworkPermissionState(): Promise<LocalNetworkPermissionState> {
   if (typeof window === "undefined") return "unknown";
   const permissions = (navigator as Navigator & {
     permissions?: {
@@ -282,6 +292,12 @@ export default function AgentManagementPage() {
   const [runnerRunning, setRunnerRunning] = useState(false);
   const [runnerStatus, setRunnerStatus] = useState("");
   const [bubbleMessage, setBubbleMessage] = useState<BubbleMessage | null>(null);
+  const [localNetworkHelpModal, setLocalNetworkHelpModal] =
+    useState<LocalNetworkHelpModalState>({
+      open: false,
+      permissionState: "unknown",
+      launcherPort: DEFAULT_RUNNER_LAUNCHER_PORT,
+    });
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const authHeaders = useMemo(
@@ -371,6 +387,22 @@ export default function AgentManagementPage() {
     },
     []
   );
+
+  const openLocalNetworkHelpModal = useCallback(
+    (permissionState: LocalNetworkPermissionState, launcherPort?: string) => {
+      const nextPort = String(launcherPort || "").trim() || DEFAULT_RUNNER_LAUNCHER_PORT;
+      setLocalNetworkHelpModal({
+        open: true,
+        permissionState,
+        launcherPort: nextPort,
+      });
+    },
+    []
+  );
+
+  const closeLocalNetworkHelpModal = useCallback(() => {
+    setLocalNetworkHelpModal((prev) => ({ ...prev, open: false }));
+  }, []);
 
   const readError = useCallback(async (response: Response) => {
     const text = await response.text().catch(() => "");
@@ -1084,6 +1116,9 @@ export default function AgentManagementPage() {
         } else {
           setRunnerStatus(`Runner is stopped on localhost:${launcherPort}.`);
         }
+        setLocalNetworkHelpModal((prev) =>
+          prev.open ? { ...prev, open: false } : prev
+        );
 
         return {
           launcherPort,
@@ -1103,6 +1138,13 @@ export default function AgentManagementPage() {
             ? "Browser blocked localhost access. Allow Local Network Access for this site, then retry."
             : "Could not reach local runner launcher. Start apps/runner first.";
         setRunnerStatus(message);
+        if (
+          !options?.silent &&
+          isHttpsPage() &&
+          permissionState !== "granted"
+        ) {
+          openLocalNetworkHelpModal(permissionState, launcherPort);
+        }
         if (!options?.silent) {
           pushBubble("error", message, options?.anchorEl);
         }
@@ -1111,6 +1153,7 @@ export default function AgentManagementPage() {
     },
     [
       fetchLocalLauncher,
+      openLocalNetworkHelpModal,
       pushBubble,
       readError,
       resolveRunnerLauncherPort,
@@ -1170,6 +1213,9 @@ export default function AgentManagementPage() {
           areNumberArraysEqual(prev, matched) ? prev : matched
         );
         if (matched.length) {
+          setLocalNetworkHelpModal((prev) =>
+            prev.open ? { ...prev, open: false } : prev
+          );
           setRunnerLauncherPort((prev) => {
             const current = String(prev || "").trim();
             if (current) return current;
@@ -1189,7 +1235,11 @@ export default function AgentManagementPage() {
         } else if (!options?.silent) {
           setRunnerRunning(false);
           const permissionState = await readLocalNetworkPermissionState();
-          if (permissionState === "denied") {
+          if (isHttpsPage() && permissionState !== "granted") {
+            openLocalNetworkHelpModal(
+              permissionState,
+              String(options?.preferredPort || runnerLauncherPort || "")
+            );
             pushBubble(
               "error",
               "Browser blocked localhost access. Allow Local Network Access for this site, then click Detect Launcher again.",
@@ -1209,7 +1259,7 @@ export default function AgentManagementPage() {
         setDetectRunnerBusy(false);
       }
     },
-    [fetchLocalLauncher, pushBubble]
+    [fetchLocalLauncher, openLocalNetworkHelpModal, pushBubble, runnerLauncherPort]
   );
 
   const startRunnerLauncher = useCallback(async (anchorEl?: HTMLElement | null) => {
@@ -1338,6 +1388,17 @@ export default function AgentManagementPage() {
         silent: true,
       });
       if (!preflightStatus) {
+        if (isHttpsPage()) {
+          const permissionState = await readLocalNetworkPermissionState();
+          if (permissionState !== "granted") {
+            openLocalNetworkHelpModal(permissionState, launcherPort);
+            const message =
+              "Browser blocked localhost access. Allow Local Network Access for this site, then click Detect Launcher again.";
+            setRunnerStatus(message);
+            pushBubble("error", message, anchorEl);
+            return;
+          }
+        }
         const message = "Runner status preflight check failed.";
         setRunnerStatus(message);
         pushBubble("error", message, anchorEl);
@@ -1439,6 +1500,7 @@ export default function AgentManagementPage() {
     llmModel,
     llmProvider,
     liteLlmBaseUrl,
+    openLocalNetworkHelpModal,
     pushBubble,
     readError,
     resolveRunnerLauncherPort,
@@ -1485,6 +1547,17 @@ export default function AgentManagementPage() {
           silent: true,
         });
         if (!preflightStatus) {
+          if (isHttpsPage()) {
+            const permissionState = await readLocalNetworkPermissionState();
+            if (permissionState !== "granted") {
+              openLocalNetworkHelpModal(permissionState, launcherPort);
+              const blockedMessage =
+                "Browser blocked localhost access. Allow Local Network Access for this site, then click Detect Launcher again.";
+              setRunnerStatus(blockedMessage);
+              pushBubble("error", blockedMessage, anchorEl);
+              return;
+            }
+          }
           const message = "Runner status preflight check failed.";
           setRunnerStatus(message);
           pushBubble("error", message, anchorEl);
@@ -1563,6 +1636,7 @@ export default function AgentManagementPage() {
     [
       fetchLocalLauncher,
       fetchRunnerStatus,
+      openLocalNetworkHelpModal,
       pushBubble,
       readError,
       resolveRunnerLauncherPort,
@@ -1701,6 +1775,62 @@ export default function AgentManagementPage() {
           aria-live="polite"
         >
           {bubbleMessage.text}
+        </div>
+      ) : null}
+
+      {localNetworkHelpModal.open ? (
+        <div
+          className="agent-author-modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="local-network-help-title"
+        >
+          <div className="agent-author-modal">
+            <div className="agent-author-modal-header">
+              <h4 id="local-network-help-title">Allow Localhost Access</h4>
+              <button
+                type="button"
+                className="agent-author-modal-close"
+                onClick={closeLocalNetworkHelpModal}
+                aria-label="Close local network access help"
+              >
+                Close
+              </button>
+            </div>
+            <p className="status">
+              Browser permission is blocking access to the local runner launcher.
+            </p>
+            <p className="meta-text">
+              Current Local Network Access permission:{" "}
+              <strong>{localNetworkHelpModal.permissionState}</strong>
+            </p>
+            <p className="meta-text">
+              Open browser site settings for <code>agentic-ethereum.com</code>,
+              set <code>Local network access</code> to <code>Allow</code>, then
+              retry detection.
+            </p>
+            <div className="row wrap">
+              <button
+                type="button"
+                className="button button-secondary"
+                onClick={closeLocalNetworkHelpModal}
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="button"
+                onClick={(event) =>
+                  void detectRunnerLauncherPorts({
+                    preferredPort: localNetworkHelpModal.launcherPort,
+                    anchorEl: event.currentTarget,
+                  })
+                }
+              >
+                Retry Detect Launcher
+              </button>
+            </div>
+          </div>
         </div>
       ) : null}
 

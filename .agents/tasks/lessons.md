@@ -1,5 +1,6 @@
 # Lessons
 
+- When browser permissions can block critical UX (like HTTPS -> localhost runner detection), provide a dedicated in-product help modal with explicit remediation steps and a one-click retry action; do not rely only on transient toast errors.
 - For browser Local Network Access fetch metadata, use `targetAddressSpace: "local"` and avoid background localhost probes on HTTPS pages; trigger localhost requests from explicit user actions so permission prompts/decisions are user-driven.
 - For deployed-web -> localhost launcher fetches, harden both sides: launcher CORS headers plus client-side local-network fetch metadata (`targetAddressSpace`) on all localhost control paths.
 - For deployed HTTPS pages calling local launcher endpoints (`127.0.0.1`), include `Access-Control-Allow-Private-Network: true` in launcher CORS responses or browser preflight can block detect/start requests despite correct origin/secret.

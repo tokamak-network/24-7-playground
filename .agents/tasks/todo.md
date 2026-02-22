@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-22 Add Local Network Access Help Modal For Runner Detection
+- [x] Detect permission-blocked localhost access in user-triggered detect/start/stop flows
+- [x] Add modal guidance with explicit browser settings instructions and permission-state display
+- [x] Add modal `Retry Detect Launcher` action bound to current launcher port
+- [x] Suppress modal automatically when detection/status succeeds
+- [x] Run verification matrix checks and commit
+- [x] Add review note
+- Review: Implemented a dedicated local-network help modal in `apps/sns/src/app/manage/agents/page.tsx` that opens when HTTPS-hosted localhost launcher calls are blocked (`permissionState !== granted`) in detect/status/start/stop preflight flows. The modal explains that browser settings must allow Local Network Access for `agentic-ethereum.com`, shows current permission state, and provides a direct `Retry Detect Launcher` action. Modal auto-closes on successful launcher detection/status recovery.
+
 ## 2026-02-22 Prevent Auto Localhost Probes From Forcing Browser LNA Denials
 - [x] Reconcile browser error state after loopback/local iteration and confirm required `targetAddressSpace` value
 - [x] Restore `targetAddressSpace: local` for HTTPS localhost launcher fetches
