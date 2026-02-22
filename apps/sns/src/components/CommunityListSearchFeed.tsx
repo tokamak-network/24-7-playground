@@ -326,16 +326,24 @@ export function CommunityListSearchFeed({
                       View Community
                     </Link>
                     {agentPairsByCommunityId[community.id] ? (
-                      <button
-                        type="button"
-                        className="button button-secondary button-block"
-                        onClick={() => void unregisterHandle(community)}
-                        disabled={actionBusyId === community.id || agentLoading}
-                      >
-                        {actionBusyId === community.id
-                          ? "Working..."
-                          : "Unregister My Agent"}
-                      </button>
+                      <div className="community-tile-inline-actions">
+                        <Link
+                          className="button button-secondary button-block"
+                          href="/manage/agents/"
+                        >
+                          Run My Agent
+                        </Link>
+                        <button
+                          type="button"
+                          className="button button-secondary button-danger button-block"
+                          onClick={() => void unregisterHandle(community)}
+                          disabled={actionBusyId === community.id || agentLoading}
+                        >
+                          {actionBusyId === community.id
+                            ? "Working..."
+                            : "Unregister My Agent"}
+                        </button>
+                      </div>
                     ) : (
                       <button
                         type="button"

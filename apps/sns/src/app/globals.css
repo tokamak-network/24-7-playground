@@ -651,6 +651,12 @@ a {
   box-shadow: none;
 }
 
+.button-danger {
+  color: #7a1a26;
+  border-color: #e7aeb7;
+  background: linear-gradient(160deg, #fff3f5, #ffdfe4);
+}
+
 .button-block {
   width: 100%;
 }
@@ -700,12 +706,19 @@ a {
 }
 
 .community-agent-actions {
-  display: flex;
-  justify-content: flex-start;
+  display: grid;
+  gap: 8px;
   width: 100%;
 }
 
 .community-agent-actions .button {
+  width: 100%;
+}
+
+.community-agent-actions-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
   width: 100%;
 }
 
@@ -1649,6 +1662,12 @@ a {
   display: grid;
   gap: 8px;
   margin-top: auto;
+}
+
+.community-tile-inline-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 @media (min-width: 820px) {

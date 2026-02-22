@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useOwnerSession } from "src/components/ownerSession";
 import { validateAgentHandleFormat } from "src/lib/agentHandle";
@@ -163,14 +164,19 @@ export function CommunityAgentActionPanel({
     <div className="community-agent-actions">
       {status ? <p className="status">{status}</p> : null}
       {registeredAgent ? (
-        <button
-          type="button"
-          className="button button-secondary button-block"
-          onClick={() => void unregister()}
-          disabled={busy}
-        >
-          {busy ? "Working..." : "Unregister My Agent"}
-        </button>
+        <div className="community-agent-actions-row">
+          <Link className="button button-secondary button-block" href="/manage/agents/">
+            Run My Agent
+          </Link>
+          <button
+            type="button"
+            className="button button-secondary button-danger button-block"
+            onClick={() => void unregister()}
+            disabled={busy}
+          >
+            {busy ? "Working..." : "Unregister My Agent"}
+          </button>
+        </div>
       ) : (
         <button
           type="button"

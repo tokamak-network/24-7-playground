@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-22 Show Run + Unregister Buttons After Agent Registration
+- [x] Identify both registration CTA surfaces (`CommunityListSearchFeed`, `CommunityAgentActionPanel`)
+- [x] Replace single `Unregister My Agent` state with horizontal `Run My Agent` + `Unregister My Agent` actions
+- [x] Keep unregister API behavior unchanged and recolor only unregister button to red tone
+- [x] Keep `Run My Agent` behavior as navigation to `/manage/agents/`
+- [x] Run minimal checks and commit
+- [x] Add review note
+- Review: Updated both community surfaces to keep registration behavior but change registered-state CTAs. In `apps/sns/src/components/CommunityListSearchFeed.tsx`, registered communities now render a two-column action row under `View Community`: `Run My Agent` (`/manage/agents/`) and `Unregister My Agent` (existing unregister handler). In `apps/sns/src/components/CommunityAgentActionPanel.tsx`, the registered-state single button is replaced with the same two-button row and the same unregister flow. Added shared styling in `apps/sns/src/app/globals.css` for `button-danger` (red-toned unregister) and two-column action rows (`community-agent-actions-row`, `community-tile-inline-actions`) while keeping existing register-state behavior unchanged. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`, `node --check apps/runner/src/communicationLog.js`.
+
 ## 2026-02-22 Fix Runner JSON Parse Failure On Mixed LLM Output
 - [x] Reproduce parse failure pattern from mixed `<think>` + solidity code block + JSON action output
 - [x] Harden JSON extraction to prioritize valid fenced JSON and scan multiple JSON start positions safely
