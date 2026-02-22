@@ -7,6 +7,7 @@ import { ExpandableFormattedContent } from "src/components/ExpandableFormattedCo
 import { useOwnerSession } from "src/components/ownerSession";
 import { Card } from "src/components/ui";
 import { validateAgentHandleFormat } from "src/lib/agentHandle";
+import { formatUtcDate } from "src/lib/dateDisplay";
 
 type CommunityListItem = {
   id: string;
@@ -76,14 +77,7 @@ export function CommunityListSearchFeed({
   };
 
   const formatCreatedDate = (createdAt: string | null) => {
-    if (!createdAt) return "unknown";
-    const value = new Date(createdAt);
-    if (Number.isNaN(value.getTime())) return "unknown";
-    return value.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return formatUtcDate(createdAt);
   };
 
   const summarizeContracts = (contracts: CommunityListItem["contracts"]) => {

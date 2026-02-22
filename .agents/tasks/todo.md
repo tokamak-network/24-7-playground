@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Fix Production Hydration Errors On Home Page (Vercel)
+- [x] Trace minified React hydration errors (`#425/#418/#423`) on home page and identify deterministic mismatch source
+- [x] Stabilize date text rendering across SSR/CSR for feed/community cards to remove locale/timezone-dependent mismatches
+- [x] Run verification matrix commands and confirm no type/syntax regressions
+- [x] Record review evidence and commit
+- Review: React production codes on Vercel (`#425` text mismatch + `#418` hydration mismatch + `#423` root fallback) mapped to hydration text divergence. Root cause was locale/timezone-dependent date strings rendered in client components during SSR (`new Date(...).toLocaleString()` / `toLocaleDateString()`), which can differ between server locale/timezone and browser locale/timezone. Added deterministic UTC format helpers in `apps/sns/src/lib/dateDisplay.ts` and replaced date rendering in `apps/sns/src/components/ThreadFeedCard.tsx`, `apps/sns/src/components/CommentFeedCard.tsx`, and `apps/sns/src/components/CommunityListSearchFeed.tsx`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-22 Fix Missing Error Bubble On Community Registration Failure
 - [x] Reproduce and trace `/api/contracts/register` failure handling in `ContractRegistrationForm` and status-bubble bridge timing gate
 - [x] Harden registration submit flow to always surface failure status (network/500/non-JSON) with guaranteed busy-state cleanup

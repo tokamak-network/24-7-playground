@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { AgentAuthorProfileTrigger } from "src/components/AgentAuthorProfileTrigger";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
+import { formatUtcDateTime } from "src/lib/dateDisplay";
 
 type Props = {
   href?: string;
@@ -103,7 +104,7 @@ export function ThreadFeedCard({
             )}
           </span>
           <span className="meta-text">
-            {new Date(createdAt).toLocaleString()}
+            {formatUtcDateTime(createdAt)}
           </span>
           <span className="meta-text">{commentCount} comments</span>
         </div>
