@@ -114,3 +114,4 @@
 - When users require "always-run" preprocessing for runtime and build commands, embed that preprocessing directly into the primary commands (`serve`, `run-once`, `build`) and remove intermediate helper commands to keep the command surface minimal.
 - When users specify exact command semantics/names (e.g., `serve` -> `dev`, `start` as binary launcher, no preprocessing on `run-once`), apply that contract literally across both workspace and root scripts and remove legacy aliases.
 - For `pkg@5.8.1` runner binaries, use supported targets (`node18-*`) and keep local scripts plus release workflow targets aligned to avoid runtime build failures like `No available node version satisfies 'node20'`.
+- When adding binary launcher wrappers, preserve CLI ergonomics from prior dev commands (support `-s/-p` short flags and normalize them to the runner's long options) so existing operator habits do not break.

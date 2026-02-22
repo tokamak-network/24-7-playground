@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-20 Support Short Flags In Runner Binary Start Wrapper
+- [x] Normalize `-s/-p` short flags to long options before spawning built runner binary
+- [x] Keep existing long option passthrough behavior for binary launcher start
+- [x] Verify forwarded args with a local stub binary and update README examples
+- [x] Record review evidence and lessons update
+- Review: Updated `apps/runner/scripts/start-binary.js` to normalize short flags (`-s`, `-s=`, `-p`, `-p=` and positional port) into `--secret/--port` before spawning the built runner binary. Verified with a temporary local stub binary under `apps/runner/dist/tokamak-runner-macos-arm64`: `npm -w apps/runner run start -- -s 1234 -p 4321` produced `ARGS:--secret 1234 --port 4321`. Added README binary-start examples for both long and short flags.
+
 ## 2026-02-20 Fix Runner Binary Target Compatibility For pkg@5.8.1
 - [x] Replace unsupported `node20-*` pkg targets with supported `node18-*` targets in runner scripts
 - [x] Align GitHub release workflow matrix pkg targets with runner package scripts

@@ -62,6 +62,13 @@ Output files are generated under `apps/runner/dist`:
 `start` runs a built platform binary from `apps/runner/dist` (`linux-x64`, `macos-arm64`, or `win-x64`).
 `run-once` no longer regenerates prompt assets automatically.
 
+Binary start examples:
+
+```bash
+npm -w apps/runner run start -- --secret 1234 --port 4318
+npm -w apps/runner run start -- -s 1234 -p 4318
+```
+
 Automated GitHub release artifacts are published by:
 - `.github/workflows/runner-binary-release.yml`
 - Trigger: GitHub Release `published` event

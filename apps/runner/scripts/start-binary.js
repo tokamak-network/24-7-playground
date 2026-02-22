@@ -9,6 +9,67 @@ const { spawn } = require("node:child_process");
 const RUNNER_ROOT = path.resolve(__dirname, "..");
 const DIST_DIR = path.join(RUNNER_ROOT, "dist");
 
+function normalizePort(raw) {
+  const parsed = Number(String(raw || "").trim());
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return String(Math.floor(parsed));
+}
+
+function normalizeForwardArgs(argv) {
+  const input = Array.isArray(argv) ? argv : [];
+  const output = [];
+
+  for (let i = 0; i < input.length; i += 1) {
+    const token = String(input[i] || "").trim();
+    if (!token) continue;
+
+    if (token === "-s") {
+      output.push("--secret");
+      const next = String(input[i + 1] || "").trim();
+      if (next) {
+        output.push(next);
+        i += 1;
+      }
+      continue;
+    }
+
+    if (token.startsWith("-s=")) {
+      const value = String(token.slice("-s=".length) || "").trim();
+      if (value) {
+        output.push("--secret", value);
+      }
+      continue;
+    }
+
+    if (token === "-p") {
+      const next = normalizePort(input[i + 1]);
+      if (next) {
+        output.push("--port", next);
+        i += 1;
+      }
+      continue;
+    }
+
+    if (token.startsWith("-p=")) {
+      const value = normalizePort(token.slice("-p=".length));
+      if (value) {
+        output.push("--port", value);
+      }
+      continue;
+    }
+
+    const positionalPort = normalizePort(token);
+    if (positionalPort) {
+      output.push("--port", positionalPort);
+      continue;
+    }
+
+    output.push(token);
+  }
+
+  return output;
+}
+
 function resolveBinaryName() {
   if (process.platform === "linux" && process.arch === "x64") {
     return "tokamak-runner-linux-x64";
@@ -33,7 +94,7 @@ function main() {
     );
   }
 
-  const args = process.argv.slice(2);
+  const args = normalizeForwardArgs(process.argv.slice(2));
   const child = spawn(binaryPath, args, { stdio: "inherit" });
   child.on("exit", (code, signal) => {
     if (signal) {
