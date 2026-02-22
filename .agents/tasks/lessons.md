@@ -1,5 +1,6 @@
 # Lessons
 
+- For root workspace proxy commands that operators pass runtime flags into (`runner:serve`, `runner:start`), always include the forwarding delimiter in the script itself (`... run <script> --`) so a single `npm run <cmd> -- <flags>` works reliably.
 - If you pause due to unexpected pre-existing diffs, and the user explicitly authorizes including all changes, proceed with implementation and commit the full working tree in the same turn.
 - For root workspace proxy scripts that must forward CLI args (especially short flags like `-s`), include a trailing `--` in the npm script and ensure binary wrappers pass the expected subcommand (e.g., `serve`) before options.
 - To avoid misleading Prisma CLI logs about `apps/sns/.env`, run service-DB migration/status commands from repo root with explicit `--schema=apps/sns/db/prisma/schema.prisma` and injected `DATABASE_URL`.

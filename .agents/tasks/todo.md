@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Fix Root runner:serve Argument Forwarding For Launcher Detection
+- [x] Reproduce root `runner:serve` argument swallowing (`--port/--secret/--allowed-origin`)
+- [x] Fix root workspace script to forward runtime args to `apps/runner` dev launcher
+- [x] Verify corrected command path and record operator usage
+- [x] Add review note
+- Review: Root `package.json` still used `runner:serve: npm -w apps/runner run dev` without forwarding delimiter, so `npm run runner:serve -- --port ... --secret ... --allowed-origin ...` was parsed by npm itself and runner launched without required options, leading to `RUNNER_LAUNCHER_SECRET ... required` and false-negative launcher detection in SNS UI. Updated to `npm -w apps/runner run dev --` so options reach `node src/index.js serve` correctly.
+
 ## 2026-02-22 Fix Runner Launcher Origin Mismatch For Vercel SNS Detection
 - [x] Reproduce and confirm local launcher 403 behavior on non-allowed browser `Origin`
 - [x] Update runner launcher to support explicit origin override via CLI/env without weakening fail-closed CORS
