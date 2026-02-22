@@ -46,6 +46,8 @@ function toInputJson(value: unknown): Prisma.InputJsonValue {
 }
 
 const SEPOLIA_CHAIN = "Sepolia";
+const REGISTER_TX_MAX_WAIT_MS = 10_000;
+const REGISTER_TX_TIMEOUT_MS = 60_000;
 
 function detectFaucet(abi: unknown) {
   if (!Array.isArray(abi)) {
@@ -431,60 +433,66 @@ export async function POST(request: Request) {
       )
     : null;
 
-  const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    let community = matchedCommunity;
+  const result = await prisma.$transaction(
+    async (tx: Prisma.TransactionClient) => {
+      let community = matchedCommunity;
 
-    if (!community) {
-      community = await tx.community.create({
-        data: {
-          name: serviceName,
-          slug: String(uniqueSlug || ""),
-          description: descriptionInput || fallbackDescription,
-          ownerWallet,
-          githubRepositoryUrl,
-        },
-      });
-    } else {
-      const updateData: {
-        ownerWallet?: string;
-        description?: string;
-        githubRepositoryUrl?: string | null;
-      } = {};
+      if (!community) {
+        community = await tx.community.create({
+          data: {
+            name: serviceName,
+            slug: String(uniqueSlug || ""),
+            description: descriptionInput || fallbackDescription,
+            ownerWallet,
+            githubRepositoryUrl,
+          },
+        });
+      } else {
+        const updateData: {
+          ownerWallet?: string;
+          description?: string;
+          githubRepositoryUrl?: string | null;
+        } = {};
 
-      if (!community.ownerWallet) {
-        updateData.ownerWallet = ownerWallet;
-      }
-      if (descriptionInput) {
-        updateData.description = descriptionInput;
-      }
-      if (githubRepositoryUrlInput) {
-        updateData.githubRepositoryUrl = githubRepositoryUrl;
+        if (!community.ownerWallet) {
+          updateData.ownerWallet = ownerWallet;
+        }
+        if (descriptionInput) {
+          updateData.description = descriptionInput;
+        }
+        if (githubRepositoryUrlInput) {
+          updateData.githubRepositoryUrl = githubRepositoryUrl;
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          community = await tx.community.update({
+            where: { id: community.id },
+            data: updateData,
+          });
+        }
       }
 
-      if (Object.keys(updateData).length > 0) {
-        community = await tx.community.update({
-          where: { id: community.id },
-          data: updateData,
+      if (resolvedContracts.length) {
+        await tx.serviceContract.createMany({
+          data: resolvedContracts.map((contract) => ({
+            name: contract.name,
+            address: contract.address,
+            chain: contract.chain,
+            communityId: community.id,
+            abiJson: toInputJson(contract.abiJson),
+            sourceJson: toInputJson(contract.sourceInfo),
+            faucetFunction: contract.faucetFunction,
+          })),
         });
       }
-    }
 
-    for (const contract of resolvedContracts) {
-      await tx.serviceContract.create({
-        data: {
-          name: contract.name,
-          address: contract.address,
-          chain: contract.chain,
-          communityId: community.id,
-          abiJson: toInputJson(contract.abiJson),
-          sourceJson: toInputJson(contract.sourceInfo),
-          faucetFunction: contract.faucetFunction,
-        },
-      });
+      return { community };
+    },
+    {
+      maxWait: REGISTER_TX_MAX_WAIT_MS,
+      timeout: REGISTER_TX_TIMEOUT_MS,
     }
-
-    return { community };
-  });
+  );
 
   const allContracts = await prisma.serviceContract.findMany({
     where: { communityId: result.community.id },
