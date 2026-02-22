@@ -1,5 +1,6 @@
 # Lessons
 
+- For deployed-web -> localhost launcher fetches, harden both sides: launcher CORS headers plus client-side local-network fetch metadata (`targetAddressSpace`) on all localhost control paths.
 - For deployed HTTPS pages calling local launcher endpoints (`127.0.0.1`), include `Access-Control-Allow-Private-Network: true` in launcher CORS responses or browser preflight can block detect/start requests despite correct origin/secret.
 - When a user specifies a production default value for runtime behavior (e.g., runner origin), update both code defaults and operator documentation/examples to the same value in one change.
 - When users request a CLI option rename, update executable parsing, help output, and operator docs in the same change so command examples remain runnable.

@@ -109,6 +109,23 @@ const SUPPLEMENTARY_PROMPT_PROFILE_OPTIONS: Array<{
   { value: "scalability-compatibility", label: "Scalability-Compatibility" },
 ];
 
+type LocalLauncherRequestInit = RequestInit & {
+  targetAddressSpace?: string;
+};
+
+function withLocalLauncherRequestOptions(
+  init?: RequestInit
+): LocalLauncherRequestInit {
+  const nextInit: LocalLauncherRequestInit = {
+    ...(init || {}),
+  };
+  if (typeof window !== "undefined" && window.location.protocol === "https:") {
+    // Hint browser local-network policy when SNS is hosted on HTTPS and launcher is localhost.
+    nextInit.targetAddressSpace = "local";
+  }
+  return nextInit;
+}
+
 function areNumberArraysEqual(left: number[], right: number[]) {
   if (left.length !== right.length) return false;
   for (let i = 0; i < left.length; i += 1) {
@@ -311,6 +328,16 @@ export default function AgentManagementPage() {
       bubbleTimerRef.current = setTimeout(() => {
         setBubbleMessage(null);
       }, 3600);
+    },
+    []
+  );
+
+  const fetchLocalLauncher = useCallback(
+    (input: RequestInfo | URL, init?: RequestInit) => {
+      return fetch(
+        input,
+        withLocalLauncherRequestOptions(init) as RequestInit
+      );
     },
     []
   );
@@ -950,7 +977,7 @@ export default function AgentManagementPage() {
         if (selectedAgentId.trim()) {
           statusQuery.set("agentId", selectedAgentId.trim());
         }
-        const response = await fetch(
+        const response = await fetchLocalLauncher(
           `http://127.0.0.1:${launcherPort}/runner/status${
             statusQuery.toString() ? `?${statusQuery.toString()}` : ""
           }`,
@@ -1050,6 +1077,7 @@ export default function AgentManagementPage() {
       }
     },
     [
+      fetchLocalLauncher,
       pushBubble,
       readError,
       resolveRunnerLauncherPort,
@@ -1083,10 +1111,13 @@ export default function AgentManagementPage() {
           const controller = new AbortController();
           const timeout = setTimeout(() => controller.abort(), 800);
           try {
-            const response = await fetch(`http://127.0.0.1:${port}/health`, {
-              method: "GET",
-              signal: controller.signal,
-            });
+            const response = await fetchLocalLauncher(
+              `http://127.0.0.1:${port}/health`,
+              {
+                method: "GET",
+                signal: controller.signal,
+              }
+            );
             if (!response.ok) return null;
             const data = await response.json().catch(() => ({}));
             if (data?.ok) return port;
@@ -1136,7 +1167,7 @@ export default function AgentManagementPage() {
         setDetectRunnerBusy(false);
       }
     },
-    [pushBubble]
+    [fetchLocalLauncher, pushBubble]
   );
 
   const startRunnerLauncher = useCallback(async (anchorEl?: HTMLElement | null) => {
@@ -1299,7 +1330,7 @@ export default function AgentManagementPage() {
         return;
       }
 
-      const response = await fetch(
+      const response = await fetchLocalLauncher(
         `http://127.0.0.1:${launcherPort}/runner/start`,
         {
           method: "POST",
@@ -1357,6 +1388,7 @@ export default function AgentManagementPage() {
     }
   }, [
     authHeaders,
+    fetchLocalLauncher,
     fetchRunnerStatus,
     general?.agent.ownerWallet,
     general?.community?.name,
@@ -1443,7 +1475,7 @@ export default function AgentManagementPage() {
           return;
         }
 
-        const response = await fetch(
+        const response = await fetchLocalLauncher(
           `http://127.0.0.1:${launcherPort}/runner/stop`,
           {
             method: "POST",
@@ -1487,6 +1519,7 @@ export default function AgentManagementPage() {
       }
     },
     [
+      fetchLocalLauncher,
       fetchRunnerStatus,
       pushBubble,
       readError,

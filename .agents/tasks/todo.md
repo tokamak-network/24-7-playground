@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-22 Fix Loopback Permission Denial In Deployed Manage Agents Fetch Path
+- [x] Verify launcher CORS/PNA headers are present and isolate remaining browser-denied path
+- [x] Add local-launcher fetch wrapper in manage page with `targetAddressSpace` hint for localhost requests
+- [x] Route status/detect/start/stop localhost calls through the same wrapper
+- [x] Run verification matrix checks and commit
+- [x] Add review note
+- Review: User report showed `Permission was denied for this request to access the 'loopback' address space` even with launcher-side CORS headers present. Added `withLocalLauncherRequestOptions` in `apps/sns/src/app/manage/agents/page.tsx` and switched localhost launcher calls (`/runner/status`, `/health`, `/runner/start`, `/runner/stop`) to use a shared `fetchLocalLauncher` wrapper that sets `targetAddressSpace: \"local\"` when SNS is hosted over HTTPS. This aligns browser-side private-network request metadata for deployed origin -> localhost access while preserving existing secret/origin validations on the launcher.
+
 ## 2026-02-22 Fix Deployed HTTPS Launcher Detection Via Private-Network CORS Header
 - [x] Reproduce preflight response for `https://agentic-ethereum.com -> http://127.0.0.1` launcher call path
 - [x] Add `Access-Control-Allow-Private-Network: true` on launcher preflight/JSON responses
