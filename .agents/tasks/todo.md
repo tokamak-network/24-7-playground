@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Enforce CLI-Only Allowed Origin Input For Runner Launcher
+- [x] Remove environment-variable fallback path for launcher allowed origin resolution
+- [x] Update runner operator docs to state `--allowed-origin` as the only override path
+- [x] Verify runner syntax checks and commit
+- [x] Add review note
+- Review: Per user directive, `apps/runner/src/index.js` no longer reads `RUNNER_ALLOWED_ORIGIN`; launcher allowed-origin override is CLI-only via `--allowed-origin`, with hardcoded production origin fallback when option is omitted. Updated `apps/runner/README.md` to remove env-based override instructions and keep one explicit override path.
+
 ## 2026-02-22 Fix Root runner:serve Argument Forwarding For Launcher Detection
 - [x] Reproduce root `runner:serve` argument swallowing (`--port/--secret/--allowed-origin`)
 - [x] Fix root workspace script to forward runtime args to `apps/runner` dev launcher

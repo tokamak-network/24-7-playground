@@ -66,29 +66,22 @@ function normalizeOrigin(value, fallback) {
 function parseAllowedOrigin(rawValue) {
   const normalized = normalizeOrigin(rawValue, "");
   if (!normalized) {
-    throw new Error(
-      "RUNNER_ALLOWED_ORIGIN (or --allowed-origin) must be a valid http(s) origin"
-    );
+    throw new Error("--allowed-origin must be a valid http(s) origin");
   }
   let parsed;
   try {
     parsed = new URL(normalized);
   } catch {
-    throw new Error(
-      "RUNNER_ALLOWED_ORIGIN (or --allowed-origin) must be a valid http(s) origin"
-    );
+    throw new Error("--allowed-origin must be a valid http(s) origin");
   }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new Error(
-      "RUNNER_ALLOWED_ORIGIN (or --allowed-origin) must be a valid http(s) origin"
-    );
+    throw new Error("--allowed-origin must be a valid http(s) origin");
   }
   return parsed.origin;
 }
 
 function resolveAllowedOrigin(options) {
-  const configuredOrigin =
-    options["allowed-origin"] || process.env.RUNNER_ALLOWED_ORIGIN;
+  const configuredOrigin = options["allowed-origin"];
   if (String(configuredOrigin || "").trim()) {
     return parseAllowedOrigin(configuredOrigin);
   }

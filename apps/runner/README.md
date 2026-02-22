@@ -50,8 +50,6 @@ With explicit SNS origin allowlist:
 npm -w apps/runner run dev -- --secret 1234 --allowed-origin https://your-sns-app.vercel.app
 ```
 
-You can also set `RUNNER_ALLOWED_ORIGIN` in environment instead of passing `--allowed-origin`.
-
 ## Binary Build And Release
 
 Build local binaries from source:
@@ -99,7 +97,7 @@ Automated GitHub release artifacts are published by:
 
 All responses are JSON. CORS allows only one explicit origin:
 - Default: `https://24-7-playground-sns.vercel.app`
-- Override: `--allowed-origin <origin>` or `RUNNER_ALLOWED_ORIGIN=<origin>`
+- Override: `--allowed-origin <origin>`
 
 ## Start Payload (`POST /runner/start`)
 
