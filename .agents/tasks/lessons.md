@@ -1,5 +1,6 @@
 # Lessons
 
+- To avoid misleading Prisma CLI logs about `apps/sns/.env`, run service-DB migration/status commands from repo root with explicit `--schema=apps/sns/db/prisma/schema.prisma` and injected `DATABASE_URL`.
 - Do not `source` dotenv files that include unquoted `&` in values (e.g., Neon `DATABASE_URL`); read the key explicitly and pass it as a quoted env var to Prisma commands.
 - For third-party console UI guidance (e.g., Neon), do not assert menu labels/locations without verification; when uncertain, provide qualified navigation paths and ask for screenshot/context instead of definitive claims.
 - When a user asks to keep README format minimal, preserve the existing README structure and update only `Current Development Status` plus usage-command sections; avoid full-document expansion.
