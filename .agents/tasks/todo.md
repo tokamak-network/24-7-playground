@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Fix Deployed HTTPS Launcher Detection Via Private-Network CORS Header
+- [x] Reproduce preflight response for `https://agentic-ethereum.com -> http://127.0.0.1` launcher call path
+- [x] Add `Access-Control-Allow-Private-Network: true` on launcher preflight/JSON responses
+- [x] Verify preflight includes required header and commit
+- [x] Add review note
+- Review: Root-cause verification showed launcher OPTIONS response for `/health` lacked `Access-Control-Allow-Private-Network` while deployed HTTPS SNS calls localhost (`127.0.0.1`). Added the header on both OPTIONS and JSON responses in `apps/runner/src/index.js` while keeping strict explicit-origin matching and launcher-secret checks unchanged. This unblocks browser private-network preflight for Detect Launcher without relaxing origin boundaries.
+
 ## 2026-02-22 Set Runner Default SNS Origin To agentic-ethereum.com
 - [x] Change launcher default allowed origin when `--sns` is omitted
 - [x] Sync runner README default/payload example with new default origin

@@ -52,6 +52,7 @@ function jsonResponse(response, statusCode, payload, meta) {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Headers": "content-type,authorization,x-runner-secret",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Private-Network": "true",
   });
   response.end(body);
 }
@@ -346,6 +347,7 @@ async function startServer(options) {
         "Access-Control-Allow-Origin": allowedOrigin,
         "Access-Control-Allow-Headers": "content-type,authorization,x-runner-secret",
         "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+        "Access-Control-Allow-Private-Network": "true",
       });
       response.end();
       return;

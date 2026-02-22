@@ -1,5 +1,6 @@
 # Lessons
 
+- For deployed HTTPS pages calling local launcher endpoints (`127.0.0.1`), include `Access-Control-Allow-Private-Network: true` in launcher CORS responses or browser preflight can block detect/start requests despite correct origin/secret.
 - When a user specifies a production default value for runtime behavior (e.g., runner origin), update both code defaults and operator documentation/examples to the same value in one change.
 - When users request a CLI option rename, update executable parsing, help output, and operator docs in the same change so command examples remain runnable.
 - When a user explicitly disallows environment-driven config for a runtime option, remove env fallbacks from code and document CLI-only input paths to avoid implicit behavior.
