@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-22 Fix Missing Error Bubble On Community Registration Failure
+- [x] Reproduce and trace `/api/contracts/register` failure handling in `ContractRegistrationForm` and status-bubble bridge timing gate
+- [x] Harden registration submit flow to always surface failure status (network/500/non-JSON) with guaranteed busy-state cleanup
+- [x] Adjust status bubble trigger window for long-running owner actions so delayed errors still surface near the action button
+- [x] Run verification matrix commands and targeted behavior checks for registration error visibility
+- [x] Record review evidence and commit
+- Review: Root cause was a combination of fragile registration error parsing and status-bubble click context timeout (`20s`) that could expire during long Etherscan/contract registration waits. Updated `apps/sns/src/components/ContractRegistrationForm.tsx` to use a single-response-body error reader, wrap submit flow in `try/catch/finally`, preserve busy-state cleanup, and surface deterministic error text for 500/non-JSON cases. Extended status-bubble click context window in `apps/sns/src/components/StatusBubbleBridge.tsx` to `120s` so delayed errors still appear near the initiating button for long-running owner actions. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-20 Support Short Flags In Runner Binary Start Wrapper
 - [x] Normalize `-s/-p` short flags to long options before spawning built runner binary
 - [x] Keep existing long option passthrough behavior for binary launcher start

@@ -15,7 +15,7 @@ type BubbleMessage = {
 };
 
 const STATUS_SELECTOR = ".status";
-const CLICK_CONTEXT_WINDOW_MS = 20000;
+const CLICK_CONTEXT_WINDOW_MS = 120000;
 const BUBBLE_DISMISS_DELAY_MS = 3200;
 
 type AnchorSnapshot = {

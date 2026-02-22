@@ -12,6 +12,22 @@ function emptyContractDraft(): ContractDraft {
   return { name: "", address: "" };
 }
 
+async function readError(response: Response) {
+  const text = await response.text().catch(() => "");
+  if (!text) {
+    return "Registration failed.";
+  }
+  try {
+    const data = JSON.parse(text) as { error?: unknown };
+    if (typeof data.error === "string" && data.error.trim()) {
+      return data.error;
+    }
+  } catch {
+    // fall through
+  }
+  return text;
+}
+
 export function ContractRegistrationForm() {
   const [serviceName, setServiceName] = useState("");
   const [description, setDescription] = useState("");
@@ -78,76 +94,66 @@ export function ContractRegistrationForm() {
     }
 
     setBusy(true);
-
-    setStatus("Fetching ABI from Etherscan...");
-    let signature = "";
+    setStatus("Preparing owner signature...");
     try {
       const accounts = (await ethereum.request({
         method: "eth_requestAccounts",
       })) as string[];
       const wallet = accounts?.[0];
       if (!wallet) {
-        setStatus("No wallet selected.");
-        setBusy(false);
-        return;
+        throw new Error("No wallet selected.");
       }
-      signature = (await ethereum.request({
+      const signature = (await ethereum.request({
         method: "personal_sign",
         params: ["24-7-playground", wallet],
       })) as string;
-    } catch {
-      setStatus("Failed to sign with MetaMask.");
-      setBusy(false);
-      return;
-    }
 
-    const res = await fetch("/api/contracts/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        serviceName: serviceName.trim(),
-        description: description.trim(),
-        contracts: preparedContracts,
-        chain: "Sepolia",
-        signature,
-        githubRepositoryUrl,
-      }),
-    });
+      setStatus("Fetching ABI from Etherscan...");
+      const res = await fetch("/api/contracts/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serviceName: serviceName.trim(),
+          description: description.trim(),
+          contracts: preparedContracts,
+          chain: "Sepolia",
+          signature,
+          githubRepositoryUrl,
+        }),
+      });
 
-    if (!res.ok) {
-      let message = "Registration failed.";
-      try {
-        const data = await res.json();
-        if (typeof data?.error === "string" && data.error.trim()) {
-          message = data.error;
-        }
-      } catch {
-        try {
-          const errText = await res.text();
-          if (errText) message = errText;
-        } catch {
-          // keep fallback
-        }
+      if (!res.ok) {
+        throw new Error(await readError(res));
       }
-      setStatus(message);
-      setBusy(false);
-      return;
-    }
 
-    const data = await res.json();
-    if (data.alreadyRegistered) {
-      setStatus(
-        `Already registered: ${data.community?.name || ""} (${data.community?.slug || ""})`
+      const data = (await res.json().catch(() => null)) as {
+        alreadyRegistered?: unknown;
+        community?: { name?: unknown; slug?: unknown } | null;
+        contractCount?: unknown;
+      } | null;
+
+      if (!data) {
+        throw new Error("Invalid registration response.");
+      }
+
+      if (data.alreadyRegistered) {
+        setStatus(
+          `Already registered: ${String(data.community?.name || "")} (${String(data.community?.slug || "")})`
+        );
+        return;
+      }
+
+      const count = Number(
+        data.contractCount || activeContractCount || preparedContracts.length
       );
+      setStatus(
+        `Community updated: ${String(data.community?.name || "")} (${String(data.community?.slug || "")}) · ${count} contract${count === 1 ? "" : "s"}`
+      );
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Registration failed.");
+    } finally {
       setBusy(false);
-      return;
     }
-
-    const count = Number(data.contractCount || activeContractCount || preparedContracts.length);
-    setStatus(
-      `Community updated: ${data.community?.name || ""} (${data.community?.slug || ""}) · ${count} contract${count === 1 ? "" : "s"}`
-    );
-    setBusy(false);
   };
 
   return (
