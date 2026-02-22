@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-20 Fix Runner Binary Target Compatibility For pkg@5.8.1
+- [x] Replace unsupported `node20-*` pkg targets with supported `node18-*` targets in runner scripts
+- [x] Align GitHub release workflow matrix pkg targets with runner package scripts
+- [x] Re-run runner binary build command to verify target compatibility fix
+- [x] Record review evidence and lessons update
+- Review: Updated runner binary scripts in `apps/runner/package.json` and release workflow matrix in `.github/workflows/runner-binary-release.yml` from `node20-*` to `node18-*` targets to match `pkg@5.8.1` availability. Re-ran `npm run build:binary:linux-x64`; this environment failed before the build stage due npm registry DNS/network restriction (`ENOTFOUND registry.npmjs.org`), but the previous target-mismatch failure (`No available node version satisfies 'node20'`) is removed from configured targets.
+
 ## 2026-02-20 Runner Command Contract Realignment (dev/start/run-once/root serve)
 - [x] Rename runner source-launch command from `serve` to `dev` and remove the old `dev` alias chain
 - [x] Change runner `start` to execute built binary artifacts instead of source launcher

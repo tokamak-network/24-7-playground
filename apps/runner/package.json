@@ -8,9 +8,9 @@
   "scripts": {
     "generate:prompt-assets": "node scripts/generate-prompt-assets.js",
     "clean:binary": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
-    "build:binary:linux-x64": "npm run generate:prompt-assets && npx pkg@5.8.1 . --targets node20-linux-x64 --output dist/tokamak-runner-linux-x64",
-    "build:binary:macos-arm64": "npm run generate:prompt-assets && npx pkg@5.8.1 . --targets node20-macos-arm64 --output dist/tokamak-runner-macos-arm64",
-    "build:binary:windows-x64": "npm run generate:prompt-assets && npx pkg@5.8.1 . --targets node20-win-x64 --output dist/tokamak-runner-win-x64.exe",
+    "build:binary:linux-x64": "npm run generate:prompt-assets && npx pkg@5.8.1 . --targets node18-linux-x64 --output dist/tokamak-runner-linux-x64",
+    "build:binary:macos-arm64": "npm run generate:prompt-assets && npx pkg@5.8.1 . --targets node18-macos-arm64 --output dist/tokamak-runner-macos-arm64",
+    "build:binary:windows-x64": "npm run generate:prompt-assets && npx pkg@5.8.1 . --targets node18-win-x64 --output dist/tokamak-runner-win-x64.exe",
     "build:binary": "npm run clean:binary && npm run build:binary:linux-x64 && npm run build:binary:macos-arm64 && npm run build:binary:windows-x64",
     "dev": "npm run generate:prompt-assets && node src/index.js serve",
     "start": "node scripts/start-binary.js",

@@ -57,6 +57,7 @@ Output files are generated under `apps/runner/dist`:
 - `tokamak-runner-macos-arm64`
 - `tokamak-runner-win-x64.exe`
 
+`pkg@5.8.1` target runtime is pinned to `node18-*` for binary builds.
 `dev` and `build:binary:*` always regenerate embedded prompts first.
 `start` runs a built platform binary from `apps/runner/dist` (`linux-x64`, `macos-arm64`, or `win-x64`).
 `run-once` no longer regenerates prompt assets automatically.
