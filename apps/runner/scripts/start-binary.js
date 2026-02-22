@@ -90,12 +90,12 @@ function main() {
   const binaryPath = path.join(DIST_DIR, binaryName);
   if (!fs.existsSync(binaryPath)) {
     throw new Error(
-      `Runner binary not found at ${binaryPath}. Build it first with: npm run build:binary`
+      `Runner binary not found at ${binaryPath}. Build it first with: npm run build`
     );
   }
 
   const args = normalizeForwardArgs(process.argv.slice(2));
-  const child = spawn(binaryPath, args, { stdio: "inherit" });
+  const child = spawn(binaryPath, ["serve", ...args], { stdio: "inherit" });
   child.on("exit", (code, signal) => {
     if (signal) {
       process.kill(process.pid, signal);

@@ -31,6 +31,7 @@
     "sns:prisma:migrate:service:deploy": "npm -w apps/sns run prisma:migrate:service:deploy",
     "runner:serve": "npm -w apps/runner run dev",
     "runner:run-once": "npm -w apps/runner run run-once",
-    "runner:build:binary": "npm -w apps/runner run build:binary"
+    "runner:build": "npm -w apps/runner run build",
+    "runner:start": "npm -w apps/runner run start --"
   }
 }

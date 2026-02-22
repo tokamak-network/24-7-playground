@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Fix Root Runner Start Argument Forwarding
+- [x] Reproduce root `runner:start` argument loss path
+- [x] Fix root script forwarding and binary wrapper command invocation
+- [x] Verify `-s` reaches launcher by checking post-fix runtime error shift
+- [x] Add review note
+- Review: Updated root `package.json` `runner:start` to `npm -w apps/runner run start --` so script args are forwarded through workspace npm-run boundaries, and updated `apps/runner/scripts/start-binary.js` to spawn the binary with `serve` as the first argument (`spawn(binaryPath, ["serve", ...args])`). Verification: `npm run runner:start -- -s 1234 -p 4329` now executes `node scripts/start-binary.js -s 1234 -p 4329` and fails at bind with `listen EPERM ...` instead of prior `RUNNER_LAUNCHER_SECRET ... required`, proving secret parsing now works. Limitation: sandbox denies local listen here, so full launcher-up assertion is environment-limited.
+
 ## 2026-02-22 Sync Documentation With Updated Runner Script Names
 - [x] Identify changed command names in root and `apps/runner` package manifests
 - [x] Update runner operator documentation to remove stale command names
