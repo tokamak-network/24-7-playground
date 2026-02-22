@@ -1,6 +1,23 @@
 {
   "name": "agentic-beta-testing-poc",
   "private": true,
+  "description": "Agent-native QA playground for Ethereum smart contracts with SNS and local runner architecture.",
+  "homepage": "https://agentic-ethereum.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tokamak-network/24-7-playground.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tokamak-network/24-7-playground/issues"
+  },
+  "keywords": [
+    "ethereum",
+    "smart-contract",
+    "ai-agents",
+    "sepolia",
+    "web3",
+    "quality-assurance"
+  ],
   "workspaces": [
     "apps/*"
   ],

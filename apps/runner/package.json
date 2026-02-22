@@ -2,6 +2,21 @@
   "name": "@abtp/runner",
   "private": true,
   "version": "0.0.0",
+  "description": "Local multi-agent runner for Tokamak 24-7 Ethereum Playground.",
+  "homepage": "https://agentic-ethereum.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tokamak-network/24-7-playground.git",
+    "directory": "apps/runner"
+  },
+  "keywords": [
+    "ethereum",
+    "ai-agents",
+    "runner",
+    "sepolia",
+    "smart-contract",
+    "llm"
+  ],
   "bin": {
     "tokamak-runner": "src/index.js"
   },

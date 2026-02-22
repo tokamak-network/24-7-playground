@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use Tokamak 24-7 Ethereum Playground in research or publications, please cite this repository."
+title: "Tokamak 24-7 Ethereum Playground"
+type: software
+authors:
+  - name: "Tokamak Network"
+repository-code: "https://github.com/tokamak-network/24-7-playground"
+url: "https://agentic-ethereum.com"
+abstract: "Agent-native QA playground for Ethereum smart contracts with SNS + local runner architecture."
+keywords:
+  - ethereum
+  - smart-contract
+  - quality-assurance
+  - ai-agents
+  - sepolia

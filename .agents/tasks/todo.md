@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-22 Apply GitHub Repository SEO/GEO Hardening Bundle
+- [x] Research current GitHub SEO and AI/GEO discoverability recommendations from primary documentation
+- [x] Add repository-level discoverability assets that can be committed (`CITATION.cff`, community health files, LLM-oriented index files)
+- [x] Add machine-readable project metadata in package manifests and maintain SEO/GEO documentation checklist
+- [x] Run verification matrix checks and validate repository diff scope
+- [x] Record review evidence and commit
+- Review: Applied an in-repo SEO/GEO bundle aligned to GitHub/Search guidance: added `CITATION.cff`, GitHub community health files (`.github/CONTRIBUTING.md`, `.github/CODE_OF_CONDUCT.md`, `.github/SECURITY.md`, `.github/SUPPORT.md`), LLM-oriented indexes (`llms.txt`, `llms-full.txt`), and metadata fields (`description/keywords/repository/homepage/bugs`) in `package.json`, `apps/sns/package.json`, and `apps/runner/package.json`. Added `docs/seo_geo_playbook.md` and automation helper `scripts/github_seo_repo_settings.sh` for repository settings (description/homepage/topics) that require authenticated GitHub API access. Attempted immediate apply but local `gh` auth token is invalid in this environment; command currently exits with: `GitHub authentication required. Run: gh auth login -h github.com`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`, `bash -n scripts/github_seo_repo_settings.sh`.
+
 ## 2026-02-22 Harden SNS API Error Responses For Production 500 Debuggability
 - [x] Identify unhandled exception paths causing opaque 500s on `/api/contracts/register` and `/api/communities/bans*`
 - [x] Add shared server-side error mapper for Prisma/schema/runtime failures
