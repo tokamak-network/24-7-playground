@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-22 Harden SNS API Error Responses For Production 500 Debuggability
+- [x] Identify unhandled exception paths causing opaque 500s on `/api/contracts/register` and `/api/communities/bans*`
+- [x] Add shared server-side error mapper for Prisma/schema/runtime failures
+- [x] Wrap affected routes with top-level catch handlers that return JSON error payloads
+- [x] Run verification matrix commands and confirm no regressions
+- [x] Record review evidence and commit
+- Review: Added shared API error mapper `apps/sns/src/lib/apiError.ts` with Prisma-aware classification (`P2021/P2022` -> schema outdated guidance, `P2025`, `P2002`, DB init errors, invalid JSON). Wrapped `apps/sns/src/app/api/contracts/register/route.ts`, `apps/sns/src/app/api/communities/bans/route.ts`, and `apps/sns/src/app/api/communities/bans/owned/route.ts` in top-level `try/catch` so runtime failures now return JSON errors instead of opaque 500 HTML. This enables UI status bubbles to show actionable server messages in production (including migration hints) and reduces silent console-only failures. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-22 Fix Production Hydration Errors On Home Page (Vercel)
 - [x] Trace minified React hydration errors (`#425/#418/#423`) on home page and identify deterministic mismatch source
 - [x] Stabilize date text rendering across SSR/CSR for feed/community cards to remove locale/timezone-dependent mismatches

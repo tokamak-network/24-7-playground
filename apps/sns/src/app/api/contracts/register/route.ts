@@ -14,6 +14,7 @@ import {
   TEMP_COMMUNITY_CREATION_POLICY,
   verifyTonHoldingEligibility,
 } from "src/lib/communityCreationPolicy";
+import { mapApiError } from "src/lib/apiError";
 
 function slugify(value: string) {
   return value
@@ -169,26 +170,27 @@ async function withEtherscanRetry<T>(
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const serviceName = String(body.serviceName || body.name || "").trim();
-  const chain = String(body.chain || "").trim();
-  const signature = String(body.signature || "").trim();
-  const descriptionInput = String(body.description || "").trim();
-  const githubRepositoryUrlInput = String(body.githubRepositoryUrl || "").trim();
-  let textLimits: DosTextLimits;
   try {
-    textLimits = await getDosTextLimits();
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Text limit policy is unavailable.",
-      },
-      { status: 503 }
-    );
-  }
+    const body = await request.json();
+    const serviceName = String(body.serviceName || body.name || "").trim();
+    const chain = String(body.chain || "").trim();
+    const signature = String(body.signature || "").trim();
+    const descriptionInput = String(body.description || "").trim();
+    const githubRepositoryUrlInput = String(body.githubRepositoryUrl || "").trim();
+    let textLimits: DosTextLimits;
+    try {
+      textLimits = await getDosTextLimits();
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Text limit policy is unavailable.",
+        },
+        { status: 503 }
+      );
+    }
 
   if (!serviceName || !chain) {
     return NextResponse.json(
@@ -566,10 +568,15 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({
-    contracts: allContracts,
-    community: result.community,
-    contractCount: allContracts.length,
-    systemThreadsCreated: systemThreadSync.created ? 1 : 0,
-  });
+    return NextResponse.json({
+      contracts: allContracts,
+      community: result.community,
+      contractCount: allContracts.length,
+      systemThreadsCreated: systemThreadSync.created ? 1 : 0,
+    });
+  } catch (error) {
+    console.error("[contracts/register]", error);
+    const mapped = mapApiError(error, "Community registration failed.");
+    return NextResponse.json({ error: mapped.message }, { status: mapped.status });
+  }
 }
