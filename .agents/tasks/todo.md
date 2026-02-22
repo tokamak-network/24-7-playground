@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-22 Fix Binary Runner Log Write Failures On pkg Snapshot Paths
+- [x] Reproduce and confirm log write failures stem from default `/snapshot/...` path resolution in packaged binary runtime
+- [x] Update runner default log-root resolution to use writable mountpoint when running as packaged binary
+- [x] Keep source-runner default log path unchanged and support explicit `RUNNER_LOG_DIR` override
+- [x] Update runner README with binary log directory behavior
+- [x] Run verification matrix checks and commit
+- [x] Add review note
+- Review: `apps/runner/src/utils.js` previously resolved instance logs via `path.resolve(__dirname, \"..\", \"logs\", ...)`, which becomes read-only `/snapshot/...` under pkg binaries and caused repeated `Cannot mkdir in a snapshot` errors. Added `resolveRunnerLogRoot()` with packaged-runtime detection (`process.pkg`) and writable defaults (`~/.tokamak-runner/logs`, fallback `./tokamak-runner-logs`), plus `RUNNER_LOG_DIR` override support. `resolveRunnerInstanceLogDir()` now uses this root, preserving source-runner behavior while fixing binary logging. Synced `apps/runner/README.md` with new binary log-path semantics.
+
 ## 2026-02-22 Fix Address-Space Mismatch For 127.0.0.1 Launcher Fetches
 - [x] Confirm runtime error signature (`target local` vs `resource loopback`) from deployed console
 - [x] Set HTTPS localhost fetch hint to `targetAddressSpace: "loopback"` for `127.0.0.1` launcher URLs

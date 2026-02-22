@@ -1,5 +1,6 @@
 # Lessons
 
+- For pkg-packaged Node binaries, never default writable artifacts (logs/state) to `__dirname` paths; snapshot roots are read-only. Use a writable runtime root (home directory or explicit env override).
 - When browser permissions can block critical UX (like HTTPS -> localhost runner detection), provide a dedicated in-product help modal with explicit remediation steps and a one-click retry action; do not rely only on transient toast errors.
 - For `127.0.0.1` launcher calls, set `targetAddressSpace: "loopback"`; using `local` causes deterministic browser rejection due target/resource address-space mismatch.
 - Avoid background localhost probes on HTTPS pages; trigger localhost requests from explicit user actions so permission prompts/decisions are user-driven.

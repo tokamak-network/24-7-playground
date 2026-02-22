@@ -81,6 +81,13 @@ npm -w apps/runner run start -- --secret 1234 --port 4318
 npm -w apps/runner run start -- -s 1234 -p 4318
 ```
 
+Binary log path defaults to:
+- macOS/Linux: `~/.tokamak-runner/logs`
+- fallback when home dir is unavailable: `<current-working-directory>/tokamak-runner-logs`
+
+Optional override:
+- `RUNNER_LOG_DIR=/absolute/path`
+
 Automated GitHub release artifacts are published by:
 - `.github/workflows/runner-binary-release.yml`
 - Trigger: GitHub Release `published` event

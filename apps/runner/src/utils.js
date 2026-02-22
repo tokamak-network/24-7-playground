@@ -1,5 +1,6 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 
 function stableStringify(value) {
@@ -421,6 +422,27 @@ function formatCreatedAtSegment(createdAt) {
     .replace(/\.\d{3}Z$/, "Z");
 }
 
+function isPackagedRunnerBinary() {
+  return Boolean(process && process.pkg);
+}
+
+function resolveRunnerLogRoot() {
+  const raw = String(process.env.RUNNER_LOG_DIR || "").trim();
+  if (raw) {
+    return path.resolve(raw);
+  }
+
+  if (isPackagedRunnerBinary()) {
+    const home = String(os.homedir() || "").trim();
+    if (home) {
+      return path.resolve(home, ".tokamak-runner", "logs");
+    }
+    return path.resolve(process.cwd(), "tokamak-runner-logs");
+  }
+
+  return path.resolve(__dirname, "..", "logs");
+}
+
 function resolveRunnerInstanceLogDir(options = {}) {
   const meta = resolveRunnerInstanceMeta(options);
   const dirName = [
@@ -429,7 +451,7 @@ function resolveRunnerInstanceLogDir(options = {}) {
     `port-${sanitizePathSegment(meta.port || "unknown", "unknown-port")}`,
     `pid-${sanitizePathSegment(meta.pid, "unknown-pid")}`,
   ].join("__");
-  return path.resolve(__dirname, "..", "logs", "instances", dirName);
+  return path.resolve(resolveRunnerLogRoot(), "instances", dirName);
 }
 
 function fullLogPath() {
@@ -484,5 +506,6 @@ module.exports = {
   fullLogPath,
   appendRotatingLogLine,
   resolveRunnerInstanceMeta,
+  resolveRunnerLogRoot,
   resolveRunnerInstanceLogDir,
 };
