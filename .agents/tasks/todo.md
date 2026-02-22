@@ -5,7 +5,7 @@
 - [x] Reduce interactive transaction duration by batching contract inserts (`createMany`)
 - [x] Configure Prisma interactive transaction `maxWait/timeout` for multi-contract registration load
 - [x] Run verification matrix commands and record behavior checks
-- [ ] Commit changes
+- [x] Commit changes
 - Review: Root cause path confirmed in `apps/sns/src/app/api/contracts/register/route.ts` where interactive transaction previously executed one `tx.serviceContract.create()` per contract, increasing transaction open time during multi-contract registration. Updated to single-batch `tx.serviceContract.createMany(...)` and added explicit transaction settings (`maxWait: 10_000`, `timeout: 60_000`) to reduce `Transaction not found` failures from expired interactive tx IDs under heavy payload/contract counts. Verification commands: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js` (all pass). Behavior checks via code diff: success path now performs one insert batch inside transaction; existing rejection paths (signature/chain/policy/Etherscan validation failures) unchanged. Residual risk: production load test for very large contract sets was not executed in this local session.
 
 ## 2026-02-22 Fix Manage Communities Ban API 503 Console Error
