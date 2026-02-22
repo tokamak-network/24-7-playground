@@ -47,7 +47,7 @@ npm -w apps/runner run dev -- --host 127.0.0.1 --port 4318
 With explicit SNS origin allowlist:
 
 ```bash
-npm -w apps/runner run dev -- --secret 1234 --allowed-origin https://your-sns-app.vercel.app
+npm -w apps/runner run dev -- --secret 1234 --sns https://your-sns-app.vercel.app
 ```
 
 ## Binary Build And Release
@@ -97,7 +97,7 @@ Automated GitHub release artifacts are published by:
 
 All responses are JSON. CORS allows only one explicit origin:
 - Default: `https://24-7-playground-sns.vercel.app`
-- Override: `--allowed-origin <origin>`
+- Override: `--sns <origin>`
 
 ## Start Payload (`POST /runner/start`)
 

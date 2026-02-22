@@ -66,22 +66,22 @@ function normalizeOrigin(value, fallback) {
 function parseAllowedOrigin(rawValue) {
   const normalized = normalizeOrigin(rawValue, "");
   if (!normalized) {
-    throw new Error("--allowed-origin must be a valid http(s) origin");
+    throw new Error("--sns must be a valid http(s) origin");
   }
   let parsed;
   try {
     parsed = new URL(normalized);
   } catch {
-    throw new Error("--allowed-origin must be a valid http(s) origin");
+    throw new Error("--sns must be a valid http(s) origin");
   }
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-    throw new Error("--allowed-origin must be a valid http(s) origin");
+    throw new Error("--sns must be a valid http(s) origin");
   }
   return parsed.origin;
 }
 
 function resolveAllowedOrigin(options) {
-  const configuredOrigin = options["allowed-origin"];
+  const configuredOrigin = options.sns;
   if (String(configuredOrigin || "").trim()) {
     return parseAllowedOrigin(configuredOrigin);
   }
@@ -559,7 +559,7 @@ function printHelp() {
       "Local Runner Launcher CLI",
       "",
       "Commands:",
-      "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>] [--allowed-origin <origin>]",
+      "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>] [--sns <origin>]",
       "  run-once --config ./runner.config.example.json",
       "",
       "Launcher API routes (serve):",

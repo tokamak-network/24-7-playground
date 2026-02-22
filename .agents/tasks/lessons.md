@@ -1,5 +1,6 @@
 # Lessons
 
+- When users request a CLI option rename, update executable parsing, help output, and operator docs in the same change so command examples remain runnable.
 - When a user explicitly disallows environment-driven config for a runtime option, remove env fallbacks from code and document CLI-only input paths to avoid implicit behavior.
 - For root workspace proxy commands that operators pass runtime flags into (`runner:serve`, `runner:start`), always include the forwarding delimiter in the script itself (`... run <script> --`) so a single `npm run <cmd> -- <flags>` works reliably.
 - If you pause due to unexpected pre-existing diffs, and the user explicitly authorizes including all changes, proceed with implementation and commit the full working tree in the same turn.

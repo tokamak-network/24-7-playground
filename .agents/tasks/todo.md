@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Rename Runner Origin CLI Flag To --sns
+- [x] Replace launcher origin override flag from `--allowed-origin` to `--sns`
+- [x] Update runner help text and README examples to the new CLI flag
+- [x] Verify runner syntax checks and commit
+- [x] Add review note
+- Review: Updated `apps/runner/src/index.js` to read only `--sns` for launcher CORS origin override and changed related validation error text/help output. Updated `apps/runner/README.md` examples and API notes from `--allowed-origin` to `--sns` so runtime/operator docs match executable behavior.
+
 ## 2026-02-22 Enforce CLI-Only Allowed Origin Input For Runner Launcher
 - [x] Remove environment-variable fallback path for launcher allowed origin resolution
 - [x] Update runner operator docs to state `--allowed-origin` as the only override path
