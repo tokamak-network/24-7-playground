@@ -120,10 +120,40 @@ function withLocalLauncherRequestOptions(
     ...(init || {}),
   };
   if (typeof window !== "undefined" && window.location.protocol === "https:") {
-    // Match browser address-space expectation for 127.0.0.1 localhost launcher calls.
-    nextInit.targetAddressSpace = "loopback";
+    // Trigger Local Network Access permission flow for HTTPS -> localhost fetches.
+    nextInit.targetAddressSpace = "local";
   }
   return nextInit;
+}
+
+async function readLocalNetworkPermissionState(): Promise<
+  "granted" | "denied" | "prompt" | "unknown"
+> {
+  if (typeof window === "undefined") return "unknown";
+  const permissions = (navigator as Navigator & {
+    permissions?: {
+      query?: (descriptor: { name: string }) => Promise<{ state?: string }>;
+    };
+  }).permissions;
+  if (!permissions || typeof permissions.query !== "function") {
+    return "unknown";
+  }
+  try {
+    const status = await permissions.query({
+      name: "local-network-access",
+    });
+    const state = String(status?.state || "").trim().toLowerCase();
+    if (state === "granted" || state === "denied" || state === "prompt") {
+      return state;
+    }
+  } catch {
+    // Browser may not expose this permission descriptor yet.
+  }
+  return "unknown";
+}
+
+function isHttpsPage() {
+  return typeof window !== "undefined" && window.location.protocol === "https:";
 }
 
 function areNumberArraysEqual(left: number[], right: number[]) {
@@ -1067,8 +1097,11 @@ export default function AgentManagementPage() {
         };
       } catch {
         setRunnerRunning(false);
+        const permissionState = await readLocalNetworkPermissionState();
         const message =
-          "Could not reach local runner launcher. Start apps/runner first.";
+          permissionState === "denied"
+            ? "Browser blocked localhost access. Allow Local Network Access for this site, then retry."
+            : "Could not reach local runner launcher. Start apps/runner first.";
         setRunnerStatus(message);
         if (!options?.silent) {
           pushBubble("error", message, options?.anchorEl);
@@ -1155,6 +1188,15 @@ export default function AgentManagementPage() {
           }
         } else if (!options?.silent) {
           setRunnerRunning(false);
+          const permissionState = await readLocalNetworkPermissionState();
+          if (permissionState === "denied") {
+            pushBubble(
+              "error",
+              "Browser blocked localhost access. Allow Local Network Access for this site, then click Detect Launcher again.",
+              options?.anchorEl
+            );
+            return;
+          }
           pushBubble(
             "error",
             "No running runner launcher detected.",
@@ -1584,13 +1626,16 @@ export default function AgentManagementPage() {
       githubIssueToken: "",
     });
     loadRunnerConfig(selectedAgentId);
-    void detectRunnerLauncherPorts({
-      preferredPort: DEFAULT_RUNNER_LAUNCHER_PORT,
-      silent: true,
-    });
+    if (!isHttpsPage()) {
+      void detectRunnerLauncherPorts({
+        preferredPort: DEFAULT_RUNNER_LAUNCHER_PORT,
+        silent: true,
+      });
+    }
   }, [detectRunnerLauncherPorts, loadGeneral, loadRunnerConfig, selectedAgentId]);
 
   useEffect(() => {
+    if (isHttpsPage()) return;
     if (!runnerLauncherPort.trim()) {
       setRunnerRunning(false);
       return;

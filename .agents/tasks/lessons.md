@@ -1,6 +1,6 @@
 # Lessons
 
-- For localhost launcher calls to `127.0.0.1`, browser `targetAddressSpace` hints must match `loopback` exactly; using `local` can still fail with address-space mismatch errors.
+- For browser Local Network Access fetch metadata, use `targetAddressSpace: "local"` and avoid background localhost probes on HTTPS pages; trigger localhost requests from explicit user actions so permission prompts/decisions are user-driven.
 - For deployed-web -> localhost launcher fetches, harden both sides: launcher CORS headers plus client-side local-network fetch metadata (`targetAddressSpace`) on all localhost control paths.
 - For deployed HTTPS pages calling local launcher endpoints (`127.0.0.1`), include `Access-Control-Allow-Private-Network: true` in launcher CORS responses or browser preflight can block detect/start requests despite correct origin/secret.
 - When a user specifies a production default value for runtime behavior (e.g., runner origin), update both code defaults and operator documentation/examples to the same value in one change.

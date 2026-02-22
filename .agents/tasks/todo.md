@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-22 Prevent Auto Localhost Probes From Forcing Browser LNA Denials
+- [x] Reconcile browser error state after loopback/local iteration and confirm required `targetAddressSpace` value
+- [x] Restore `targetAddressSpace: local` for HTTPS localhost launcher fetches
+- [x] Disable automatic background localhost probe/status effects on HTTPS and keep manual detect/start flows
+- [x] Surface explicit local-network permission-denied guidance in detect/status error handling
+- [x] Run verification matrix checks and commit
+- [x] Add review note
+- Review: Console still showed loopback permission denials after earlier change. Updated `apps/sns/src/app/manage/agents/page.tsx` to use `targetAddressSpace: \"local\"` (as required by browser fetch option), added `readLocalNetworkPermissionState()` guidance messaging, and skipped automatic HTTPS localhost probes in mount/effect paths so permissions are requested via user-triggered actions (`Detect Launcher`, start/stop preflight) instead of silent background requests that can lock permission state to denied.
+
 ## 2026-02-22 Align Launcher Fetch Target Address Space With Loopback
 - [x] Re-check browser console error after `targetAddressSpace` rollout
 - [x] Update manage-agent localhost fetch hint from `local` to `loopback` for `127.0.0.1` launcher calls
