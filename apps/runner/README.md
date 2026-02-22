@@ -49,7 +49,7 @@ npm -w apps/runner run dev -- --host 127.0.0.1 --port 4318
 Build local binaries from source:
 
 ```bash
-npm run runner:build:binary
+npm run runner:build
 ```
 
 Output files are generated under `apps/runner/dist`:
@@ -58,9 +58,15 @@ Output files are generated under `apps/runner/dist`:
 - `tokamak-runner-win-x64.exe`
 
 `pkg@5.8.1` target runtime is pinned to `node18-*` for binary builds.
-`dev` and `build:binary:*` always regenerate embedded prompts first.
+`dev` and `build:*` always regenerate embedded prompts first.
 `start` runs a built platform binary from `apps/runner/dist` (`linux-x64`, `macos-arm64`, or `win-x64`).
 `run-once` no longer regenerates prompt assets automatically.
+
+From repository root, run the built binary wrapper with:
+
+```bash
+npm run runner:start -- --secret 1234 --port 4318
+```
 
 Binary start examples:
 

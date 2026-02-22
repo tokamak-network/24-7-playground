@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Sync Documentation With Updated Runner Script Names
+- [x] Identify changed command names in root and `apps/runner` package manifests
+- [x] Update runner operator documentation to remove stale command names
+- [x] Verify docs no longer reference deprecated runner build command names
+- [x] Add review note
+- Review: Updated `apps/runner/README.md` command text to match current script names (`runner:build` instead of `runner:build:binary`, `build:*` instead of `build:binary:*`) and added root wrapper usage for `runner:start`. Verification: `rg -n "runner:build:binary|build:binary:\\*|build:binary" apps/runner/README.md README.md docs` returned no matches; `rg -n "runner:build|runner:start|build:\\*" apps/runner/README.md` confirmed new command references.
+
 ## 2026-02-22 Fix Prisma Interactive Transaction Expiry On Community Register
 - [x] Confirm transaction timeout path in `/api/contracts/register` and define minimal patch scope
 - [x] Reduce interactive transaction duration by batching contract inserts (`createMany`)
