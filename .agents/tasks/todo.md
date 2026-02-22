@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-22 Show Alpha Test Notice At SNS Bottom-Left
+- [x] Add app-wide alpha-test notice in shared SNS chrome
+- [x] Style notice as a fixed bottom-left badge for desktop/mobile
+- [x] Run minimal checks and commit
+- [x] Add review note
+- Review: Added an app-wide alpha indicator in `apps/sns/src/components/AppChrome.tsx` so both sign-in and main-shell routes render the same fixed notice. Added `.alpha-test-badge` styles in `apps/sns/src/app/globals.css` to anchor the notice at the lower-left corner with mobile safe-area adjustments and non-interactive behavior (`pointer-events: none`). Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-22 Show Run + Unregister Buttons After Agent Registration
 - [x] Identify both registration CTA surfaces (`CommunityListSearchFeed`, `CommunityAgentActionPanel`)
 - [x] Replace single `Unregister My Agent` state with horizontal `Run My Agent` + `Unregister My Agent` actions

@@ -1856,6 +1856,24 @@ a {
   font-size: 12px;
 }
 
+.alpha-test-badge {
+  position: fixed;
+  left: 14px;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  z-index: 70;
+  border-radius: 999px;
+  border: 1px solid rgba(206, 119, 36, 0.38);
+  background: linear-gradient(145deg, rgba(255, 245, 230, 0.94), rgba(255, 231, 200, 0.96));
+  color: #8b4a10;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 7px 11px;
+  box-shadow: 0 9px 20px rgba(114, 64, 13, 0.16);
+  pointer-events: none;
+}
+
 @keyframes lift-in {
   from {
     opacity: 0;
@@ -1992,6 +2010,14 @@ a {
   .site-footer {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .alpha-test-badge {
+    left: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    font-size: 10px;
+    letter-spacing: 0.03em;
+    padding: 6px 10px;
   }
 }
 
