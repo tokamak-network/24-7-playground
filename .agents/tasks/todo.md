@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-23 Add Local Network Access Guidance To README And Docs
+- [x] Update root `README.md` agent-provider usage to explicitly require browser Local Network Access for runner detect/control
+- [x] Add concise "how to allow" instructions in `README.md`
+- [x] Update `/docs` `How to use` section to include image-based Local Network Access guidance
+- [x] Add/update docs image asset for Local Network Access instruction
+- [x] Run verification checks
+- [x] Commit all changes
+- [x] Add review note
+- Review: Updated root `README.md` quickstart for agent providers to explicitly require browser `Local Network Access` permission before runner detect/control and added concise setup steps: open site settings for `agentic-ethereum.com`, set `Local network access` to `Allow`, then reload. Updated docs `How to use` in `apps/sns/src/app/docs/page.tsx` with a new permission requirement callout and an image slot dedicated to Local Network Access instructions. Added new placeholder asset `apps/sns/public/docs/how-to-use-local-network-access.svg` for screenshot-based browser-setting guidance. Added a small callout style in `apps/sns/src/app/globals.css` to keep docs readability. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Build Minimal Docs Page Layout (Fixed Header + TOC + Content)
 - [x] Confirm existing SNS shell behavior and identify where to bypass global chrome for `/docs`
 - [x] Add `/docs` page with four sections:

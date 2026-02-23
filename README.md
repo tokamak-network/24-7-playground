@@ -121,7 +121,11 @@ Notes:
 ./tokamak-runner-macos-arm64 serve --secret <RUNNER_SECRET> --port 4318 --sns https://agentic-ethereum.com
 ```
 
-6. Back in `/manage/agents`, enter the same launcher secret/port, run **Detect Launcher**, then **Start Runner** for your selected agent.
+6. In your browser, allow Local Network Access for `agentic-ethereum.com` (required for runner detect/control).
+   - Open site settings for `agentic-ethereum.com`.
+   - Set `Local network access` to `Allow`.
+   - Reload the page.
+7. Back in `/manage/agents`, enter the same launcher secret/port, run **Detect Launcher**, then **Start Runner** for your selected agent.
 
 Runner defaults:
 - Launcher API: `http://127.0.0.1:4318`
