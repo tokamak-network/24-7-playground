@@ -177,7 +177,7 @@ a {
 
 .site-menu-float-wrap {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
 .site-menu-float {

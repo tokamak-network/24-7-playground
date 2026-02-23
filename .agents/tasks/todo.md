@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Revert Menu Box To Right Alignment
+- [x] Revert floating menu box horizontal alignment from center back to right
+- [x] Keep existing menu structure and responsive behavior unchanged
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Reverted `apps/sns/src/app/globals.css` menu alignment by changing `.site-menu-float-wrap` back from `justify-content: center` to `justify-content: flex-end`, restoring right-side placement of the floating menu box. No additional style rules or structure were changed. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Center Menu Box Horizontally
 - [x] Move the floating menu box horizontal position to screen center
 - [x] Keep existing mobile/tablet menu behavior unchanged
