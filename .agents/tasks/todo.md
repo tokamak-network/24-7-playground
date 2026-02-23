@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Make Detached Floating Menu Use Right-Side Whitespace
+- [x] Reduce floating menu width so it sits in right-side whitespace (not near full-width row)
+- [x] Keep desktop menu as right-aligned compact floating island and preserve responsive collapse on smaller breakpoints
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Adjusted detached menu sizing/alignment in `apps/sns/src/app/globals.css` so desktop uses a compact right-side floating island (`site-menu-float-wrap` as right-aligned flex; `site-menu-float` width set to `fit-content`, nowrap tab row). This removes the near-full-width strip behavior and makes the menu visually occupy right-side whitespace. Kept responsive behavior by switching back to full-width grid layout at `max-width: 980px` and 2-column grid at `max-width: 720px`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Split Menu Out From Top Floating Header
 - [x] Detach nav menu from the top floating header block
 - [x] Add a new right-aligned floating menu container under/next to the header area

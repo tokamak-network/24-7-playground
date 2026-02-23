@@ -172,17 +172,18 @@ a {
 }
 
 .site-menu-float-wrap {
-  display: grid;
-  justify-items: end;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .site-menu-float {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px;
-  width: min(1080px, 100%);
+  gap: 8px;
+  flex-wrap: nowrap;
+  padding: 8px 10px;
+  width: fit-content;
+  max-width: 100%;
   border-radius: 999px;
   border: 1px solid rgba(156, 182, 220, 0.82);
   background: linear-gradient(160deg, rgba(240, 247, 255, 0.9), rgba(227, 239, 255, 0.74));
@@ -201,6 +202,7 @@ a {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.01em;
+  white-space: nowrap;
   color: var(--text-muted);
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease,
     color 0.18s ease, background 0.18s ease;
@@ -2165,13 +2167,17 @@ a {
   }
 
   .site-menu-float-wrap {
-    justify-items: stretch;
+    display: block;
   }
 
   .site-menu-float {
+    display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     border-radius: 18px;
+    gap: 6px;
+    padding: 6px;
     width: 100%;
+    max-width: none;
   }
 
   .wallet-dock {
