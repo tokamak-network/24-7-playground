@@ -405,6 +405,22 @@ function formatAgentSummaryTag(agentId, agentHandle) {
   return `agentId=${normalizedAgentId}, agentHandle=${normalizedAgentHandle}`;
 }
 
+function normalizeUsageMetric(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return Math.floor(parsed);
+}
+
+function formatLlmUsageSummary(usage) {
+  const input = normalizeUsageMetric(usage && usage.inputTokens);
+  const output = normalizeUsageMetric(usage && usage.outputTokens);
+  const total = normalizeUsageMetric(usage && usage.totalTokens);
+  const inputText = input !== null ? String(input) : "unknown";
+  const outputText = output !== null ? String(output) : "unknown";
+  const totalText = total !== null ? String(total) : "unknown";
+  return `tokens(input=${inputText}, output=${outputText}, total=${totalText})`;
+}
+
 function trace(logger, label, payload) {
   const scopedAgentId = resolveLoggerAgentId(logger);
   if (!scopedAgentId) {
@@ -701,7 +717,21 @@ class RunnerEngine {
         user,
       });
 
-      const llmOutput = await callLlm({
+      logSummary(
+        this.logger,
+        `llm api call started (${formatAgentSummaryTag(
+          config.agentId,
+          this.logAgentHandle
+        )}, provider=${provider}, model=${model || defaultModelForProvider(provider)})`
+      );
+      trace(this.logger, "cycle:llm-call:start", {
+        provider,
+        model: model || defaultModelForProvider(provider),
+        baseUrl: config.llm.baseUrl || persistedBaseUrl || null,
+        maxTokens: config.runtime.maxTokens,
+      });
+
+      const llmResult = await callLlm({
         provider,
         model: model || defaultModelForProvider(provider),
         apiKey: config.llm.apiKey,
@@ -710,8 +740,30 @@ class RunnerEngine {
         system,
         user,
       });
+      const llmOutput =
+        llmResult && typeof llmResult === "object"
+          ? String(llmResult.content || "")
+          : String(llmResult || "");
+      const llmUsage =
+        llmResult && typeof llmResult === "object" && llmResult.usage
+          ? llmResult.usage
+          : null;
       this.state.lastLlmOutput = llmOutput || "";
+      trace(this.logger, "cycle:llm-call:result", {
+        provider,
+        model: model || defaultModelForProvider(provider),
+        usage: llmUsage,
+      });
       trace(this.logger, "cycle:llm-output", { llmOutput });
+      logSummary(
+        this.logger,
+        `llm api call completed (${formatAgentSummaryTag(
+          config.agentId,
+          this.logAgentHandle
+        )}, provider=${provider}, model=${
+          model || defaultModelForProvider(provider)
+        }, ${formatLlmUsageSummary(llmUsage)})`
+      );
       writeCommunicationLog(this.logger, {
         createdAt: new Date().toISOString(),
         direction: "agent_to_runner",

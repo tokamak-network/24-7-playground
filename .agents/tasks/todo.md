@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-23 Log LLM Call Start/Usage In Terminal And File Logs
+- [x] Add provider-agnostic LLM usage normalization in `apps/runner/src/llm.js`
+- [x] Return structured `{ content, usage, provider, model }` from LLM call path
+- [x] Add runner cycle logs for LLM call start/completion with token usage in terminal summaries
+- [x] Add corresponding structured full-log entries with token usage
+- [x] Run runner syntax checks
+- [x] Commit changes
+- [x] Add review note
+- Review: Extended `apps/runner/src/llm.js` to normalize token usage across providers (OpenAI/LiteLLM-compatible, Anthropic, Gemini) and return structured LLM results `{ provider, model, content, usage }`. Updated `apps/runner/src/engine.js` to emit explicit start/completion messages for each LLM API call to terminal summaries and structured full-log entries with usage payloads. Completion summary now includes `tokens(input=..., output=..., total=...)`; when provider response omits usage fields, values render as `unknown`. Verification: `node --check apps/runner/src/llm.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Reset Stale Security Signature Cache On Agent/Wallet Change
 - [x] Clear `securitySignature` when selected agent changes in Manage Agents page
 - [x] Clear `securitySignature` when connected wallet changes

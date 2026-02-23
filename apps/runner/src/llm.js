@@ -26,6 +26,66 @@ function normalizeOptionalMaxTokens(value) {
   return Math.floor(parsed);
 }
 
+function normalizeUsageNumber(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return Math.floor(parsed);
+}
+
+function normalizeUsage(provider, data) {
+  const normalizedProvider = normalizeProvider(provider);
+  if (normalizedProvider === "ANTHROPIC") {
+    const raw =
+      data && data.usage && typeof data.usage === "object" ? data.usage : null;
+    const input = normalizeUsageNumber(raw && raw.input_tokens);
+    const output = normalizeUsageNumber(raw && raw.output_tokens);
+    const total =
+      normalizeUsageNumber(raw && raw.total_tokens) ??
+      (input !== null && output !== null ? input + output : null);
+    return {
+      inputTokens: input,
+      outputTokens: output,
+      totalTokens: total,
+      raw,
+    };
+  }
+
+  if (normalizedProvider === "GEMINI") {
+    const raw =
+      data && data.usageMetadata && typeof data.usageMetadata === "object"
+        ? data.usageMetadata
+        : null;
+    const input = normalizeUsageNumber(raw && raw.promptTokenCount);
+    const output = normalizeUsageNumber(raw && raw.candidatesTokenCount);
+    const total =
+      normalizeUsageNumber(raw && raw.totalTokenCount) ??
+      (input !== null && output !== null ? input + output : null);
+    return {
+      inputTokens: input,
+      outputTokens: output,
+      totalTokens: total,
+      raw,
+    };
+  }
+
+  const raw = data && data.usage && typeof data.usage === "object" ? data.usage : null;
+  const input =
+    normalizeUsageNumber(raw && raw.prompt_tokens) ??
+    normalizeUsageNumber(raw && raw.input_tokens);
+  const output =
+    normalizeUsageNumber(raw && raw.completion_tokens) ??
+    normalizeUsageNumber(raw && raw.output_tokens);
+  const total =
+    normalizeUsageNumber(raw && raw.total_tokens) ??
+    (input !== null && output !== null ? input + output : null);
+  return {
+    inputTokens: input,
+    outputTokens: output,
+    totalTokens: total,
+    raw,
+  };
+}
+
 async function parseJsonResponse(response) {
   const text = await response.text();
   if (!text) return {};
@@ -91,7 +151,10 @@ async function callOpenAiCompatible(params) {
     data.choices[0] &&
     data.choices[0].message &&
     data.choices[0].message.content;
-  return typeof content === "string" ? content : "";
+  return {
+    content: typeof content === "string" ? content : "",
+    usage: normalizeUsage(params.provider || "OPENAI", data),
+  };
 }
 
 async function callAnthropic(params) {
@@ -144,7 +207,10 @@ async function callAnthropic(params) {
   }
   const blocks = Array.isArray(data.content) ? data.content : [];
   const textBlock = blocks.find((block) => block && block.type === "text");
-  return textBlock && typeof textBlock.text === "string" ? textBlock.text : "";
+  return {
+    content: textBlock && typeof textBlock.text === "string" ? textBlock.text : "",
+    usage: normalizeUsage(params.provider || "ANTHROPIC", data),
+  };
 }
 
 async function callGemini(params) {
@@ -200,7 +266,10 @@ async function callGemini(params) {
       Array.isArray(data.candidates[0].content.parts)
         ? data.candidates[0].content.parts[0]
         : null;
-    return candidate && typeof candidate.text === "string" ? candidate.text : "";
+    return {
+      content: candidate && typeof candidate.text === "string" ? candidate.text : "",
+      usage: normalizeUsage(params.provider || "GEMINI", data),
+    };
   };
 
   try {
@@ -247,17 +316,35 @@ async function callLlm(params) {
 
   try {
     if (provider === "GEMINI") {
-      return await callGemini({ ...params, provider, model });
+      const result = await callGemini({ ...params, provider, model });
+      return {
+        provider,
+        model,
+        content: String(result && result.content ? result.content : ""),
+        usage: result && result.usage ? result.usage : null,
+      };
     }
     if (provider === "ANTHROPIC") {
-      return await callAnthropic({ ...params, provider, model });
+      const result = await callAnthropic({ ...params, provider, model });
+      return {
+        provider,
+        model,
+        content: String(result && result.content ? result.content : ""),
+        usage: result && result.usage ? result.usage : null,
+      };
     }
-    return await callOpenAiCompatible({
+    const result = await callOpenAiCompatible({
       ...params,
       provider,
       model,
       baseUrl: provider === "LITELLM" ? baseUrl : params.baseUrl,
     });
+    return {
+      provider,
+      model,
+      content: String(result && result.content ? result.content : ""),
+      usage: result && result.usage ? result.usage : null,
+    };
   } catch (error) {
     trace("error", {
       provider,
