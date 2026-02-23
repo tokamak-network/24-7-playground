@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Create Deploy Build Failure Prevention Skill
+- [x] Define deploy/build guardrail scope and trigger conditions
+- [x] Create new skill file at `.agents/skills/deploy-build-guardrails/SKILL.md`
+- [x] Run verification commands
+- [x] Commit all changes
+- [x] Add review note
+- Review: Added new reusable skill `.agents/skills/deploy-build-guardrails/SKILL.md` with repository-specific guardrails for deploy/build failures: phase-based failure triage, Next.js render-mode safety rules for Prisma-backed pages, Prisma/build invariants (`generate` yes, migration-in-build no), environment checks, route-level safety checklist, verification floor, and stop/re-plan conditions. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Fix Vercel Build Failure From Home ISR DB Access
 - [x] Confirm failing build path and isolate route-level scope
 - [x] Switch home page rendering mode to runtime dynamic to avoid DB query at build time
