@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MetaMaskButtonGuard } from "src/components/MetaMaskButtonGuard";
 import { StatusBubbleBridge } from "src/components/StatusBubbleBridge";
 import { UserErrorLogger } from "src/components/UserErrorLogger";
 import { WalletDock } from "src/components/WalletDock";
@@ -33,7 +32,6 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
     <>
       <div className="page-shell">
         <UserErrorLogger />
-        <MetaMaskButtonGuard />
         <StatusBubbleBridge />
         <header className="site-header">
           <div className="brand">

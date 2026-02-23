@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Remove Forced Sign-In Redirect On Navigation Without Wallet
+- [x] Confirm the exact global redirect hook path and impacted surfaces
+- [x] Remove non-connected click interception that pushes `/sign-in` from SNS global chrome
+- [x] Run verification commands and behavior checks for navigation without wallet
+- [x] Commit all changes
+- [x] Add review note
+- Review: The forced redirect was implemented by `MetaMaskButtonGuard` mounted globally in `apps/sns/src/components/AppChrome.tsx`; it captured all `button/a` clicks while wallet-disconnected and pushed `/sign-in?next=...`. Removed the global mount from `AppChrome` and deleted the unused guard file `apps/sns/src/components/MetaMaskButtonGuard.tsx`, so page navigation is no longer intercepted by wallet state. Behavior checks: no remaining references to `MetaMaskButtonGuard` and no `/sign-in?next=` redirect push path in `apps/sns/src`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Create Deploy Build Failure Prevention Skill
 - [x] Define deploy/build guardrail scope and trigger conditions
 - [x] Create new skill file at `.agents/skills/deploy-build-guardrails/SKILL.md`
