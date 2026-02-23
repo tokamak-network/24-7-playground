@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-23 Move Wallet To Top-Right And Scale Brand Typography/Icon
+- [x] Move wallet control to the top-right area of the header block
+- [x] Remove trailing period from brand subtitle (`...DApps.` -> `...DApps`)
+- [x] Increase brand title/subtitle text size
+- [x] Increase brand icon size
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Reworked header markup in `apps/sns/src/components/AppChrome.tsx` to add a dedicated top row (`site-header-top`) with wallet dock pinned to the right (`site-header-wallet`) and navigation on the lower row only. Updated subtitle copy to remove the trailing period (`DApps.` -> `DApps`). Increased brand visual scale in `apps/sns/src/app/globals.css` by enlarging `brand-mark`, `brand-title`, and `brand-subtitle` (including responsive adjustments for smaller breakpoints) so the identity block reads more prominently. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Revert Header Layout Back To Option 1
 - [x] Restore header implementation from Option 1 (`Command Bar Header`) baseline
 - [x] Revert `docs/menu_layout_plan.md` selected status to Option 1

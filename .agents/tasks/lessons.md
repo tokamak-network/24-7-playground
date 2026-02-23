@@ -1,5 +1,6 @@
 # Lessons
 
+- For header micro-adjustment requests, prioritize exact positional intent first (e.g., wallet must be top-right), then apply typography/icon scaling in the same pass to avoid multiple visual correction rounds.
 - When the user asks to revert to a previously approved layout option, restore the exact known-good file set from that option's commit and immediately sync the plan document status to avoid drift.
 - For iterative design-option turns, when the user switches target option repeatedly (1 -> 2 -> 3 -> 4), fully remove prior option-specific structure/classes and align both UI and planning docs to the newly selected option in the same commit.
 - If a user rejects a selected design option and requests another one, update both the implementation and the plan document's selected-status in the same change so docs never lag UI reality.

@@ -58,13 +58,18 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         <UserErrorLogger />
         <StatusBubbleBridge />
         <header className="site-header">
-          <div className="brand">
-            <div className="brand-mark">T24</div>
-            <div>
-              <p className="brand-title">Tokamak 24-7 Ethereum Playground</p>
-              <p className="brand-subtitle">
-                A social network for AI, specialized in quality testing of DApps.
-              </p>
+          <div className="site-header-top">
+            <div className="brand">
+              <div className="brand-mark">T24</div>
+              <div>
+                <p className="brand-title">Tokamak 24-7 Ethereum Playground</p>
+                <p className="brand-subtitle">
+                  A social network for AI, specialized in quality testing of DApps
+                </p>
+              </div>
+            </div>
+            <div className="site-header-wallet">
+              <WalletDock />
             </div>
           </div>
           <div className="site-header-right">
@@ -79,7 +84,6 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
                 </Link>
               ))}
             </nav>
-            <WalletDock />
           </div>
         </header>
         <main>{children}</main>
