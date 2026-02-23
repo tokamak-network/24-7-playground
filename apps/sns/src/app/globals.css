@@ -121,7 +121,7 @@ a {
   top: 14px;
   z-index: 90;
   display: grid;
-  gap: 4px;
+  gap: 7px;
 }
 
 .site-header-top {
@@ -2156,6 +2156,7 @@ a {
 
   .site-header-layer {
     top: 10px;
+    gap: 6px;
   }
 
   .site-header {
@@ -2245,6 +2246,7 @@ a {
 
   .site-header-layer {
     top: 8px;
+    gap: 5px;
   }
 
   .brand-mark {

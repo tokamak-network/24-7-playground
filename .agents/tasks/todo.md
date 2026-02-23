@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Slightly Increase Title/Menu Box Gap
+- [x] Increase spacing between title box and menu box slightly while keeping them visually close
+- [x] Keep responsive spacing balanced so separation remains clear on smaller screens
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Increased only the inter-box spacing on the shared wrapper `site-header-layer` in `apps/sns/src/app/globals.css` from ultra-tight to slightly clearer separation: desktop `gap: 7px`, tablet `gap: 6px`, mobile `gap: 5px`. This keeps title/menu visually close while improving boundary perception without changing box styling, structure, or positioning. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Separate Menu Box From Title Box In Structure
 - [x] Move menu box out of title box structure (sibling boxes, not nested)
 - [x] Keep both boxes within one top-layer behavior while preserving narrow gap
