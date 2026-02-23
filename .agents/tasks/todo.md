@@ -1,5 +1,22 @@
 # Project Plan
 
+## 2026-02-23 Render Docs Sections From Published Markdown And Add New First Section
+- [x] Replace hardcoded docs section page content with markdown-backed rendering from `docs/published/*.md`
+- [x] Add new first docs section `What is 24-7 Ethereum Playground?` as a separate route and markdown file
+- [x] Update docs TOC order and `/docs` default redirect to the new first section page
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Added markdown-backed docs rendering by introducing `apps/sns/src/app/docs/PublishedMarkdownSection.tsx`, which reads section markdown from root `docs/published` and renders headings/paragraphs/lists/images/blockquote/code blocks into the existing docs UI classes. Rewired section routes (`how-to-use`, `how-it-works`, `security-notes`, `troubleshooting`) to render from markdown files instead of hardcoded JSX, and created corresponding markdown sources in `docs/published/`. Added the new first section route `apps/sns/src/app/docs/what-is-24-7-ethereum-playground/page.tsx` with source file `docs/published/what-is-24-7-ethereum-playground.md`, updated TOC order in `apps/sns/src/app/docs/layout.tsx`, and changed `/docs` entry redirect in `apps/sns/src/app/docs/page.tsx` to `/docs/what-is-24-7-ethereum-playground`. Added small markdown support styles in `apps/sns/src/app/globals.css` (`docs-markdown`, paragraph, inline code). Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
+## 2026-02-23 Add First Docs Section "What is 24-7 Ethereum Playground?"
+- [x] Add new first docs section route and wire it to render from `docs/published` markdown
+- [x] Update docs TOC order so the new section appears first
+- [x] Update `/docs` default redirect to the new first section page
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+
 ## 2026-02-23 Stabilize Cross-Page Horizontal Alignment
 - [x] Reserve vertical scrollbar gutter globally so page content x-position stays fixed
 - [x] Keep existing layout width/spacing rules unchanged
