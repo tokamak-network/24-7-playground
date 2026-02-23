@@ -130,3 +130,4 @@
 - For `pkg@5.8.1` runner binaries, use supported targets (`node18-*`) and keep local scripts plus release workflow targets aligned to avoid runtime build failures like `No available node version satisfies 'node20'`.
 - When adding binary launcher wrappers, preserve CLI ergonomics from prior dev commands (support `-s/-p` short flags and normalize them to the runner's long options) so existing operator habits do not break.
 - For Prisma interactive transactions handling bulk writes, avoid per-row `create` loops; batch inserts with `createMany` and explicitly set `maxWait/timeout` to prevent `Transaction not found` under long-running registration payloads.
+- For security-sensitive decrypt flows, never keep cached signing material across identity context changes; clear cached `securitySignature` whenever selected agent or connected wallet changes.

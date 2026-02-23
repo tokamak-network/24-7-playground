@@ -1677,6 +1677,7 @@ export default function AgentManagementPage() {
       setLiteLlmBaseUrl("");
       setSecurityPasswordMode("none");
       setSecurityPassword("");
+      setSecuritySignature("");
       setDetectedRunnerPorts([]);
       setSecurityDraft({
         llmApiKey: "",
@@ -1692,6 +1693,7 @@ export default function AgentManagementPage() {
     setLiteLlmBaseUrl("");
     setSecurityPasswordMode("none");
     setSecurityPassword("");
+    setSecuritySignature("");
     setRunnerRunning(false);
     setSecurityDraft({
       llmApiKey: "",
@@ -1707,6 +1709,10 @@ export default function AgentManagementPage() {
       });
     }
   }, [detectRunnerLauncherPorts, loadGeneral, loadRunnerConfig, selectedAgentId]);
+
+  useEffect(() => {
+    setSecuritySignature("");
+  }, [walletAddress]);
 
   useEffect(() => {
     if (isHttpsPage()) return;

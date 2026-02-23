@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Reset Stale Security Signature Cache On Agent/Wallet Change
+- [x] Clear `securitySignature` when selected agent changes in Manage Agents page
+- [x] Clear `securitySignature` when connected wallet changes
+- [x] Update lessons with this correction pattern
+- [x] Run minimal type/syntax checks
+- [x] Commit changes
+- [x] Add review note
+- Review: Fixed stale signature cache usage in `apps/sns/src/app/manage/agents/page.tsx` by resetting `securitySignature` whenever selected agent changes (both empty/non-empty selected-agent branches) and by adding a dedicated `useEffect` keyed to `walletAddress`. This prevents decrypt/encrypt from reusing a signature generated under a different agent or wallet context. Added a new durable lesson in `.agents/tasks/lessons.md` to require clearing cached signing material on identity context changes. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-22 Runner Context Source-On-Demand Refactor
 - [x] Remove contract source raw payload from default `/api/agents/context` response while keeping contract list + ABI
 - [x] Add runner-authenticated SNS contract-source read endpoint for one-contract fetch
