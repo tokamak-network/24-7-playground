@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Scale Wallet Control Component To 150 Percent
+- [x] Increase wallet control component size to 150% while keeping internal proportions
+- [x] Ensure wallet tooltip/status bubble scales consistently with wallet control
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Scaled wallet control visuals in `apps/sns/src/app/globals.css` to ~150% across the full `wallet-*` block. Updated container sizing (`gap`, `radius`, `padding`, shadow), row/action spacing, label/address typography, switch button size (`26 -> 39`) and icon font (`14 -> 21`), plus tooltip/status-bubble geometry and typography (`min/max width 200/280 -> 300/420`, font `11 -> 16.5`, matching offsets/radii/padding). This preserves internal visual proportion while enlarging the whole wallet control component. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Center Wallet Control Vertically In Title Box
 - [x] Set wallet control vertical alignment to center within title box
 - [x] Keep responsive behavior unchanged except the requested vertical centering

@@ -1,5 +1,6 @@
 # Lessons
 
+- For explicit component-scale requests like "150%", scale all nested visual elements together (container, text, controls, tooltips, status bubble) instead of enlarging only one subpart.
 - For header wallet vertical-centering requests, align the header row container and wallet slot together (`site-header-top` + `site-header-wallet`) instead of offsetting with ad-hoc margins.
 - For direct percentage typography requests, apply exact proportional scaling to each clamp component (min/preferred/max) across desktop and mobile overrides.
 - When users want title/menu box heights to feel balanced, reduce brand title/subtitle/logo scale first (desktop + mobile) before changing container spacing or structure.
