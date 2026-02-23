@@ -108,11 +108,11 @@ a {
   position: sticky;
   top: 14px;
   z-index: 90;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding: 14px 16px;
+  gap: 18px;
+  padding: 14px 18px;
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.7);
@@ -121,11 +121,9 @@ a {
 }
 
 .site-header-right {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 14px;
-  flex-wrap: wrap;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
 }
 
 .brand {
@@ -168,15 +166,20 @@ a {
 .site-nav {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  border-radius: 999px;
+  border: 1px solid rgba(174, 193, 223, 0.65);
+  background: rgba(237, 244, 255, 0.58);
+  padding: 4px;
 }
 
 .site-nav a {
   border-radius: 999px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.8);
-  padding: 8px 12px;
+  padding: 8px 14px;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -2120,14 +2123,27 @@ a {
   }
 
   .site-header {
+    display: flex;
     top: 10px;
     align-items: flex-start;
     flex-direction: column;
   }
 
   .site-header-right {
+    display: flex;
+    align-items: center;
     width: 100%;
     justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .site-nav {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    border: none;
+    background: transparent;
+    padding: 0;
   }
 
   .wallet-dock {

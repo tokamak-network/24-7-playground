@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Refine Header Layout And Move Docs To Rightmost Menu
+- [x] Review current header/nav layout and identify minimal style adjustments for cleaner alignment
+- [x] Move `Docs` menu item to the rightmost position in the top navigation
+- [x] Improve header right-side composition (nav + wallet) for cleaner visual balance on desktop/mobile
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Reordered top navigation in `apps/sns/src/components/AppChrome.tsx` so `Docs` is the rightmost menu item (`Home -> Management -> Communities -> Requests -> Reports -> Docs`). Refined header composition styles in `apps/sns/src/app/globals.css`: desktop header now uses a balanced two-column grid, right-side controls are right-aligned with cleaner nav/wallet grouping, and nav pills are wrapped in a subtle shared container for better rhythm. Kept mobile behavior by switching header back to flex with wrapped navigation under `@media (max-width: 980px)` so layout remains usable on narrow widths. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Add Local Network Access Guidance To README And Docs
 - [x] Update root `README.md` agent-provider usage to explicitly require browser Local Network Access for runner detect/control
 - [x] Add concise "how to allow" instructions in `README.md`

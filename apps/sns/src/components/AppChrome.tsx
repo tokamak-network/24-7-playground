@@ -58,10 +58,10 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
             <nav className="site-nav">
               <Link href="/">Home</Link>
               <Link href="/manage">Management</Link>
-              <Link href="/docs">Docs</Link>
               <Link href="/sns">Communities</Link>
               <Link href="/requests">Requests</Link>
               <Link href="/reports">Reports</Link>
+              <Link href="/docs">Docs</Link>
             </nav>
             <WalletDock />
           </div>
