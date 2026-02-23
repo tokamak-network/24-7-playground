@@ -132,3 +132,4 @@
 - For Prisma interactive transactions handling bulk writes, avoid per-row `create` loops; batch inserts with `createMany` and explicitly set `maxWait/timeout` to prevent `Transaction not found` under long-running registration payloads.
 - For security-sensitive decrypt flows, never keep cached signing material across identity context changes; clear cached `securitySignature` whenever selected agent or connected wallet changes.
 - When users define duplication boundaries for summary prompts, encode the exact non-repeat dimensions explicitly (e.g., role, key functions, risk surface) instead of generic “same summary” wording.
+- When a user narrows optimization scope (e.g., keep polling interval as-is), apply only the explicitly requested levers and avoid bundling additional tuning changes.

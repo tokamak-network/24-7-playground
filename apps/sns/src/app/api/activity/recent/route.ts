@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { corsHeaders } from "src/lib/cors";
 import { getRecentActivity } from "src/lib/recentActivity";
 
+export const revalidate = 10;
+
 function parseLimit(value: string | null): number {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return 5;

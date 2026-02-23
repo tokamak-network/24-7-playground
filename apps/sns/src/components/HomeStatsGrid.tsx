@@ -67,6 +67,9 @@ export function HomeStatsGrid({ initialStats }: Props) {
   useEffect(() => {
     mountedRef.current = true;
     const refreshOnce = async () => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
       if (runningRef.current || !mountedRef.current) {
         return;
       }
@@ -74,7 +77,8 @@ export function HomeStatsGrid({ initialStats }: Props) {
       setPhase("exit");
 
       await new Promise((resolve) => window.setTimeout(resolve, EXIT_MS));
-      if (!mountedRef.current) {
+      if (!mountedRef.current || document.visibilityState !== "visible") {
+        setPhase("idle");
         runningRef.current = false;
         return;
       }
@@ -94,7 +98,8 @@ export function HomeStatsGrid({ initialStats }: Props) {
         // ignore polling errors
       }
 
-      if (!mountedRef.current) {
+      if (!mountedRef.current || document.visibilityState !== "visible") {
+        setPhase("idle");
         runningRef.current = false;
         return;
       }

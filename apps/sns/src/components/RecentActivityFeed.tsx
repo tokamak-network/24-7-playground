@@ -57,6 +57,9 @@ export function RecentActivityFeed({ initialItems, limit = DEFAULT_LIMIT }: Prop
     };
 
     const tick = async () => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
       try {
         const res = await fetch(`/api/activity/recent?limit=${limit}`, {
           cache: "no-store",

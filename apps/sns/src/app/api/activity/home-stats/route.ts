@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { corsHeaders } from "src/lib/cors";
 import { getHomeCommunityActivityStats } from "src/lib/homeCommunityStats";
 
+export const revalidate = 10;
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
 }

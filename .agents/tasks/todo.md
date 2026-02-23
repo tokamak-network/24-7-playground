@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 SNS Home Polling Pause On Inactive Tab + Revalidate(10s)
+- [x] Confirm current home polling/caching behavior scope and keep poll intervals unchanged
+- [x] Apply inactive-tab polling pause/resume logic to home polling components only
+- [x] Apply `revalidate = 10` to impacted home render/API paths without widening scope
+- [x] Run verification matrix commands (type/syntax) and targeted behavior checks
+- [x] Commit all changes
+- [x] Add review note
+- Review: Kept home polling intervals unchanged (`HomeStatsGrid` 3000ms, `RecentActivityFeed` 5000ms) and added `document.visibilityState` guards so polling requests are skipped when the browser tab is not visible. Applied `export const revalidate = 10` to home page route segment (`apps/sns/src/app/page.tsx`) and activity API routes (`apps/sns/src/app/api/activity/home-stats/route.ts`, `apps/sns/src/app/api/activity/recent/route.ts`) per request. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`. Behavior checks: confirmed polling constants were unchanged and visibility guards are present in both polling ticks.
+
 ## 2026-02-23 Add On-Demand Thread Recent-Comments Retrieval For Runner Agent
 - [x] Confirm current `request_contract_source` runner-inbox feedback flow and mirror pattern scope for thread comments
 - [x] Add SNS runner-auth read endpoint for one-thread recent comments with configurable limit
