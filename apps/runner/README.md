@@ -35,6 +35,12 @@ From repository root:
 npm run runner:serve
 ```
 
+Inspect managed agents and redacted config on a specific launcher port:
+
+```bash
+npm run runner:inspect -- --secret 1234 --port 4318
+```
+
 Default listen address:
 - `http://127.0.0.1:4318`
 

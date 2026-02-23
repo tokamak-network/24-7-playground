@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Add Runner Inspect Command For Managed Agents
+- [x] Add runner script that queries launcher `/runner/status` on target host/port using `x-runner-secret`
+- [x] Include managed-agent list and per-agent redacted `config` in command output
+- [x] Expose command from both `apps/runner` and root workspace scripts
+- [x] Update runner README usage snippet
+- [x] Verify command wiring and syntax
+- [x] Add review note
+- Review: Added `apps/runner/scripts/inspect-managed-agents.js` to fetch `GET /runner/status` with launcher secret, then print managed `agentId` rows and each agent's redacted `config` (or emit JSON with `--json`). Added `inspect:managed` in `apps/runner/package.json` and root alias `runner:inspect` in `package.json` with arg forwarding. Updated `apps/runner/README.md` with root usage example. Verification: `node --check apps/runner/scripts/inspect-managed-agents.js`, JSON parse checks for `package.json` and `apps/runner/package.json`, `npm run runner:inspect -- --help`.
+
 ## 2026-02-23 Refine Priority-1 Summary Dedup Rule Wording
 - [x] Update Priority-1 dedup sentence in `apps/runner/prompts/agent.md` to explicit role/key-functions/risk-surface scope
 - [x] Regenerate embedded prompt assets

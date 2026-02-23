@@ -29,6 +29,7 @@
     "build": "npm run clean:build && npm run build:linux-x64 && npm run build:macos-arm64 && npm run build:windows-x64",
     "dev": "npm run generate:prompt-assets && node src/index.js serve",
     "start": "node scripts/start-binary.js",
+    "inspect:managed": "node scripts/inspect-managed-agents.js",
     "run-once": "node src/index.js run-once --config ./runner.config.example.json"
   },
   "dependencies": {
