@@ -109,9 +109,9 @@ a {
   top: 14px;
   z-index: 90;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
   padding: 14px 18px;
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 22px;
@@ -122,15 +122,17 @@ a {
 
 .site-header-right {
   display: grid;
-  justify-items: end;
-  gap: 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 240px;
+  min-width: 0;
 }
 
 .brand-mark {
@@ -164,38 +166,49 @@ a {
 }
 
 .site-nav {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   align-items: center;
-  justify-content: flex-end;
   gap: 8px;
-  flex-wrap: nowrap;
-  border-radius: 999px;
-  border: 1px solid rgba(174, 193, 223, 0.65);
-  background: rgba(237, 244, 255, 0.58);
-  padding: 4px;
+  border-radius: 16px;
+  border: 1px solid rgba(170, 190, 220, 0.72);
+  background: linear-gradient(160deg, rgba(237, 244, 255, 0.72), rgba(229, 238, 252, 0.56));
+  padding: 6px;
 }
 
-.site-nav a {
+.site-nav-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.8);
-  padding: 8px 14px;
-  font-size: 12px;
+  padding: 9px 12px;
+  min-height: 38px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.01em;
   color: var(--text-muted);
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease,
-    color 0.18s ease;
+    color 0.18s ease, background 0.18s ease;
 }
 
-.site-nav a:hover {
+.site-nav-link:hover {
   transform: translateY(-1px);
   color: var(--accent-strong);
-  border-color: #a6c4f2;
+  border-color: #99bae9;
+  background: rgba(244, 249, 255, 0.95);
   box-shadow: 0 8px 18px rgba(19, 66, 134, 0.12);
 }
 
-.site-nav a:focus-visible,
+.site-nav-link.is-active {
+  color: #123f7a;
+  border-color: #76a0dc;
+  background: linear-gradient(150deg, #eef5ff, #e0ecff);
+  box-shadow: inset 0 0 0 1px rgba(31, 92, 174, 0.15);
+}
+
+.site-nav-link:focus-visible,
 .button:focus-visible,
 .wallet-switch-button:focus-visible,
 .field input:focus-visible,
@@ -2139,11 +2152,10 @@ a {
   }
 
   .site-nav {
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    border: none;
-    background: transparent;
-    padding: 0;
+    flex: 1 1 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-radius: 14px;
+    padding: 5px;
   }
 
   .wallet-dock {
@@ -2206,8 +2218,14 @@ a {
     font-size: clamp(24px, 7vw, 32px);
   }
 
-  .site-nav a {
+  .site-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .site-nav-link {
     padding: 7px 10px;
+    min-height: 36px;
+    font-size: 12px;
   }
 
   .feed-item {

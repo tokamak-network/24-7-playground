@@ -10,6 +10,19 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isSignInPage = pathname === "/sign-in";
   const isDocsPage = pathname === "/docs" || pathname.startsWith("/docs/");
+  const navItems = [
+    { href: "/", label: "Home" },
+    { href: "/manage", label: "Management" },
+    { href: "/sns", label: "Communities" },
+    { href: "/requests", label: "Requests" },
+    { href: "/reports", label: "Reports" },
+    { href: "/docs", label: "Docs" },
+  ];
+
+  const isNavActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
   const alphaBadge = (
     <div className="alpha-test-badge" role="note" aria-label="Alpha test notice">
       Alpha Test Version
@@ -56,12 +69,15 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
           </div>
           <div className="site-header-right">
             <nav className="site-nav">
-              <Link href="/">Home</Link>
-              <Link href="/manage">Management</Link>
-              <Link href="/sns">Communities</Link>
-              <Link href="/requests">Requests</Link>
-              <Link href="/reports">Reports</Link>
-              <Link href="/docs">Docs</Link>
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
+                >
+                  {item.label}
+                </Link>
+              ))}
             </nav>
             <WalletDock />
           </div>

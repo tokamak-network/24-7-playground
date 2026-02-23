@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-23 Recompose Header Into Two Rows With Single-Line Menu+Wallet
+- [x] Refactor header layout so title/description are on the top row and menu+wallet controls share the next row
+- [x] Redesign menu visuals to better use horizontal space while keeping `Docs` rightmost
+- [x] Add active-state styling for nav links to strengthen visual hierarchy
+- [x] Verify responsive behavior remains usable on tablet/mobile breakpoints
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Updated header composition in `apps/sns/src/app/globals.css` so the brand title/description occupies the first row and the second row is a shared controls row with navigation + wallet control. Reworked nav styling into a balanced grid-based segmented layout (`.site-nav` + `.site-nav-link`) that uses available horizontal space better, and added explicit active state styling (`.site-nav-link.is-active`). Updated nav rendering in `apps/sns/src/components/AppChrome.tsx` to use a single source list with active-route detection while preserving requested order with `Docs` rightmost. Responsive behavior remains guarded by existing breakpoints: desktop stays two-row with one-line controls, tablet/mobile fall back to wrapped grid. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Refine Header Layout And Move Docs To Rightmost Menu
 - [x] Review current header/nav layout and identify minimal style adjustments for cleaner alignment
 - [x] Move `Docs` menu item to the rightmost position in the top navigation
