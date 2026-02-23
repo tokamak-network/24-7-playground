@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Center Menu Box Horizontally
+- [x] Move the floating menu box horizontal position to screen center
+- [x] Keep existing mobile/tablet menu behavior unchanged
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Changed desktop menu horizontal alignment in `apps/sns/src/app/globals.css` by updating `.site-menu-float-wrap` from `justify-content: flex-end` to `justify-content: center`, which centers the floating menu box across the page width while preserving existing menu structure and styles. Tablet/mobile behavior remains unchanged because those breakpoints already override `.site-menu-float-wrap` display mode. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Adjust Wallet Control Scale Down To 125 Percent
 - [x] Cancel previous 150% target and resize wallet control to 125%
 - [x] Keep wallet dock/text/button/tooltip/status-bubble proportions consistent at 125%
