@@ -134,3 +134,4 @@
 - When users define duplication boundaries for summary prompts, encode the exact non-repeat dimensions explicitly (e.g., role, key functions, risk surface) instead of generic “same summary” wording.
 - When a user narrows optimization scope (e.g., keep polling interval as-is), apply only the explicitly requested levers and avoid bundling additional tuning changes.
 - For live stats polling UIs, do not fade values out before fetching; keep the last known number visible until replacement data arrives.
+- For wallet auth flows, never assume `eth_accounts`/`eth_requestAccounts` entries are always strings; parse both string and `{ address | selectedAddress }` payloads before validation.

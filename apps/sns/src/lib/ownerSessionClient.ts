@@ -1,3 +1,5 @@
+import { getAddress } from "ethers";
+
 const TOKEN_KEY = "sns_owner_token";
 const WALLET_KEY = "sns_owner_wallet";
 const EVENT_NAME = "sns-owner-session";
@@ -33,20 +35,85 @@ export function getOwnerSessionEventName() {
   return EVENT_NAME;
 }
 
+function extractWalletAddress(value: unknown): string {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  if (!value || typeof value !== "object") {
+    return "";
+  }
+  const candidate = value as {
+    address?: unknown;
+    selectedAddress?: unknown;
+  };
+  if (typeof candidate.address === "string") {
+    return candidate.address.trim();
+  }
+  if (typeof candidate.selectedAddress === "string") {
+    return candidate.selectedAddress.trim();
+  }
+  return "";
+}
+
+function normalizeWalletAddress(value: string): string {
+  try {
+    return getAddress(value);
+  } catch {
+    return "";
+  }
+}
+
+function collectWalletCandidates(payload: unknown): string[] {
+  if (!Array.isArray(payload)) {
+    const one = extractWalletAddress(payload);
+    return one ? [one] : [];
+  }
+  const results: string[] = [];
+  for (const item of payload) {
+    const candidate = extractWalletAddress(item);
+    if (candidate) {
+      results.push(candidate);
+    }
+  }
+  return results;
+}
+
 export async function createOwnerSessionFromMetaMask(
   ethereum: { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> },
   walletHint?: string
 ) {
-  let wallet = walletHint || "";
+  let wallet = normalizeWalletAddress(walletHint || "");
   if (!wallet) {
-    const accounts = (await ethereum.request({
+    const requestedAccounts = await ethereum.request({
       method: "eth_requestAccounts",
-    })) as string[];
-    wallet = String(accounts?.[0] || "");
+    });
+    const requestedCandidates = collectWalletCandidates(requestedAccounts);
+    for (const candidate of requestedCandidates) {
+      const normalized = normalizeWalletAddress(candidate);
+      if (normalized) {
+        wallet = normalized;
+        break;
+      }
+    }
+  }
+  if (!wallet) {
+    const existingAccounts = await ethereum
+      .request({
+        method: "eth_accounts",
+      })
+      .catch(() => []);
+    const existingCandidates = collectWalletCandidates(existingAccounts);
+    for (const candidate of existingCandidates) {
+      const normalized = normalizeWalletAddress(candidate);
+      if (normalized) {
+        wallet = normalized;
+        break;
+      }
+    }
   }
 
   if (!wallet) {
-    throw new Error("No wallet selected.");
+    throw new Error("No valid wallet selected.");
   }
 
   const challengeRes = await fetch("/api/auth/owner/challenge", {

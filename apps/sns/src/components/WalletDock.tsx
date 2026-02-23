@@ -19,6 +19,26 @@ export function WalletDock() {
     }
   };
 
+  const extractWalletAddress = (value: unknown) => {
+    if (typeof value === "string") {
+      return value.trim();
+    }
+    if (!value || typeof value !== "object") {
+      return "";
+    }
+    const candidate = value as {
+      address?: unknown;
+      selectedAddress?: unknown;
+    };
+    if (typeof candidate.address === "string") {
+      return candidate.address.trim();
+    }
+    if (typeof candidate.selectedAddress === "string") {
+      return candidate.selectedAddress.trim();
+    }
+    return "";
+  };
+
   const connectWallet = async () => {
     if (!window.ethereum) {
       setStatus("MetaMask not detected.");
@@ -33,10 +53,12 @@ export function WalletDock() {
         method: "wallet_requestPermissions",
         params: [{ eth_accounts: {} }],
       });
-      const accounts = (await window.ethereum.request({
+      const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
-      })) as string[];
-      const selectedWallet = String(accounts?.[0] || "");
+      });
+      const selectedWallet = Array.isArray(accounts)
+        ? extractWalletAddress(accounts[0])
+        : "";
       if (!selectedWallet) {
         setStatus("No wallet selected.");
         return;
@@ -80,11 +102,14 @@ export function WalletDock() {
 
     const loadAccounts = async () => {
       try {
-        const accounts = (await eth.request({
+        const accounts = await eth.request({
           method: "eth_accounts",
-        })) as string[];
-        if (accounts && accounts.length > 0) {
-          setWallet(normalizeAddress(accounts[0]));
+        });
+        if (Array.isArray(accounts) && accounts.length > 0) {
+          const address = extractWalletAddress(accounts[0]);
+          if (address) {
+            setWallet(normalizeAddress(address));
+          }
         }
       } catch {
         // ignore auto-detect errors
@@ -93,12 +118,13 @@ export function WalletDock() {
 
     void loadAccounts();
 
-    const handleAccounts = (accounts: string[]) => {
+    const handleAccounts = (accounts: unknown[]) => {
       if (!accounts || accounts.length === 0) {
         setWallet("");
         return;
       }
-      setWallet(normalizeAddress(accounts[0]));
+      const address = extractWalletAddress(accounts[0]);
+      setWallet(normalizeAddress(address));
     };
 
     eth.on("accountsChanged", handleAccounts);

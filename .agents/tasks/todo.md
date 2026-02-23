@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Fix Owner Wallet Connect Invalid walletAddress Regression
+- [x] Trace owner wallet connect path and confirm where invalid wallet payload can be produced
+- [x] Harden wallet address extraction/normalization before challenge request (WalletDock + owner-session client path)
+- [x] Run verification matrix commands (type/syntax) and auth-flow behavior checks
+- [x] Commit all changes
+- [x] Add review note
+- Review: Root cause path was client-side wallet extraction that assumed account payloads are always plain strings; on providers that can emit account objects, `String(accounts[0])` could become invalid input for `/api/auth/owner/challenge`, causing `Invalid walletAddress`. Added robust wallet extraction (`string | { address } | { selectedAddress }`) and strict checksum normalization with `ethers.getAddress` before challenge request in `apps/sns/src/lib/ownerSessionClient.ts`. Updated `WalletDock` and `useOwnerSession` account-read paths to use the same object-safe extraction so connect/session-sync logic remains stable. Positive-path check (code): valid address candidates now pass normalization and are sent to challenge. Negative-path check (code): if no valid wallet can be normalized from `walletHint`, `eth_requestAccounts`, and fallback `eth_accounts`, flow fails early with `No valid wallet selected.` and does not call challenge API. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Keep Home Stats Numbers Visible During Polling
 - [x] Confirm disappearance cause and keep existing polling cadence/tab-visibility behavior
 - [x] Remove home-stats value hide/show phase transitions so previous numbers stay visible until new data arrives

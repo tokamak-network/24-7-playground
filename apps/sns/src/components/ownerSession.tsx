@@ -9,6 +9,26 @@ import {
   saveOwnerSession,
 } from "src/lib/ownerSessionClient";
 
+function extractWalletAddress(value: unknown): string {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  if (!value || typeof value !== "object") {
+    return "";
+  }
+  const candidate = value as {
+    address?: unknown;
+    selectedAddress?: unknown;
+  };
+  if (typeof candidate.address === "string") {
+    return candidate.address.trim();
+  }
+  if (typeof candidate.selectedAddress === "string") {
+    return candidate.selectedAddress.trim();
+  }
+  return "";
+}
+
 export function useOwnerSession() {
   const [walletAddress, setWalletAddress] = useState("");
   const [connectedWallet, setConnectedWallet] = useState("");
@@ -44,8 +64,11 @@ export function useOwnerSession() {
     try {
       const accounts = (await ethereum.request({
         method: "eth_accounts",
-      })) as string[];
-      const connectedWallet = String(accounts?.[0] || "").toLowerCase();
+      })) as unknown;
+      const firstAccount = Array.isArray(accounts)
+        ? extractWalletAddress(accounts[0])
+        : "";
+      const connectedWallet = firstAccount.toLowerCase();
       setConnectedWallet(connectedWallet);
       const sessionWallet = session.walletAddress.toLowerCase();
 
