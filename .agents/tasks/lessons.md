@@ -1,5 +1,6 @@
 # Lessons
 
+- If a user says a proposed design is not innovative enough and picks another concept, switch immediately to the requested concept and update the design-plan document status to match the implemented option.
 - When users ask to compare layout concepts and pick one, record the concept set in a dedicated docs file first, then implement only the selected option to keep decision history explicit.
 - When users request removing a specific visual wrapper (e.g., nav container box), remove the exact container-level styles (border/background/padding) first before proposing broader redesign options.
 - When a user requests header restructuring (title row + controls row), implement the structure explicitly in shared layout CSS and pair it with a navigation system update (active state + spacing) instead of only tweaking margins.

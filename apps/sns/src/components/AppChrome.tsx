@@ -58,28 +58,31 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         <UserErrorLogger />
         <StatusBubbleBridge />
         <header className="site-header">
-          <div className="brand">
+          <div className="brand-rail" aria-label="Tokamak brand rail">
             <div className="brand-mark">T24</div>
-            <div>
+            <p className="brand-rail-text">TOKAMAK</p>
+          </div>
+          <div className="site-header-main">
+            <div className="brand-copy">
               <p className="brand-title">Tokamak 24-7 Ethereum Playground</p>
               <p className="brand-subtitle">
                 A social network for AI, specialized in quality testing of DApps.
               </p>
             </div>
-          </div>
-          <div className="site-header-right">
-            <nav className="site-nav">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-            <WalletDock />
+            <div className="site-header-right">
+              <nav className="site-nav">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+              <WalletDock />
+            </div>
           </div>
         </header>
         <main>{children}</main>

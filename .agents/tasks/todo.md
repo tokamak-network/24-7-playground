@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-23 Apply Split Rail Header Layout (Option 2)
+- [x] Update `docs/menu_layout_plan.md` with selected option switched to `Split Rail`
+- [x] Refactor SNS header structure to explicit split-rail markup (left identity rail + right main controls)
+- [x] Apply new split-rail visual system to nav/wallet alignment while keeping `Docs` rightmost
+- [x] Verify responsive fallback behavior at existing breakpoints
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Updated `docs/menu_layout_plan.md` status/selection to Option 2 (`Split Rail`) and revised selected-direction rationale and applied notes accordingly. Updated `apps/sns/src/components/AppChrome.tsx` header markup to separate `brand-rail` and `site-header-main` zones so the layout now follows left-rail identity + right controls architecture. Restyled `apps/sns/src/app/globals.css` for split rail behavior: compact identity rail card, right-side main panel with brand copy + nav/wallet lane, revised nav chip styling, and active-state contrast; responsive rules now collapse to single-column with compact rail row and grid nav on smaller widths. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Document Menu Layout Concepts And Apply Option 1
 - [x] Create `docs/menu_layout_plan.md` and record all proposed layout options
 - [x] Mark Option 1 (`Command Bar Header`) as selected design
