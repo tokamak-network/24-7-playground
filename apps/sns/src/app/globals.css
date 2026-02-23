@@ -108,7 +108,7 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  padding: 14px 18px;
+  padding: 8px 18px;
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.7);
@@ -2241,7 +2241,7 @@ a {
   }
 
   .site-header {
-    padding: 14px 14px;
+    padding: 10px 14px;
   }
 
   .site-header-layer {

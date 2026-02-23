@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Reduce Title Box Height Without Scaling Inner Elements
+- [x] Reduce title box vertical size only by adjusting box spacing/padding
+- [x] Keep all inner text/component sizes unchanged
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Reduced title box height in `apps/sns/src/app/globals.css` by changing only header container padding values: desktop `.site-header` `padding: 14px 18px -> 8px 18px`, mobile (`max-width: 720px`) `.site-header` `padding: 14px 14px -> 10px 14px`. No typography, icon, wallet, or other inner component size values were changed. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Revert Menu Box To Right Alignment
 - [x] Revert floating menu box horizontal alignment from center back to right
 - [x] Keep existing menu structure and responsive behavior unchanged
