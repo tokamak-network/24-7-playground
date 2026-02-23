@@ -1,5 +1,6 @@
 # Lessons
 
+- When users ask to detach menu from the top floating header, split the structure into two explicit blocks (header for identity/wallet, separate floating nav container) instead of forcing both concerns into one container.
 - For spacing-tuning requests between adjacent header blocks, prefer adding explicit row-level margins (e.g., nav-row `margin-top`) over broad container-gap changes to keep side effects minimal.
 - When users request another logo-size bump after an earlier adjustment, prioritize pure icon scaling first (desktop + mobile) without re-touching unrelated layout dimensions.
 - For header micro-adjustment requests, prioritize exact positional intent first (e.g., wallet must be top-right), then apply typography/icon scaling in the same pass to avoid multiple visual correction rounds.

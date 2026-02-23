@@ -72,20 +72,20 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               <WalletDock />
             </div>
           </div>
-          <div className="site-header-right">
-            <nav className="site-nav">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
         </header>
+        <div className="site-menu-float-wrap">
+          <nav className="site-menu-float">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
         <main>{children}</main>
         <footer className="site-footer">
           <div>PoC only. No real funds or mainnet writes.</div>

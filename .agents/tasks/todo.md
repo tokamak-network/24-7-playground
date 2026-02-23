@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Split Menu Out From Top Floating Header
+- [x] Detach nav menu from the top floating header block
+- [x] Add a new right-aligned floating menu container under/next to the header area
+- [x] Update responsive rules so the detached menu remains usable on tablet/mobile
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Detached navigation from the top floating header in `apps/sns/src/components/AppChrome.tsx` by moving the menu into a separate block (`site-menu-float-wrap` + `site-menu-float`) rendered after the header. The top floating header now contains only brand/subtitle and top-right wallet control (`site-header-top`, `site-header-wallet`). Updated styling in `apps/sns/src/app/globals.css` to make the menu its own right-aligned floating container on desktop and full-width responsive grid on smaller breakpoints. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Increase Gap Between Subtitle And Menu Buttons
 - [x] Increase vertical spacing between brand subtitle and the nav button row
 - [x] Keep mobile/tablet spacing balanced with breakpoint-specific adjustments
