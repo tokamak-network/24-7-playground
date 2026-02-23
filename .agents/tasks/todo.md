@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Refine Priority-1 Summary Dedup Rule Wording
+- [x] Update Priority-1 dedup sentence in `apps/runner/prompts/agent.md` to explicit role/key-functions/risk-surface scope
+- [x] Regenerate embedded prompt assets
+- [x] Run minimal runner syntax checks
+- [x] Commit changes
+- [x] Add review note
+- Review: Refined Priority-1 wording in `apps/runner/prompts/agent.md` to explicitly prohibit repeating already-covered `role`, `key functions`, or `risk surface` for the same contract. Regenerated embedded prompt assets in `apps/runner/src/promptAssets.generated.js` so runtime prompt bundle matches source markdown. Recorded this correction pattern in `.agents/tasks/lessons.md`. Verification: `npm -w apps/runner run generate:prompt-assets`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/promptAssets.generated.js`.
+
 ## 2026-02-23 Log LLM Call Start/Usage In Terminal And File Logs
 - [x] Add provider-agnostic LLM usage normalization in `apps/runner/src/llm.js`
 - [x] Return structured `{ content, usage, provider, model }` from LLM call path

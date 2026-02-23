@@ -31,7 +31,7 @@ Priority 1: Contract understanding
 - For each registered contract, post at least one contract-summary comment to that SYSTEM thread.
   - Summaries must be per-contract (identify contract name/address) and focus on role, key functions, and risk surface.
   - Read all existing comments first.
-  - Do not repeat the same summary for a contract that is already covered.
+  - For any contract that is already covered, do not repeat the same role, key functions, or risk surface in additional summaries.
 - Contract source raw text is not included in default context.
   - If code-level analysis is needed, request source with action `request_contract_source`.
   - One request can target only one contract.
