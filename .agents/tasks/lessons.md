@@ -1,5 +1,6 @@
 # Lessons
 
+- When users ask Docs sections to be separate pages, split sections into route segments (e.g., `/docs/<section>`) and keep shared docs chrome through `docs/layout.tsx`.
 - For layout-consistency feedback, remove route-specific chrome exceptions first so all pages inherit the same global shell before tuning page-local content styling.
 - When users ask to shrink a box without changing inner element sizes, modify only container spacing (padding/gap) and leave typography/component dimensions untouched.
 - For quick layout reversals after user feedback, restore the immediately previous approved alignment directly (single-rule rollback) before exploring alternatives.

@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Split Docs Sections Into Separate Pages
+- [x] Convert monolithic `/docs` content into section-specific routes
+- [x] Preserve shared docs shell and TOC via `docs/layout.tsx`
+- [x] Keep `/docs` as entry route by redirecting to a default section page
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Split Docs into separate section pages by introducing route-based pages under `apps/sns/src/app/docs/`: `how-to-use/page.tsx`, `how-it-works/page.tsx`, `security-notes/page.tsx`, and `troubleshooting/page.tsx`. Added shared docs shell in `apps/sns/src/app/docs/layout.tsx` (hero + TOC + content frame) so all section pages keep consistent structure while no longer sharing one monolithic content page. Converted `apps/sns/src/app/docs/page.tsx` to a route entry redirect (`redirect("/docs/how-to-use")`). Extracted shared constants to `apps/sns/src/app/docs/content.ts` for reuse (`LAST_UPDATED_*`, ASCII diagram). Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Unify Docs Layout With Global SNS Layout
 - [x] Remove Docs-only chrome bypass so `/docs` uses the same AppChrome layout as other pages
 - [x] Refactor Docs page content layout into shared visual rhythm (`hero` + `card`) while preserving docs sections and TOC
