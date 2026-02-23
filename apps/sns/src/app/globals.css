@@ -111,7 +111,7 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 10px;
+  gap: 4px;
   padding: 14px 18px;
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 22px;
@@ -174,7 +174,6 @@ a {
 .site-menu-float-wrap {
   display: flex;
   justify-content: flex-end;
-  height: 70px;
 }
 
 .site-menu-float {
@@ -185,10 +184,6 @@ a {
   padding: 8px 10px;
   width: fit-content;
   max-width: 100%;
-  position: fixed;
-  top: 142px;
-  right: max(20px, calc((100vw - 1240px) / 2 + 20px));
-  z-index: 88;
   border-radius: 999px;
   border: 1px solid rgba(156, 182, 220, 0.82);
   background: linear-gradient(160deg, rgba(240, 247, 255, 0.9), rgba(227, 239, 255, 0.74));
@@ -2173,7 +2168,6 @@ a {
 
   .site-menu-float-wrap {
     display: block;
-    height: auto;
   }
 
   .site-menu-float {
@@ -2184,10 +2178,6 @@ a {
     padding: 6px;
     width: 100%;
     max-width: none;
-    position: static;
-    top: auto;
-    right: auto;
-    z-index: auto;
   }
 
   .wallet-dock {

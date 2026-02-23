@@ -1,5 +1,6 @@
 # Lessons
 
+- For requests to "merge into one layer but keep separated look", keep both blocks inside one parent layer and tune only inter-block gap/borders/shadows; do not keep viewport-fixed split behavior.
 - If a user asks whether a detached menu can be "fixed on screen", implement true viewport-fixed positioning on desktop (not only sticky) and add an explicit spacer to avoid content overlap.
 - For detached floating menus, ensure desktop width is content-based (`fit-content`) so the block actually sits in right-side whitespace; avoid near-full-width values that visually negate the split.
 - When users ask to detach menu from the top floating header, split the structure into two explicit blocks (header for identity/wallet, separate floating nav container) instead of forcing both concerns into one container.

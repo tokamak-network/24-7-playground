@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Merge Title/Menu Into One Layer With Tight Gap
+- [x] Place title box and menu box into the same top floating layer/container
+- [x] Keep visual separation between the two boxes while reducing their gap to very narrow spacing
+- [x] Remove detached fixed-menu behavior introduced in previous step
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Merged title box and menu box into the same header layer by moving menu markup back inside `site-header` in `apps/sns/src/components/AppChrome.tsx` while retaining separate card visuals for each block. Reduced vertical spacing between the title block and menu block to a narrow header gap (`4px`) in `apps/sns/src/app/globals.css` so they appear almost adjacent but still visually detached. Removed previously introduced detached fixed-menu behavior by deleting desktop `position: fixed` anchoring from `site-menu-float` and spacer-specific `height` handling from `site-menu-float-wrap`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Pin Detached Floating Menu To Viewport
 - [x] Make the detached floating menu fixed to the viewport on desktop
 - [x] Prevent main-content overlap by reserving vertical space where needed
