@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Adjust Wallet Control Scale Down To 125 Percent
+- [x] Cancel previous 150% target and resize wallet control to 125%
+- [x] Keep wallet dock/text/button/tooltip/status-bubble proportions consistent at 125%
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Reduced wallet control sizing from the prior 150% pass down to 125% in `apps/sns/src/app/globals.css` across the full wallet component surface (`wallet-dock`, row/actions spacing, label/address text, switch button, switch tooltip, address tooltip, status bubble and pointer). Key targets now align to ~125% from the original baseline: button `26 -> 33`, address text `12 -> 15`, label text `10 -> 12.5`, tooltip width `200/280 -> 250/350`, status bubble font `11 -> 14`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Scale Wallet Control Component To 150 Percent
 - [x] Increase wallet control component size to 150% while keeping internal proportions
 - [x] Ensure wallet tooltip/status bubble scales consistently with wallet control
