@@ -1,5 +1,6 @@
 # Lessons
 
+- For layout-consistency feedback, remove route-specific chrome exceptions first so all pages inherit the same global shell before tuning page-local content styling.
 - When users ask to shrink a box without changing inner element sizes, modify only container spacing (padding/gap) and leave typography/component dimensions untouched.
 - For quick layout reversals after user feedback, restore the immediately previous approved alignment directly (single-rule rollback) before exploring alternatives.
 - If the user says a percentage-based UI scale is too large, immediately retarget to the newly requested percentage (e.g., 150% -> 125%) across the full component set rather than partial rollback.

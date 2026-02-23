@@ -1891,56 +1891,20 @@ a {
   font-size: 12px;
 }
 
-.docs-route-main {
-  min-height: 100vh;
+.docs-page {
+  gap: 20px;
 }
 
-.docs-page {
-  --docs-topbar-height: 78px;
-  --docs-content-max-width: 1180px;
-  max-width: var(--docs-content-max-width);
-  margin: 0 auto;
-  padding: calc(var(--docs-topbar-height) + 18px) 24px 42px;
+.docs-layout-card {
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
-  gap: 28px;
-}
-
-.docs-topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 120;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  height: var(--docs-topbar-height);
-  padding: 0 max(24px, calc((100vw - var(--docs-content-max-width)) / 2 + 24px));
-  border-bottom: 1px solid rgba(212, 222, 238, 0.95);
-  background: rgba(245, 249, 255, 0.95);
-  backdrop-filter: blur(8px);
-}
-
-.docs-topbar h1 {
-  margin: 0;
-  font-family: var(--font-display), "Helvetica Neue", sans-serif;
-  font-size: clamp(24px, 2.8vw, 34px);
-  line-height: 1.1;
-}
-
-.docs-topbar p {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 13px;
-  line-height: 1.35;
-  white-space: nowrap;
+  gap: 24px;
+  align-items: start;
 }
 
 .docs-toc {
   position: sticky;
-  top: calc(var(--docs-topbar-height) + 14px);
+  top: 132px;
   align-self: start;
 }
 
@@ -1983,6 +1947,7 @@ a {
 .docs-section {
   display: grid;
   gap: 14px;
+  scroll-margin-top: 140px;
 }
 
 .docs-section h2 {
@@ -2205,21 +2170,13 @@ a {
     flex-direction: column;
   }
 
-  .docs-page {
-    --docs-topbar-height: 74px;
+  .docs-layout-card {
     grid-template-columns: 1fr;
     gap: 16px;
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .docs-topbar {
-    height: var(--docs-topbar-height);
-    padding: 0 16px;
   }
 
   .docs-toc {
-    top: calc(var(--docs-topbar-height) + 8px);
+    position: static;
   }
 
   .docs-toc-nav {
@@ -2295,23 +2252,6 @@ a {
     font-size: 10px;
     letter-spacing: 0.03em;
     padding: 6px 10px;
-  }
-
-  .docs-page {
-    --docs-topbar-height: 92px;
-    padding: calc(var(--docs-topbar-height) + 10px) 12px 28px;
-  }
-
-  .docs-topbar {
-    height: var(--docs-topbar-height);
-    align-items: flex-start;
-    flex-direction: column;
-    justify-content: center;
-    padding: 8px 12px;
-  }
-
-  .docs-topbar p {
-    white-space: normal;
   }
 
   .docs-toc-nav {

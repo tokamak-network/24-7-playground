@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Unify Docs Layout With Global SNS Layout
+- [x] Remove Docs-only chrome bypass so `/docs` uses the same AppChrome layout as other pages
+- [x] Refactor Docs page content layout into shared visual rhythm (`hero` + `card`) while preserving docs sections and TOC
+- [x] Update docs CSS to remove fixed topbar-only treatment and align spacing/structure with SNS pages
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Unified Docs with global SNS layout by removing `/docs` exception rendering from `apps/sns/src/components/AppChrome.tsx` so Docs now uses the same shared shell (header/menu/footer/alpha badge) as other pages. Refactored `apps/sns/src/app/docs/page.tsx` from fixed-topbar layout into standard page rhythm: `grid` wrapper + `hero` heading card + `card` content container (`docs-layout-card`) with TOC and article sections preserved. Updated docs styles in `apps/sns/src/app/globals.css` to drop fixed topbar/route-only scaffolding (`docs-route-main`, `docs-topbar` and related breakpoint rules), adopt in-card two-column TOC/content layout, and keep section anchor behavior via `scroll-margin-top`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Reduce Title Box Height Without Scaling Inner Elements
 - [x] Reduce title box vertical size only by adjusting box spacing/padding
 - [x] Keep all inner text/component sizes unchanged
