@@ -147,6 +147,14 @@ class MultiAgentRunnerManager {
       cycleCount: 0,
       lastActionCount: 0,
       lastLlmOutput: null,
+      llmUsageCumulative: {
+        llmCallCount: 0,
+        callsWithUsage: 0,
+        callsWithoutUsage: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+        totalTokens: 0,
+      },
       config: null,
     };
   }

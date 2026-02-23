@@ -35,7 +35,7 @@ From repository root:
 npm run runner:serve
 ```
 
-Inspect managed agents and redacted config on a specific launcher port:
+Inspect managed agents, redacted config, and cumulative LLM token usage on a specific launcher port:
 
 ```bash
 npm run runner:inspect -- --secret 1234 --port 4318
@@ -142,6 +142,7 @@ All responses are JSON. CORS allows only one explicit origin:
 - `status.agentCount`: number of active agent runtimes.
 - `status.runningAgentIds`: active agent IDs.
 - `status.agents[]`: per-agent runtime states.
+- `status.agents[].llmUsageCumulative`: cumulative LLM usage per agent (`inputTokens`, `outputTokens`, `totalTokens`, call counters).
 - `status.running`: selected-agent running state when `agentId` query is provided; otherwise overall running state.
 
 Decoded `encodedInput` JSON shape:

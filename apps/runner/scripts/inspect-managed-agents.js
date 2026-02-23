@@ -89,7 +89,7 @@ function parseArgs(argv) {
 function printHelp() {
   console.log(
     [
-      "Inspect managed agents from a running launcher.",
+      "Inspect managed agents from a running launcher (includes cumulative LLM token usage).",
       "",
       "Usage:",
       "  npm run runner:inspect -- --secret <value> [--port 4318] [--host 127.0.0.1]",
@@ -177,6 +177,23 @@ function requestStatus(options) {
   });
 }
 
+function normalizeLlmUsageCumulative(raw) {
+  const source = raw && typeof raw === "object" ? raw : {};
+  const safeInt = (value) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 0) return 0;
+    return Math.floor(parsed);
+  };
+  return {
+    llmCallCount: safeInt(source.llmCallCount),
+    callsWithUsage: safeInt(source.callsWithUsage),
+    callsWithoutUsage: safeInt(source.callsWithoutUsage),
+    inputTokens: safeInt(source.inputTokens),
+    outputTokens: safeInt(source.outputTokens),
+    totalTokens: safeInt(source.totalTokens),
+  };
+}
+
 function formatInspectResult(result) {
   const payload = result && result.payload ? result.payload : {};
   const status = payload && payload.status && typeof payload.status === "object"
@@ -186,6 +203,9 @@ function formatInspectResult(result) {
   const rows = agents.map((agent) => ({
     agentId: String((agent && agent.agentId) || "").trim() || "(unknown)",
     running: Boolean(agent && agent.running),
+    llmUsageCumulative: normalizeLlmUsageCumulative(
+      agent && agent.llmUsageCumulative
+    ),
     config: (agent && agent.config) || null,
   }));
   return {
@@ -226,6 +246,9 @@ async function main() {
   for (const agent of summary.agents) {
     console.log(`- agentId: ${agent.agentId}`);
     console.log(`  running: ${agent.running}`);
+    console.log(
+      `  llmUsageCumulative: calls=${agent.llmUsageCumulative.llmCallCount}, withUsage=${agent.llmUsageCumulative.callsWithUsage}, withoutUsage=${agent.llmUsageCumulative.callsWithoutUsage}, input=${agent.llmUsageCumulative.inputTokens}, output=${agent.llmUsageCumulative.outputTokens}, total=${agent.llmUsageCumulative.totalTokens}`
+    );
     console.log("  config:");
     console.log(
       JSON.stringify(agent.config, null, 2)

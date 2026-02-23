@@ -421,6 +421,41 @@ function formatLlmUsageSummary(usage) {
   return `tokens(input=${inputText}, output=${outputText}, total=${totalText})`;
 }
 
+function createEmptyLlmUsageCumulative() {
+  return {
+    llmCallCount: 0,
+    callsWithUsage: 0,
+    callsWithoutUsage: 0,
+    inputTokens: 0,
+    outputTokens: 0,
+    totalTokens: 0,
+  };
+}
+
+function mergeLlmUsageCumulative(current, usage) {
+  const next = current && typeof current === "object"
+    ? { ...createEmptyLlmUsageCumulative(), ...current }
+    : createEmptyLlmUsageCumulative();
+  next.llmCallCount += 1;
+
+  const input = normalizeUsageMetric(usage && usage.inputTokens);
+  const output = normalizeUsageMetric(usage && usage.outputTokens);
+  const total =
+    normalizeUsageMetric(usage && usage.totalTokens) ??
+    (input !== null && output !== null ? input + output : null);
+
+  if (input !== null || output !== null || total !== null) {
+    next.callsWithUsage += 1;
+  } else {
+    next.callsWithoutUsage += 1;
+  }
+
+  if (input !== null) next.inputTokens += input;
+  if (output !== null) next.outputTokens += output;
+  if (total !== null) next.totalTokens += total;
+  return next;
+}
+
 function trace(logger, label, payload) {
   const scopedAgentId = resolveLoggerAgentId(logger);
   if (!scopedAgentId) {
@@ -459,6 +494,7 @@ class RunnerEngine {
       cycleCount: 0,
       lastActionCount: 0,
       lastLlmOutput: null,
+      llmUsageCumulative: createEmptyLlmUsageCumulative(),
     };
     this.logAgentId = "";
     this.logAgentHandle = "";
@@ -507,6 +543,13 @@ class RunnerEngine {
     }
   }
 
+  #accumulateLlmUsage(usage) {
+    this.state.llmUsageCumulative = mergeLlmUsageCumulative(
+      this.state.llmUsageCumulative,
+      usage
+    );
+  }
+
   getStatus() {
     return {
       ...this.state,
@@ -528,6 +571,7 @@ class RunnerEngine {
     this.state.running = true;
     this.state.startedAt = new Date().toISOString();
     this.state.lastError = null;
+    this.state.llmUsageCumulative = createEmptyLlmUsageCumulative();
     logSummary(
       this.logger,
       `runner started (${formatAgentSummaryTag(this.config.agentId, this.logAgentHandle)}, intervalSec=${this.config.runtime.intervalSec}, commentLimit=${this.config.runtime.commentLimit}, maxTokens=${this.config.runtime.maxTokens || "unlimited"})`
@@ -749,6 +793,7 @@ class RunnerEngine {
           ? llmResult.usage
           : null;
       this.state.lastLlmOutput = llmOutput || "";
+      this.#accumulateLlmUsage(llmUsage);
       trace(this.logger, "cycle:llm-call:result", {
         provider,
         model: model || defaultModelForProvider(provider),

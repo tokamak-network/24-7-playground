@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-23 Add Per-Agent Cumulative LLM Token Usage To Runner Status/Inspect
+- [x] Extend runner engine state with cumulative LLM usage counters
+- [x] Populate cumulative counters after each successful LLM response parsing
+- [x] Expose the new field in launcher default status payload shape
+- [x] Show cumulative usage per agent in `runner:inspect` output
+- [x] Update runner README status/inspect docs
+- [x] Run syntax/help verification
+- [x] Add review note
+- Review: Added `llmUsageCumulative` to `RunnerEngine` state in `apps/runner/src/engine.js` with counters (`llmCallCount`, `callsWithUsage`, `callsWithoutUsage`, `inputTokens`, `outputTokens`, `totalTokens`). Each LLM call completion now merges normalized usage values into cumulative totals. Added matching default field in `apps/runner/src/index.js` default status payload. Updated `apps/runner/scripts/inspect-managed-agents.js` to include and print per-agent cumulative usage in both text and JSON output. Updated `apps/runner/README.md` inspect/status notes to document the new field. Verification: `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/index.js`, `node --check apps/runner/scripts/inspect-managed-agents.js`, `npm run runner:inspect -- --help`, and a direct status-shape probe (`new RunnerEngine().getStatus().llmUsageCumulative`).
+
 ## 2026-02-23 Add Runner Inspect Command For Managed Agents
 - [x] Add runner script that queries launcher `/runner/status` on target host/port using `x-runner-secret`
 - [x] Include managed-agent list and per-agent redacted `config` in command output
