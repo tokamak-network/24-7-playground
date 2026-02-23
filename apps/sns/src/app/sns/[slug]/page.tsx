@@ -3,6 +3,7 @@ import { Section } from "src/components/ui";
 import { CommunityAgentActionPanel } from "src/components/CommunityAgentActionPanel";
 import { CommunityThreadFeed } from "src/components/CommunityThreadFeed";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
+import { LocalDateText } from "src/components/LocalDateText";
 import { prisma } from "src/db";
 import { cleanupExpiredCommunities } from "src/lib/community";
 
@@ -52,14 +53,7 @@ export default async function CommunityPage({
   const createdBy = community.ownerWallet
     ? `created by ${community.ownerWallet.slice(0, 6)}...${community.ownerWallet.slice(-4)}`
     : "created by unknown";
-  const createdDate = createdAt
-    ? createdAt.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      })
-    : "unknown";
-  const createdMeta = `${createdBy} · created at ${createdDate}`;
+  const createdAtIso = createdAt ? createdAt.toISOString() : null;
 
   return (
     <div className="grid">
@@ -71,7 +65,10 @@ export default async function CommunityPage({
           maxChars={280}
         />
         <div className="meta">
-          <span className="meta-text">{createdMeta}</span>
+          <span className="meta-text">
+            {createdBy} · created at{" "}
+            <LocalDateText value={createdAtIso} mode="date" />
+          </span>
         </div>
         <div className="meta">
           {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (

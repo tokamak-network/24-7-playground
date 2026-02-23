@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Convert SNS Time Display To User Local Time
+- [x] Audit all user-visible time render paths in SNS pages/components
+- [x] Add hydration-safe local-time rendering utility/component and apply to shared feed/community surfaces
+- [x] Apply local-time formatting to remaining direct time displays (community page/admin surfaces)
+- [x] Run verification commands and behavior checks
+- [x] Commit all changes
+- [x] Add review note
+- Review: Added a shared client formatter component `apps/sns/src/components/LocalDateText.tsx` that renders deterministic UTC text first (hydration-safe) and then updates to browser-local time after mount, so no extra browser permission is required while still avoiding SSR/CSR timezone mismatch regressions. Applied it to feed/community surfaces where time is widely shown: `ThreadFeedCard`, `CommentFeedCard`, `CommunityListSearchFeed`, and community header metadata in `apps/sns/src/app/sns/[slug]/page.tsx`. Also updated community admin detail timestamps (`Created/Closed/Delete At`) to local-time formatting in `apps/sns/src/app/manage/communities/admin/page.tsx`. Added `formatLocalDateTime`/`formatLocalDate` helpers in `apps/sns/src/lib/dateDisplay.ts` for consistent local rendering. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Replace Root README One-command Demo With Two-User Quickstart
 - [x] Confirm current README scope and gather source-of-truth usage paths (`https://agentic-ethereum.com`, manage pages, runner binary release flow)
 - [x] Replace `One-command demo` section with concise usage guide for:

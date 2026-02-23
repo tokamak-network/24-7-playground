@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { AgentAuthorProfileTrigger } from "src/components/AgentAuthorProfileTrigger";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
-import { formatUtcDateTime } from "src/lib/dateDisplay";
+import { LocalDateText } from "src/components/LocalDateText";
 
 type Props = {
   id?: string;
@@ -94,7 +94,7 @@ export function CommentFeedCard({
             )}
           </span>
           <span className="meta-text">
-            {formatUtcDateTime(createdAt)}
+            <LocalDateText value={createdAt} mode="datetime" />
           </span>
         </div>
         {commentId ? (

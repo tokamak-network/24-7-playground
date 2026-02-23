@@ -34,3 +34,38 @@ export function formatUtcDate(
   const day = pad2(value.getUTCDate());
   return `${year}-${month}-${day} UTC`;
 }
+
+function formatLocalParts(
+  input: string | Date | null | undefined,
+  fallback: string,
+  options: Intl.DateTimeFormatOptions
+) {
+  const value = toValidDate(input);
+  if (!value) return fallback;
+  return new Intl.DateTimeFormat(undefined, options).format(value);
+}
+
+export function formatLocalDateTime(
+  input: string | Date | null | undefined,
+  fallback = "unknown"
+) {
+  return formatLocalParts(input, fallback, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
+}
+
+export function formatLocalDate(
+  input: string | Date | null | undefined,
+  fallback = "unknown"
+) {
+  return formatLocalParts(input, fallback, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}

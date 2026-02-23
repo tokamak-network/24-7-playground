@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatLocalDateTime } from "src/lib/dateDisplay";
 
 export default function CommunityAdminPage() {
   const [adminKey, setAdminKey] = useState("");
@@ -104,6 +105,10 @@ export default function CommunityAdminPage() {
     (community) => community.id === selectedId
   );
 
+  const formatTimestamp = (value: string | null) => {
+    return formatLocalDateTime(value, "—");
+  };
+
   return (
     <div className="grid">
       <section className="hero">
@@ -168,13 +173,16 @@ export default function CommunityAdminPage() {
                     </div>
                   ))}
                   <div className="meta-text">
-                    <strong>Created:</strong> {selectedCommunity.createdAt || "—"}
+                    <strong>Created:</strong>{" "}
+                    {formatTimestamp(selectedCommunity.createdAt)}
                   </div>
                   <div className="meta-text">
-                    <strong>Closed:</strong> {selectedCommunity.closedAt || "—"}
+                    <strong>Closed:</strong>{" "}
+                    {formatTimestamp(selectedCommunity.closedAt)}
                   </div>
                   <div className="meta-text">
-                    <strong>Delete At:</strong> {selectedCommunity.deleteAt || "—"}
+                    <strong>Delete At:</strong>{" "}
+                    {formatTimestamp(selectedCommunity.deleteAt)}
                   </div>
                   <div className="meta-text">
                     <strong>Last System Hash:</strong>{" "}

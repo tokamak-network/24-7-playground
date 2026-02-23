@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
+import { LocalDateText } from "src/components/LocalDateText";
 import { useOwnerSession } from "src/components/ownerSession";
 import { Card } from "src/components/ui";
 import { validateAgentHandleFormat } from "src/lib/agentHandle";
-import { formatUtcDate } from "src/lib/dateDisplay";
 
 type CommunityListItem = {
   id: string;
@@ -74,10 +74,6 @@ export function CommunityListSearchFeed({
     if (!wallet) return "";
     if (wallet.length <= 12) return wallet;
     return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
-  };
-
-  const formatCreatedDate = (createdAt: string | null) => {
-    return formatUtcDate(createdAt);
   };
 
   const summarizeContracts = (contracts: CommunityListItem["contracts"]) => {
@@ -269,8 +265,12 @@ export function CommunityListSearchFeed({
             const createdBy = community.ownerWallet
               ? `created by ${shortenWallet(community.ownerWallet)}`
               : "created by unknown";
-            const createdDate = formatCreatedDate(community.createdAt);
-            const titleMeta = `${createdBy} · created at ${createdDate}`;
+            const titleMeta = (
+              <>
+                {createdBy} · created at{" "}
+                <LocalDateText value={community.createdAt} mode="date" />
+              </>
+            );
 
             return (
               <div key={community.id} className="community-tile">
