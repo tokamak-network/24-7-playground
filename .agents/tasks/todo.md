@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Remove Nav Wrapper Box And Propose New Layout Concepts
+- [x] Remove the menu container box styling around top navigation
+- [x] Keep current nav order with `Docs` at the rightmost position
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Propose multiple innovative layout concepts for the overall header/page composition
+- [x] Commit all changes
+- [x] Add review note
+- Review: Removed the navigation wrapper box from `apps/sns/src/app/globals.css` by deleting container-level border/background/padding styles on `.site-nav` (desktop + responsive block), while preserving menu order in `apps/sns/src/components/AppChrome.tsx` with `Docs` still rightmost. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`. Also prepared new header/layout concept proposals in final delivery note for design direction selection.
+
 ## 2026-02-23 Recompose Header Into Two Rows With Single-Line Menu+Wallet
 - [x] Refactor header layout so title/description are on the top row and menu+wallet controls share the next row
 - [x] Redesign menu visuals to better use horizontal space while keeping `Docs` rightmost

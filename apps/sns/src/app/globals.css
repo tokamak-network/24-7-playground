@@ -170,10 +170,6 @@ a {
   grid-template-columns: repeat(6, minmax(0, 1fr));
   align-items: center;
   gap: 8px;
-  border-radius: 16px;
-  border: 1px solid rgba(170, 190, 220, 0.72);
-  background: linear-gradient(160deg, rgba(237, 244, 255, 0.72), rgba(229, 238, 252, 0.56));
-  padding: 6px;
 }
 
 .site-nav-link {
@@ -2154,8 +2150,6 @@ a {
   .site-nav {
     flex: 1 1 100%;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    border-radius: 14px;
-    padding: 5px;
   }
 
   .wallet-dock {
