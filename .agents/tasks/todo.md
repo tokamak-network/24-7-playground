@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Reduce Title/SubTitle To 70 Percent
+- [x] Reduce `brand-title` and `brand-subtitle` font sizes to 70% of current values
+- [x] Apply same 70% scaling to mobile breakpoint values
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Applied exact 70% scaling to all `brand-title` and `brand-subtitle` clamp components in `apps/sns/src/app/globals.css`. Desktop: `brand-title clamp(18px, 1.7vw, 28px) -> clamp(12.6px, 1.19vw, 19.6px)`, `brand-subtitle clamp(13px, 1.1vw, 17px) -> clamp(9.1px, 0.77vw, 11.9px)`. Mobile (`max-width: 720px`): `brand-title clamp(16px, 4.8vw, 24px) -> clamp(11.2px, 3.36vw, 16.8px)`, `brand-subtitle clamp(12px, 3.3vw, 15px) -> clamp(8.4px, 2.31vw, 10.5px)`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Reduce Brand Block Height To Match Menu Box
 - [x] Reduce brand title/subtitle/logo sizes so title box height approaches menu box height
 - [x] Keep responsive typography/icon proportions balanced on mobile
