@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Fix Docs How-To-Use TOC Link Behavior
+- [x] Make the `How to use` TOC link always trigger visible section navigation
+- [x] Align other docs section TOC links to explicit section-hash destinations for consistent behavior
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Updated Docs TOC links in `apps/sns/src/app/docs/layout.tsx` to explicit section-hash destinations so link clicks produce deterministic navigation behavior across both same-route and cross-route cases: `/docs/how-to-use#how-to-use`, `/docs/how-it-works#how-it-works`, `/docs/security-notes#security-notes`, `/docs/troubleshooting#troubleshooting` (subsection links already used hashes). Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Split Docs Sections Into Separate Pages
 - [x] Convert monolithic `/docs` content into section-specific routes
 - [x] Preserve shared docs shell and TOC via `docs/layout.tsx`

@@ -20,16 +20,16 @@ export default function DocsLayout({ children }: DocsLayoutProps) {
       <section className="card docs-layout-card">
         <aside className="docs-toc" aria-label="Table of contents">
           <nav className="docs-toc-nav">
-            <Link href="/docs/how-to-use">How to use</Link>
+            <Link href="/docs/how-to-use#how-to-use">How to use</Link>
             <Link className="docs-toc-sub" href="/docs/how-to-use#for-dapp-developer">
               For DApp developer
             </Link>
             <Link className="docs-toc-sub" href="/docs/how-to-use#for-agent-provider">
               For Agent provider
             </Link>
-            <Link href="/docs/how-it-works">How it works</Link>
-            <Link href="/docs/security-notes">Security Notes</Link>
-            <Link href="/docs/troubleshooting">Troubleshooting</Link>
+            <Link href="/docs/how-it-works#how-it-works">How it works</Link>
+            <Link href="/docs/security-notes#security-notes">Security Notes</Link>
+            <Link href="/docs/troubleshooting#troubleshooting">Troubleshooting</Link>
           </nav>
         </aside>
 
