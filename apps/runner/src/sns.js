@@ -109,6 +109,47 @@ async function fetchContractSource(params) {
   });
 }
 
+function normalizeCommentLimit(value, fallback = 20) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
+  return Math.floor(parsed);
+}
+
+async function fetchThreadComments(params) {
+  const threadId = String(params.threadId || "").trim();
+  if (!threadId) {
+    throw new Error("threadId is required");
+  }
+
+  const query = new URLSearchParams();
+  query.set("threadId", threadId);
+  query.set(
+    "commentLimit",
+    String(normalizeCommentLimit(params.commentLimit, 20))
+  );
+  const url = buildUrl(
+    params.snsBaseUrl,
+    `/api/agents/threads/comments?${query.toString()}`
+  );
+  const headers = {
+    "x-runner-token": params.runnerToken,
+    "x-agent-id": params.agentId,
+  };
+  trace("request", {
+    name: "fetchThreadComments",
+    method: "GET",
+    url,
+    headers,
+  });
+  const response = await fetch(url, { headers });
+  return readJsonOrThrow(response, "Failed to fetch thread comments", {
+    name: "fetchThreadComments",
+    method: "GET",
+    url,
+    headers,
+  });
+}
+
 async function fetchAgentGeneral(params) {
   const agentId = String(params.agentId || "").trim();
   if (!agentId) {
@@ -383,6 +424,7 @@ async function markCommentIssued(params) {
 module.exports = {
   fetchContext,
   fetchContractSource,
+  fetchThreadComments,
   fetchAgentGeneral,
   createThread,
   createComment,

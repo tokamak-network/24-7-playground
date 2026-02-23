@@ -16,6 +16,7 @@ const {
   createThread,
   fetchAgentGeneral,
   fetchContractSource,
+  fetchThreadComments,
   fetchContext,
   markCommentIssued,
   markThreadIssued,
@@ -64,6 +65,15 @@ function normalizeOptionalPositiveInt(value) {
   return Math.floor(parsed);
 }
 
+function normalizeOptionalCommentLimit(value, fallback) {
+  if (value === undefined || value === null || value === "") {
+    return fallback;
+  }
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
+  return Math.floor(parsed);
+}
+
 function normalizeSupplementaryPromptProfile(value) {
   const normalized = String(value || "")
     .trim()
@@ -80,7 +90,7 @@ function defaultSystemPrompt() {
     "You are a smart contract auditor and beta tester.",
     "Return strict JSON only.",
     "JSON schema:",
-    "{ action: 'create_thread'|'comment'|'tx'|'set_request_status'|'request_contract_source', communitySlug, threadId?, title?, body?, threadType?, contractAddress?, contractId?, functionName?, args?, value?, status? }",
+    "{ action: 'create_thread'|'comment'|'tx'|'set_request_status'|'request_contract_source'|'request_thread_comments', communitySlug, threadId?, title?, body?, threadType?, contractAddress?, contractId?, functionName?, args?, value?, status?, commentLimit? }",
     "threadType can be DISCUSSION, REQUEST_TO_HUMAN, or REPORT_TO_HUMAN.",
   ].join("\n");
   return readPromptFile("agent.md", fallback);
@@ -1216,6 +1226,138 @@ class RunnerEngine {
           executionResults.push({
             action: "request_contract_source",
             community: community.slug,
+            result: feedbackSafe,
+          });
+          continue;
+        }
+
+        if (actionType === "request_thread_comments") {
+          const requestedThreadId = String(action.threadId || "").trim();
+          const requestedCommentLimit = normalizeOptionalCommentLimit(
+            action.commentLimit ?? action.recentCommentLimit,
+            config.runtime.commentLimit
+          );
+          const communityThreads = Array.isArray(community.threads)
+            ? community.threads.filter(
+                (thread) =>
+                  thread &&
+                  typeof thread === "object" &&
+                  String(thread.id || "").trim()
+              )
+            : [];
+          const selectedThread = requestedThreadId
+            ? communityThreads.find(
+                (thread) => String(thread.id || "").trim() === requestedThreadId
+              ) || null
+            : null;
+
+          let feedbackPayload;
+          if (!requestedThreadId) {
+            feedbackPayload = {
+              type: "thread_comments_feedback",
+              communitySlug: community.slug,
+              threadId: null,
+              commentLimit: requestedCommentLimit,
+              result: {
+                ok: false,
+                error: "threadId is required.",
+              },
+            };
+          } else if (!selectedThread) {
+            feedbackPayload = {
+              type: "thread_comments_feedback",
+              communitySlug: community.slug,
+              threadId: requestedThreadId,
+              commentLimit: requestedCommentLimit,
+              result: {
+                ok: false,
+                error: "Thread not found in this community context.",
+              },
+            };
+          } else {
+            try {
+              const commentsResponse = await fetchThreadComments({
+                snsBaseUrl: config.snsBaseUrl,
+                runnerToken: config.runnerToken,
+                agentId: config.agentId,
+                threadId: selectedThread.id,
+                commentLimit: requestedCommentLimit,
+              });
+              const returnedThread =
+                commentsResponse &&
+                commentsResponse.thread &&
+                typeof commentsResponse.thread === "object"
+                  ? commentsResponse.thread
+                  : null;
+              const returnedComments =
+                commentsResponse && Array.isArray(commentsResponse.comments)
+                  ? commentsResponse.comments
+                  : [];
+              const returnedLimitRaw =
+                commentsResponse && commentsResponse.commentLimit;
+              const returnedLimit = Number.isFinite(Number(returnedLimitRaw))
+                ? Math.floor(Number(returnedLimitRaw))
+                : requestedCommentLimit;
+              feedbackPayload = {
+                type: "thread_comments_feedback",
+                communitySlug: community.slug,
+                threadId: selectedThread.id,
+                commentLimit: returnedLimit,
+                result: {
+                  ok: true,
+                  thread: returnedThread || {
+                    id: selectedThread.id,
+                    title: selectedThread.title || "",
+                    type: selectedThread.type || "",
+                    createdAt: selectedThread.createdAt || null,
+                  },
+                  comments: returnedComments,
+                },
+              };
+            } catch (error) {
+              feedbackPayload = {
+                type: "thread_comments_feedback",
+                communitySlug: community.slug,
+                threadId: selectedThread.id,
+                commentLimit: requestedCommentLimit,
+                result: {
+                  ok: false,
+                  error: toErrorMessage(
+                    error,
+                    "Failed to fetch thread comments from SNS"
+                  ),
+                },
+              };
+            }
+          }
+
+          const feedbackSafe = toJsonSafe(feedbackPayload);
+          this.#enqueueRunnerInbox(feedbackSafe);
+          writeCommunicationLog(this.logger, {
+            createdAt: new Date().toISOString(),
+            direction: "runner_to_agent",
+            actionTypes: ["request_thread_comments"],
+            agentId: config.agentId,
+            content: JSON.stringify(feedbackSafe, null, 2),
+          });
+          if (feedbackSafe && feedbackSafe.result && feedbackSafe.result.ok) {
+            const count = Array.isArray(feedbackSafe.result.comments)
+              ? feedbackSafe.result.comments.length
+              : 0;
+            logSummary(
+              this.logger,
+              `action request_thread_comments completed (community=${community.slug}, threadId=${feedbackSafe.threadId || "-"}, comments=${count}, limit=${feedbackSafe.commentLimit ?? "-"})`
+            );
+          } else {
+            logSummary(
+              this.logger,
+              `action request_thread_comments failed (community=${community.slug}, threadId=${feedbackSafe.threadId || "-"}, reason=${(feedbackSafe && feedbackSafe.result && feedbackSafe.result.error) || "unknown"})`
+            );
+          }
+          executionResults.push({
+            action: "request_thread_comments",
+            community: community.slug,
+            threadId: feedbackSafe.threadId || requestedThreadId || null,
             result: feedbackSafe,
           });
           continue;

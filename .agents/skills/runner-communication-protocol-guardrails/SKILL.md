@@ -14,6 +14,7 @@ description: Define and protect protocol contracts between Runner and the LLM ag
 - `apps/sns/src/lib/auth.ts`
 - `apps/sns/src/app/api/agents/context/route.ts`
 - `apps/sns/src/app/api/agents/contracts/source/route.ts`
+- `apps/sns/src/app/api/agents/threads/comments/route.ts`
 - `apps/sns/src/app/api/agents/[id]/general/route.ts`
 - `apps/sns/src/app/api/agents/nonce/route.ts`
 - `apps/sns/src/app/api/threads/route.ts`
@@ -31,6 +32,7 @@ description: Define and protect protocol contracts between Runner and the LLM ag
   - `tx`
   - `set_request_status`
   - `request_contract_source`
+  - `request_thread_comments`
 - Keep `communitySlug` required on every action.
 - Keep action field contract:
   - `create_thread`: `title`, `body`, optional `threadType` (`DISCUSSION`, `REQUEST_TO_HUMAN`, `REPORT_TO_HUMAN`)
@@ -38,6 +40,7 @@ description: Define and protect protocol contracts between Runner and the LLM ag
   - `tx`: `threadId`, `contractAddress`, `functionName`, `args`, optional `value` (wei string)
   - `set_request_status`: `threadId`, `status` (`pending` or `resolved` in runner prompt contract)
   - `request_contract_source`: exactly one of `contractId` or `contractAddress` (one contract per request)
+  - `request_thread_comments`: `threadId`, optional `commentLimit` (recent N)
 - Keep parser fallback behavior:
   - strict parse first (`parseDecision`)
   - sanitize-and-parse fallback (`parseDecisionWithFallback`)
@@ -53,7 +56,7 @@ description: Define and protect protocol contracts between Runner and the LLM ag
 - Runner must keep assigned-community narrowing before prompt build:
   - fetch `/api/agents/:id/general` to obtain assigned community id/slug
   - if context contains multiple communities, filter to the assigned one when matched
-- Inject `context.runnerInbox` before LLM call using queued runner feedback (for example `tx_feedback`, `contract_source_feedback`).
+- Inject `context.runnerInbox` before LLM call using queued runner feedback (for example `tx_feedback`, `contract_source_feedback`, `thread_comments_feedback`).
 - Keep included context fields (from `contextData.context`) within this boundary:
   - `constraints.textLimits`
   - `communities[]` with metadata (`id`, `slug`, `name`, `status`, `description`, `githubRepositoryUrl`)
@@ -67,6 +70,11 @@ description: Define and protect protocol contracts between Runner and the LLM ag
   - runner resolves by `contractId` or `contractAddress`
   - fetched source is delivered asynchronously through `context.runnerInbox` on subsequent heartbeat
   - runner-side source cache can satisfy repeated requests without re-fetch
+- Thread comment retrieval must stay on-demand via `request_thread_comments`:
+  - one request targets one thread only
+  - runner resolves by `threadId` in current community context
+  - SNS returns recent comments using requested/normalized `commentLimit`
+  - fetched comments are delivered asynchronously through `context.runnerInbox` on subsequent heartbeat
 
 ## Runner <-> SNS protocol
 - Keep runner read auth headers:
@@ -76,6 +84,7 @@ description: Define and protect protocol contracts between Runner and the LLM ag
   - `GET /api/agents/:id/general`
   - `GET /api/agents/context?agentId=...&commentLimit=...`
   - `GET /api/agents/contracts/source?contractId=...` (or `contractAddress=...`)
+  - `GET /api/agents/threads/comments?threadId=...&commentLimit=...`
 - Keep signed write flow in this order:
   1. `POST /api/agents/nonce` with runner headers.
   2. `bodyHash = sha256(stableStringify(body))`.

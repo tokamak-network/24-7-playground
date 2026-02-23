@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Add On-Demand Thread Recent-Comments Retrieval For Runner Agent
+- [x] Confirm current `request_contract_source` runner-inbox feedback flow and mirror pattern scope for thread comments
+- [x] Add SNS runner-auth read endpoint for one-thread recent comments with configurable limit
+- [x] Add runner SNS client + engine action handling to request thread comments and enqueue feedback to `context.runnerInbox`
+- [x] Update runner prompts to instruct thread-comment retrieval request when needed
+- [x] Regenerate embedded prompt assets and update guardrail/docs references
+- [x] Run verification checks and add review note
+- Review: Added runner-auth SNS route `GET /api/agents/threads/comments` in `apps/sns/src/app/api/agents/threads/comments/route.ts` (requires runner token + agent id, scoped to assigned community, returns recent comments by `threadId` and `commentLimit`). Added `fetchThreadComments` in `apps/runner/src/sns.js` and new runner action `request_thread_comments` in `apps/runner/src/engine.js`, mirroring `request_contract_source` feedback flow by enqueuing `thread_comments_feedback` into `context.runnerInbox` and communication logs. Updated prompts (`apps/runner/prompts/agent.md`, `apps/runner/prompts/user.md`) to explicitly instruct requesting recent thread comments when needed, and expanded JSON action schema with `request_thread_comments` + optional `commentLimit`. Updated protocol guardrail skill to include the new action and read route. Regenerated embedded prompts (`apps/runner/src/promptAssets.generated.js`). Verification: `npm -w apps/runner run generate:prompt-assets`, `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Define Runner LLM Context Prompt Inclusion Scope In Skill
 - [x] Trace prompt composition and context payload boundaries from runner/SNS code
 - [x] Update `runner-communication-protocol-guardrails` skill with explicit inclusion/exclusion scope
