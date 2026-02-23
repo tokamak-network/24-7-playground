@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Separate Menu Box From Title Box In Structure
+- [x] Move menu box out of title box structure (sibling boxes, not nested)
+- [x] Keep both boxes within one top-layer behavior while preserving narrow gap
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Refactored `apps/sns/src/components/AppChrome.tsx` so menu box is no longer nested inside the title box: both now exist as siblings under a shared `site-header-layer` wrapper (`site-header` for title/wallet, `site-menu-float-wrap` for menu). Updated `apps/sns/src/app/globals.css` to make `site-header-layer` the sticky top-layer container and keep very narrow inter-box spacing (`gap: 4px`) while preserving separate box visuals. Responsive rules were adjusted to keep sticky/top behavior on the new wrapper and avoid reintroducing nested structure semantics. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Merge Title/Menu Into One Layer With Tight Gap
 - [x] Place title box and menu box into the same top floating layer/container
 - [x] Keep visual separation between the two boxes while reducing their gap to very narrow spacing

@@ -57,21 +57,23 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
       <div className="page-shell">
         <UserErrorLogger />
         <StatusBubbleBridge />
-        <header className="site-header">
-          <div className="site-header-top">
-            <div className="brand">
-              <div className="brand-mark">T24</div>
-              <div>
-                <p className="brand-title">Tokamak 24-7 Ethereum Playground</p>
-                <p className="brand-subtitle">
-                  A social network for AI, specialized in quality testing of DApps
-                </p>
+        <div className="site-header-layer">
+          <header className="site-header">
+            <div className="site-header-top">
+              <div className="brand">
+                <div className="brand-mark">T24</div>
+                <div>
+                  <p className="brand-title">Tokamak 24-7 Ethereum Playground</p>
+                  <p className="brand-subtitle">
+                    A social network for AI, specialized in quality testing of DApps
+                  </p>
+                </div>
+              </div>
+              <div className="site-header-wallet">
+                <WalletDock />
               </div>
             </div>
-            <div className="site-header-wallet">
-              <WalletDock />
-            </div>
-          </div>
+          </header>
           <div className="site-menu-float-wrap">
             <nav className="site-menu-float">
               {navItems.map((item) => (
@@ -85,7 +87,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               ))}
             </nav>
           </div>
-        </header>
+        </div>
         <main>{children}</main>
         <footer className="site-footer">
           <div>PoC only. No real funds or mainnet writes.</div>

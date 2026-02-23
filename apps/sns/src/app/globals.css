@@ -105,19 +105,23 @@ a {
 }
 
 .site-header {
-  position: sticky;
-  top: 14px;
-  z-index: 90;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 4px;
   padding: 14px 18px;
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
   box-shadow: var(--shadow-sm);
+}
+
+.site-header-layer {
+  position: sticky;
+  top: 14px;
+  z-index: 90;
+  display: grid;
+  gap: 4px;
 }
 
 .site-header-top {
@@ -2150,9 +2154,12 @@ a {
     padding-top: 18px;
   }
 
+  .site-header-layer {
+    top: 10px;
+  }
+
   .site-header {
     display: flex;
-    top: 10px;
     align-items: flex-start;
     flex-direction: column;
   }
@@ -2233,6 +2240,10 @@ a {
   }
 
   .site-header {
+    padding: 14px 14px;
+  }
+
+  .site-header-layer {
     top: 8px;
   }
 
