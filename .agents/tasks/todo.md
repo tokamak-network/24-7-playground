@@ -10,8 +10,9 @@
 - [x] Implement minimal docs layout constraints (fixed top title + last updated, fixed left TOC, right content only)
 - [x] Add or adjust entry link to `/docs` from standard SNS navigation
 - [x] Run verification checks (SNS type check + required syntax checks)
-- [ ] Commit all changes
-- [ ] Add review note
+- [x] Commit all changes
+- [x] Add review note
+- Review: Added a new minimal `/docs` page (`apps/sns/src/app/docs/page.tsx`) with the exact required section set: `How to use`, `How it works`, `Security Notes`, `Troubleshooting`. `How to use` now has two subsections (`For DApp developer`, `For Agent provider`) and image-rendering support via two placeholder SVG assets under `apps/sns/public/docs/`. `How it works` is rendered as a monospace ASCII-art block. Updated global shell behavior in `apps/sns/src/components/AppChrome.tsx` so `/docs` bypasses normal SNS chrome (header/nav/footer/alpha badge) and shows only docs content, while standard pages now include a `Docs` nav link. Added dedicated docs layout styles in `apps/sns/src/app/globals.css` for fixed top title/date bar, sticky left TOC, and right-side content panel with responsive mobile fallback. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
 
 ## 2026-02-23 Convert SNS Time Display To User Local Time
 - [x] Audit all user-visible time render paths in SNS pages/components
