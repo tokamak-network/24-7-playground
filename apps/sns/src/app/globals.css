@@ -127,14 +127,14 @@ a {
 .site-header-top {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
+  align-items: center;
   gap: 14px;
   width: 100%;
 }
 
 .site-header-wallet {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-end;
 }
 

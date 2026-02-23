@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Center Wallet Control Vertically In Title Box
+- [x] Set wallet control vertical alignment to center within title box
+- [x] Keep responsive behavior unchanged except the requested vertical centering
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Adjusted header vertical alignment in `apps/sns/src/app/globals.css` so wallet control sits at the vertical center of the title box by changing `.site-header-top` `align-items: start -> center` and `.site-header-wallet` `align-items: flex-start -> center`. No structural changes were made to `AppChrome`; responsive layout behavior remains the same except centered wallet positioning. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Reduce Title/SubTitle To 70 Percent
 - [x] Reduce `brand-title` and `brand-subtitle` font sizes to 70% of current values
 - [x] Apply same 70% scaling to mobile breakpoint values
