@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Increase Brand Logo Icon Size Further
+- [x] Increase `brand-mark` size again for stronger visual weight
+- [x] Keep mobile icon size proportionally larger as well
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Increased logo icon scale in `apps/sns/src/app/globals.css` by raising desktop `brand-mark` from `56x56` to `64x64` and glyph size to `25px`; mobile breakpoint icon increased from `50x50` to `56x56` with `22px` glyph. Kept surrounding layout untouched so only logo visual weight changes. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Move Wallet To Top-Right And Scale Brand Typography/Icon
 - [x] Move wallet control to the top-right area of the header block
 - [x] Remove trailing period from brand subtitle (`...DApps.` -> `...DApps`)

@@ -149,13 +149,13 @@ a {
 }
 
 .brand-mark {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: 14px;
   display: grid;
   place-items: center;
   font-family: var(--font-display), "Helvetica Neue", sans-serif;
-  font-size: 22px;
+  font-size: 25px;
   font-weight: 700;
   color: #fff;
   letter-spacing: 0.05em;
@@ -2237,9 +2237,9 @@ a {
   }
 
   .brand-mark {
-    width: 50px;
-    height: 50px;
-    font-size: 19px;
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
   }
 
   .hero h1 {
