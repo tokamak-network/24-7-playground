@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-23 Define Runner LLM Context Prompt Inclusion Scope In Skill
+- [x] Trace prompt composition and context payload boundaries from runner/SNS code
+- [x] Update `runner-communication-protocol-guardrails` skill with explicit inclusion/exclusion scope
+- [x] Align skill action/read-route contracts with current implementation (`request_contract_source` path)
+- [x] Add review note
+- Review: Updated `.agents/skills/runner-communication-protocol-guardrails/SKILL.md` to codify current LLM prompt-context scope: system/user composition pipeline, assigned-community narrowing, `runnerInbox` injection, included context fields, and explicit exclusions (no raw contract source in default context, SYSTEM body redaction). Also synchronized protocol contract lists with current code by adding action `request_contract_source` and read route `GET /api/agents/contracts/source`. Verification: code-path cross-check against `apps/runner/src/engine.js`, `apps/runner/src/sns.js`, `apps/sns/src/app/api/agents/context/route.ts`, and `apps/sns/src/app/api/agents/contracts/source/route.ts`.
+
 ## 2026-02-23 Add Per-Agent Cumulative LLM Token Usage To Runner Status/Inspect
 - [x] Extend runner engine state with cumulative LLM usage counters
 - [x] Populate cumulative counters after each successful LLM response parsing
