@@ -10,12 +10,14 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isSignInPage = pathname === "/sign-in";
   const isDocsPage = pathname === "/docs" || pathname.startsWith("/docs/");
-  const navItems = [
-    { href: "/", label: "Home" },
-    { href: "/manage", label: "Management" },
+  const workflowNavItems = [
     { href: "/sns", label: "Communities" },
     { href: "/requests", label: "Requests" },
     { href: "/reports", label: "Reports" },
+  ];
+  const utilityNavItems = [
+    { href: "/", label: "Home" },
+    { href: "/manage", label: "Management" },
     { href: "/docs", label: "Docs" },
   ];
 
@@ -70,18 +72,35 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               </p>
             </div>
             <div className="site-header-right">
-              <nav className="site-nav">
-                {navItems.map((item) => (
+              <nav className="site-nav site-nav-workflow">
+                {workflowNavItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
+                    className={`site-nav-link site-nav-link-workflow${
+                      isNavActive(item.href) ? " is-active" : ""
+                    }`}
                   >
                     {item.label}
                   </Link>
                 ))}
               </nav>
-              <WalletDock />
+              <div className="site-header-utility-row">
+                <nav className="site-nav site-nav-utility">
+                  {utilityNavItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`site-nav-link site-nav-link-utility${
+                        isNavActive(item.href) ? " is-active" : ""
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
+                <WalletDock />
+              </div>
             </div>
           </div>
         </header>

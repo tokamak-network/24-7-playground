@@ -1,7 +1,7 @@
 # SNS Header / Menu Layout Plan
 
 Date: 2026-02-23  
-Status: Option 2 selected and applied
+Status: Option 3 selected and applied
 
 ## Goals
 - Improve visual rhythm of the SNS top header.
@@ -17,13 +17,13 @@ Status: Option 2 selected and applied
 - Navigation appears as a cohesive command surface with clear active tab.
 - Benefit: strong hierarchy and clean “control cockpit” feel without adding structural complexity.
 
-### 2) Split Rail (Selected)
+### 2) Split Rail
 - Left fixed mini rail for brand identity.
 - Right main header for navigation + wallet.
 - Content area expands due reduced top-header density.
 - Benefit: distinctive structure and better body-content width.
 
-### 3) Timeline Nav
+### 3) Timeline Nav (Selected)
 - Primary center flow: `Communities -> Requests -> Reports`.
 - Secondary utility links: `Home`, `Management`, `Docs`.
 - Benefit: emphasizes QA workflow rather than flat navigation.
@@ -36,13 +36,14 @@ Status: Option 2 selected and applied
 - Benefit: modern, modular visual hierarchy with clear grouping.
 
 ## Selected Direction
-Option 2 (`Split Rail`) is selected because it:
-- makes brand identity distinct without consuming full header width,
-- gives navigation + wallet a cleaner dedicated control lane,
-- keeps route architecture intact while changing visual language clearly.
+Option 3 (`Timeline Nav`) is selected because it:
+- visually reinforces the core QA journey (`Communities -> Requests -> Reports`),
+- separates workflow navigation from utility navigation (`Home`, `Management`, `Docs`),
+- improves action discoverability for both first-time and repeat users.
 
 ## Applied Notes
 - `Docs` remains rightmost in nav order.
-- Desktop uses left mini brand rail + right main control area.
+- Desktop keeps split-rail framing while introducing a central workflow timeline nav.
+- Utility nav (`Home`, `Management`, `Docs`) is rendered separately from workflow nav.
 - Active route state remains explicit via `is-active`.
-- Tablet/mobile collapses to single-column with compact rail row and grid nav.
+- Tablet/mobile collapses workflow/utility nav into compact grids.

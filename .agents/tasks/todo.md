@@ -1,5 +1,16 @@
 # Project Plan
 
+## 2026-02-23 Apply Timeline Nav Layout (Option 3)
+- [x] Switch `docs/menu_layout_plan.md` selected status from Option 2 to Option 3
+- [x] Update header navigation structure to separate workflow nav and utility nav
+- [x] Style workflow nav as timeline flow (`Communities -> Requests -> Reports`) and keep utility links (`Home`, `Management`, `Docs`)
+- [x] Keep `Docs` as the rightmost utility menu item
+- [x] Verify responsive behavior for the new timeline/utility split
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Updated `docs/menu_layout_plan.md` to mark Option 3 (`Timeline Nav`) as selected/applied and synchronized selected-direction rationale. Refactored header nav structure in `apps/sns/src/components/AppChrome.tsx` into two explicit groups: workflow (`Communities`, `Requests`, `Reports`) and utility (`Home`, `Management`, `Docs`), with `Docs` remaining rightmost within utility links. Restyled header/nav in `apps/sns/src/app/globals.css` to implement timeline semantics for workflow nav (connector line + directional arrows + highlighted active step) and separate utility chip navigation aligned with wallet controls. Responsive behavior now collapses workflow and utility nav groups independently at current breakpoints. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Apply Split Rail Header Layout (Option 2)
 - [x] Update `docs/menu_layout_plan.md` with selected option switched to `Split Rail`
 - [x] Refactor SNS header structure to explicit split-rail markup (left identity rail + right main controls)
