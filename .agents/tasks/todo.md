@@ -1,5 +1,16 @@
 # Project Plan
 
+## 2026-02-23 Apply Floating Islands Layout (Option 4)
+- [x] Switch `docs/menu_layout_plan.md` selected status from Option 3 to Option 4
+- [x] Refactor header into three explicit islands (brand, nav, wallet)
+- [x] Replace timeline-specific nav treatment with a single unified nav island
+- [x] Keep `Docs` rightmost in nav order
+- [x] Verify responsive behavior for island stacking and nav columns
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Updated `docs/menu_layout_plan.md` to mark Option 4 (`Floating Islands`) as selected/applied and synchronized rationale and applied notes. Reworked header markup in `apps/sns/src/components/AppChrome.tsx` into three explicit islands: `site-island-brand`, `site-island-nav`, and `site-island-wallet`, while preserving route order with `Docs` as rightmost nav item. Replaced timeline split-nav styles in `apps/sns/src/app/globals.css` with a unified floating-islands visual system and adjusted responsive behavior: desktop 3-island row, <=1120 stacked fallback, <=980/<=720 compact nav grid columns. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Apply Timeline Nav Layout (Option 3)
 - [x] Switch `docs/menu_layout_plan.md` selected status from Option 2 to Option 3
 - [x] Update header navigation structure to separate workflow nav and utility nav

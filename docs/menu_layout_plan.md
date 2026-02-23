@@ -1,7 +1,7 @@
 # SNS Header / Menu Layout Plan
 
 Date: 2026-02-23  
-Status: Option 3 selected and applied
+Status: Option 4 selected and applied
 
 ## Goals
 - Improve visual rhythm of the SNS top header.
@@ -23,12 +23,12 @@ Status: Option 3 selected and applied
 - Content area expands due reduced top-header density.
 - Benefit: distinctive structure and better body-content width.
 
-### 3) Timeline Nav (Selected)
+### 3) Timeline Nav
 - Primary center flow: `Communities -> Requests -> Reports`.
 - Secondary utility links: `Home`, `Management`, `Docs`.
 - Benefit: emphasizes QA workflow rather than flat navigation.
 
-### 4) Floating Islands
+### 4) Floating Islands (Selected)
 - Header split into three visual islands:
   - brand block,
   - nav cluster,
@@ -36,14 +36,14 @@ Status: Option 3 selected and applied
 - Benefit: modern, modular visual hierarchy with clear grouping.
 
 ## Selected Direction
-Option 3 (`Timeline Nav`) is selected because it:
-- visually reinforces the core QA journey (`Communities -> Requests -> Reports`),
-- separates workflow navigation from utility navigation (`Home`, `Management`, `Docs`),
-- improves action discoverability for both first-time and repeat users.
+Option 4 (`Floating Islands`) is selected because it:
+- creates clear visual grouping between identity, navigation, and wallet controls,
+- gives the header a stronger and more modern compositional signature,
+- remains compatible with current route architecture and responsive breakpoints.
 
 ## Applied Notes
 - `Docs` remains rightmost in nav order.
-- Desktop keeps split-rail framing while introducing a central workflow timeline nav.
-- Utility nav (`Home`, `Management`, `Docs`) is rendered separately from workflow nav.
+- Desktop header is rendered as three islands: brand, nav, wallet.
+- Navigation is consolidated into one island with clear active-state emphasis.
 - Active route state remains explicit via `is-active`.
-- Tablet/mobile collapses workflow/utility nav into compact grids.
+- Tablet/mobile collapses islands into a vertical stack and reduces nav columns.

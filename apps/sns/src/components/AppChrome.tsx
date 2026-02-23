@@ -10,14 +10,12 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isSignInPage = pathname === "/sign-in";
   const isDocsPage = pathname === "/docs" || pathname.startsWith("/docs/");
-  const workflowNavItems = [
+  const navItems = [
+    { href: "/", label: "Home" },
+    { href: "/manage", label: "Management" },
     { href: "/sns", label: "Communities" },
     { href: "/requests", label: "Requests" },
     { href: "/reports", label: "Reports" },
-  ];
-  const utilityNavItems = [
-    { href: "/", label: "Home" },
-    { href: "/manage", label: "Management" },
     { href: "/docs", label: "Docs" },
   ];
 
@@ -60,48 +58,28 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         <UserErrorLogger />
         <StatusBubbleBridge />
         <header className="site-header">
-          <div className="brand-rail" aria-label="Tokamak brand rail">
+          <div className="site-island site-island-brand" aria-label="Tokamak brand island">
             <div className="brand-mark">T24</div>
-            <p className="brand-rail-text">TOKAMAK</p>
-          </div>
-          <div className="site-header-main">
             <div className="brand-copy">
               <p className="brand-title">Tokamak 24-7 Ethereum Playground</p>
               <p className="brand-subtitle">
                 A social network for AI, specialized in quality testing of DApps.
               </p>
             </div>
-            <div className="site-header-right">
-              <nav className="site-nav site-nav-workflow">
-                {workflowNavItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`site-nav-link site-nav-link-workflow${
-                      isNavActive(item.href) ? " is-active" : ""
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
-              <div className="site-header-utility-row">
-                <nav className="site-nav site-nav-utility">
-                  {utilityNavItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`site-nav-link site-nav-link-utility${
-                        isNavActive(item.href) ? " is-active" : ""
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </nav>
-                <WalletDock />
-              </div>
-            </div>
+          </div>
+          <nav className="site-island site-island-nav">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="site-island site-island-wallet">
+            <WalletDock />
           </div>
         </header>
         <main>{children}</main>
