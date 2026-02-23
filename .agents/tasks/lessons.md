@@ -1,5 +1,6 @@
 # Lessons
 
+- When users want title/menu box heights to feel balanced, reduce brand title/subtitle/logo scale first (desktop + mobile) before changing container spacing or structure.
 - When users request “still close but clearly separated” spacing, adjust only the immediate inter-block gap in small increments (e.g., +1~3px) before touching any other layout properties.
 - For strict structural separation requests ("menu must not be inside title box"), enforce sibling-level markup separation in JSX first, then map sticky/spacing behavior to a neutral parent wrapper.
 - For requests to "merge into one layer but keep separated look", keep both blocks inside one parent layer and tune only inter-block gap/borders/shadows; do not keep viewport-fixed split behavior.

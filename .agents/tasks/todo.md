@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Reduce Brand Block Height To Match Menu Box
+- [x] Reduce brand title/subtitle/logo sizes so title box height approaches menu box height
+- [x] Keep responsive typography/icon proportions balanced on mobile
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Reduced brand block scale in `apps/sns/src/app/globals.css` to bring the title box height closer to the floating menu box height. Desktop updates: `.brand-mark` `64 -> 52`, mark text `25 -> 21`, `.brand-title` `clamp(20px, 2vw, 34px) -> clamp(18px, 1.7vw, 28px)`, `.brand-subtitle` `clamp(15px, 1.45vw, 22px) -> clamp(13px, 1.1vw, 17px)`. Mobile updates (`max-width: 720px`): `.brand-mark` `56 -> 46`, mark text `22 -> 18`, `.brand-title` `clamp(18px, 5.6vw, 28px) -> clamp(16px, 4.8vw, 24px)`, `.brand-subtitle` `clamp(13px, 3.7vw, 18px) -> clamp(12px, 3.3vw, 15px)`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Slightly Increase Title/Menu Box Gap
 - [x] Increase spacing between title box and menu box slightly while keeping them visually close
 - [x] Keep responsive spacing balanced so separation remains clear on smaller screens
