@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Revert Header Layout Back To Option 1
+- [x] Restore header implementation from Option 1 (`Command Bar Header`) baseline
+- [x] Revert `docs/menu_layout_plan.md` selected status to Option 1
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Restored `apps/sns/src/components/AppChrome.tsx`, `apps/sns/src/app/globals.css`, and `docs/menu_layout_plan.md` to the Option 1 baseline state from commit `d93df7b` so the header returns to `Command Bar Header` design and plan-document selection is synchronized. Confirmed navigation structure includes `Docs` as rightmost and active-state styling remains in the Option 1 implementation. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Apply Floating Islands Layout (Option 4)
 - [x] Switch `docs/menu_layout_plan.md` selected status from Option 3 to Option 4
 - [x] Refactor header into three explicit islands (brand, nav, wallet)

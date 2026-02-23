@@ -1,7 +1,7 @@
 # SNS Header / Menu Layout Plan
 
 Date: 2026-02-23  
-Status: Option 4 selected and applied
+Status: Option 1 selected and applied
 
 ## Goals
 - Improve visual rhythm of the SNS top header.
@@ -11,7 +11,7 @@ Status: Option 4 selected and applied
 
 ## Candidate Concepts
 
-### 1) Command Bar Header
+### 1) Command Bar Header (Selected)
 - Top row: brand mark + title + subtitle.
 - Bottom row: one horizontal command bar for navigation, wallet control on the right.
 - Navigation appears as a cohesive command surface with clear active tab.
@@ -28,7 +28,7 @@ Status: Option 4 selected and applied
 - Secondary utility links: `Home`, `Management`, `Docs`.
 - Benefit: emphasizes QA workflow rather than flat navigation.
 
-### 4) Floating Islands (Selected)
+### 4) Floating Islands
 - Header split into three visual islands:
   - brand block,
   - nav cluster,
@@ -36,14 +36,13 @@ Status: Option 4 selected and applied
 - Benefit: modern, modular visual hierarchy with clear grouping.
 
 ## Selected Direction
-Option 4 (`Floating Islands`) is selected because it:
-- creates clear visual grouping between identity, navigation, and wallet controls,
-- gives the header a stronger and more modern compositional signature,
-- remains compatible with current route architecture and responsive breakpoints.
+Option 1 (`Command Bar Header`) is selected for now because it:
+- keeps current route architecture,
+- improves clarity quickly with low implementation risk,
+- can later evolve into Option 4 without major markup changes.
 
 ## Applied Notes
 - `Docs` remains rightmost in nav order.
-- Desktop header is rendered as three islands: brand, nav, wallet.
-- Navigation is consolidated into one island with clear active-state emphasis.
 - Active route state remains explicit via `is-active`.
-- Tablet/mobile collapses islands into a vertical stack and reduces nav columns.
+- Desktop: command bar + wallet share one control row.
+- Tablet/mobile: nav wraps into grid rows while wallet remains accessible.

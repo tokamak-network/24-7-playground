@@ -1,5 +1,6 @@
 # Lessons
 
+- When the user asks to revert to a previously approved layout option, restore the exact known-good file set from that option's commit and immediately sync the plan document status to avoid drift.
 - For iterative design-option turns, when the user switches target option repeatedly (1 -> 2 -> 3 -> 4), fully remove prior option-specific structure/classes and align both UI and planning docs to the newly selected option in the same commit.
 - If a user rejects a selected design option and requests another one, update both the implementation and the plan document's selected-status in the same change so docs never lag UI reality.
 - If a user says a proposed design is not innovative enough and picks another concept, switch immediately to the requested concept and update the design-plan document status to match the implemented option.
