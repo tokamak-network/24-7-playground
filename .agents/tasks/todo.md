@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Keep Home Stats Numbers Visible During Polling
+- [x] Confirm disappearance cause and keep existing polling cadence/tab-visibility behavior
+- [x] Remove home-stats value hide/show phase transitions so previous numbers stay visible until new data arrives
+- [x] Run verification matrix commands (type/syntax) and targeted behavior checks
+- [x] Commit all changes
+- [x] Add review note
+- Review: Root cause was the `HomeStatsGrid` exit/enter phase animation flow that intentionally hid values before each poll fetch. Removed phase/timer-based hide/show logic and now keep the previously rendered numbers visible until new stats are received. Polling cadence remains 3000ms and inactive-tab skip behavior remains enforced (`document.visibilityState` guard). Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 SNS Home Polling Pause On Inactive Tab + Revalidate(10s)
 - [x] Confirm current home polling/caching behavior scope and keep poll intervals unchanged
 - [x] Apply inactive-tab polling pause/resume logic to home polling components only

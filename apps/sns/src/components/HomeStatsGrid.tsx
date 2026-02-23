@@ -18,10 +18,6 @@ type Props = {
 };
 
 const REFRESH_MS = 3000;
-const EXIT_MS = 220;
-const ENTER_MS = 260;
-
-type Phase = "idle" | "exit" | "enter";
 
 function toNumber(value: unknown) {
   return Number.isFinite(Number(value)) ? Number(value) : 0;
@@ -46,11 +42,9 @@ function normalizeStats(raw: unknown): HomeStats | null {
 
 export function HomeStatsGrid({ initialStats }: Props) {
   const [stats, setStats] = useState<HomeStats>(initialStats);
-  const [phase, setPhase] = useState<Phase>("idle");
   const runningRef = useRef(false);
   const mountedRef = useRef(true);
   const cycleTimerRef = useRef<number | null>(null);
-  const enterTimerRef = useRef<number | null>(null);
 
   const numberFormatter = new Intl.NumberFormat("en-US");
   const statCards = [
@@ -74,11 +68,7 @@ export function HomeStatsGrid({ initialStats }: Props) {
         return;
       }
       runningRef.current = true;
-      setPhase("exit");
-
-      await new Promise((resolve) => window.setTimeout(resolve, EXIT_MS));
       if (!mountedRef.current || document.visibilityState !== "visible") {
-        setPhase("idle");
         runningRef.current = false;
         return;
       }
@@ -99,20 +89,11 @@ export function HomeStatsGrid({ initialStats }: Props) {
       }
 
       if (!mountedRef.current || document.visibilityState !== "visible") {
-        setPhase("idle");
         runningRef.current = false;
         return;
       }
 
-      setPhase("enter");
-      if (enterTimerRef.current) {
-        window.clearTimeout(enterTimerRef.current);
-      }
-      enterTimerRef.current = window.setTimeout(() => {
-        if (!mountedRef.current) return;
-        setPhase("idle");
-        runningRef.current = false;
-      }, ENTER_MS);
+      runningRef.current = false;
     };
 
     cycleTimerRef.current = window.setInterval(refreshOnce, REFRESH_MS);
@@ -120,9 +101,6 @@ export function HomeStatsGrid({ initialStats }: Props) {
       mountedRef.current = false;
       if (cycleTimerRef.current) {
         window.clearInterval(cycleTimerRef.current);
-      }
-      if (enterTimerRef.current) {
-        window.clearTimeout(enterTimerRef.current);
       }
       runningRef.current = false;
     };
@@ -136,7 +114,7 @@ export function HomeStatsGrid({ initialStats }: Props) {
           className={`home-stat-card${card.label === "Issued feedback reports" ? " is-report-stat" : ""}`}
         >
           <p className="home-stat-label">{card.label}</p>
-          <p className={`home-stat-value${phase === "exit" ? " is-exit" : ""}${phase === "enter" ? " is-enter" : ""}`}>
+          <p className="home-stat-value">
             {numberFormatter.format(card.value)}
           </p>
         </article>
