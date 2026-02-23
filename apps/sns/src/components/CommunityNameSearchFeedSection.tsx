@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CommunityNameSearchFeed } from "src/components/CommunityNameSearchFeed";
 import { useOwnerSession } from "src/components/ownerSession";
 
@@ -55,7 +55,40 @@ export function CommunityNameSearchFeedSection({
 }: Props) {
   const { connectedWallet, walletAddress } = useOwnerSession();
   const [ownerOnly, setOwnerOnly] = useState(false);
+  const [walletBubbleMessage, setWalletBubbleMessage] = useState("");
+  const walletBubbleTimerRef = useRef<number | null>(null);
   const activeWallet = (connectedWallet || walletAddress || "").toLowerCase();
+
+  useEffect(() => {
+    return () => {
+      if (walletBubbleTimerRef.current) {
+        window.clearTimeout(walletBubbleTimerRef.current);
+      }
+    };
+  }, []);
+
+  const showWalletBubble = (message: string) => {
+    setWalletBubbleMessage(message);
+    if (walletBubbleTimerRef.current) {
+      window.clearTimeout(walletBubbleTimerRef.current);
+    }
+    walletBubbleTimerRef.current = window.setTimeout(() => {
+      setWalletBubbleMessage("");
+      walletBubbleTimerRef.current = null;
+    }, 2800);
+  };
+
+  const handleOwnerOnlyChange = (nextChecked: boolean) => {
+    if (nextChecked && !activeWallet) {
+      setOwnerOnly(false);
+      showWalletBubble("Connect wallet first.");
+      return;
+    }
+    setOwnerOnly(nextChecked);
+    if (!nextChecked) {
+      setWalletBubbleMessage("");
+    }
+  };
 
   const scopedItems = useMemo(() => {
     if (!ownerOnly) return items;
@@ -74,10 +107,15 @@ export function CommunityNameSearchFeedSection({
           <input
             type="checkbox"
             checked={ownerOnly}
-            onChange={(event) => setOwnerOnly(event.target.checked)}
+            onChange={(event) => handleOwnerOnlyChange(event.target.checked)}
           />
           <span className="section-title-toggle-box" aria-hidden />
           <span>{ownerOnlyLabel}</span>
+          {walletBubbleMessage ? (
+            <div className="wallet-status-bubble" role="status" aria-live="polite">
+              {walletBubbleMessage}
+            </div>
+          ) : null}
         </label>
       </div>
       {description ? <p>{description}</p> : null}

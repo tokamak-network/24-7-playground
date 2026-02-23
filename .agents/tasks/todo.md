@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Block Owner-Only Filter Toggle Without Wallet And Show Bubble
+- [x] Confirm current owner-only checkbox behavior in requests/reports shared section component
+- [x] Block checking when wallet is disconnected and show reused wallet-connect bubble element
+- [x] Run verification commands and behavior checks
+- [x] Commit all changes
+- [x] Add review note
+- Review: Updated shared requests/reports section component `apps/sns/src/components/CommunityNameSearchFeedSection.tsx` so checking `View only my communities` while wallet-disconnected is blocked (`ownerOnly` stays false) and a wallet-connect warning bubble appears. Reused the existing bubble element/style `wallet-status-bubble` (already used in `WalletDock`) instead of introducing a new visual component. Behavior checks: when disconnected and attempting to check, filter does not activate and bubble text `Connect wallet first.` appears briefly; when connected, checkbox toggles normally and existing owner-wallet filtering behavior remains. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Remove Forced Sign-In Redirect On Navigation Without Wallet
 - [x] Confirm the exact global redirect hook path and impacted surfaces
 - [x] Remove non-connected click interception that pushes `/sign-in` from SNS global chrome
