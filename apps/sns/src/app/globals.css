@@ -1856,6 +1856,165 @@ a {
   font-size: 12px;
 }
 
+.docs-route-main {
+  min-height: 100vh;
+}
+
+.docs-page {
+  --docs-topbar-height: 78px;
+  --docs-content-max-width: 1180px;
+  max-width: var(--docs-content-max-width);
+  margin: 0 auto;
+  padding: calc(var(--docs-topbar-height) + 18px) 24px 42px;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 28px;
+}
+
+.docs-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: var(--docs-topbar-height);
+  padding: 0 max(24px, calc((100vw - var(--docs-content-max-width)) / 2 + 24px));
+  border-bottom: 1px solid rgba(212, 222, 238, 0.95);
+  background: rgba(245, 249, 255, 0.95);
+  backdrop-filter: blur(8px);
+}
+
+.docs-topbar h1 {
+  margin: 0;
+  font-family: var(--font-display), "Helvetica Neue", sans-serif;
+  font-size: clamp(24px, 2.8vw, 34px);
+  line-height: 1.1;
+}
+
+.docs-topbar p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.docs-toc {
+  position: sticky;
+  top: calc(var(--docs-topbar-height) + 14px);
+  align-self: start;
+}
+
+.docs-toc-nav {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid #d2def0;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.docs-toc-nav a {
+  display: block;
+  border-radius: 9px;
+  padding: 8px 10px;
+  color: #294b75;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.docs-toc-nav a:hover {
+  background: #eaf2ff;
+}
+
+.docs-toc-nav a.docs-toc-sub {
+  padding-left: 24px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b6388;
+}
+
+.docs-content {
+  min-width: 0;
+  display: grid;
+  gap: 34px;
+}
+
+.docs-section {
+  display: grid;
+  gap: 14px;
+}
+
+.docs-section h2 {
+  margin: 0;
+  font-family: var(--font-display), "Helvetica Neue", sans-serif;
+  font-size: clamp(26px, 2.6vw, 34px);
+  line-height: 1.15;
+}
+
+.docs-subsection {
+  display: grid;
+  gap: 10px;
+}
+
+.docs-subsection h3 {
+  margin: 0;
+  font-family: var(--font-display), "Helvetica Neue", sans-serif;
+  font-size: clamp(19px, 1.8vw, 24px);
+  line-height: 1.2;
+}
+
+.docs-figure {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  border-radius: 14px;
+  border: 1px solid #d2def0;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 10px;
+}
+
+.docs-figure img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  border: 1px solid #d3e0f2;
+}
+
+.docs-figure figcaption {
+  color: #596b88;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.docs-ascii {
+  margin: 0;
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid #cad7ec;
+  background: #f7fbff;
+  color: #16355d;
+  padding: 14px;
+  font-size: 12px;
+  line-height: 1.42;
+}
+
+.docs-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #2f4668;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
 .alpha-test-badge {
   position: fixed;
   left: 14px;
@@ -1976,6 +2135,28 @@ a {
     align-items: flex-start;
     flex-direction: column;
   }
+
+  .docs-page {
+    --docs-topbar-height: 74px;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .docs-topbar {
+    height: var(--docs-topbar-height);
+    padding: 0 16px;
+  }
+
+  .docs-toc {
+    top: calc(var(--docs-topbar-height) + 8px);
+  }
+
+  .docs-toc-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
 }
 
 @media (max-width: 720px) {
@@ -2018,6 +2199,31 @@ a {
     font-size: 10px;
     letter-spacing: 0.03em;
     padding: 6px 10px;
+  }
+
+  .docs-page {
+    --docs-topbar-height: 92px;
+    padding: calc(var(--docs-topbar-height) + 10px) 12px 28px;
+  }
+
+  .docs-topbar {
+    height: var(--docs-topbar-height);
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    padding: 8px 12px;
+  }
+
+  .docs-topbar p {
+    white-space: normal;
+  }
+
+  .docs-toc-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .docs-toc-nav a.docs-toc-sub {
+    padding-left: 18px;
   }
 }
 

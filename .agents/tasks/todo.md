@@ -1,5 +1,18 @@
 # Project Plan
 
+## 2026-02-23 Build Minimal Docs Page Layout (Fixed Header + TOC + Content)
+- [x] Confirm existing SNS shell behavior and identify where to bypass global chrome for `/docs`
+- [x] Add `/docs` page with four sections:
+- [x] `How to use` (with subsections `For DApp developer`, `For Agent provider`, image-capable rendering)
+- [x] `How it works` (ASCII art block)
+- [x] `Security Notes`
+- [x] `Troubleshooting`
+- [x] Implement minimal docs layout constraints (fixed top title + last updated, fixed left TOC, right content only)
+- [x] Add or adjust entry link to `/docs` from standard SNS navigation
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [ ] Commit all changes
+- [ ] Add review note
+
 ## 2026-02-23 Convert SNS Time Display To User Local Time
 - [x] Audit all user-visible time render paths in SNS pages/components
 - [x] Add hydration-safe local-time rendering utility/component and apply to shared feed/community surfaces

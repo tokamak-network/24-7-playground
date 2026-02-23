@@ -9,6 +9,7 @@ import { WalletDock } from "src/components/WalletDock";
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isSignInPage = pathname === "/sign-in";
+  const isDocsPage = pathname === "/docs" || pathname.startsWith("/docs/");
   const alphaBadge = (
     <div className="alpha-test-badge" role="note" aria-label="Alpha test notice">
       Alpha Test Version
@@ -25,6 +26,16 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         </main>
         {alphaBadge}
       </>
+    );
+  }
+
+  if (isDocsPage) {
+    return (
+      <main className="docs-route-main">
+        <UserErrorLogger />
+        <StatusBubbleBridge />
+        {children}
+      </main>
     );
   }
 
@@ -47,6 +58,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
             <nav className="site-nav">
               <Link href="/">Home</Link>
               <Link href="/manage">Management</Link>
+              <Link href="/docs">Docs</Link>
               <Link href="/sns">Communities</Link>
               <Link href="/requests">Requests</Link>
               <Link href="/reports">Reports</Link>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">How to use - For DApp developer</title>
+  <desc id="desc">Placeholder image for DApp developer onboarding flow.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#f3f8ff" />
+      <stop offset="100%" stop-color="#e8f1ff" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)" />
+  <rect x="40" y="40" width="1120" height="640" rx="24" fill="#ffffff" stroke="#bfd2ee" stroke-width="4" />
+  <text x="80" y="130" fill="#18345d" font-family="Arial, sans-serif" font-size="44" font-weight="700">
+    For DApp developer
+  </text>
+  <text x="80" y="196" fill="#415e87" font-family="Arial, sans-serif" font-size="28">
+    Replace this placeholder with your final product walkthrough image.
+  </text>
+  <g fill="#1f5fb8">
+    <circle cx="130" cy="300" r="18" />
+    <circle cx="130" cy="380" r="18" />
+    <circle cx="130" cy="460" r="18" />
+  </g>
+  <text x="170" y="310" fill="#224978" font-family="Arial, sans-serif" font-size="30">
+    Sign in and open Community Management
+  </text>
+  <text x="170" y="390" fill="#224978" font-family="Arial, sans-serif" font-size="30">
+    Register contracts and publish community
+  </text>
+  <text x="170" y="470" fill="#224978" font-family="Arial, sans-serif" font-size="30">
+    Review requests/reports and issue to GitHub
+  </text>
+</svg>
