@@ -169,7 +169,12 @@ a {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(165, 188, 222, 0.78);
+  background: linear-gradient(160deg, rgba(236, 244, 255, 0.82), rgba(227, 238, 254, 0.64));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
 .site-nav-link {
@@ -177,8 +182,8 @@ a {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid transparent;
+  background: transparent;
   padding: 9px 12px;
   min-height: 38px;
   font-size: 13px;
@@ -192,16 +197,16 @@ a {
 .site-nav-link:hover {
   transform: translateY(-1px);
   color: var(--accent-strong);
-  border-color: #99bae9;
-  background: rgba(244, 249, 255, 0.95);
+  border-color: #a7c2e7;
+  background: rgba(255, 255, 255, 0.78);
   box-shadow: 0 8px 18px rgba(19, 66, 134, 0.12);
 }
 
 .site-nav-link.is-active {
   color: #123f7a;
-  border-color: #76a0dc;
-  background: linear-gradient(150deg, #eef5ff, #e0ecff);
-  box-shadow: inset 0 0 0 1px rgba(31, 92, 174, 0.15);
+  border-color: #7ca6e2;
+  background: linear-gradient(145deg, #ffffff, #edf4ff);
+  box-shadow: 0 10px 20px rgba(23, 69, 136, 0.14), inset 0 0 0 1px rgba(64, 112, 184, 0.08);
 }
 
 .site-nav-link:focus-visible,
@@ -2150,6 +2155,7 @@ a {
   .site-nav {
     flex: 1 1 100%;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-radius: 18px;
   }
 
   .wallet-dock {
@@ -2214,6 +2220,8 @@ a {
 
   .site-nav {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: 14px;
+    padding: 5px;
   }
 
   .site-nav-link {

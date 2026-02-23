@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-23 Document Menu Layout Concepts And Apply Option 1
+- [x] Create `docs/menu_layout_plan.md` and record all proposed layout options
+- [x] Mark Option 1 (`Command Bar Header`) as selected design
+- [x] Apply Option 1 styles to SNS header/navigation layout
+- [x] Verify responsive behavior for header/nav at current breakpoints
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Added new plan document `docs/menu_layout_plan.md` with four layout concepts and explicitly marked Option 1 (`Command Bar Header`) as selected/applied. Updated top-nav styling in `apps/sns/src/app/globals.css` to implement the command-bar visual model (cohesive rounded command surface + lightweight tabs + clearer active state), while preserving two-row header structure (brand row + controls row) and `Docs` rightmost order from `apps/sns/src/components/AppChrome.tsx`. Responsive behavior remains under existing breakpoints (`980px`, `720px`) with grid downshifts for nav density. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Remove Nav Wrapper Box And Propose New Layout Concepts
 - [x] Remove the menu container box styling around top navigation
 - [x] Keep current nav order with `Docs` at the rightmost position
