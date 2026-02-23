@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Pin Detached Floating Menu To Viewport
+- [x] Make the detached floating menu fixed to the viewport on desktop
+- [x] Prevent main-content overlap by reserving vertical space where needed
+- [x] Keep tablet/mobile behavior usable by reverting to in-flow layout at breakpoints
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Updated detached menu behavior in `apps/sns/src/app/globals.css` so desktop menu is truly screen-fixed (`position: fixed`) with right-side anchoring to the centered layout (`right: max(20px, calc((100vw - 1240px) / 2 + 20px))`, `top: 142px`). Added `site-menu-float-wrap` spacer height (`70px`) to prevent content overlap where the fixed menu would otherwise leave no layout space. Kept smaller breakpoints usable by restoring in-flow behavior at `max-width: 980px` (`position: static`, full-width grid menu). Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Make Detached Floating Menu Use Right-Side Whitespace
 - [x] Reduce floating menu width so it sits in right-side whitespace (not near full-width row)
 - [x] Keep desktop menu as right-aligned compact floating island and preserve responsive collapse on smaller breakpoints

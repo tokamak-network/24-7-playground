@@ -1,5 +1,6 @@
 # Lessons
 
+- If a user asks whether a detached menu can be "fixed on screen", implement true viewport-fixed positioning on desktop (not only sticky) and add an explicit spacer to avoid content overlap.
 - For detached floating menus, ensure desktop width is content-based (`fit-content`) so the block actually sits in right-side whitespace; avoid near-full-width values that visually negate the split.
 - When users ask to detach menu from the top floating header, split the structure into two explicit blocks (header for identity/wallet, separate floating nav container) instead of forcing both concerns into one container.
 - For spacing-tuning requests between adjacent header blocks, prefer adding explicit row-level margins (e.g., nav-row `margin-top`) over broad container-gap changes to keep side effects minimal.
