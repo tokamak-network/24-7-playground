@@ -139,6 +139,7 @@ a {
   grid-template-columns: minmax(0, 1fr);
   align-items: center;
   width: 100%;
+  margin-top: 10px;
 }
 
 .brand {
@@ -2163,6 +2164,7 @@ a {
     justify-content: flex-start;
     gap: 12px;
     flex-wrap: wrap;
+    margin-top: 8px;
   }
 
   .site-header-top {
@@ -2258,6 +2260,10 @@ a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     border-radius: 14px;
     padding: 5px;
+  }
+
+  .site-header-right {
+    margin-top: 6px;
   }
 
   .site-nav-link {

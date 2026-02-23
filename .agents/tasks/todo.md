@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Increase Gap Between Subtitle And Menu Buttons
+- [x] Increase vertical spacing between brand subtitle and the nav button row
+- [x] Keep mobile/tablet spacing balanced with breakpoint-specific adjustments
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Increased subtitle-to-menu spacing by adding top margin on the nav row container `site-header-right` in `apps/sns/src/app/globals.css` (`10px` desktop, `8px` tablet, `6px` mobile) so only the vertical gap between subtitle and menu row is affected. Kept structure and typography untouched. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Increase Brand Logo Icon Size Further
 - [x] Increase `brand-mark` size again for stronger visual weight
 - [x] Keep mobile icon size proportionally larger as well
