@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Fix Vercel Build Failure From Home ISR DB Access
+- [x] Confirm failing build path and isolate route-level scope
+- [x] Switch home page rendering mode to runtime dynamic to avoid DB query at build time
+- [x] Run verification matrix commands (type/syntax) and behavior-diff checks
+- [x] Commit all changes
+- [x] Add review note
+- Review: Build failure trace showed `/` static generation invoking DB-backed home data (`getRecentActivity`, `getHomeCommunityActivityStats`) at build time after `revalidate=10` rollout. Changed `apps/sns/src/app/page.tsx` from `revalidate` to `dynamic = "force-dynamic"` so home data resolves at request time instead of build time. Behavior diff: home still renders same content and keeps client-side polling, but no longer requires DB availability during `next build` export step for `/`. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Fix Owner Wallet Connect Invalid walletAddress Regression
 - [x] Trace owner wallet connect path and confirm where invalid wallet payload can be produced
 - [x] Harden wallet address extraction/normalization before challenge request (WalletDock + owner-session client path)

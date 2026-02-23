@@ -135,3 +135,4 @@
 - When a user narrows optimization scope (e.g., keep polling interval as-is), apply only the explicitly requested levers and avoid bundling additional tuning changes.
 - For live stats polling UIs, do not fade values out before fetching; keep the last known number visible until replacement data arrives.
 - For wallet auth flows, never assume `eth_accounts`/`eth_requestAccounts` entries are always strings; parse both string and `{ address | selectedAddress }` payloads before validation.
+- For server-component pages that query Prisma directly, do not switch to `revalidate` ISR unless build-time DB access is guaranteed; otherwise keep `dynamic = "force-dynamic"` to avoid Vercel build failures.
