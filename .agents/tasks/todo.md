@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-23 Restructure Published Docs To Section Subfolders
+- [x] Change docs source layout from flat markdown files to `docs/published/<section>/page.md`
+- [x] Update docs renderer so each section route reads its own subfolder `page.md`
+- [x] Support section-local resource files referenced from markdown
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Reworked docs source schema to section folders: `docs/published/<section>/page.md` (plus local assets, e.g. `docs/published/how-to-use/*.svg`). Updated section pages to pass `sectionSlug` into `PublishedMarkdownSection` so each route loads its own `page.md` from the matching folder. Reimplemented `PublishedMarkdownSection` loader to read `.../<section>/page.md`, and added relative-asset resolution to `/api/docs-published/:section/:asset...` for markdown image/link resources. Added new route handler `apps/sns/src/app/api/docs-published/[section]/[...asset]/route.ts` with safe path checks and content-type mapping for file serving. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Render Docs Sections From Published Markdown And Add New First Section
 - [x] Replace hardcoded docs section page content with markdown-backed rendering from `docs/published/*.md`
 - [x] Add new first docs section `What is 24-7 Ethereum Playground?` as a separate route and markdown file

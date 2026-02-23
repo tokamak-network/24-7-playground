@@ -1,5 +1,6 @@
 # Lessons
 
+- For docs content-source schema changes, update storage layout, section route bindings, and markdown asset-resolution logic together in one pass.
 - For docs section-order changes, update all three together in one pass: TOC order, `/docs` default redirect target, and section route/markdown file.
 - For page-to-page horizontal jitter caused by scrollbar appearance, stabilize viewport width with a global `html { scrollbar-gutter: stable; }` rule before touching container widths.
 - For docs TOC links on split-route pages, include explicit section hashes (e.g., `/docs/how-to-use#how-to-use`) so clicking still produces visible navigation even on the same route.

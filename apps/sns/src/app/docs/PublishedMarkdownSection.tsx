@@ -3,7 +3,7 @@ import path from "node:path";
 import type { ReactNode } from "react";
 
 type PublishedMarkdownSectionProps = {
-  fileName: string;
+  sectionSlug: string;
   sectionId: string;
 };
 
@@ -26,10 +26,10 @@ const ORDERED_LIST_ITEM_RE = /^\s*\d+\.\s+(.+)$/;
 const HEADING_RE = /^(#{1,6})\s+(.+)$/;
 const IMAGE_RE = /^!\[([^\]]*)\]\(([^)]+)\)$/;
 
-async function loadPublishedMarkdown(fileName: string): Promise<string> {
+async function loadPublishedMarkdown(sectionSlug: string): Promise<string> {
   const attempts: string[] = [];
   for (const baseDir of PUBLISHED_DOCS_PATH_CANDIDATES) {
-    const filePath = path.join(baseDir, fileName);
+    const filePath = path.join(baseDir, sectionSlug, "page.md");
     attempts.push(filePath);
     try {
       return await readFile(filePath, "utf8");
@@ -52,7 +52,29 @@ function slugifyHeading(text: string) {
     .replace(/\s+/g, "-");
 }
 
-function renderInline(text: string, keyPrefix: string): ReactNode[] {
+function toPublishedAssetHref(sectionSlug: string, rawPath: string) {
+  const href = rawPath.trim();
+  if (!href) return "#";
+  if (/^https?:\/\//i.test(href) || href.startsWith("/")) {
+    return href;
+  }
+
+  const cleaned = href.split("#")[0].split("?")[0].trim();
+  const parts = cleaned.split("/").filter(Boolean);
+  if (parts.length === 0 || parts.some((part) => part === "." || part === "..")) {
+    return "#";
+  }
+
+  const encodedSection = encodeURIComponent(sectionSlug);
+  const encodedPath = parts.map((part) => encodeURIComponent(part)).join("/");
+  return `/api/docs-published/${encodedSection}/${encodedPath}`;
+}
+
+function renderInline(
+  text: string,
+  sectionSlug: string,
+  keyPrefix: string
+): ReactNode[] {
   const result: ReactNode[] = [];
   const linkOrCodeRe = /(`[^`]+`)|(\[([^\]]+)\]\(([^)]+)\))/g;
   let cursor = 0;
@@ -72,7 +94,7 @@ function renderInline(text: string, keyPrefix: string): ReactNode[] {
       );
     } else {
       const linkLabel = match[3] || "";
-      const linkHref = match[4] || "#";
+      const linkHref = toPublishedAssetHref(sectionSlug, match[4] || "#");
       const external = /^https?:\/\//.test(linkHref);
       result.push(
         <a
@@ -166,9 +188,7 @@ function parseMarkdown(markdown: string): MarkdownBlock[] {
       while (index < lines.length) {
         const candidate = lines[index].trim();
         const itemMatch = candidate.match(UNORDERED_LIST_ITEM_RE);
-        if (!itemMatch) {
-          break;
-        }
+        if (!itemMatch) break;
         items.push(itemMatch[1].trim());
         index += 1;
       }
@@ -182,9 +202,7 @@ function parseMarkdown(markdown: string): MarkdownBlock[] {
       while (index < lines.length) {
         const candidate = lines[index].trim();
         const itemMatch = candidate.match(ORDERED_LIST_ITEM_RE);
-        if (!itemMatch) {
-          break;
-        }
+        if (!itemMatch) break;
         items.push(itemMatch[1].trim());
         index += 1;
       }
@@ -196,9 +214,7 @@ function parseMarkdown(markdown: string): MarkdownBlock[] {
     while (index < lines.length) {
       const candidate = lines[index];
       const candidateTrimmed = candidate.trim();
-      if (!candidateTrimmed) {
-        break;
-      }
+      if (!candidateTrimmed) break;
       if (
         candidateTrimmed.startsWith("```") ||
         HEADING_RE.test(candidateTrimmed) ||
@@ -213,28 +229,25 @@ function parseMarkdown(markdown: string): MarkdownBlock[] {
       index += 1;
     }
 
-    blocks.push({
-      type: "paragraph",
-      text: paragraphLines.join(" "),
-    });
+    blocks.push({ type: "paragraph", text: paragraphLines.join(" ") });
   }
 
   return blocks;
 }
 
-function renderBlock(block: MarkdownBlock, blockIndex: number) {
+function renderBlock(block: MarkdownBlock, sectionSlug: string, blockIndex: number) {
   if (block.type === "heading") {
     const headingId = slugifyHeading(block.text);
     if (block.level <= 2) {
       return (
         <h2 id={headingId} key={`h2-${blockIndex}`}>
-          {renderInline(block.text, `h2-${blockIndex}`)}
+          {renderInline(block.text, sectionSlug, `h2-${blockIndex}`)}
         </h2>
       );
     }
     return (
       <h3 id={headingId} key={`h3-${blockIndex}`}>
-        {renderInline(block.text, `h3-${blockIndex}`)}
+        {renderInline(block.text, sectionSlug, `h3-${blockIndex}`)}
       </h3>
     );
   }
@@ -242,7 +255,7 @@ function renderBlock(block: MarkdownBlock, blockIndex: number) {
   if (block.type === "paragraph") {
     return (
       <p className="docs-markdown-paragraph" key={`p-${blockIndex}`}>
-        {renderInline(block.text, `p-${blockIndex}`)}
+        {renderInline(block.text, sectionSlug, `p-${blockIndex}`)}
       </p>
     );
   }
@@ -250,7 +263,7 @@ function renderBlock(block: MarkdownBlock, blockIndex: number) {
   if (block.type === "blockquote") {
     return (
       <p className="docs-callout" key={`quote-${blockIndex}`}>
-        {renderInline(block.text, `quote-${blockIndex}`)}
+        {renderInline(block.text, sectionSlug, `quote-${blockIndex}`)}
       </p>
     );
   }
@@ -261,7 +274,7 @@ function renderBlock(block: MarkdownBlock, blockIndex: number) {
       <ListTag className="docs-list" key={`list-${blockIndex}`}>
         {block.items.map((item, itemIndex) => (
           <li key={`item-${blockIndex}-${itemIndex}`}>
-            {renderInline(item, `item-${blockIndex}-${itemIndex}`)}
+            {renderInline(item, sectionSlug, `item-${blockIndex}-${itemIndex}`)}
           </li>
         ))}
       </ListTag>
@@ -269,9 +282,10 @@ function renderBlock(block: MarkdownBlock, blockIndex: number) {
   }
 
   if (block.type === "image") {
+    const imageSrc = toPublishedAssetHref(sectionSlug, block.src);
     return (
       <figure className="docs-figure" key={`img-${blockIndex}`}>
-        <img src={block.src} alt={block.alt} />
+        <img src={imageSrc} alt={block.alt} />
       </figure>
     );
   }
@@ -284,15 +298,15 @@ function renderBlock(block: MarkdownBlock, blockIndex: number) {
 }
 
 export async function PublishedMarkdownSection({
-  fileName,
+  sectionSlug,
   sectionId,
 }: PublishedMarkdownSectionProps) {
   try {
-    const markdown = await loadPublishedMarkdown(fileName);
+    const markdown = await loadPublishedMarkdown(sectionSlug);
     const blocks = parseMarkdown(markdown);
     return (
       <section id={sectionId} className="docs-section docs-markdown">
-        {blocks.map((block, index) => renderBlock(block, index))}
+        {blocks.map((block, index) => renderBlock(block, sectionSlug, index))}
       </section>
     );
   } catch (error) {
