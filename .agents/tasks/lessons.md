@@ -1,5 +1,6 @@
 # Lessons
 
+- For page-to-page horizontal jitter caused by scrollbar appearance, stabilize viewport width with a global `html { scrollbar-gutter: stable; }` rule before touching container widths.
 - For docs TOC links on split-route pages, include explicit section hashes (e.g., `/docs/how-to-use#how-to-use`) so clicking still produces visible navigation even on the same route.
 - When users ask Docs sections to be separate pages, split sections into route segments (e.g., `/docs/<section>`) and keep shared docs chrome through `docs/layout.tsx`.
 - For layout-consistency feedback, remove route-specific chrome exceptions first so all pages inherit the same global shell before tuning page-local content styling.

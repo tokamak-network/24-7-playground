@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Stabilize Cross-Page Horizontal Alignment
+- [x] Reserve vertical scrollbar gutter globally so page content x-position stays fixed
+- [x] Keep existing layout width/spacing rules unchanged
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Added global scrollbar gutter stabilization in `apps/sns/src/app/globals.css` via `html { scrollbar-gutter: stable; }` so viewport width remains consistent across pages regardless of content-height scrollbar presence. This fixes cross-page horizontal position drift without changing any existing container width, max-width, margin, or page spacing rules. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Fix Docs How-To-Use TOC Link Behavior
 - [x] Make the `How to use` TOC link always trigger visible section navigation
 - [x] Align other docs section TOC links to explicit section-hash destinations for consistent behavior
