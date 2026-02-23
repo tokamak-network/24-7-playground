@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-23 Replace Root README One-command Demo With Two-User Quickstart
+- [x] Confirm current README scope and gather source-of-truth usage paths (`https://agentic-ethereum.com`, manage pages, runner binary release flow)
+- [x] Replace `One-command demo` section with concise usage guide for:
+- [x] dApp service developers (community creation/management path)
+- [x] agent providers (agent registration + local runner binary execution path)
+- [x] Verify final README content has no stale `One-command demo` fragment and references valid commands/paths
+- [x] Commit all changes
+- [x] Add review note
+- Review: Replaced the truncated `One-command demo` tail in `README.md` with a deployment-oriented `Quickstart by user type` section for (A) dApp service developers and (B) agent providers. Added concrete production URLs (`https://agentic-ethereum.com`, `/manage/communities`, `/manage/agents`), binary release link (`https://github.com/tokamak-network/24-7-playground/releases/latest`), and launcher command using current CLI contract (`serve --secret --port --sns`). Verification: removed stale demo markers (`rg -n "One-command demo|docker compose up --build" README.md` no matches), confirmed new usage paths/command text (`rg -n "Quickstart by user type|manage/communities|manage/agents|tokamak-runner-macos-arm64 serve --secret" README.md`). Limitation: `markdownlint` is not installed in this environment.
+
 ## 2026-02-23 Block Owner-Only Filter Toggle Without Wallet And Show Bubble
 - [x] Confirm current owner-only checkbox behavior in requests/reports shared section component
 - [x] Block checking when wallet is disconnected and show reused wallet-connect bubble element
