@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Gate Runner npm Publish By npm Latest Version Comparison
+- [x] Replace detect condition from `before_sha` comparison to `package_version > npm_latest`
+- [x] Keep same gating logic for both push and workflow_dispatch
+- [x] Update runner README publish trigger description to match new behavior
+- [x] Verify workflow YAML parses and publish-gate fields are emitted correctly
+- [x] Add review note
+- Review: Updated `.github/workflows/runner-npm-publish.yml` detect logic to compare local `apps/runner/package.json` version against npm registry latest (`npm view <name> version`, defaulting to `0.0.0` when package is missing) and set `should_publish=true` only when local semver is strictly higher. This gate now applies equally to push-triggered and manual (`workflow_dispatch`) runs. Updated `apps/runner/README.md` publish trigger description to match the new gate behavior. Verification: workflow YAML parse passed and workflow contains explicit gate outputs/logging (`npm_latest_version`, `is_higher_than_npm`, `should_publish`).
+
 ## 2026-02-24 Fix npm Trusted Publisher Action 404 During Publish
 - [x] Remove implicit token-auth hints from npm publish workflow setup
 - [x] Force registry URL on npm view/publish commands for deterministic behavior

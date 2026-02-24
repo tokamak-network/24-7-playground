@@ -28,43 +28,30 @@ jobs:
 
       - name: Resolve package publish target
         id: resolve
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
 
           package_name="$(node -p "require('./apps/runner/package.json').name")"
           package_version="$(node -p "require('./apps/runner/package.json').version")"
+          npm_latest_version="$(npm view "${package_name}" version --registry=https://registry.npmjs.org 2>/dev/null || true)"
+          if [[ -z "${npm_latest_version}" ]]; then
+            npm_latest_version="0.0.0"
+          fi
 
           echo "package_name=${package_name}" >> "$GITHUB_OUTPUT"
           echo "package_version=${package_version}" >> "$GITHUB_OUTPUT"
+          echo "npm_latest_version=${npm_latest_version}" >> "$GITHUB_OUTPUT"
 
-          if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          is_higher_than_npm="$(node -e "const latest=process.argv[1];const current=process.argv[2];const parse=(v)=>{if(!/^\\d+\\.\\d+\\.\\d+$/.test(v)) return null;return v.split('.').map(Number);};const l=parse(latest), c=parse(current);if(!l||!c){console.log('invalid');process.exit(0);}if(c[0]!==l[0]){console.log(c[0]>l[0]?'yes':'no');process.exit(0);}if(c[1]!==l[1]){console.log(c[1]>l[1]?'yes':'no');process.exit(0);}if(c[2]!==l[2]){console.log(c[2]>l[2]?'yes':'no');process.exit(0);}console.log('equal');" "${npm_latest_version}" "${package_version}")"
 
-          previous_version=""
-          if [[ -n "${BEFORE_SHA}" ]] && git cat-file -e "${BEFORE_SHA}:apps/runner/package.json" 2>/dev/null; then
-            previous_version="$(git show "${BEFORE_SHA}:apps/runner/package.json" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>process.stdout.write(String(JSON.parse(s).version||'')))")"
-          fi
-
-          if [[ -z "${previous_version}" ]]; then
-            echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          is_increased="$(node -e "const prev=process.argv[1];const curr=process.argv[2];const parse=(v)=>{if(!/^\\d+\\.\\d+\\.\\d+$/.test(v)) return null;return v.split('.').map(Number);};const p=parse(prev), c=parse(curr);if(!p||!c){console.log('invalid');process.exit(0);}if(c[0]!==p[0]){console.log(c[0]>p[0]?'yes':'no');process.exit(0);}if(c[1]!==p[1]){console.log(c[1]>p[1]?'yes':'no');process.exit(0);}if(c[2]!==p[2]){console.log(c[2]>p[2]?'yes':'no');process.exit(0);}console.log('equal');" "${previous_version}" "${package_version}")"
-
-          if [[ "${is_increased}" == "invalid" ]]; then
-            echo "Runner package versions must follow x.y.z for publish comparison."
-            echo "previous=${previous_version}, current=${package_version}"
+          if [[ "${is_higher_than_npm}" == "invalid" ]]; then
+            echo "Runner package versions must follow x.y.z for npm comparison."
+            echo "npm_latest=${npm_latest_version}, current=${package_version}"
             exit 1
           fi
 
-          if [[ "${is_increased}" != "yes" ]]; then
-            echo "Runner version did not increase: previous=${previous_version}, current=${package_version}"
+          if [[ "${is_higher_than_npm}" != "yes" ]]; then
+            echo "Runner version is not higher than npm latest: npm_latest=${npm_latest_version}, current=${package_version}"
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
