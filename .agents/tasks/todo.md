@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Refine How-It-Works LLM Provider Multiplicity Notation
+- [x] Remove per-provider labels (`A/B/C`) from the ASCII diagram
+- [x] Represent expandable provider multiplicity with `...`
+- [x] Commit related changes
+- [x] Add review note
+- Review: Refined `docs/published/how-it-works/page.md` so LLM provider blocks are no longer separated by `A/B/C` names. The diagram now uses repeated generic `LLM Provider` blocks followed by `...` to clearly express that the runner can communicate with more than three providers.
+
 ## 2026-02-24 Update How-It-Works ASCII Diagram Topology
 - [x] Review existing `how-it-works` ASCII diagram elements
 - [x] Redraw diagram so `agentic-ethereum.com` communicates with `Local Runner`
