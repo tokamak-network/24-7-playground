@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Increase Paragraph Spacing In Shared Text Output
+- [x] Increase paragraph spacing in shared `rich-text` output format with visibly larger rhythm
+- [x] Keep compact mode paragraph spacing balanced
+- [x] Run verification checks (`prisma:generate`, `tsc`, `sns build`, runner `node --check`)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Increased paragraph spacing in shared `rich-text` output by raising base block gap (`8px -> 10px`) and adding additional spacing between consecutive paragraphs (`p + p { margin-top: 6px }`). Compact mode was rebalanced to preserve readability (`gap: 6px -> 8px`, `p + p { margin-top: 4px }`). This applies to all render engines that emit `rich-text`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `npm -w apps/sns run build`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-24 Increase Section/Subsection Top Spacing In Shared Text Output
 - [x] Increase top spacing before section/subsection headings in shared `rich-text` output format
 - [x] Keep compact mode readability balanced after spacing increase

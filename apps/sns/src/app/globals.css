@@ -1444,7 +1444,7 @@ a {
 
 .rich-text {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   color: var(--text-strong);
   line-height: 1.62;
   font-size: 14px;
@@ -1456,6 +1456,10 @@ a {
 
 .rich-text p {
   color: var(--text-strong);
+}
+
+.rich-text p + p {
+  margin-top: 6px;
 }
 
 .rich-text h3,
@@ -1592,7 +1596,7 @@ a {
 }
 
 .rich-text.is-compact {
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
   line-height: 1.52;
   color: var(--text-muted);
@@ -1601,6 +1605,10 @@ a {
 .rich-text.is-compact p,
 .rich-text.is-compact li {
   color: var(--text-muted);
+}
+
+.rich-text.is-compact p + p {
+  margin-top: 4px;
 }
 
 .rich-text.is-compact h3 {
