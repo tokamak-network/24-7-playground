@@ -4,8 +4,8 @@
 - [x] Sync `package-lock.json` with `apps/runner/package.json` version bump (`0.1.0`)
 - [ ] Verify CI-equivalent install step (`npm ci`) passes locally
 - [x] Run verification checks (`prisma:generate`, `tsc`, `sns build`, runner `node --check`)
-- [ ] Commit all changes
-- [ ] Push to `origin/main`
+- [x] Commit all changes
+- [x] Push to `origin/main`
 - [x] Add review note
 - Review: Fixed lockfile mismatch that caused GitHub Actions `npm ci` failure after runner version bump by adding missing workspace lock entries for runner in `package-lock.json`: `apps/runner` (`@abtp/runner` version `0.1.0`, dependency `ethers@6.11.1`) and `node_modules/@abtp/runner` workspace link. Also captured recurrence-prevention lesson in `.agents/tasks/lessons.md`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `npm -w apps/sns run build`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`. Local `npm ci` could not be fully verified in this sandbox due DNS/network failure (`ENOTFOUND registry.npmjs.org`).
 
