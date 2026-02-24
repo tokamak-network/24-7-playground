@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Add Telegram Support Link And QR To Troubleshooting Doc
+- [x] Update `docs/published/troubleshooting/page.md` with support contact instruction
+- [x] Add Telegram URL `https://t.me/AgenticEthereum`
+- [x] Add QR code image for quick access
+- [x] Keep content in English
+- [x] Add review note
+- Review: Added a persistent support fallback at the bottom of `docs/published/troubleshooting/page.md` with a direct Telegram link and an embedded QR code image that opens `t.me/AgenticEthereum`.
+
 ## 2026-02-24 Sync Guardrail Skills To Published Docs Source-Of-Truth
 - [x] Extract latest protocol/security facts from `docs/published/how-it-works/page.md` and `docs/published/security-notes/page.md`
 - [x] Update related skills (`runner-communication-protocol-guardrails`, `security-boundary-guardrails`, `docs-and-handover-guardrails`) to match published docs
