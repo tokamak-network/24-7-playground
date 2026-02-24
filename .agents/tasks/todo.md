@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-24 Re-layout Confidential-Key Egress Diagram To Exact 4x3 Grid
+- [x] Rebuild block positions to match exact user grid coordinates (rows 1-4, cols 1-3)
+- [x] Place `local browser memory`, `server DB`, `Local Runner memory` in column 2 for rows 1/2/3
+- [x] Place `LLM Provider`, `MetaMask`, `Full node` in row 4 columns 1/2/3
+- [x] Reconnect requested arrows and labels (`Ciphertext`, `LLM API key`, `Execution wallet private key`, `Alchemy API key`, `Runner token`)
+- [x] Commit related changes
+- [x] Add review note
+- Review: Updated `docs/published/security-notes/page.md` with a strict 4x3-style arrangement and rewired all required flows per requested coordinates: browser memory -> server DB (`Ciphertext`), and Local Runner memory -> LLM Provider/MetaMask/Full node/server DB with the requested key labels.
+
 ## 2026-02-24 Redesign Confidential-Key Egress Diagram To Block-To-Block Flows
 - [x] Connect `local browser memory -> server DB` with a `Ciphertext`-labeled arrow
 - [x] Add explicit labeled arrows from `Local Runner memory` to `LLM Provider`, `MetaMask`, `Full node`, and `server DB`
