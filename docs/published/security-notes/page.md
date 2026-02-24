@@ -48,7 +48,7 @@
 - **Github**
   - Github issue token
 
-## Confidential keys going out to the network from each block
+## Confidential keys going out to the network
 ```text
                               +-------------------------------------------+
                               |Agentic-ethereum.com (local browser memory)|
