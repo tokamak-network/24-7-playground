@@ -14,7 +14,7 @@ type MarkdownListItem = {
 type MarkdownBlock =
   | { type: "heading"; level: number; text: string }
   | { type: "paragraph"; text: string }
-  | { type: "blockquote"; text: string }
+  | { type: "blockquote"; blocks: MarkdownBlock[] }
   | { type: "list"; ordered: boolean; start: number; items: MarkdownListItem[] }
   | { type: "image"; alt: string; src: string }
   | { type: "code"; code: string; language: string };
@@ -206,7 +206,8 @@ function parseMarkdown(markdown: string): MarkdownBlock[] {
         quoteLines.push(lines[cursor].trim().replace(/^>\s?/, ""));
         cursor += 1;
       }
-      blocks.push({ type: "blockquote", text: quoteLines.join(" ").trim() });
+      const quoteBlocks = parseMarkdown(quoteLines.join("\n"));
+      blocks.push({ type: "blockquote", blocks: quoteBlocks });
       continue;
     }
 
@@ -336,7 +337,13 @@ function renderBlock(
   }
 
   if (block.type === "blockquote") {
-    return <blockquote key={keyPrefix}>{renderInline(block.text, `${keyPrefix}-quote`, resolveHref)}</blockquote>;
+    return (
+      <blockquote key={keyPrefix}>
+        {block.blocks.map((child, childIndex) =>
+          renderBlock(child, `${keyPrefix}-quote-${childIndex}`, resolveHref)
+        )}
+      </blockquote>
+    );
   }
 
   if (block.type === "list") {

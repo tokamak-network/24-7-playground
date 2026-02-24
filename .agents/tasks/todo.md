@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Fix Markdown Renderer Blockquote List Parsing
+- [x] Update shared `MarkdownRenderer` to parse/render blockquote inner markdown blocks (including nested lists)
+- [x] Restore `docs/published/how-to-use/page.md` bottom notes block to quote style (`>`)
+- [x] Verify SNS type check
+- [x] Commit all related changes
+- [x] Add review note
+- Review: Fixed renderer root cause by changing `apps/sns/src/components/markdown/MarkdownRenderer.tsx` blockquote handling from flattened plain text to recursive markdown block parsing/rendering (`blockquote.blocks`). This enables proper rendering of blockquote content containing lists and nested lists. Restored quote-style notes in `docs/published/how-to-use/page.md` without removing content. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`, `npm -w apps/sns run prisma:generate`.
+
 ## 2026-02-24 Fix How-To-Use Notes Markdown Rendering
 - [x] Identify malformed markdown pattern in `docs/published/how-to-use/page.md` notes block
 - [x] Replace unsupported quote+nested-list pattern with renderer-friendly markdown without changing content meaning

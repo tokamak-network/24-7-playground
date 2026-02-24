@@ -180,6 +180,7 @@
 - Do not derive long-term decrypt keys from raw wallet signatures alone; signature variability can break decryption. Prefer stable wallet identity binding (e.g., recovered signer address) + user password, while keeping legacy fallback.
 - When docs ask for defaults only, avoid mixing in optional override variables; list OS-specific default paths explicitly.
 - In SNS docs markdown, avoid blockquote + nested-list combinations for critical guidance; use plain headings/lists to match renderer capabilities.
+- If markdown rendering fails on a valid docs structure the user wants to keep, fix the shared renderer first instead of rewriting docs to avoid the syntax.
 - For wallet auth flows, never assume `eth_accounts`/`eth_requestAccounts` entries are always strings; parse both string and `{ address | selectedAddress }` payloads before validation.
 - For server-component pages that query Prisma directly, do not switch to `revalidate` ISR unless build-time DB access is guaranteed; otherwise keep `dynamic = "force-dynamic"` to avoid Vercel build failures.
 - Do not add app-wide click interception that forces `/sign-in` on navigation unless explicitly requested; keep wallet connection checks scoped to the actions that truly require auth.
