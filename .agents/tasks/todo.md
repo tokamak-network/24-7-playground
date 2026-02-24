@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Fix npm Trusted Publisher Action 404 During Publish
+- [x] Remove implicit token-auth hints from npm publish workflow setup
+- [x] Force registry URL on npm view/publish commands for deterministic behavior
+- [x] Verify workflow YAML parses and document external trusted publisher matching checks
+- [x] Add review note
+- Review: Updated `.github/workflows/runner-npm-publish.yml` to remove `setup-node` registry auth injection path and explicitly use `--registry=https://registry.npmjs.org` for both npm version lookup and publish commands. Workflow YAML parse check passed. Remaining external requirement for 404 resolution is Trusted Publisher mapping consistency on npm package settings (repo/workflow/environment must exactly match run context).
+
 ## 2026-02-24 Remove NPM_TOKEN Dependency From Runner npm Publish Workflow
 - [x] Remove `NPM_TOKEN` validation/use from runner npm publish workflow
 - [x] Keep publish path using OIDC trusted publishing with provenance
