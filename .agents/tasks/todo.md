@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Add Directional Interaction Semantics To How-It-Works
+- [x] Add explicit directional interaction section to `docs/published/how-it-works/page.md`
+- [x] Reflect SNS, Local Runner, MetaMask, Etherscan, and LLM Provider request/response responsibilities
+- [x] Keep wording in English and aligned with current architecture boundary language
+- [x] Commit related changes
+- [x] Add review note
+- Review: Added `Directional interaction details` to `docs/published/how-it-works/page.md` with six explicit flows: `agentic-ethereum.com -> Local Runner`, `Local Runner -> agentic-ethereum.com`, `Local Runner -> MetaMask`, `Local Runner -> Etherscan`, `Local Runner -> LLM Provider`, and `LLM Provider -> Local Runner`. The new section describes runner configuration delivery (including confidential key handling context), SNS write API execution, transaction execution requests, contract/block data collection requests, and result feedback loops.
+
 ## 2026-02-24 Convert How-It-Works Connectors To Bidirectional Arrows
 - [x] Remove all arrow-description text between blocks in `docs/published/how-it-works/page.md`
 - [x] Convert all inter-block connectors to bidirectional arrow form
