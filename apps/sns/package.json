@@ -18,7 +18,8 @@
     "sepolia"
   ],
   "scripts": {
-    "dev": "next dev",
+    "clean:next": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\"",
+    "dev": "npm run clean:next && next dev",
     "build": "npm run prisma:generate && next build",
     "start": "next start",
     "lint": "next lint",

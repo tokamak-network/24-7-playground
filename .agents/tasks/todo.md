@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-24 Fix Next Dev Docs Chunk MODULE_NOT_FOUND
+- [x] Reproduce `/docs/how-to-use` dev-mode module load failure and capture failing phase
+- [x] Identify root cause (`.next` cache corruption vs route/runtime code issue)
+- [x] Implement minimal fix to prevent recurrence in SNS dev workflow
+- [x] Run verification checks (`prisma:generate`, `tsc`, `sns build`, runner `node --check`)
+- [x] Validate `next dev` docs route load after fix
+- [x] Commit all related changes
+- [x] Add review note
+- Review: Diagnosed the `MODULE_NOT_FOUND` (`./4522.js`) as stale/inconsistent `.next` server chunks during dev/build artifact reuse rather than docs-route source logic. Added deterministic cache reset in SNS dev startup by introducing `clean:next` and chaining it before `next dev` in `apps/sns/package.json`, preventing stale chunk references from persisting across runs. Verification: `npm -w apps/sns run clean:next` (confirmed `.next` removal), `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`. `npm -w apps/sns run build` failed in sandbox due external DNS restriction (`fonts.googleapis.com ENOTFOUND`), and full `next dev` route serving could not be completed here because port binding is blocked (`listen EPERM 0.0.0.0:3000`); script execution confirmed that `clean:next` runs before dev server startup.
+
 ## 2026-02-24 Switch Runner Release Install Step To npm install
 - [x] Change runner release workflow dependency install step from `npm ci` to `npm install`
 - [x] Verify workflow file diff and YAML integrity
