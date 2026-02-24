@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Rework How-It-Works Into Staircase Per-Block Direct Connectors
+- [x] Remove shared-trunk branch style from the lower diagram area
+- [x] Re-layout lower blocks as a staircase descending left-to-right
+- [x] Connect each lower block directly from Local Runner with its own connector start point
+- [x] Preserve direction semantics (downward one-way for MetaMask/Full node/GitHub, bidirectional for LLM Provider blocks)
+- [x] Add review note
+- Review: Updated `docs/published/how-it-works/page.md` to a staircase layout with independent connectors per lower block. Removed the previous shared trunk, kept `MetaMask/Full node/GitHub` as one-way `->`, and kept `LLM Provider` blocks as `<->`.
+
 ## 2026-02-24 Revert How-It-Works Connector Regression And Re-Spec Layout
 - [x] Revert `docs/published/how-it-works/page.md` to the state before the latest connector regression
 - [x] Restate the requested connector semantics and alignment rules as an explicit checklist
