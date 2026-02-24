@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Proofread How-To-Use English Without Layout Changes
+- [x] Correct grammar and spelling in `docs/published/how-to-use/page.md`
+- [x] Keep existing format and structure unchanged (headings, numbering, bullets, image placements)
+- [x] Commit all related changes
+- [x] Add review note
+- Review: Proofread and corrected English in `docs/published/how-to-use/page.md` while preserving the existing document structure and layout. Fixes include spelling (`obtainable`, `confidential`, `exposed`), punctuation/phrasing improvements, and clearer wording in selected field descriptions without changing section order or formatting structure.
+
 ## 2026-02-24 Update How-To-Use Runner Log Default Paths
 - [x] Remove `RUNNER_LOG_DIR` mention from `docs/published/how-to-use/page.md`
 - [x] Add explicit default runner log paths for macOS/Linux and Windows
