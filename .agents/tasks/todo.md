@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Fix Markdown Renderer List Item Block Rendering
+- [x] Confirm root cause in shared `MarkdownRenderer` for list-item continuation block flattening
+- [x] Update list parsing to preserve indented block content (images/paragraphs/nested lists) under list items
+- [x] Verify SNS checks (`prisma:generate`, `tsc`, runner `node --check`)
+- [x] Commit all related changes
+- [x] Add review note
+- Review: Fixed list-item continuation parsing in `apps/sns/src/components/markdown/MarkdownRenderer.tsx`. Instead of flattening indented continuation lines into a single inline string, the parser now captures continuation blocks, normalizes indentation, and recursively parses them as markdown child blocks. This restores correct rendering for structured content under numbered steps (for example bold subsection labels, markdown images, and nested bullets in `docs/published/how-to-use/page.md` step 6) and prevents broken inline output such as `!alt text` text leakage. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-24 Fix Markdown Renderer Blockquote List Parsing
 - [x] Update shared `MarkdownRenderer` to parse/render blockquote inner markdown blocks (including nested lists)
 - [x] Restore `docs/published/how-to-use/page.md` bottom notes block to quote style (`>`)

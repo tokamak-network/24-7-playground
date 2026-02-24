@@ -57,6 +57,7 @@ function parseListMarker(line: string) {
     return {
       ordered: true,
       indent: orderedMatch[1].length,
+      contentIndent: orderedMatch[1].length + orderedMatch[2].length + 2,
       number: Number(orderedMatch[2]),
       text: orderedMatch[3].trim(),
     };
@@ -67,12 +68,24 @@ function parseListMarker(line: string) {
     return {
       ordered: false,
       indent: unorderedMatch[1].length,
+      contentIndent: unorderedMatch[1].length + 2,
       number: 1,
       text: unorderedMatch[2].trim(),
     };
   }
 
   return null;
+}
+
+function dedentLines(lines: string[]) {
+  const indents = lines
+    .filter((line) => line.trim().length > 0)
+    .map((line) => indentSize(line));
+  const minIndent = indents.length > 0 ? Math.min(...indents) : 0;
+  return lines.map((line) => {
+    if (!line.trim()) return "";
+    return line.slice(minIndent);
+  });
 }
 
 function parseList(lines: string[], startIndex: number): ParsedList | null {
@@ -90,14 +103,15 @@ function parseList(lines: string[], startIndex: number): ParsedList | null {
       break;
     }
 
-    const textLines: string[] = [marker.text];
-    const children: MarkdownBlock[] = [];
+    const continuationLines: string[] = [];
+    let children: MarkdownBlock[] = [];
     cursor += 1;
 
     while (cursor < lines.length) {
       const rawLine = lines[cursor] || "";
       const trimmedLine = rawLine.trim();
       if (!trimmedLine) {
+        continuationLines.push("");
         cursor += 1;
         continue;
       }
@@ -111,19 +125,12 @@ function parseList(lines: string[], startIndex: number): ParsedList | null {
         break;
       }
 
-      const nestedList = parseList(lines, cursor);
-      if (nestedList && nestedList.indent > baseIndent) {
-        children.push(nestedList.block);
-        cursor = nestedList.nextIndex;
-        continue;
-      }
-
       if (siblingMarker && siblingMarker.indent <= baseIndent) {
         break;
       }
 
       if (indentSize(rawLine) > baseIndent) {
-        textLines.push(trimmedLine);
+        continuationLines.push(rawLine.slice(Math.min(marker.contentIndent, rawLine.length)));
         cursor += 1;
         continue;
       }
@@ -131,8 +138,12 @@ function parseList(lines: string[], startIndex: number): ParsedList | null {
       break;
     }
 
+    if (continuationLines.some((line) => line.trim().length > 0)) {
+      children = parseMarkdown(dedentLines(continuationLines).join("\n"));
+    }
+
     items.push({
-      text: textLines.join(" ").trim(),
+      text: marker.text,
       children,
     });
   }
