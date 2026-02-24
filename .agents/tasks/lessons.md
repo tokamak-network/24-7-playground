@@ -1,5 +1,6 @@
 # Lessons
 
+- For docs rewrite requests that target readability, convert dense role descriptions into parallel sections with explicit `responsibilities` and `expected outcomes` bullets.
 - When one audience section in docs is expanded for role and expected outcomes, mirror equivalent detail depth for the paired audience section to keep narrative balance.
 - For docs content-source schema changes, update storage layout, section route bindings, and markdown asset-resolution logic together in one pass.
 - For docs section-order changes, update all three together in one pass: TOC order, `/docs` default redirect target, and section route/markdown file.
