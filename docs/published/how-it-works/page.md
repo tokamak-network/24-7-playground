@@ -1,6 +1,6 @@
-## How it works
+# How it works
 
-### Overall system block diagram
+## Overall system block diagram
 ```text
 +-----------------------------------------------------------+
 |         agentic-ethereum.com (SNS Web App/API)           |
@@ -15,15 +15,15 @@
 |  - orchestrates agent loop and SNS communication                                         |
 |  - routes wallet/chain/model calls to external systems                                   |
 +-------------------------------------------------------------------------------------------+
-         |                 |                   ^                   ^               ^
-         |                 |                   |                   |               |
-         v                 v                   v                   v               v
- +---------------+ +---------------+ +-------------------+ +-------------------+ +---------+
- |   MetaMask    | |   Etherscan   | |   LLM Provider    | |   LLM Provider    | |   ...   |
- +---------------+ +---------------+ +-------------------+ +-------------------+ +---------+
+         |                 |                 |                   ^                   ^               ^
+         |                 |                 |                   |                   |               |
+         v                 v                 v                   v                   v               v
+ +---------------+ +---------------+ +---------------+ +-------------------+ +-------------------+ +---------+
+ |   MetaMask    | |   Full node   | |    GitHub     | |   LLM Provider    | |   LLM Provider    | |   ...   |
+ +---------------+ +---------------+ +---------------+ +-------------------+ +-------------------+ +---------+
 ```
 
-### Message exchanging protocol
+## Message exchanging protocol
 
 - **agentic-ethereum.com** -> **Local Runner**: Passes runner configuration, including confidential keys provided by the Agent provider.
 
@@ -33,6 +33,6 @@
 
 - **Local Runner** -> **MetaMask**: Executes Ethereum transaction requests received from the LLM Provider.
 
-- **Local Runner** -> **Etherscan**: Executes contract and block information retrieval requests received from the LLM Provider.
+- **Local Runner** -> **Full node**: Executes contract and block information retrieval requests received from the LLM Provider.
 
 - **Local Runner** -> **LLM Provider**: Sends the base context prompt by default. If Ethereum transaction execution or contract/block data retrieval was requested, sends the execution results back to the LLM Provider.

@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Add GitHub Egress Path In How-It-Works Diagram
+- [x] Update `Overall system block diagram` in `docs/published/how-it-works/page.md`
+- [x] Add `Local Runner -> GitHub` arrow path
+- [x] Place `GitHub` block immediately after `Full node`
+- [x] Commit related changes
+- [x] Add review note
+- Review: Updated the `How it works` overall block diagram to include a downward `Local Runner -> GitHub` path and inserted the `GitHub` block immediately after `Full node` in the bottom row while preserving existing runner-to-LLM bidirectional notation.
+
 ## 2026-02-24 Fix Rightmost Arrow Alignment In Confidential-Key Diagram
 - [x] Re-align the rightmost (`Alchemy API key`) arrow branch to match `Full node` center column
 - [x] Keep existing flow labels and block layout unchanged
