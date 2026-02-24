@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-24 Enforce Shared Output Format Across SNS Rendering Engines
+- [x] Align `MarkdownRenderer` output DOM/class contract with `FormattedContent` output format
+- [x] Keep parser inputs independent while sharing one visual/output format contract
+- [x] Update `sns-design-layout-guardrails` to explicitly require shared output format across render engines
+- [x] Run verification checks (`prisma:generate`, `tsc`, `sns build`, runner `node --check`)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Kept two parser engines by input (`FormattedContent` for thread/comment content, `MarkdownRenderer` for docs markdown) but unified the output format contract on shared `rich-text` DOM/style semantics. Updated `MarkdownRenderer` to emit `rich-text` wrapper + shared block tags (`h3/h4`, `p`, `ul/ol/li`, `blockquote`, `pre > code`, inline `a/strong/code`) and aligned code/link rendering semantics with `FormattedContent`. Added `.rich-text-figure` styles so docs image blocks remain within the shared output style family. Updated `sns-design-layout-guardrails` to explicitly require shared output format across render engines even when parsers differ. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `npm -w apps/sns run build`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-24 Add Shared Markdown Renderer Guardrails To Skill
 - [x] Add markdown shared-renderer guardrails to `.agents/skills/sns-design-layout-guardrails/SKILL.md`
 - [x] Define non-negotiable reuse rule for SNS markdown surfaces

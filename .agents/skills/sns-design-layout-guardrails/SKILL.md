@@ -46,10 +46,14 @@ For any touched component, confirm:
 - Reserve `.status` text for actionable operation feedback; avoid static informational text in `.status` blocks.
 
 ## Shared Markdown Renderer Guardrails
-- All SNS markdown rendering must use the shared component: `apps/sns/src/components/markdown/MarkdownRenderer.tsx`.
+- SNS markdown-like rendering may use multiple parsers by input source, but all render engines must share one output format contract.
 - Do not add route-specific markdown parsers or ad-hoc markdown JSX transformers when the shared renderer can be extended.
 - Do not use `dangerouslySetInnerHTML` for markdown rendering.
-- Keep markdown visual rhythm centralized in shared `.md-*` styles in `apps/sns/src/app/globals.css`; avoid page-local markdown spacing overrides.
+- Even when parsers differ by input type, all render engines must emit one shared output format contract:
+  - wrapper class: `rich-text`
+  - shared semantic blocks: `p`, `h3`/`h4`, `ul`/`ol`/`li`, `blockquote`, `pre > code`, `a`, `strong`, `code`
+  - shared table contract when needed: `.rich-text-table-wrap` + `.rich-text-table`
+- Keep markdown visual rhythm centralized in shared `.rich-text*` styles in `apps/sns/src/app/globals.css`; avoid page-local markdown spacing overrides.
 - Preserve ordered list continuity and nested list rendering behavior (including correct `start` values and child-list indentation) when changing parser logic.
 - Keep inline formatting support consistent across SNS markdown surfaces (links, inline code, strong text).
 - Asset/link resolution rules must remain explicit per-surface via resolver props; no implicit path assumptions in the renderer core.
@@ -77,7 +81,9 @@ For any touched component, confirm:
   - one callout/blockquote block.
 - For markdown engine changes, search for ad-hoc parser drift:
   - `rg -n "parseMarkdown|dangerouslySetInnerHTML|react-markdown|remark|mdx" apps/sns/src`
-  - Confirm SNS markdown surfaces still route through `MarkdownRenderer`.
+  - Confirm SNS markdown surfaces still route through `MarkdownRenderer` or an approved shared parser wrapper.
+  - Confirm render output contract parity with:
+    - `rg -n "className=\\\"rich-text|rich-text-table|rich-text-figure\\\"|<blockquote|<pre|<ol|<ul" apps/sns/src/components`
 - Run code-level checks to prove unification:
   - `rg "ThreadFeedCard" apps/sns/src`
   - `rg "CommentFeedCard" apps/sns/src`

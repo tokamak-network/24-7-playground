@@ -257,17 +257,9 @@ function renderInline(
     }
 
     if (match[1]) {
-      result.push(
-        <code className="md-inline-code" key={`${keyPrefix}-code-${tokenIndex}`}>
-          {match[1].slice(1, -1)}
-        </code>
-      );
+      result.push(<code key={`${keyPrefix}-code-${tokenIndex}`}>{match[1].slice(1, -1)}</code>);
     } else if (match[2]) {
-      result.push(
-        <strong className="md-strong" key={`${keyPrefix}-strong-${tokenIndex}`}>
-          {match[2].slice(2, -2)}
-        </strong>
-      );
+      result.push(<strong key={`${keyPrefix}-strong-${tokenIndex}`}>{match[2].slice(2, -2)}</strong>);
     } else {
       const label = match[4] || "";
       const href = resolveHref(match[5] || "#");
@@ -276,7 +268,6 @@ function renderInline(
         <a
           href={href}
           key={`${keyPrefix}-link-${tokenIndex}`}
-          className="md-link"
           target={external ? "_blank" : undefined}
           rel={external ? "noreferrer noopener" : undefined}
         >
@@ -304,13 +295,9 @@ function renderList(
 ) {
   const ListTag = block.ordered ? "ol" : "ul";
   return (
-    <ListTag
-      className={joinClassName("md-list", block.ordered ? "md-list-ordered" : "md-list-unordered")}
-      start={block.ordered ? block.start : undefined}
-      key={keyPrefix}
-    >
+    <ListTag start={block.ordered ? block.start : undefined} key={keyPrefix}>
       {block.items.map((item, itemIndex) => (
-        <li className="md-list-item" key={`${keyPrefix}-item-${itemIndex}`}>
+        <li key={`${keyPrefix}-item-${itemIndex}`}>
           <span>{renderInline(item.text, `${keyPrefix}-text-${itemIndex}`, resolveHref)}</span>
           {item.children.length > 0
             ? item.children.map((child, childIndex) =>
@@ -332,32 +319,24 @@ function renderBlock(
     const id = slugifyHeading(block.text);
     if (block.level <= 2) {
       return (
-        <h2 id={id} className="md-h2" key={keyPrefix}>
+        <h3 id={id} key={keyPrefix}>
           {renderInline(block.text, `${keyPrefix}-heading`, resolveHref)}
-        </h2>
+        </h3>
       );
     }
     return (
-      <h3 id={id} className="md-h3" key={keyPrefix}>
+      <h4 id={id} key={keyPrefix}>
         {renderInline(block.text, `${keyPrefix}-heading`, resolveHref)}
-      </h3>
+      </h4>
     );
   }
 
   if (block.type === "paragraph") {
-    return (
-      <p className="md-paragraph" key={keyPrefix}>
-        {renderInline(block.text, `${keyPrefix}-paragraph`, resolveHref)}
-      </p>
-    );
+    return <p key={keyPrefix}>{renderInline(block.text, `${keyPrefix}-paragraph`, resolveHref)}</p>;
   }
 
   if (block.type === "blockquote") {
-    return (
-      <blockquote className="md-callout" key={keyPrefix}>
-        <p>{renderInline(block.text, `${keyPrefix}-quote`, resolveHref)}</p>
-      </blockquote>
-    );
+    return <blockquote key={keyPrefix}>{renderInline(block.text, `${keyPrefix}-quote`, resolveHref)}</blockquote>;
   }
 
   if (block.type === "list") {
@@ -366,15 +345,15 @@ function renderBlock(
 
   if (block.type === "image") {
     return (
-      <figure className="md-figure" key={keyPrefix}>
+      <figure className="rich-text-figure" key={keyPrefix}>
         <img src={resolveHref(block.src)} alt={block.alt} />
       </figure>
     );
   }
 
   return (
-    <pre className="md-code" key={keyPrefix}>
-      <code>{block.code}</code>
+    <pre key={keyPrefix}>
+      <code data-lang={block.language || undefined}>{block.code}</code>
     </pre>
   );
 }
@@ -386,9 +365,10 @@ export function MarkdownRenderer({
 }: MarkdownRendererProps) {
   const blocks = parseMarkdown(markdown);
   const hrefResolver = resolveHref ?? ((rawHref: string) => rawHref);
+  const mergedClassName = joinClassName("rich-text", className);
 
   return (
-    <div className={joinClassName("md-root", className)}>
+    <div className={mergedClassName}>
       {blocks.map((block, index) => renderBlock(block, `md-${index}`, hrefResolver))}
     </div>
   );

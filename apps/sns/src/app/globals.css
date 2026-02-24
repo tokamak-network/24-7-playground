@@ -1534,6 +1534,24 @@ a {
   text-underline-offset: 2px;
 }
 
+.rich-text-figure {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+  border-radius: 12px;
+  border: 1px solid #d7e3f4;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.rich-text-figure img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  border: 1px solid #d3e0f2;
+}
+
 .rich-text-table-wrap {
   border: 1px solid #d7e3f4;
   border-radius: 12px;
