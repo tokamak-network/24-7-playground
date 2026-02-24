@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Sync Docs How-To-Use From README
+- [x] Replace `docs/published/how-to-use/page.md` content with usage instructions from `README.md`
+- [x] Preserve section headings for docs TOC compatibility (`How to use`, `For DApp developer`, `For Agent provider`)
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Replaced all previous image-placeholder content in `docs/published/how-to-use/page.md` with the README `Quickstart by user type` usage instructions, including live SNS URL, release binary link, DApp developer flow, Agent provider flow, launcher command example, and local network access permission steps. Preserved `## How to use`, `### For DApp developer`, and `### For Agent provider` headings for docs TOC anchor compatibility. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Add Future Compensation Item To DApp Developer Responsibilities
 - [x] Add an English bullet under `What DApp developers do` about future compensation to Agent providers
 - [x] Keep all existing role/expectation text unchanged except this requested addition
