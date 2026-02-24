@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Re-layout Security-Notes Key-Egress Diagram To Requested Block Geometry
+- [x] Reposition blocks to match requested structure (top center stack, middle 3 blocks, bottom 2 blocks)
+- [x] Reconnect key-flow arrows according to new coordinates
+- [x] Preserve block content text and stored-key lines
+- [x] Keep key-flow semantics unchanged (`Ciphertext`, `Runner token`, `LLM API key`, `Execution wallet private key`, `Alchemy API key`, `GitHub issue token`)
+- [x] Add review note
+- Review: Rebuilt the ASCII diagram in `docs/published/security-notes/page.md` to the requested layout: browser-memory and server-DB stacked at top center, then `LLM Provider / Local Runner memory / Github`, and `MetaMask / Full node` on the bottom row. Rewired arrows for all six key flows while preserving block content.
+
 ## 2026-02-24 Add GitHub-Issue-Token Egress Path In Security Notes Diagram
 - [x] Update `Confidential keys going out to the network from each block` ASCII diagram
 - [x] Add `Local Runner memory -> Github` flow labeled `GitHub issue token`

@@ -50,49 +50,48 @@
 
 ## Confidential keys going out to the network from each block
 ```text
-                            +-------------------------------------------+
-                            |Agentic-ethereum.com (local browser memory)|
-                            |-------------------------------------------|
-                            | stored keys:                              |
-                            | - Runner launcher secret                  |
-                            | - Security password                       |
-                            | - LLM API key                             |
-                            | - Execution wallet private key            |
-                            | - Alchemy API key                         |
-                            | - GitHub issue token (optional)           |
-                            +-------------------------------------------+
-                                           |
-                                           | Encrypted confidential payload
-                                           v
-                            +-------------------------------------------+
-                            | Agentic-ethereum.com (server DB)          |
-                            |-------------------------------------------|
-                            | stored keys:                              |
-                            | - Runner token                            |
-                            | - Encrypted confidential payload          |
-                            +-------------------------------------------+
-                                           ^
-                                           | Runner token
-                                           |
-                            +-------------------------------------------+
-                            | Local Runner memory                       |
-                            |-------------------------------------------|
-                            | stored keys:                              |
-                            | - Runner token                            |
-                            | - Runner launcher secret                  |
-                            | - LLM API key                             |
-                            | - Execution wallet private key            |
-                            | - Alchemy API key                         |
-                            | - GitHub issue token (optional)           |
-                            +-------------------------------------------+
-                            /                |                 |                     \
-                           /                 |                 |                      \
-                  LLM API key  Execution wallet private key  Alchemy API key  GitHub issue token
-                         v                  v                 v                      v
- +-------------------------------+  +-------------------------------+  +-------------------------------+  +-------------------------------+
- | LLM Provider                  |  | MetaMask                      |  | Full node                     |  | Github                        |
- |-------------------------------|  |-------------------------------|  |-------------------------------|  |-------------------------------|
- | stored keys:                  |  | stored keys:                  |  | stored keys:                  |  | stored keys:                  |
- | - LLM API key                 |  | - Execution wallet private key|  | - Alchemy API key             |  | - Github issue token          |
- +-------------------------------+  +-------------------------------+  +-------------------------------+  +-------------------------------+
+                              +-------------------------------------------+
+                              |Agentic-ethereum.com (local browser memory)|
+                              |-------------------------------------------|
+                              | stored keys:                              |
+                              | - Runner launcher secret                  |
+                              | - Security password                       |
+                              | - LLM API key                             |
+                              | - Execution wallet private key            |
+                              | - Alchemy API key                         |
+                              | - GitHub issue token (optional)           |
+                              +-------------------------------------------+
+                                              |
+                                              | Encrypted confidential payload
+                                              v
+                              +-------------------------------------------+
+                              | Agentic-ethereum.com (server DB)          |
+                              |-------------------------------------------|
+                              | stored keys:                              |
+                              | - Runner token                            |
+                              | - Encrypted confidential payload          |
+                              +-------------------------------------------+
+                                              ^
+                                              | Runner token
+                                              |
++-------------------------------+   LLM API key <----+-------------------------------------------+----> GitHub issue token   +-------------------------------+
+| LLM Provider                  |                    | Local Runner memory                       |                            | Github                        |
+|-------------------------------|                    |-------------------------------------------|                            |-------------------------------|
+| stored keys:                  |                    | stored keys:                              |                            | stored keys:                  |
+| - LLM API key                 |                    | - Runner token                            |                            | - Github issue token          |
++-------------------------------+                    | - Runner launcher secret                  |                            +-------------------------------+
+                                                     | - LLM API key                             |
+                                                     | - Execution wallet private key            |
+                                                     | - Alchemy API key                         |
+                                                     | - GitHub issue token (optional)           |
+                                                     +-------------------------------------------+
+                                                           /                               \
+                                                          /                                 \
+                             Execution wallet private key v                                   v Alchemy API key
+                                         +-------------------------------+   +-------------------------------+
+                                         | MetaMask                      |   | Full node                     |
+                                         |-------------------------------|   |-------------------------------|
+                                         | stored keys:                  |   | stored keys:                  |
+                                         | - Execution wallet private key|   | - Alchemy API key             |
+                                         +-------------------------------+   +-------------------------------+
 ```

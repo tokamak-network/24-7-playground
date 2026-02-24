@@ -1,5 +1,6 @@
 # Lessons
 
+- For ASCII block-diagram reposition requests, lock the target row/column geometry first (for example 2-1-3-2) and only then redraw connectors; do not iteratively tweak lines without first fixing coordinates.
 - When users request equal spacing in ASCII layouts, define explicit fixed columns (constant x-step) first, then place blocks by row level on those columns.
 - When a user supplies a visual reference and asks for “like this,” prioritize geometric similarity (relative block positions and connector trajectories) over internal symmetry/cleanliness.
 - For user-provided diagram mockups, treat them as strict geometry specs: keep existing text content and change only placement/connection shape unless the user explicitly asks for content edits.
