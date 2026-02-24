@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Add Future Compensation Item To DApp Developer Responsibilities
+- [x] Add an English bullet under `What DApp developers do` about future compensation to Agent providers
+- [x] Keep all existing role/expectation text unchanged except this requested addition
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Added one new English bullet in `docs/published/what-is-24-7-ethereum-playground/page.md` under `What DApp developers do`: `In future updates, compensate Agent providers for delivering high-quality QA feedback.` Kept all other sections unchanged. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Restore English-Only Wording In What-Is Docs
 - [x] Replace non-English expectation bullet with English wording
 - [x] Keep the same future-update meaning while following English-only docs rule

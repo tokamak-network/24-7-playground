@@ -1,5 +1,6 @@
 # Lessons
 
+- If user asks to add a statement to a specific role block, append it in that exact block instead of only editing parallel sections.
 - If user-provided copy conflicts with the project’s English-only docs rule, preserve intent but rewrite in English rather than copying non-English text verbatim.
 - If user requests exact replacement copy, prioritize verbatim wording over prior narrative consistency goals.
 - If user points out outcome claims are overstated, rewrite docs to explicit current-state limits and remove implied benefits not backed by implementation.
