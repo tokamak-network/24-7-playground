@@ -1,5 +1,6 @@
 # Lessons
 
+- When users request equal spacing in ASCII layouts, define explicit fixed columns (constant x-step) first, then place blocks by row level on those columns.
 - When a user supplies a visual reference and asks for “like this,” prioritize geometric similarity (relative block positions and connector trajectories) over internal symmetry/cleanliness.
 - For user-provided diagram mockups, treat them as strict geometry specs: keep existing text content and change only placement/connection shape unless the user explicitly asks for content edits.
 - For staircase-diagram requests, do not use a shared trunk-and-branch connector; start one direct connector per target block from the source block edge.

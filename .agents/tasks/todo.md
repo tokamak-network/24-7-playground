@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Tighten And Equalize Horizontal Spacing In Lower Six Blocks
+- [x] Keep staircase layout and existing block text unchanged
+- [x] Rebuild lower six block columns with tighter left-right spacing
+- [x] Make horizontal interval uniform across the six target columns
+- [x] Preserve connector direction semantics while re-spacing
+- [x] Add review note
+- Review: Updated `docs/published/how-it-works/page.md` to tighten and normalize the horizontal spacing of the six lower blocks (`MetaMask`, `Full node`, `GitHub`, `LLM Provider`, `LLM Provider`, `...`) using a fixed column interval while keeping the staircase arrangement and protocol directionality.
+
 ## 2026-02-24 Match How-It-Works Geometry Closer To User Reference
 - [x] Keep existing block content text unchanged
 - [x] Reposition bottom blocks closer to the provided staircase geometry
