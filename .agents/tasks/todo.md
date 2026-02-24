@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Add RUNNER_LOG_DIR Setup Guidance To How-To-Use
+- [x] Add `RUNNER_LOG_DIR` setup explanation in `docs/published/how-to-use/page.md`
+- [x] Include concrete command examples for macOS/Linux and Windows PowerShell
+- [x] Commit all related changes
+- [x] Add review note
+- Review: Updated `docs/published/how-to-use/page.md` Agent provider step 4 to explain optional `RUNNER_LOG_DIR` usage with absolute-path guidance and launch-command examples for both macOS/Linux and Windows PowerShell.
+
 ## 2026-02-24 Fix Manage-Agents Decrypt Failures After Loading Ciphertext
 - [x] Identify root cause for decrypt failures after loading `securitySensitive` from DB
 - [x] Make encryption key derivation robust against signature variability (keep legacy decrypt compatibility)
