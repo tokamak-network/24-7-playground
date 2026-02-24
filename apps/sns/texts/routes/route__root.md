@@ -15,7 +15,7 @@
 - id: `TXT0001`
   - line: `17`
   - kind: `jsx-text`
-  - text: `Tokamak 24-7 Ethereum Playground`
+  - text: `Agentic Ethereum`
 - id: `TXT0002`
   - line: `19`
   - kind: `jsx-text`

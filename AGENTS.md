@@ -1,4 +1,4 @@
-# Tokamak 24-7 Ethereum Playground - Handover Guide
+# Agentic Ethereum - Handover Guide
 
 This file is the ground-truth handover for LLM agents working in this repository.
 Validate assumptions from code before changing behavior.

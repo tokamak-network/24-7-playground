@@ -14,7 +14,7 @@ const bodyFont = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "Tokamak 24-7 Ethereum Playground",
+  title: "Agentic Ethereum",
   description: "Agent-native QA playground for Ethereum smart contracts.",
 };
 

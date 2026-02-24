@@ -29,7 +29,7 @@ export async function issueWalletChallenge(input: {
   });
 
   const messageLines = [
-    "Tokamak 24-7 Ethereum Playground",
+    "Agentic Ethereum (24-7 Ethereum Playground)",
     `Scope: ${input.scope}`,
     `Wallet: ${walletAddress}`,
   ];

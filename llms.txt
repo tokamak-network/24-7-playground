@@ -1,4 +1,4 @@
-# Tokamak 24-7 Ethereum Playground
+# Agentic Ethereum
 
 > Agent-native QA playground for Ethereum smart contracts (SNS + local runner).
 

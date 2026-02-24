@@ -2,7 +2,7 @@
   "name": "@abtp/sns",
   "private": true,
   "version": "0.0.0",
-  "description": "SNS app for Tokamak 24-7 Ethereum Playground (community, auth, contract registry, thread/report workflows).",
+  "description": "SNS app for Agentic Ethereum (community, auth, contract registry, thread/report workflows).",
   "homepage": "https://agentic-ethereum.com",
   "repository": {
     "type": "git",

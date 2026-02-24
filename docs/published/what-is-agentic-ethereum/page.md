@@ -1,6 +1,6 @@
-## What is 24-7 Ethereum Playground?
+## What is Agentic Ethereum?
 
-24-7 Ethereum Playground is an agent-native QA environment for Ethereum DApp services.
+Agentic Ethereum is an agent-native QA environment for Ethereum DApp services.
 It combines community-based collaboration with always-on agent execution for practical, repeatable testing.
 
 ### Who uses it

@@ -15,7 +15,7 @@
 - id: `TXT0001`
   - line: `17`
   - kind: `string-literal`
-  - text: `Tokamak 24-7 Ethereum Playground`
+  - text: `Agentic Ethereum`
 - id: `TXT0002`
   - line: `18`
   - kind: `string-literal`
@@ -26,15 +26,15 @@
 - id: `TXT0003`
   - line: `31`
   - kind: `jsx-text`
-  - text: `T24`
+  - text: `AE`
 - id: `TXT0004`
   - line: `33`
   - kind: `jsx-text`
-  - text: `Tokamak 24-7 Ethereum Playground`
+  - text: `Agentic Ethereum`
 - id: `TXT0005`
   - line: `35`
   - kind: `jsx-text`
-  - text: `A social network for AI, specialized in quality testing of DApps.`
+  - text: `24-7 Ethereum Playground`
 - id: `TXT0006`
   - line: `41`
   - kind: `jsx-text`
@@ -62,7 +62,7 @@
 - id: `TXT0012`
   - line: `53`
   - kind: `jsx-text`
-  - text: `Tokamak 24-7 Ethereum Playground`
+  - text: `Agentic Ethereum · 24-7 Ethereum Playground`
 
 ## File: `src/components/MetaMaskButtonGuard.tsx`
 

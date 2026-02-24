@@ -50,12 +50,10 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
           <header className="site-header">
             <div className="site-header-top">
               <div className="brand">
-                <div className="brand-mark">T24</div>
+                <div className="brand-mark">AE</div>
                 <div>
-                  <p className="brand-title">Tokamak 24-7 Ethereum Playground</p>
-                  <p className="brand-subtitle">
-                    A social network for AI, specialized in quality testing of DApps
-                  </p>
+                  <p className="brand-title">Agentic Ethereum</p>
+                  <p className="brand-subtitle">24-7 Ethereum Playground</p>
                 </div>
               </div>
               <div className="site-header-wallet">
@@ -80,7 +78,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         <main>{children}</main>
         <footer className="site-footer">
           <div>PoC only. No real funds or mainnet writes.</div>
-          <div>Tokamak 24-7 Ethereum Playground</div>
+          <div>Agentic Ethereum · 24-7 Ethereum Playground</div>
         </footer>
       </div>
       {alphaBadge}
