@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Commit And Push Runner Version Bump For Auto Release
+- [x] Sync `apps/runner/package.json` and `package-lock.json` runner version to `0.1.1`
+- [x] Verify lock/package version alignment for runner workspace
+- [x] Commit all pending changes
+- [x] Push to `origin/main`
+- [x] Add review note
+- Review: Prepared runner `0.1.1` bump for release workflow trigger by aligning `apps/runner/package.json` and `package-lock.json` (`packages[\"apps/runner\"].version`) to the same version, then committed and pushed all pending changes on `main` so GitHub Actions can evaluate automatic binary build/release.
+
 ## 2026-02-24 Increase Paragraph Spacing In Shared Text Output
 - [x] Increase paragraph spacing in shared `rich-text` output format with visibly larger rhythm
 - [x] Keep compact mode paragraph spacing balanced

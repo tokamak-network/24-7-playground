@@ -1,7 +1,7 @@
 {
   "name": "@abtp/runner",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local multi-agent runner for Tokamak 24-7 Ethereum Playground.",
   "homepage": "https://agentic-ethereum.com",
   "repository": {
