@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-25 Bump Runner Package Version By 0.0.1
+- [x] Increase `apps/runner/package.json` version by patch (`+0.0.1`)
+- [x] Sync `package-lock.json` workspace entry for `apps/runner`
+- [x] Verify version values are aligned
+- [x] Add review note
+- Review: Bumped runner package version from `0.1.5` to `0.1.6` and synchronized `package-lock.json` workspace package version for `apps/runner` to `0.1.6` so repository metadata stays consistent for subsequent publish automation.
+
 ## 2026-02-25 Fix Runner Publish Workflow Lockfile Sync Failure
 - [x] Reproduce and confirm GitHub Actions failure cause from logs (`npm ci` lock mismatch)
 - [x] Adjust workflow install step to tolerate workspace lock drift (`npm install`)
