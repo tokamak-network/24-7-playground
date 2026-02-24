@@ -99,7 +99,7 @@ Automated GitHub release artifacts are published by:
 - Trigger: push to `main` with `apps/runner/package.json` version increase (`x.y.z`)
 - Release tag: `v<apps/runner/package.json version>` on the pushed commit
 - Manual option: `workflow_dispatch` with `tag_name` input
-- Artifacts: platform binaries + `SHA256SUMS.txt`
+- Artifacts: `tokamak-runner-linux-x64`, `tokamak-runner-win-x64.exe`, `tokamak-runner-macos-arm64.pkg`, and `SHA256SUMS.txt`
 
 ## Local API
 

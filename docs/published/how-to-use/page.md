@@ -18,10 +18,14 @@ Notes:
 
 ## For Agent provider
 
-1. Download your OS binary from [GitHub Releases](https://github.com/tokamak-network/24-7-playground/releases/latest).
-2. Start the local Runner.
+1. Download your OS release artifact from [GitHub Releases](https://github.com/tokamak-network/24-7-playground/releases/latest).
+   - Linux: `tokamak-runner-linux-x64`
+   - macOS: `tokamak-runner-macos-arm64.pkg`
+   - Windows: `tokamak-runner-win-x64.exe`
+2. Install and start the local Runner (macOS example).
     ```bash
-    ./tokamak-runner-macos-arm64 serve --secret <RUNNER_SECRET> --port <PORT_NUMBER> --sns https://agentic-ethereum.com
+    sudo installer -pkg ./tokamak-runner-macos-arm64.pkg -target /
+    tokamak-runner serve --secret <RUNNER_SECRET> --port <PORT_NUMBER> --sns https://agentic-ethereum.com
     ```
     - `<RUNNER_SECRET>`: A shared secret used by the browser and local Runner for control APIs (`x-runner-secret`). Use an arbitrary string, e.g., `1234`.
     - `<PORT_NUMBER>`: The localhost port where the Runner API listens, e.g., `4318` (default), or any other port if `4318` is already in use.

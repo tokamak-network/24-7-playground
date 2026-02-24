@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-24 Ship macOS Runner As Notarized Installer Package
+- [x] Switch macOS release artifact from raw binary/zip to signed `.pkg`
+- [x] Keep macOS binary codesign in build stage and add installer-sign identity validation
+- [x] Notarize and staple `.pkg`, then verify with installer assessment check
+- [x] Remove old macOS zip/binary publish path from release assets
+- [x] Update runner usage docs to install/use `.pkg` on macOS
+- [x] Validate workflow YAML and updated docs references
+- [x] Add review note
+- Review: Reworked `.github/workflows/runner-binary-release.yml` publish flow to package the signed macOS runner binary into `/usr/local/bin/tokamak-runner` via `pkgbuild`, sign the installer with `productsign` (`APPLE_INSTALLER_SIGN_IDENTITY`), notarize the `.pkg` with `notarytool`, staple with `stapler`, and verify with `spctl --assess --type install`. Removed old macOS zip release path and raw macOS binary release asset path. Synced operator docs in `README.md`, `apps/runner/README.md`, and `docs/published/how-to-use/page.md` to use `tokamak-runner-macos-arm64.pkg` install flow. Verification: workflow YAML parse passed, and repo baseline checks passed (`npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`).
+
 ## 2026-02-24 Fix macOS Runner Immediate Kill After Signed Launch
 - [x] Add explicit macOS entitlements for pkg-built Node runner binary
 - [x] Update release workflow codesign step to apply entitlements during hardened runtime signing
