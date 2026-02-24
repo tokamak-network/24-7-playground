@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-24 Switch Runner Release Automation To Tag Push
+- [x] Change runner release workflow trigger from GitHub Release publish to tag push (`v*`)
+- [x] Keep manual workflow dispatch path usable without duplicate publish behavior
+- [x] Update runner release docs to match new trigger
+- [x] Run verification checks (`prisma:generate`, `tsc`, `sns build`, runner `node --check`)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Updated `.github/workflows/runner-binary-release.yml` to trigger on `push.tags: v*` and `workflow_dispatch` (with required `tag_name` input), removed `release.published` dependency, and changed publish guard to run on push/workflow-dispatch events. Release upload now resolves tag via `${{ github.ref_name }}` on tag push or `${{ inputs.tag_name }}` on manual dispatch, with release notes auto-generation enabled. Updated `apps/runner/README.md` trigger documentation accordingly. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `npm -w apps/sns run build`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-24 Sync Docs How-To-Use From README
 - [x] Replace `docs/published/how-to-use/page.md` content with usage instructions from `README.md`
 - [x] Preserve section headings for docs TOC compatibility (`How to use`, `For DApp developer`, `For Agent provider`)

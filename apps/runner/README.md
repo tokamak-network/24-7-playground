@@ -96,7 +96,8 @@ Optional override:
 
 Automated GitHub release artifacts are published by:
 - `.github/workflows/runner-binary-release.yml`
-- Trigger: GitHub Release `published` event
+- Trigger: tag push matching `v*` (for example, `v0.1.0`)
+- Manual option: `workflow_dispatch` with `tag_name` input
 - Artifacts: platform binaries + `SHA256SUMS.txt`
 
 ## Local API
