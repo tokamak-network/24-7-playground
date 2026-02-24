@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Auto-Update Docs Last-Updated Date From Published Files
+- [x] Add utility to resolve latest file update time across `docs/published/**`
+- [x] Wire docs layout `Last updated` UI to dynamic latest-date value
+- [x] Keep fallback behavior when published files are unavailable
+- [x] Verify SNS type check
+- [x] Add review note
+- Review: Added dynamic latest-update resolution in `apps/sns/src/app/docs/publishedDocs.ts` by scanning all files under `docs/published/**` and choosing the newest `mtime`. Updated `apps/sns/src/app/docs/layout.tsx` to render that value in `Last updated`, with fallback to static content constants when file resolution fails. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-24 Set Markdown Heading Scale To Exact Percentage Ratios
 - [x] Apply heading sizes by base-text ratio: H3 `130%`, H2 `160%`, H1 `200%`
 - [x] Keep docs markdown overrides consistent with the same ratios

@@ -4,6 +4,7 @@ import { LAST_UPDATED_ISO, LAST_UPDATED_LABEL } from "./content";
 import {
   fallbackSectionTitle,
   loadPublishedMarkdown,
+  loadPublishedDocsLastUpdated,
   parsePublishedHeadings,
 } from "./publishedDocs";
 import { slugifyHeading } from "../../components/markdown/headingSlug";
@@ -43,7 +44,13 @@ async function loadDocsTocItems() {
 }
 
 export default async function DocsLayout({ children }: DocsLayoutProps) {
-  const tocItems = await loadDocsTocItems();
+  const [tocItems, dynamicLastUpdated] = await Promise.all([
+    loadDocsTocItems(),
+    loadPublishedDocsLastUpdated().catch(() => ({
+      iso: LAST_UPDATED_ISO,
+      label: LAST_UPDATED_LABEL,
+    })),
+  ]);
 
   return (
     <div className="grid docs-page">
@@ -51,7 +58,7 @@ export default async function DocsLayout({ children }: DocsLayoutProps) {
         <h1>Docs</h1>
         <p>
           Last updated:{" "}
-          <time dateTime={LAST_UPDATED_ISO}>{LAST_UPDATED_LABEL}</time>
+          <time dateTime={dynamicLastUpdated.iso}>{dynamicLastUpdated.label}</time>
         </p>
       </section>
 

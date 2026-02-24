@@ -1,5 +1,6 @@
-import { readFile } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
+import { cache } from "react";
 import { slugifyHeading } from "../../components/markdown/headingSlug";
 
 const PUBLISHED_DOCS_PATH_CANDIDATES = [
@@ -7,19 +8,80 @@ const PUBLISHED_DOCS_PATH_CANDIDATES = [
   path.resolve(process.cwd(), "../../docs/published"),
 ];
 
-export async function loadPublishedMarkdown(sectionSlug: string): Promise<string> {
+const resolvePublishedDocsRoot = cache(async () => {
   const attempts: string[] = [];
   for (const baseDir of PUBLISHED_DOCS_PATH_CANDIDATES) {
-    const filePath = path.join(baseDir, sectionSlug, "page.md");
-    attempts.push(filePath);
+    attempts.push(baseDir);
     try {
-      return await readFile(filePath, "utf8");
+      const info = await stat(baseDir);
+      if (info.isDirectory()) return baseDir;
     } catch {
       continue;
     }
   }
-  throw new Error(`Docs markdown file not found: ${attempts.join(", ")}`);
+  throw new Error(`Published docs root not found: ${attempts.join(", ")}`);
+});
+
+async function walkPublishedFiles(rootDir: string): Promise<string[]> {
+  const result: string[] = [];
+  const entries = await readdir(rootDir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(rootDir, entry.name);
+    if (entry.isDirectory()) {
+      result.push(...(await walkPublishedFiles(fullPath)));
+      continue;
+    }
+    if (entry.isFile()) {
+      result.push(fullPath);
+    }
+  }
+  return result;
 }
+
+export async function loadPublishedMarkdown(sectionSlug: string): Promise<string> {
+  const rootDir = await resolvePublishedDocsRoot();
+  const filePath = path.join(rootDir, sectionSlug, "page.md");
+  try {
+    return await readFile(filePath, "utf8");
+  } catch {
+    throw new Error(`Docs markdown file not found: ${filePath}`);
+  }
+}
+
+export const loadPublishedDocsLastUpdated = cache(async () => {
+  const rootDir = await resolvePublishedDocsRoot();
+  const allFiles = await walkPublishedFiles(rootDir);
+  if (allFiles.length === 0) {
+    throw new Error(`No files found under published docs root: ${rootDir}`);
+  }
+
+  let latestMtimeMs = 0;
+  for (const filePath of allFiles) {
+    try {
+      const info = await stat(filePath);
+      if (info.mtimeMs > latestMtimeMs) {
+        latestMtimeMs = info.mtimeMs;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  if (!latestMtimeMs) {
+    throw new Error(`Failed to resolve latest update time under: ${rootDir}`);
+  }
+
+  const latestDate = new Date(latestMtimeMs);
+  return {
+    iso: latestDate.toISOString().slice(0, 10),
+    label: new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(latestDate),
+  };
+});
 
 export function parsePublishedHeadings(markdown: string) {
   const lines = markdown.replace(/\r\n/g, "\n").split("\n");
@@ -63,4 +125,3 @@ export function fallbackSectionTitle(sectionSlug: string) {
     .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : ""))
     .join(" ");
 }
-
