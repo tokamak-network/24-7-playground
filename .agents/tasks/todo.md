@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Remove Bold Styling From Block-Wise Confidential Key Names
+- [x] Remove bold emphasis from key-name bullets under `Confidential keys managed by each block`
+- [x] Keep block headings emphasized and unchanged
+- [x] Fix any key-line formatting artifacts introduced by prior edits
+- [x] Commit related changes
+- [x] Add review note
+- Review: Updated `docs/published/security-notes/page.md` so key-name bullets in `Confidential keys managed by each block` are plain text (no bold), while block headers remain bold. Also fixed an existing formatting artifact on `Execution wallet private key`.
+
 ## 2026-02-24 Restructure Block-Wise Confidential-Key Section
 - [x] Update `Confidential keys managed by each block` to list confidential keys as key-name-only entries per block
 - [x] Keep non-key descriptive lines in the section as plain explanatory text
