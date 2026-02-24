@@ -2015,7 +2015,7 @@ a {
   scroll-margin-top: 140px;
 }
 
-.docs-section h2 {
+.docs-section > h2 {
   margin: 0;
   font-family: var(--font-display), "Helvetica Neue", sans-serif;
   font-size: clamp(26px, 2.6vw, 34px);
@@ -2027,11 +2027,23 @@ a {
   gap: 10px;
 }
 
-.docs-subsection h3 {
+.docs-subsection > h3 {
   margin: 0;
   font-family: var(--font-display), "Helvetica Neue", sans-serif;
   font-size: clamp(19px, 1.8vw, 24px);
   line-height: 1.2;
+}
+
+.docs-markdown.rich-text h1 {
+  font-size: clamp(34px, 3.2vw, 42px);
+}
+
+.docs-markdown.rich-text h2 {
+  font-size: clamp(26px, 2.4vw, 32px);
+}
+
+.docs-markdown.rich-text h3 {
+  font-size: clamp(20px, 1.9vw, 24px);
 }
 
 .md-root {

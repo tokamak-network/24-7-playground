@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Fix Docs Heading Hierarchy Regression (H2 Larger Than H1)
+- [x] Prevent docs container heading selectors from overriding markdown heading hierarchy
+- [x] Add explicit docs-markdown heading scale so H1 > H2 > H3 is guaranteed
+- [x] Verify visual hierarchy-related CSS consistency
+- [x] Add review note
+- Review: Fixed heading hierarchy regression in `apps/sns/src/app/globals.css` by narrowing `.docs-section h2` and `.docs-subsection h3` selectors to direct-child forms (`>`) so they no longer override nested markdown headings. Added explicit docs markdown heading scale (`.docs-markdown.rich-text h1/h2/h3`) to guarantee `H1 > H2 > H3`.
+
 ## 2026-02-24 Increase Heading Level Size Contrast In Shared Markdown Output
 - [x] Update shared markdown heading rendering so H1/H2/H3 are distinctly mapped
 - [x] Increase `rich-text` heading typography scale gaps for H1/H2/H3
@@ -3353,3 +3360,11 @@ SNS Branding Rename to Agentic Ethereum Review (2026-02-24):
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed after cleaning stale `.next` types.
   - `rg -n \"Tokamak 24-7 Ethereum Playground|Tokamak 24-7\" ...` returned no active-source matches (logs/cache/history excluded).
+
+## 2026-02-24 Rename App Name to Agentic Ethereum: 24-7 Playground (Subtitle Restore)
+- [ ] Audit all active-source app-name/subtitle references
+- [ ] Set app name to `Agentic Ethereum: 24-7 Playground` across SNS/docs/metadata
+- [ ] Restore subtitle text to pre-change value (`A social network for AI, specialized in quality testing of DApps`)
+- [ ] Re-scan for stale old app-name references
+- [ ] Run minimum verification (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [ ] Commit all changes
