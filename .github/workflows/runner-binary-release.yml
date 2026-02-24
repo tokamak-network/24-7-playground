@@ -175,8 +175,10 @@ jobs:
         run: |
           set -euo pipefail
           BINARY_PATH="apps/runner/dist/${{ matrix.output_name }}"
-          codesign --force --options runtime --timestamp --sign "$APPLE_SIGN_IDENTITY" "$BINARY_PATH"
+          ENTITLEMENTS_PATH="apps/runner/build/macos-entitlements.plist"
+          codesign --force --options runtime --timestamp --entitlements "$ENTITLEMENTS_PATH" --sign "$APPLE_SIGN_IDENTITY" "$BINARY_PATH"
           codesign --verify --strict --verbose=2 "$BINARY_PATH"
+          codesign --display --entitlements :- "$BINARY_PATH"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

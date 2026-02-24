@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Fix macOS Runner Immediate Kill After Signed Launch
+- [x] Add explicit macOS entitlements for pkg-built Node runner binary
+- [x] Update release workflow codesign step to apply entitlements during hardened runtime signing
+- [x] Validate workflow/plist syntax
+- [x] Add review note
+- Review: Added `apps/runner/build/macos-entitlements.plist` with JIT/runtime permissions needed by pkg-built Node binaries under hardened runtime (`allow-jit`, `allow-unsigned-executable-memory`, `disable-library-validation`). Updated macOS codesign step in `.github/workflows/runner-binary-release.yml` to sign with `--entitlements` and print embedded entitlements for release-log verification. Verification: workflow YAML parse (`ruby ... YAML.load_file`) and plist lint (`plutil -lint`) both passed.
+
 ## 2026-02-24 Exclude Raw macOS Runner Binary From Release Assets
 - [x] Update runner release workflow so raw `tokamak-runner-macos-arm64` is not published as a release asset
 - [x] Keep notarization flow intact using zipped macOS artifact
