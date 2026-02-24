@@ -9,7 +9,7 @@
 - **Security password**: User-provided local password used to encrypt and decrypt confidential payloads before DB storage/after DB load.
 - **Runner token**: SNS-issued runner credential used by Local Runner for authenticated SNS API access.
 
-## Confidential keys managed by each block
+## Confidential keys stored in each block
 - **Agentic-ethereum.com (local browser memory)**
   - Runner launcher secret
   - Security password
@@ -18,7 +18,7 @@
   - Alchemy API key
   - GitHub issue token (optional)
 
-- **Agentic-ethereum.com (DB)**
+- **Agentic-ethereum.com (server DB)**
   - Encryption of (LLM API key, Execution wallet private key, Alchemy API key, GitHub issue token (optional))
     - Encryption algorithm:
       - AES-256-GCM (`crypto.subtle`, 12-byte IV)
@@ -28,24 +28,88 @@
     - Decrypted by Security password
   - Runner token
 
-- **Local Runner**
+- **Local Runner memory**
   - Runner token
   - Runner launcher secret
   - LLM API key
   - Execution wallet private key
   - Alchemy API key
   - GitHub issue token (optional)
-  - Receives runtime plaintext confidential fields from the browser when Runner is started.
-  - Keeps these values in local process memory/config during execution and uses them for SNS writes, LLM calls, Sepolia RPC calls, and optional GitHub issue creation.
-  - Enforces local launcher access control with `x-runner-secret` and strict origin validation.
 
 - **LLM Provider**
   - LLM API key
-  - Receives LLM request payloads (prompts/context) and provider authentication material required by its API transport (for example, API key headers/query).
-  - Does **not** receive the other confidential keys listed above.
+
+- **MetaMask**
+  - Execution wallet private key
+
+- **Full node**
+  - Alchemy API key
 
 ## Confidential keys going out to the network from each block
-- Keep runtime plaintext secrets local to runner execution boundaries.
-- SNS write operations require nonce issuance + timestamp freshness + HMAC validation.
-- Transaction actions are restricted to registered Sepolia contracts and ABI-allowed functions.
-- Launcher control endpoints are protected by explicit origin checks and `x-runner-secret`.
+```text
++-------------------------------------------------------------+
+| Agentic-ethereum.com (local browser memory)                |
+|-------------------------------------------------------------|
+| stored keys:                                                |
+| - Runner launcher secret                                    |
+| - Security password                                         |
+| - LLM API key                                               |
+| - Execution wallet private key                              |
+| - Alchemy API key                                           |
+| - GitHub issue token (optional)                             |
++-------------------------------------------------------------+
+  Runner launcher secret ------------------------------------->
+  LLM API key ------------------------------------------------>
+  Execution wallet private key ------------------------------->
+  Alchemy API key -------------------------------------------->
+  GitHub issue token (optional) ------------------------------>
+
++-------------------------------------------------------------+
+| Agentic-ethereum.com (server DB)                           |
+|-------------------------------------------------------------|
+| stored keys:                                                |
+| - Runner token                                              |
+| - Encrypted confidential payload                            |
++-------------------------------------------------------------+
+  Runner token ----------------------------------------------->
+
++-------------------------------------------------------------+
+| Local Runner memory                                         |
+|-------------------------------------------------------------|
+| stored keys:                                                |
+| - Runner token                                              |
+| - Runner launcher secret                                    |
+| - LLM API key                                               |
+| - Execution wallet private key                              |
+| - Alchemy API key                                           |
+| - GitHub issue token (optional)                             |
++-------------------------------------------------------------+
+  Runner token ----------------------------------------------->
+  LLM API key ------------------------------------------------>
+  Alchemy API key -------------------------------------------->
+  GitHub issue token (optional) ------------------------------>
+
++-------------------------------------------------------------+
+| LLM Provider                                                |
+|-------------------------------------------------------------|
+| stored keys:                                                |
+| - LLM API key                                               |
++-------------------------------------------------------------+
+  (no confidential keys from this list are sent out)
+
++-------------------------------------------------------------+
+| MetaMask                                                    |
+|-------------------------------------------------------------|
+| stored keys:                                                |
+| - Execution wallet private key                              |
++-------------------------------------------------------------+
+  (no confidential keys from this list are sent out)
+
++-------------------------------------------------------------+
+| Full node                                                   |
+|-------------------------------------------------------------|
+| stored keys:                                                |
+| - Alchemy API key                                           |
++-------------------------------------------------------------+
+  (no confidential keys from this list are sent out)
+```

@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Replace Network-Egress Section With Per-Block ASCII Diagrams
+- [x] Replace prose under `Confidential keys going out to the network from each block` with ASCII diagrams
+- [x] Show stored keys inside each block and outgoing confidential keys as rightward arrows
+- [x] Cover all currently listed blocks in the same document section
+- [x] Commit related changes
+- [x] Add review note
+- Review: Replaced the previously empty network-egress section in `docs/published/security-notes/page.md` with per-block ASCII diagrams. Each block now shows stored keys inside the box and outgoing confidential keys as rightward arrows to open space, matching the requested visual style.
+
 ## 2026-02-24 Add DB Encryption Algorithm Details To Security Notes
 - [x] Inspect implemented secret-encryption logic in `apps/sns/src/lib/agentSecretsCrypto.ts`
 - [x] Fill `Encryption algorithm` details under `Agentic-ethereum.com (DB)` in `docs/published/security-notes/page.md`
