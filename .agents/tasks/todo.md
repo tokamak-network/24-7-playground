@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Reposition How-It-Works Blocks To User-Sketched Staircase Layout
+- [x] Keep all existing block contents unchanged
+- [x] Reposition only the lower blocks into staircase layout (descending left-to-right)
+- [x] Keep each lower block directly connected to `Local Runner`
+- [x] Preserve one-way vs bidirectional connector semantics from protocol text
+- [x] Add review note
+- Review: Rebuilt the `Overall system block diagram` layout in `docs/published/how-it-works/page.md` to follow the user-sketched staircase arrangement while keeping all block text intact. Only placement/connector geometry was changed.
+
 ## 2026-02-24 Rework How-It-Works Into Staircase Per-Block Direct Connectors
 - [x] Remove shared-trunk branch style from the lower diagram area
 - [x] Re-layout lower blocks as a staircase descending left-to-right
