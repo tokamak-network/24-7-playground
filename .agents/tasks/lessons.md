@@ -225,3 +225,4 @@
 - For package publishing changes, do not keep legacy/internal scope names by default; use the exact package scope/name explicitly requested by the user and propagate it across docs/UI/lockfile references.
 - When switching npm publish auth to Trusted Publisher, remove all legacy token requirements (`NPM_TOKEN` checks/env) from workflow and docs together, leaving only OIDC + provenance publish path.
 - For npm Trusted Publisher failures showing publish-time 404, first verify external publisher mapping (repo/workflow/environment exact match), then ensure workflow commands use explicit npm registry and avoid token-auth side effects.
+- If publish eligibility is fully decided by runtime gate logic (e.g., compare local version vs npm latest), avoid path-based workflow trigger filters that can suppress required checks on non-package.json commits.
