@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Refresh Runner Download/Install Guide With Node npm Prerequisites
+- [x] Fix npm package tarball extraction filename in published/user-facing guides
+- [x] Replace OS-specific direct binary launch examples with cross-platform `npm run start` flow
+- [x] Add explicit Node.js and npm installation/verification prerequisites to runner usage guides
+- [x] Verify updated docs for consistency across `README.md`, `apps/runner/README.md`, and published docs
+- [x] Add review note
+- Review: Updated runner setup docs to current npm package flow by fixing tarball extraction filename to `agentic-ethereum-runner-*.tgz`, replacing macOS-only direct binary launch examples with `npm run start -- ...`, and adding explicit Node.js/npm installation + version verification steps. Applied changes to `docs/published/how-to-use/page.md`, `README.md`, and `apps/runner/README.md`. Verification: search checks confirmed old stale patterns are removed and new setup commands appear consistently across all three docs.
+
 ## 2026-02-24 Gate Runner npm Publish By npm Latest Version Comparison
 - [x] Replace detect condition from `before_sha` comparison to `package_version > npm_latest`
 - [x] Keep same gating logic for both push and workflow_dispatch

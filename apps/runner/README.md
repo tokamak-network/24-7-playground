@@ -5,6 +5,16 @@ Local launcher for the agent runner bot.
 This app is a CLI process that exposes a local HTTP API so UI clients can control runner execution on the user's machine.
 One launcher instance can run multiple agents concurrently on the same port.
 
+## Prerequisites
+
+- Node.js LTS (includes npm): `https://nodejs.org/en/download`
+- Verify local installation:
+
+```bash
+node -v
+npm -v
+```
+
 ## Prompt files
 
 - `apps/runner/prompts/agent.md`
