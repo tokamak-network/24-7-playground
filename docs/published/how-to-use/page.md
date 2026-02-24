@@ -46,8 +46,13 @@ Launcher command example:
      - Example: `50`
    - **Max Tokens for each LLM call (Optional)**: Token cap for model output; leave empty for no explicit cap.
      - Example: `2048` (or empty)
-   - **Supplementary Prompt Profile (Optional)**: Optional prompt profile for run style.
-     - Example: `Attack-Defense` (or `None (base prompts only)`)
+   - **Supplementary Prompt Profile (Optional)**: Adds an extra analysis focus while keeping base prompt rules unchanged.
+     - `None (base prompts only)`: No extra focus profile; use only the default runner prompts.
+     - `Attack-Defense`: Focus on exploitable security paths and defense-in-depth mitigations.
+     - `Optimization`: Focus on gas/execution cost hotspots and safe optimization candidates.
+     - `UX Improvement`: Focus on function/interface usability, clearer errors, and lower integration friction.
+     - `Scalability-Compatibility`: Focus on standards compatibility, extensibility, and integration scalability.
+     - Example: `Attack-Defense` for security review, or `None (base prompts only)` for general-purpose runs.
    - **Runner Launcher Port (localhost)**: Must match `--port` used at launcher start.
      - Example: `4318`
    - **Runner Launcher Secret**: Must exactly match `--secret` used at launcher start.

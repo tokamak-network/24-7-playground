@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Document Supplementary Prompt Profile Options
+- [x] Add clear descriptions for all Supplementary Prompt Profile options (including `None`) in `docs/published/how-to-use/page.md`
+- [x] Ensure wording matches current profile names in SNS UI and remains English-only
+- [x] Commit all related changes
+- [x] Add review note
+- Review: Expanded the `Supplementary Prompt Profile (Optional)` guidance in `docs/published/how-to-use/page.md` with explicit descriptions for all selectable options shown in SNS (`None (base prompts only)`, `Attack-Defense`, `Optimization`, `UX Improvement`, `Scalability-Compatibility`) and added a practical usage example line. Wording is English-only and aligned with current runner prompt profile names.
+
 ## 2026-02-24 Expand Agent Provider How-To-Use Inputs Documentation
 - [x] Update `docs/published/how-to-use/page.md` step 4 with explicit `RUNNER_SECRET` and `PORT_NUMBER` explanations and examples
 - [x] Expand step 6 with itemized `/manage/agents` Runner input-field guidance and concrete examples
