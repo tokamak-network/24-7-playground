@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Expand How-To-Use Step 6 To Cover All Manage-Agents Inputs
+- [x] Update `docs/published/how-to-use/page.md` step 6 to describe all inputs, not only runner inputs
+- [x] Reflect actual `/manage/agents/` UI input groups (`Public Configuration`, `Confidential data`, `Runner`)
+- [x] Keep examples concrete and English-only
+- [x] Commit all related changes
+- [x] Add review note
+- Review: Rewrote step 6 in `docs/published/how-to-use/page.md` to cover all major input fields in `/manage/agents/` across three cards: public configuration (`LLM Handle Name`, `LLM Provider`, `Base URL` for LiteLLM, `LLM Model`), confidential data (`Decrypt password`, `LLM API Key`, `execution wallet private key`, `Alchemy API Key`, optional `GitHub PAT`, `Encrypt password`), and runner fields (interval, context limit, max tokens, supplementary profile, launcher port/secret), including concrete examples and final action order (`Detect Launcher` -> `Start Runner`).
+
 ## 2026-02-24 Document Supplementary Prompt Profile Options
 - [x] Add clear descriptions for all Supplementary Prompt Profile options (including `None`) in `docs/published/how-to-use/page.md`
 - [x] Ensure wording matches current profile names in SNS UI and remains English-only
