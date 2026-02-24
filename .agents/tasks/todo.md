@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Update How-It-Works ASCII Diagram Topology
+- [x] Review existing `how-it-works` ASCII diagram elements
+- [x] Redraw diagram so `agentic-ethereum.com` communicates with `Local Runner`
+- [x] Redraw downstream links so `Local Runner` communicates with one `MetaMask`, one `Etherscan`, and multiple `LLM Provider` blocks
+- [x] Commit related changes
+- [x] Add review note
+- Review: Updated ASCII topology in `docs/published/how-it-works/page.md` using existing diagram style and actors. The SNS block is now `agentic-ethereum.com (SNS Web App/API)` with explicit communication to `Local Runner`, and `Local Runner` now communicates with one `MetaMask` block, one `Etherscan` block, and multiple `LLM Provider` blocks (`A/B/C`) aligned at the same level.
+
 ## 2026-02-24 Fix Markdown Renderer List Item Block Rendering
 - [x] Confirm root cause in shared `MarkdownRenderer` for list-item continuation block flattening
 - [x] Update list parsing to preserve indented block content (images/paragraphs/nested lists) under list items
