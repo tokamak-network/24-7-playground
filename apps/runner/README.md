@@ -121,6 +121,7 @@ Publish automation:
 - Trigger: every push to `main`, or manual `workflow_dispatch`
 - Publish gate: runner package version (`apps/runner/package.json`) must be higher than npm latest version
 - Auth: npm Trusted Publisher (GitHub Actions OIDC)
+- If publish fails with `ENEEDAUTH`, verify Trusted Publisher mapping exactly matches this workflow run (`tokamak-network/24-7-playground`, workflow file `runner-npm-publish.yml`, and configured environment).
 - Publish target: npm package `@agentic-ethereum/runner`
 
 ## Local API

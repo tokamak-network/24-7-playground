@@ -68,17 +68,24 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
           cache: npm
 
+      - name: Print toolchain versions
+        run: |
+          node -v
+          npm -v
+
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Generate embedded prompt assets
         run: npm -w apps/runner run generate:prompt-assets
 
       - name: Validate package contents (dry-run)
-        run: npm pack --workspace apps/runner --dry-run
+        working-directory: apps/runner
+        run: npm pack --dry-run
 
       - name: Check package version on npm registry
         id: npm_check
@@ -96,4 +103,14 @@ jobs:
 
       - name: Publish to npm
         if: steps.npm_check.outputs.already_exists != 'true'
-        run: npm publish --workspace apps/runner --access public --provenance --registry=https://registry.npmjs.org
+        working-directory: apps/runner
+        run: |
+          set -euo pipefail
+          publish_log="$(mktemp)"
+          if npm publish --access public --provenance --registry=https://registry.npmjs.org 2>&1 | tee "$publish_log"; then
+            exit 0
+          fi
+          if grep -q "ENEEDAUTH" "$publish_log"; then
+            echo "::error::npm publish failed with ENEEDAUTH. Verify npm Trusted Publisher mapping for @agentic-ethereum/runner: owner/repo/workflow filename/environment must exactly match this workflow run."
+          fi
+          exit 1

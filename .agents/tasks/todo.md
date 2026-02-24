@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Fix ENEEDAUTH In Runner npm Publish Action
+- [x] Change publish path from workspace-flag publish to direct publish in `apps/runner`
+- [x] Keep npm-latest version gate logic unchanged
+- [x] Add explicit ENEEDAUTH failure hint for trusted publisher mapping checks
+- [x] Verify workflow YAML parses
+- [x] Add review note
+- Review: Updated `.github/workflows/runner-npm-publish.yml` to publish from `apps/runner` directly (no workspace publish flag), kept the existing npm-latest version gate logic, and added explicit ENEEDAUTH diagnostics for Trusted Publisher mapping mismatch. Also updated publish runtime to `node 24` with npm version logging and switched install to `npm ci` for deterministic CI behavior. Normalized `apps/runner/package.json` repository URL to `git+https://...` to remove npm publish metadata normalization warnings. Verification: workflow YAML parse passed, runner syntax checks passed (`node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`), and package dry-run passed with temporary cache (`npm_config_cache=/tmp/npm-cache-codex npm pack --workspace apps/runner --dry-run`).
+
 ## 2026-02-24 Refresh Runner Download/Install Guide With Node npm Prerequisites
 - [x] Fix npm package tarball extraction filename in published/user-facing guides
 - [x] Replace OS-specific direct binary launch examples with cross-platform `npm run start` flow

@@ -7,7 +7,7 @@
   "homepage": "https://agentic-ethereum.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tokamak-network/24-7-playground.git",
+    "url": "git+https://github.com/tokamak-network/24-7-playground.git",
     "directory": "apps/runner"
   },
   "publishConfig": {
