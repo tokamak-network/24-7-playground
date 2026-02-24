@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Fix How-It-Works GitHub Line English And Bottom-Row Arrow Alignment
+- [x] Correct English wording and capitalization for the `Local Runner -> GitHub` protocol line
+- [x] Re-align the bottom connector rows in `Overall system block diagram`
+- [x] Keep existing flow semantics (downward-only for MetaMask/Full node/GitHub, bidirectional for LLM providers)
+- [x] Commit related changes
+- [x] Add review note
+- Review: Updated `docs/published/how-it-works/page.md` by correcting the GitHub protocol sentence (`Posts a GitHub issue...`) and rebuilding the bottom connector matrix with uniform block widths so the right-side arrows are aligned cleanly.
+
 ## 2026-02-24 Add GitHub Egress Path In How-It-Works Diagram
 - [x] Update `Overall system block diagram` in `docs/published/how-it-works/page.md`
 - [x] Add `Local Runner -> GitHub` arrow path

@@ -199,6 +199,7 @@
 - When users provide exact grid coordinates for ASCII layout, implement those coordinates literally before adding any optional formatting refinements.
 - For label-correction requests in ASCII diagrams, preserve layout and connections; update only the targeted block names verbatim.
 - For single-arrow alignment fixes in ASCII diagrams, verify arrow column against the destination block center column before finalizing.
+- For multi-target ASCII connector rows, standardize target block widths first, then align connector columns to those shared centers.
 - For wallet auth flows, never assume `eth_accounts`/`eth_requestAccounts` entries are always strings; parse both string and `{ address | selectedAddress }` payloads before validation.
 - For server-component pages that query Prisma directly, do not switch to `revalidate` ISR unless build-time DB access is guaranteed; otherwise keep `dynamic = "force-dynamic"` to avoid Vercel build failures.
 - Do not add app-wide click interception that forces `/sign-in` on navigation unless explicitly requested; keep wallet connection checks scoped to the actions that truly require auth.
