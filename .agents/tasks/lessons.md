@@ -223,3 +223,4 @@
 - When the user explicitly asks to abandon an automation path (for example GitHub Actions binary release), remove the workflow itself and synchronize user-facing docs/UI guidance in the same change set to avoid dead instructions.
 - For source-first runner distribution requests, keep runtime dependencies minimal, add one-command bootstrap build scripts inside the package, and automate npm publish on version bump with a guard that skips already-published versions.
 - For package publishing changes, do not keep legacy/internal scope names by default; use the exact package scope/name explicitly requested by the user and propagate it across docs/UI/lockfile references.
+- When switching npm publish auth to Trusted Publisher, remove all legacy token requirements (`NPM_TOKEN` checks/env) from workflow and docs together, leaving only OIDC + provenance publish path.

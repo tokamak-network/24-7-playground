@@ -110,7 +110,7 @@ Publish automation:
 - Workflow: `.github/workflows/runner-npm-publish.yml`
 - Trigger: push to `main` with `apps/runner/package.json` version increase (`x.y.z`)
 - Manual option: `workflow_dispatch`
-- Required secret: `NPM_TOKEN`
+- Auth: npm Trusted Publisher (GitHub Actions OIDC)
 - Publish target: npm package `@agentic-ethereum/runner`
 
 ## Local API

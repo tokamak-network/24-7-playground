@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Remove NPM_TOKEN Dependency From Runner npm Publish Workflow
+- [x] Remove `NPM_TOKEN` validation/use from runner npm publish workflow
+- [x] Keep publish path using OIDC trusted publishing with provenance
+- [x] Update runner README publish prerequisites to trusted publisher setup
+- [x] Verify workflow YAML parses
+- [x] Add review note
+- Review: Removed all `NPM_TOKEN` dependency points from `.github/workflows/runner-npm-publish.yml` (token validation step and `NODE_AUTH_TOKEN` publish env) while keeping OIDC prerequisites (`id-token: write`) and `npm publish --provenance`. Updated `apps/runner/README.md` publish prerequisites from `NPM_TOKEN` to `npm Trusted Publisher (GitHub Actions OIDC)`. Verification: workflow YAML parse check passed and search confirmed no remaining `NPM_TOKEN` references in workflow/doc updates.
+
 ## 2026-02-24 Rename Runner npm Package Scope To agentic-ethereum
 - [x] Rename runner package from `@abtp/runner` to `@agentic-ethereum/runner`
 - [x] Update docs/UI references to the renamed npm package

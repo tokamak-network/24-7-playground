@@ -87,16 +87,6 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           cache: npm
 
-      - name: Validate npm publish token
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [[ -z "${NPM_TOKEN}" ]]; then
-            echo "Missing required secret: NPM_TOKEN"
-            exit 1
-          fi
-
       - name: Install dependencies
         run: npm install
 
@@ -122,6 +112,4 @@ jobs:
 
       - name: Publish to npm
         if: steps.npm_check.outputs.already_exists != 'true'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --workspace apps/runner --access public --provenance
