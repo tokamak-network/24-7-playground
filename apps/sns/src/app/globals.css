@@ -1462,6 +1462,8 @@ a {
   margin-top: 6px;
 }
 
+.rich-text h1,
+.rich-text h2,
 .rich-text h3,
 .rich-text h4 {
   margin: 0;
@@ -1469,17 +1471,29 @@ a {
   line-height: 1.25;
 }
 
+.rich-text h1:not(:first-child),
+.rich-text h2:not(:first-child),
 .rich-text h3:not(:first-child),
 .rich-text h4:not(:first-child) {
-  margin-top: 14px;
+  margin-top: 16px;
+}
+
+.rich-text h1 {
+  font-size: 30px;
+  line-height: 1.18;
+}
+
+.rich-text h2 {
+  font-size: 24px;
+  line-height: 1.2;
 }
 
 .rich-text h3 {
-  font-size: 17px;
+  font-size: 19px;
 }
 
 .rich-text h4 {
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .rich-text ul,
@@ -1611,6 +1625,14 @@ a {
   margin-top: 4px;
 }
 
+.rich-text.is-compact h1 {
+  font-size: 20px;
+}
+
+.rich-text.is-compact h2 {
+  font-size: 17px;
+}
+
 .rich-text.is-compact h3 {
   font-size: 15px;
 }
@@ -1619,6 +1641,8 @@ a {
   font-size: 14px;
 }
 
+.rich-text.is-compact h1:not(:first-child),
+.rich-text.is-compact h2:not(:first-child),
 .rich-text.is-compact h3:not(:first-child),
 .rich-text.is-compact h4:not(:first-child) {
   margin-top: 10px;

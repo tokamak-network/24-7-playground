@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Increase Heading Level Size Contrast In Shared Markdown Output
+- [x] Update shared markdown heading rendering so H1/H2/H3 are distinctly mapped
+- [x] Increase `rich-text` heading typography scale gaps for H1/H2/H3
+- [x] Verify SNS type check
+- [x] Add review note
+- Review: Updated `apps/sns/src/components/markdown/MarkdownRenderer.tsx` to map heading levels explicitly (`h1`, `h2`, `h3`, fallback `h4`) instead of collapsing level 1/2 to `h3`. Updated `apps/sns/src/app/globals.css` typography scale to widen heading contrast (`h1 30px`, `h2 24px`, `h3 19px`, `h4 16px`) and added compact-mode heading sizes for all four levels. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-24 Add Per-Image Width Control For Docs QR Rendering
 - [x] Extend shared markdown renderer to support optional per-image width metadata
 - [x] Apply width metadata to troubleshooting Telegram QR image
@@ -3329,10 +3336,20 @@ SNS Type Hardening for Vercel Build Stability Review (2026-02-19):
   - Vercel can still fail due transient external font fetches (`fonts.gstatic.com`) or infra-level network conditions, which is separate from TypeScript typing correctness.
 
 ## 2026-02-24 SNS Branding Rename to Agentic Ethereum
-- [ ] Audit all in-repo product-name references (excluding logs/history artifacts)
-- [ ] Rename SNS app visible brand to `Agentic Ethereum`
-- [ ] Apply subtitle `24-7 Ethereum Playground` where current title branding is shown
-- [ ] Update supporting docs/metadata (README, AGENTS handover, LLM index, citation, package descriptions)
-- [ ] Re-scan repository to confirm no stale `Tokamak 24-7 Ethereum Playground` references in active sources
-- [ ] Run minimum verification for touched SNS runtime files (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
-- [ ] Commit all changes
+- [x] Audit all in-repo product-name references (excluding logs/history artifacts)
+- [x] Rename SNS app visible brand to `Agentic Ethereum`
+- [x] Apply subtitle `24-7 Ethereum Playground` where current title branding is shown
+- [x] Update supporting docs/metadata (README, AGENTS handover, LLM index, citation, package descriptions)
+- [x] Re-scan repository to confirm no stale `Tokamak 24-7 Ethereum Playground` references in active sources
+- [x] Run minimum verification for touched SNS runtime files (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Commit all changes
+
+SNS Branding Rename to Agentic Ethereum Review (2026-02-24):
+- Updated SNS UI brand to `Agentic Ethereum` and subtitle to `24-7 Ethereum Playground` (header/footer/home metadata, login challenge text, docs TOC label).
+- Updated project metadata/docs references (`README.md`, `AGENTS.md`, `llms.txt`, `llms-full.txt`, `CITATION.cff`, `apps/sns/package.json`, `apps/runner/package.json`).
+- Renamed docs route slug and published markdown folder:
+  - `/docs/what-is-24-7-ethereum-playground` -> `/docs/what-is-agentic-ethereum`
+  - `docs/published/what-is-24-7-ethereum-playground` -> `docs/published/what-is-agentic-ethereum`
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed after cleaning stale `.next` types.
+  - `rg -n \"Tokamak 24-7 Ethereum Playground|Tokamak 24-7\" ...` returned no active-source matches (logs/cache/history excluded).

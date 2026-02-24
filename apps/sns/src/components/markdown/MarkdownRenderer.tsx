@@ -344,7 +344,21 @@ function renderBlock(
 ) {
   if (block.type === "heading") {
     const id = slugifyHeading(block.text);
-    if (block.level <= 2) {
+    if (block.level === 1) {
+      return (
+        <h1 id={id} key={keyPrefix}>
+          {renderInline(block.text, `${keyPrefix}-heading`, resolveHref)}
+        </h1>
+      );
+    }
+    if (block.level === 2) {
+      return (
+        <h2 id={id} key={keyPrefix}>
+          {renderInline(block.text, `${keyPrefix}-heading`, resolveHref)}
+        </h2>
+      );
+    }
+    if (block.level === 3) {
       return (
         <h3 id={id} key={keyPrefix}>
           {renderInline(block.text, `${keyPrefix}-heading`, resolveHref)}

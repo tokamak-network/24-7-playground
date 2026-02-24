@@ -1,5 +1,6 @@
 # Lessons
 
+- For shared markdown output, do not collapse heading levels 1 and 2 into the same rendered tag; keep H1/H2/H3 distinct and scale typography with visibly larger gaps.
 - When docs require one image rendered smaller without affecting other docs images, add per-image size metadata in the shared markdown renderer instead of applying global image-size CSS overrides.
 - When users state that published docs are the latest truth, synchronize all related guardrail skills to those docs in the same change and avoid leaving skill-doc drift.
 - When a user provides a revised diagram mock with explicit branch topology, preserve all box content and update only node coordinates plus edge topology in one pass.
