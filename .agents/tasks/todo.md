@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Rewire Security-Notes Diagram To New Arrow Topology
+- [x] Reposition the seven blocks to the requested top-stack / middle-three / bottom-two geometry
+- [x] Reconnect arrows to match requested flow style (top-down stack, side branches, bottom split)
+- [x] Keep block content text unchanged
+- [x] Keep key labels attached to corresponding outbound paths
+- [x] Add review note
+- Review: Updated `docs/published/security-notes/page.md` so the key-egress diagram now uses a top center stack (`local browser memory -> server DB <- Local Runner memory`), side branches from `Local Runner memory` to `LLM Provider` and `Github`, and a bottom split from `Local Runner memory` to `MetaMask` and `Full node`.
+
 ## 2026-02-24 Re-layout Security-Notes Key-Egress Diagram To Requested Block Geometry
 - [x] Reposition blocks to match requested structure (top center stack, middle 3 blocks, bottom 2 blocks)
 - [x] Reconnect key-flow arrows according to new coordinates

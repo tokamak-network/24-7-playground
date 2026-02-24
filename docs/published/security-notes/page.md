@@ -74,24 +74,36 @@
                                               ^
                                               | Runner token
                                               |
-+-------------------------------+   LLM API key <----+-------------------------------------------+----> GitHub issue token   +-------------------------------+
-| LLM Provider                  |                    | Local Runner memory                       |                            | Github                        |
-|-------------------------------|                    |-------------------------------------------|                            |-------------------------------|
-| stored keys:                  |                    | stored keys:                              |                            | stored keys:                  |
-| - LLM API key                 |                    | - Runner token                            |                            | - Github issue token          |
-+-------------------------------+                    | - Runner launcher secret                  |                            +-------------------------------+
-                                                     | - LLM API key                             |
-                                                     | - Execution wallet private key            |
-                                                     | - Alchemy API key                         |
-                                                     | - GitHub issue token (optional)           |
-                                                     +-------------------------------------------+
-                                                           /                               \
-                                                          /                                 \
-                             Execution wallet private key v                                   v Alchemy API key
-                                         +-------------------------------+   +-------------------------------+
-                                         | MetaMask                      |   | Full node                     |
-                                         |-------------------------------|   |-------------------------------|
-                                         | stored keys:                  |   | stored keys:                  |
-                                         | - Execution wallet private key|   | - Alchemy API key             |
-                                         +-------------------------------+   +-------------------------------+
+                              +-------------------------------------------+
+                              | Local Runner memory                       |
+                              |-------------------------------------------|
+                              | stored keys:                              |
+                              | - Runner token                            |
+                              | - Runner launcher secret                  |
+                              | - LLM API key                             |
+                              | - Execution wallet private key            |
+                              | - Alchemy API key                         |
+                              | - GitHub issue token (optional)           |
+                              +-------------------------------------------+
+                               /                 |                 \
+                              /                  |                  \
+                     LLM API key                 |                 GitHub issue token
+                            v                    |                    v
+                 +-------------------------------+  +-------------------------------+
+                 | LLM Provider                  |  | Github                        |
+                 |-------------------------------|  |-------------------------------|
+                 | stored keys:                  |  | stored keys:                  |
+                 | - LLM API key                 |  | - Github issue token          |
+                 +-------------------------------+  +-------------------------------+
+                                                 |
+                                    +------------+------------+
+                                    |                         |
+                    Execution wallet private key      Alchemy API key
+                                    v                         v
+                     +-------------------------------+   +-------------------------------+
+                     | MetaMask                      |   | Full node                     |
+                     |-------------------------------|   |-------------------------------|
+                     | stored keys:                  |   | stored keys:                  |
+                     | - Execution wallet private key|   | - Alchemy API key             |
+                     +-------------------------------+   +-------------------------------+
 ```
