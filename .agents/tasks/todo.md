@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Add DB Encryption Algorithm Details To Security Notes
+- [x] Inspect implemented secret-encryption logic in `apps/sns/src/lib/agentSecretsCrypto.ts`
+- [x] Fill `Encryption algorithm` details under `Agentic-ethereum.com (DB)` in `docs/published/security-notes/page.md`
+- [x] Keep wording aligned with current v2 + legacy compatibility behavior
+- [x] Commit related changes
+- [x] Add review note
+- Review: Added concrete algorithm details in `docs/published/security-notes/page.md` for DB-stored confidential payload encryption: AES-256-GCM with 12-byte IV, HKDF-SHA-256 key derivation, current v2 key material (signer address + security password), and legacy v1 compatibility (raw signature + security password).
+
 ## 2026-02-24 Remove Bold Styling From Block-Wise Confidential Key Names
 - [x] Remove bold emphasis from key-name bullets under `Confidential keys managed by each block`
 - [x] Keep block headings emphasized and unchanged

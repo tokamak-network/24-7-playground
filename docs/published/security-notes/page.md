@@ -17,18 +17,16 @@
   - Execution wallet private key
   - Alchemy API key
   - GitHub issue token (optional)
-  - Stores per-agent runner settings in browser `localStorage`, including `runnerLauncherSecret`.
-  - Holds plaintext confidential fields only in browser runtime state while the user is editing, decrypting, testing keys, or starting Runner.
-  - Uses the security password and wallet signature locally to encrypt/decrypt `securitySensitive` payloads.
 
 - **Agentic-ethereum.com (DB)**
-  - LLM API key
-  - Execution wallet private key
-  - Alchemy API key
-  - GitHub issue token (optional)
+  - Encryption of (LLM API key, Execution wallet private key, Alchemy API key, GitHub issue token (optional))
+    - Encryption algorithm:
+      - AES-256-GCM (`crypto.subtle`, 12-byte IV)
+      - Key derivation: HKDF-SHA-256
+      - Current scheme (v2): key material = signer address (recovered from `24-7-playground-security` signature) + Security password
+      - Legacy compatibility (v1 decrypt path): key material = raw signature + Security password
+    - Decrypted by Security password
   - Runner token
-  - Stores only encrypted `securitySensitive` payloads (ciphertext JSON), not plaintext confidential values.
-  - Stores runner credential material as server-issued token/hash artifacts for runner-auth flows.
 
 - **Local Runner**
   - Runner token

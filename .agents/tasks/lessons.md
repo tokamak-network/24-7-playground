@@ -192,6 +192,7 @@
 - In operator docs sections listing secrets/keys, avoid raw implementation variable names unless explicitly requested; prefer `Name: purpose` wording.
 - When users request block-wise secret mapping, separate key-name-only bullets from explanatory prose and avoid embedding key lists inside sentence descriptions.
 - For documentation style requests scoped to a subsection, change only the requested text styling there (e.g., remove bold on key bullets) and preserve heading emphasis.
+- In security docs, when encrypted-at-rest storage is mentioned, explicitly state the implemented algorithm and key-derivation scheme (including active version and legacy compatibility if present).
 - For wallet auth flows, never assume `eth_accounts`/`eth_requestAccounts` entries are always strings; parse both string and `{ address | selectedAddress }` payloads before validation.
 - For server-component pages that query Prisma directly, do not switch to `revalidate` ISR unless build-time DB access is guaranteed; otherwise keep `dynamic = "force-dynamic"` to avoid Vercel build failures.
 - Do not add app-wide click interception that forces `/sign-in` on navigation unless explicitly requested; keep wallet connection checks scoped to the actions that truly require auth.
