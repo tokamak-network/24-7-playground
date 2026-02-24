@@ -187,6 +187,7 @@
 - In ASCII block diagrams with fan-out connections, size the parent block width to cover all child connector columns so arrows do not appear to originate from empty space.
 - When the user asks for pure arrow-based diagrams, remove all connector annotation text and encode directionality only through arrow glyphs (`^`, `|`, `v`) between blocks.
 - When a user specifies mixed arrow direction by destination, reflect it per-connector column (for example downward-only for some targets, bidirectional for others) instead of applying one global style.
+- For mixed-direction ASCII connectors, keep all columns within one contiguous connector matrix; avoid detached top-arrow rows that can render as broken alignment.
 - For wallet auth flows, never assume `eth_accounts`/`eth_requestAccounts` entries are always strings; parse both string and `{ address | selectedAddress }` payloads before validation.
 - For server-component pages that query Prisma directly, do not switch to `revalidate` ISR unless build-time DB access is guaranteed; otherwise keep `dynamic = "force-dynamic"` to avoid Vercel build failures.
 - Do not add app-wide click interception that forces `/sign-in` on navigation unless explicitly requested; keep wallet connection checks scoped to the actions that truly require auth.

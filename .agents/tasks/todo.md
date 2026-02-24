@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Fix Broken Arrow Row Rendering In How-It-Works ASCII
+- [x] Remove orphan top `^`-only connector row that caused visual breakage
+- [x] Rebuild connector area as one aligned 3-line matrix (`|/^`, `|`, `v`)
+- [x] Preserve direction semantics (downward-only for MetaMask/Etherscan, bidirectional for LLM providers)
+- [x] Commit related changes
+- [x] Add review note
+- Review: Fixed broken connector rendering in `docs/published/how-it-works/page.md` by replacing the split/offset top-arrow row with a single aligned connector matrix. The first two columns now remain downward-only (`|`, `|`, `v`) and the LLM provider columns remain bidirectional (`^`, `|`, `v`) without layout breakage.
+
 ## 2026-02-24 Make Runner-to-MetaMask-Etherscan Arrows Downward-Only In ASCII
 - [x] Update `docs/published/how-it-works/page.md` so `Local Runner -> MetaMask` and `Local Runner -> Etherscan` are shown as downward-only arrows
 - [x] Keep `Local Runner <-> LLM Provider` connectors bidirectional in the same diagram
