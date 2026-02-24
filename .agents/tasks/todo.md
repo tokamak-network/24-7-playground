@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Normalize Message Protocol Line Format In How-It-Works
+- [x] Inspect `Message exchanging protocols` section in `docs/published/how-it-works/page.md`
+- [x] Apply first-line protocol format (`**A** -> **B**: ...`) to all remaining entries
+- [x] Keep existing semantic meaning unchanged while removing mixed numbering/bullets
+- [x] Commit related changes
+- [x] Add review note
+- Review: Standardized all entries in `docs/published/how-it-works/page.md` under `Message exchanging protocols` to the same inline format used by the first line (`**source** -> **target**: description`). Removed mixed numbered-list and nested-bullet formatting while preserving all protocol semantics.
+
 ## 2026-02-24 Fix Broken Arrow Row Rendering In How-It-Works ASCII
 - [x] Remove orphan top `^`-only connector row that caused visual breakage
 - [x] Rebuild connector area as one aligned 3-line matrix (`|/^`, `|`, `v`)
