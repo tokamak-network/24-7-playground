@@ -221,3 +221,4 @@
 - When the user explicitly requests committing all workspace changes, include unrelated pre-existing edits in the same commit instead of splitting or excluding files.
 - For macOS CLI release UX, notarized zip/single-binary delivery is not enough for "download-and-run without quarantine workarounds"; ship a notarized and stapled signed `.pkg` installer as the primary artifact.
 - When the user explicitly asks to abandon an automation path (for example GitHub Actions binary release), remove the workflow itself and synchronize user-facing docs/UI guidance in the same change set to avoid dead instructions.
+- For source-first runner distribution requests, keep runtime dependencies minimal, add one-command bootstrap build scripts inside the package, and automate npm publish on version bump with a guard that skips already-published versions.

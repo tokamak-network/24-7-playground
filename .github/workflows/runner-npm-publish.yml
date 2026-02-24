@@ -1,0 +1,127 @@
+name: Runner npm Publish
+
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "apps/runner/package.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  detect:
+    name: Detect Publish Target
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.resolve.outputs.should_publish }}
+      package_name: ${{ steps.resolve.outputs.package_name }}
+      package_version: ${{ steps.resolve.outputs.package_version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve package publish target
+        id: resolve
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          package_name="$(node -p "require('./apps/runner/package.json').name")"
+          package_version="$(node -p "require('./apps/runner/package.json').version")"
+
+          echo "package_name=${package_name}" >> "$GITHUB_OUTPUT"
+          echo "package_version=${package_version}" >> "$GITHUB_OUTPUT"
+
+          if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          previous_version=""
+          if [[ -n "${BEFORE_SHA}" ]] && git cat-file -e "${BEFORE_SHA}:apps/runner/package.json" 2>/dev/null; then
+            previous_version="$(git show "${BEFORE_SHA}:apps/runner/package.json" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>process.stdout.write(String(JSON.parse(s).version||'')))")"
+          fi
+
+          if [[ -z "${previous_version}" ]]; then
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          is_increased="$(node -e "const prev=process.argv[1];const curr=process.argv[2];const parse=(v)=>{if(!/^\\d+\\.\\d+\\.\\d+$/.test(v)) return null;return v.split('.').map(Number);};const p=parse(prev), c=parse(curr);if(!p||!c){console.log('invalid');process.exit(0);}if(c[0]!==p[0]){console.log(c[0]>p[0]?'yes':'no');process.exit(0);}if(c[1]!==p[1]){console.log(c[1]>p[1]?'yes':'no');process.exit(0);}if(c[2]!==p[2]){console.log(c[2]>p[2]?'yes':'no');process.exit(0);}console.log('equal');" "${previous_version}" "${package_version}")"
+
+          if [[ "${is_increased}" == "invalid" ]]; then
+            echo "Runner package versions must follow x.y.z for publish comparison."
+            echo "previous=${previous_version}, current=${package_version}"
+            exit 1
+          fi
+
+          if [[ "${is_increased}" != "yes" ]]; then
+            echo "Runner version did not increase: previous=${previous_version}, current=${package_version}"
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "should_publish=true" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Publish npm package
+    needs: detect
+    if: needs.detect.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+
+      - name: Validate npm publish token
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${NPM_TOKEN}" ]]; then
+            echo "Missing required secret: NPM_TOKEN"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate embedded prompt assets
+        run: npm -w apps/runner run generate:prompt-assets
+
+      - name: Validate package contents (dry-run)
+        run: npm pack --workspace apps/runner --dry-run
+
+      - name: Check package version on npm registry
+        id: npm_check
+        env:
+          PACKAGE_NAME: ${{ needs.detect.outputs.package_name }}
+          PACKAGE_VERSION: ${{ needs.detect.outputs.package_version }}
+        run: |
+          set -euo pipefail
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "already_exists=true" >> "$GITHUB_OUTPUT"
+            echo "Package version already exists on npm. Skipping publish."
+          else
+            echo "already_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm
+        if: steps.npm_check.outputs.already_exists != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --workspace apps/runner --access public --provenance

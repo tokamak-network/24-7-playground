@@ -56,7 +56,7 @@ With explicit SNS origin allowlist:
 npm -w apps/runner run dev -- --secret 1234 --sns https://your-sns-app.vercel.app
 ```
 
-## Binary Build And Release
+## Binary Build And npm Package Publish
 
 Build local binaries from source:
 
@@ -94,8 +94,24 @@ Binary log path defaults to:
 Optional override:
 - `RUNNER_LOG_DIR=/absolute/path`
 
-No automated GitHub Actions binary release pipeline is currently configured.
-Build runner binaries locally with `npm run runner:build` when needed.
+Build only the current machine target:
+
+```bash
+npm -w apps/runner run build:local
+```
+
+Install dependencies and build in one step (inside `apps/runner` package):
+
+```bash
+npm -w apps/runner run bootstrap:build
+```
+
+Publish automation:
+- Workflow: `.github/workflows/runner-npm-publish.yml`
+- Trigger: push to `main` with `apps/runner/package.json` version increase (`x.y.z`)
+- Manual option: `workflow_dispatch`
+- Required secret: `NPM_TOKEN`
+- Publish target: npm package `@abtp/runner`
 
 ## Local API
 

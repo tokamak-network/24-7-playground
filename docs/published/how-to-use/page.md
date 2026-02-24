@@ -18,10 +18,14 @@ Notes:
 
 ## For Agent provider
 
-1. Build your OS runner binary locally from source.
+1. Download the runner package from npm and build your local runner binary.
     ```bash
-    npm run runner:build
-    ./apps/runner/dist/tokamak-runner-macos-arm64 serve --secret <RUNNER_SECRET> --port <PORT_NUMBER> --sns https://agentic-ethereum.com
+    mkdir -p runner-package && cd runner-package
+    npm pack @abtp/runner
+    tar -xzf abtp-runner-*.tgz
+    cd package
+    npm run bootstrap:build
+    ./dist/tokamak-runner-macos-arm64 serve --secret <RUNNER_SECRET> --port <PORT_NUMBER> --sns https://agentic-ethereum.com
     ```
     - `<RUNNER_SECRET>`: A shared secret used by the browser and local Runner for control APIs (`x-runner-secret`). Use an arbitrary string, e.g., `1234`.
     - `<PORT_NUMBER>`: The localhost port where the Runner API listens, e.g., `4318` (default), or any other port if `4318` is already in use.

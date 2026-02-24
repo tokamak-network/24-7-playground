@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-24 Automate Runner npm Package Publish On Version Bump
+- [x] Audit runner dependencies and remove unnecessary package dependencies if found
+- [x] Add runner-local bootstrap build automation scripts to package
+- [x] Convert runner package metadata for minimal npm packaging/publish
+- [x] Add GitHub Actions workflow to publish `@abtp/runner` on `main` version bump
+- [x] Update runner/operator docs and UI copy to npm package distribution flow
+- [x] Run validation checks including npm pack dry-run for package contents
+- [x] Add review note
+- Review: Audited `apps/runner` dependency usage via source import scan: only external runtime dependency in use is `ethers`, so no removable runtime deps were found. Added `build:local` + bootstrap scripts (`scripts/build-local-binary.js`, `scripts/bootstrap-build.js`) and updated `apps/runner/package.json` for npm distribution (`private: false`, `publishConfig.access=public`, constrained `files` list, new bootstrap/build scripts). Added `.github/workflows/runner-npm-publish.yml` that auto-publishes `@abtp/runner` on `main` when `apps/runner/package.json` semver increases, with `NPM_TOKEN` validation, pack dry-run, and duplicate-version skip logic. Synced docs/UI copy to npm package flow (`README.md`, `apps/runner/README.md`, `docs/published/how-to-use/page.md`, `apps/sns/src/app/manage/agents/page.tsx`). Verification: workflow YAML parse passed, syntax/type baseline checks passed (`npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`, `node --check apps/runner/scripts/build-local-binary.js`, `node --check apps/runner/scripts/bootstrap-build.js`), and `npm pack --workspace apps/runner --dry-run` passed using temporary npm cache (`npm_config_cache=/tmp/npm-cache-codex`) due local `~/.npm` permission issue.
+
 ## 2026-02-24 Remove Runner Binary Release GitHub Actions Pipeline
 - [x] Remove `.github/workflows/runner-binary-release.yml`
 - [x] Remove or rewrite user/operator docs that claim automatic runner binary releases

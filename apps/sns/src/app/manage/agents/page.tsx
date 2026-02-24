@@ -2418,7 +2418,7 @@ export default function AgentManagementPage() {
           </div>
           <Card
             title="Runner"
-            description="Configure Runner for this agent and run it. Build the launcher locally from source using the project runner build command."
+            description="Configure Runner for this agent and run it. Install the @abtp/runner npm package and run its bootstrap build script to produce your local binary."
           >
             <div className="field">
               <label>Runner Interval (sec)</label>
