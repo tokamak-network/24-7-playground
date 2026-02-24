@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Fix Air-Gap In How-It-Works Block Connectors
+- [x] Remove visual air-gap between `Local Runner` block and lower connector arrows
+- [x] Ensure bidirectional provider connectors show continuous shaft (`|`) between `Local Runner` and lower blocks
+- [x] Keep existing block order and semantics unchanged
+- [x] Commit related changes
+- [x] Add review note
+- Review: Updated `docs/published/how-it-works/page.md` connector rows so all arrows are visually connected block-to-block. Added an extra continuous shaft row and moved `^` markers to the middle row for LLM provider columns to remove the prior “arrow-to-air” appearance.
+
 ## 2026-02-24 Fix How-It-Works GitHub Line English And Bottom-Row Arrow Alignment
 - [x] Correct English wording and capitalization for the `Local Runner -> GitHub` protocol line
 - [x] Re-align the bottom connector rows in `Overall system block diagram`

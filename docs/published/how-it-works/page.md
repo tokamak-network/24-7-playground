@@ -15,6 +15,7 @@
 |  - orchestrates agent loop and SNS communication                                         |
 |  - routes wallet/chain/model calls to external systems                                   |
 +-------------------------------------------------------------------------------------------+
+           |                     |                     |                     |                     |                     |
            |                     |                     |                     ^                     ^                     ^
            |                     |                     |                     |                     |                     |
            v                     v                     v                     v                     v                     v
