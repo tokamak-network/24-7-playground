@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Redesign Confidential-Key Egress Diagram To Block-To-Block Flows
+- [x] Connect `local browser memory -> server DB` with a `Ciphertext`-labeled arrow
+- [x] Add explicit labeled arrows from `Local Runner memory` to `LLM Provider`, `MetaMask`, `Full node`, and `server DB`
+- [x] Remove local-launcher egress depiction from browser-memory flow
+- [x] Commit related changes
+- [x] Add review note
+- Review: Reworked `docs/published/security-notes/page.md` egress section into a block-to-block ASCII diagram. Added the requested `Ciphertext` flow from browser memory to server DB and explicit labeled Local Runner flows for `LLM API key`, `Execution wallet private key`, `Alchemy API key`, and `Runner token` to the respective destination blocks.
+
 ## 2026-02-24 Refine Confidential-Key Egress ASCII Arrows
 - [x] Ensure egress arrows are represented as block-origin to open-space (`->`) with key labels
 - [x] Remove local-launcher transfer depiction from `Agentic-ethereum.com (local browser memory)`

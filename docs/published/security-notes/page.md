@@ -47,28 +47,19 @@
 
 ## Confidential keys going out to the network from each block
 ```text
-+-------------------------------------------------------------+
-| Agentic-ethereum.com (local browser memory)                |
-|-------------------------------------------------------------|
-| stored keys:                                                |
-| - Runner launcher secret                                    |
-| - Security password                                         |
-| - LLM API key                                               |
++-------------------------------------------------------------+      +-------------------------------------------------------------+
+| Agentic-ethereum.com (local browser memory)                |      | Agentic-ethereum.com (server DB)                           |
+|-------------------------------------------------------------|      |-------------------------------------------------------------|
+| stored keys:                                                |      | stored keys:                                                |
+| - Runner launcher secret                                    |      | - Runner token                                              |
+| - Security password                                         |      | - Encrypted confidential payload                            |
+| - LLM API key                                               |      +-------------------------------------------------------------+
 | - Execution wallet private key                              |
 | - Alchemy API key                                           |
 | - GitHub issue token (optional)                             |
 +-------------------------------------------------------------+
-  (No confidential-key egress to external network in the normal flow)
-  (Local launcher transfer is intentionally omitted here)
+          | Ciphertext -------------------------------------> [Agentic-ethereum.com (server DB)]
 
-+-------------------------------------------------------------+
-| Agentic-ethereum.com (server DB)                           |
-|-------------------------------------------------------------|
-| stored keys:                                                |
-| - Runner token                                              |
-| - Encrypted confidential payload                            |
-+-------------------------------------------------------------+
-  (No direct confidential-key egress from this block)
 
 +-------------------------------------------------------------+
 | Local Runner memory                                         |
@@ -81,32 +72,17 @@
 | - Alchemy API key                                           |
 | - GitHub issue token (optional)                             |
 +-------------------------------------------------------------+
-  Runner token ------------------------------>
-  LLM API key ----------------------------->
-  Alchemy API key ------------------------>
-  GitHub issue token (optional) ---------->
 
-+-------------------------------------------------------------+
-| LLM Provider                                                |
-|-------------------------------------------------------------|
-| stored keys:                                                |
-| - LLM API key                                               |
-+-------------------------------------------------------------+
-  (No confidential-key egress from this list)
++-------------------------------------------------------------+      +-------------------------------------------------------------+      +-------------------------------------------------------------+
+| LLM Provider                                                |      | MetaMask                                                    |      | Full node                                                   |
+|-------------------------------------------------------------|      |-------------------------------------------------------------|      |-------------------------------------------------------------|
+| stored keys:                                                |      | stored keys:                                                |      | stored keys:                                                |
+| - LLM API key                                               |      | - Execution wallet private key                              |      | - Alchemy API key                                           |
++-------------------------------------------------------------+      +-------------------------------------------------------------+      +-------------------------------------------------------------+
 
-+-------------------------------------------------------------+
-| MetaMask                                                    |
-|-------------------------------------------------------------|
-| stored keys:                                                |
-| - Execution wallet private key                              |
-+-------------------------------------------------------------+
-  (No confidential-key egress from this list)
-
-+-------------------------------------------------------------+
-| Full node                                                   |
-|-------------------------------------------------------------|
-| stored keys:                                                |
-| - Alchemy API key                                           |
-+-------------------------------------------------------------+
-  (No confidential-key egress from this list)
+From Local Runner memory:
+  | LLM API key -------------------------------> [LLM Provider]
+  | Execution wallet private key --------------> [MetaMask]
+  | Alchemy API key ---------------------------> [Full node]
+  | Runner token ------------------------------> [Agentic-ethereum.com (server DB)]
 ```
