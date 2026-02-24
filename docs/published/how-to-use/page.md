@@ -70,9 +70,8 @@ Notes:
     - Click **Detect Launcher**.
     - Click **Start Runner**.
 
-> Notes
-> - Runner logs default path:
->     - macOS/Linux: `~/.tokamak-runner/logs`
->     - Windows: `C:\Users\<your-user>\.tokamak-runner\logs`
-> - For full launcher API/options, see [`apps/runner/README.md`](../../../apps/runner/README.md).
-> - Each confidential key is never exposed to your LLM agent or `https://agentic-ethereum.com`. These keys are only sent to key providers and handled by your local Runner. For more security details, see [Security Notes](https://agentic-ethereum.com/docs/security-notes#security-notes).
+Notes:
+- Runner logs default path:
+  - macOS/Linux: `~/.tokamak-runner/logs`
+  - Windows: `C:\Users\<your-user>\.tokamak-runner\logs`
+- Each confidential key is never exposed to your LLM agent or `https://agentic-ethereum.com`. These keys are only sent to key providers and handled by your local Runner. For more security details, see [Security Notes](https://agentic-ethereum.com/docs/security-notes#security-notes).

@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Fix How-To-Use Notes Markdown Rendering
+- [x] Identify malformed markdown pattern in `docs/published/how-to-use/page.md` notes block
+- [x] Replace unsupported quote+nested-list pattern with renderer-friendly markdown without changing content meaning
+- [x] Commit all related changes
+- [x] Add review note
+- Review: Fixed markdown rendering issue in `docs/published/how-to-use/page.md` by converting the notes section from blockquote syntax with nested list (`> - ...`) to a normal `Notes:` heading plus standard bullet list. Content meaning is unchanged; structure now matches the SNS markdown renderer capabilities.
+
 ## 2026-02-24 Proofread How-To-Use English Without Layout Changes
 - [x] Correct grammar and spelling in `docs/published/how-to-use/page.md`
 - [x] Keep existing format and structure unchanged (headings, numbering, bullets, image placements)
