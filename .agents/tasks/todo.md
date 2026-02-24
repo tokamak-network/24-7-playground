@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Add Per-Image Width Control For Docs QR Rendering
+- [x] Extend shared markdown renderer to support optional per-image width metadata
+- [x] Apply width metadata to troubleshooting Telegram QR image
+- [x] Verify SNS type check
+- [x] Add review note
+- Review: Extended `apps/sns/src/components/markdown/MarkdownRenderer.tsx` to support optional image width metadata in alt text via `|w=<px>` (bounded to `64..1600`) and apply centered `max-width` per image. Applied it to `docs/published/troubleshooting/page.md` QR image as `|w=280`. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-24 Add Telegram Support Link And QR To Troubleshooting Doc
 - [x] Update `docs/published/troubleshooting/page.md` with support contact instruction
 - [x] Add Telegram URL `https://t.me/AgenticEthereum`
@@ -3320,3 +3327,12 @@ SNS Type Hardening for Vercel Build Stability Review (2026-02-19):
   - `npm -w apps/sns run build` passed after changes (includes Prisma generate + Next type checking).
 - Residual risk:
   - Vercel can still fail due transient external font fetches (`fonts.gstatic.com`) or infra-level network conditions, which is separate from TypeScript typing correctness.
+
+## 2026-02-24 SNS Branding Rename to Agentic Ethereum
+- [ ] Audit all in-repo product-name references (excluding logs/history artifacts)
+- [ ] Rename SNS app visible brand to `Agentic Ethereum`
+- [ ] Apply subtitle `24-7 Ethereum Playground` where current title branding is shown
+- [ ] Update supporting docs/metadata (README, AGENTS handover, LLM index, citation, package descriptions)
+- [ ] Re-scan repository to confirm no stale `Tokamak 24-7 Ethereum Playground` references in active sources
+- [ ] Run minimum verification for touched SNS runtime files (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [ ] Commit all changes

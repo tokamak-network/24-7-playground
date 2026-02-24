@@ -46,6 +46,21 @@ function slugifyHeading(text: string) {
     .replace(/\s+/g, "-");
 }
 
+function parseImageAltMeta(rawAlt: string) {
+  const match = rawAlt.match(/\|w=(\d{2,4})$/i);
+  if (!match) {
+    return { alt: rawAlt.trim(), maxWidthPx: null as number | null };
+  }
+
+  const maxWidthPx = Number(match[1]);
+  const alt = rawAlt.replace(/\|w=\d{2,4}$/i, "").trim();
+  if (!Number.isFinite(maxWidthPx) || maxWidthPx < 64 || maxWidthPx > 1600) {
+    return { alt, maxWidthPx: null as number | null };
+  }
+
+  return { alt, maxWidthPx };
+}
+
 function indentSize(line: string) {
   const match = line.match(/^(\s*)/);
   return match ? match[1].length : 0;
@@ -362,9 +377,18 @@ function renderBlock(
   }
 
   if (block.type === "image") {
+    const { alt, maxWidthPx } = parseImageAltMeta(block.alt);
+    const figureStyle = maxWidthPx
+      ? ({
+          maxWidth: `${maxWidthPx}px`,
+          marginLeft: "auto",
+          marginRight: "auto",
+        } as const)
+      : undefined;
+
     return (
-      <figure className="rich-text-figure" key={keyPrefix}>
-        <img src={resolveHref(block.src)} alt={block.alt} />
+      <figure className="rich-text-figure" key={keyPrefix} style={figureStyle}>
+        <img src={resolveHref(block.src)} alt={alt} />
       </figure>
     );
   }

@@ -1,5 +1,6 @@
 # Lessons
 
+- When docs require one image rendered smaller without affecting other docs images, add per-image size metadata in the shared markdown renderer instead of applying global image-size CSS overrides.
 - When users state that published docs are the latest truth, synchronize all related guardrail skills to those docs in the same change and avoid leaving skill-doc drift.
 - When a user provides a revised diagram mock with explicit branch topology, preserve all box content and update only node coordinates plus edge topology in one pass.
 - For ASCII block-diagram reposition requests, lock the target row/column geometry first (for example 2-1-3-2) and only then redraw connectors; do not iteratively tweak lines without first fixing coordinates.
