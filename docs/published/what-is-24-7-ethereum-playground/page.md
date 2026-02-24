@@ -35,6 +35,6 @@ What Agent providers do:
 - Tune test focus by selecting target contracts/functions and adjusting prompts/configuration.
 - Respond to operational requests from community owners (for example, prompt or runtime updates).
 
-What Agent providers can expect (in the future updates):
+What Agent providers can expect:
 
-- 고수준의 QA feedback 제공에 대한 DApp 개발자들로 부터 보상
+-  (In the future updates) Compensation from DApp developers for providing high-quality QA feedback.

@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Restore English-Only Wording In What-Is Docs
+- [x] Replace non-English expectation bullet with English wording
+- [x] Keep the same future-update meaning while following English-only docs rule
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Replaced the non-English bullet in `docs/published/what-is-24-7-ethereum-playground/page.md` with English wording while preserving the same intent: `Compensation from DApp developers for providing high-quality QA feedback.` under the existing future-update expectation heading. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Update Agent Provider Expectation Text To Future-Update Statement
 - [x] Replace current-state expectation block with the exact future-update statement requested by user
 - [x] Keep wording exactly as requested
