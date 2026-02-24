@@ -1,12 +1,21 @@
 # Project Plan
 
+## 2026-02-25 Fix Runner Publish Workflow Lockfile Sync Failure
+- [x] Reproduce and confirm GitHub Actions failure cause from logs (`npm ci` lock mismatch)
+- [x] Adjust workflow install step to tolerate workspace lock drift (`npm install`)
+- [x] Remove setup-node registry config that emits npm `always-auth` warning
+- [x] Keep trusted publisher/OIDC publish path and npm version-gate logic unchanged
+- [x] Verify workflow YAML parses
+- [x] Add review note
+- Review: Fixed `.github/workflows/runner-npm-publish.yml` publish-job install phase by switching `npm ci` to `npm install` so lockfile drift does not block publish runs. Removed `registry-url` from `actions/setup-node` to stop npm 11 warning about unknown `always-auth` config while keeping explicit npm registry on `npm view` and `npm publish` commands. Node runtime remains `24` for trusted publisher compatibility. Verification: workflow YAML parse passed.
+
 ## 2026-02-24 Fix ENEEDAUTH In Runner npm Publish Action
 - [x] Change publish path from workspace-flag publish to direct publish in `apps/runner`
 - [x] Keep npm-latest version gate logic unchanged
 - [x] Add explicit ENEEDAUTH failure hint for trusted publisher mapping checks
 - [x] Verify workflow YAML parses
 - [x] Add review note
-- Review: Updated `.github/workflows/runner-npm-publish.yml` to publish from `apps/runner` directly (no workspace publish flag), kept the existing npm-latest version gate logic, and added explicit ENEEDAUTH diagnostics for Trusted Publisher mapping mismatch. Also updated publish runtime to `node 24` with npm version logging and switched install to `npm ci` for deterministic CI behavior. Normalized `apps/runner/package.json` repository URL to `git+https://...` to remove npm publish metadata normalization warnings. Verification: workflow YAML parse passed, runner syntax checks passed (`node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`), and package dry-run passed with temporary cache (`npm_config_cache=/tmp/npm-cache-codex npm pack --workspace apps/runner --dry-run`).
+- Review: Updated `.github/workflows/runner-npm-publish.yml` to publish from `apps/runner` directly (no workspace publish flag), kept the existing npm-latest version gate logic, and added explicit ENEEDAUTH diagnostics for Trusted Publisher mapping mismatch. Updated publish runtime to `node 24` with npm version logging. Normalized `apps/runner/package.json` repository URL to `git+https://...` to remove npm publish metadata normalization warnings. Verification: workflow YAML parse passed, runner syntax checks passed (`node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`), and package dry-run passed with temporary cache (`npm_config_cache=/tmp/npm-cache-codex npm pack --workspace apps/runner --dry-run`).
 
 ## 2026-02-24 Refresh Runner Download/Install Guide With Node npm Prerequisites
 - [x] Fix npm package tarball extraction filename in published/user-facing guides

@@ -1,6 +1,7 @@
 # Lessons
 
 - For npm Trusted Publisher in GitHub Actions, use a toolchain that satisfies npm's minimum OIDC publish requirements (`node 22.14+`, `npm 11.5.1+`), otherwise publish can fail with `ENEEDAUTH` even when mapping is configured.
+- Do not switch publish workflows to `npm ci` unless workspace `package-lock.json` sync is enforced in the same change; otherwise CI can fail on lock drift and block release.
 - For docs metadata like “Last updated,” derive it from `docs/published/**` file timestamps instead of hardcoded constants so the docs shell always tracks real content updates.
 - For docs TOC consistency, generate sidebar entries from published markdown (`H1` + `H2`) for every section instead of hardcoding subsection links for only one page.
 - For typography requests given as explicit percentages, implement those exact multipliers with `em` relative to the base text size so the ratio remains correct across responsive/compact variants.
