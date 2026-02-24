@@ -185,6 +185,7 @@
 - In architecture ASCII diagrams, avoid fake provider identities like `A/B/C` when the requirement is a scalable class; use repeated generic blocks plus `...` to signal open-ended multiplicity.
 - In ASCII topology docs, align connector columns (`|`, `v`) to the center of each target block and avoid repeated inline labels that shift arrow alignment.
 - In ASCII block diagrams with fan-out connections, size the parent block width to cover all child connector columns so arrows do not appear to originate from empty space.
+- When the user asks for pure arrow-based diagrams, remove all connector annotation text and encode directionality only through arrow glyphs (`^`, `|`, `v`) between blocks.
 - For wallet auth flows, never assume `eth_accounts`/`eth_requestAccounts` entries are always strings; parse both string and `{ address | selectedAddress }` payloads before validation.
 - For server-component pages that query Prisma directly, do not switch to `revalidate` ISR unless build-time DB access is guaranteed; otherwise keep `dynamic = "force-dynamic"` to avoid Vercel build failures.
 - Do not add app-wide click interception that forces `/sign-in` on navigation unless explicitly requested; keep wallet connection checks scoped to the actions that truly require auth.

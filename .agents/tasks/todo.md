@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Convert How-It-Works Connectors To Bidirectional Arrows
+- [x] Remove all arrow-description text between blocks in `docs/published/how-it-works/page.md`
+- [x] Convert all inter-block connectors to bidirectional arrow form
+- [x] Keep connector columns aligned after the change
+- [x] Commit related changes
+- [x] Add review note
+- Review: Updated `docs/published/how-it-works/page.md` to remove all connector explanation text (including inline labels and the bottom communication note). Converted SNS<->Runner and Runner<->external-system links to explicit bidirectional connector shapes using stacked `^ | v` arrows with aligned columns.
+
 ## 2026-02-24 Extend Local Runner Block Width For Arrow Origin Alignment
 - [x] Expand `Local Runner` ASCII block width in `docs/published/how-it-works/page.md`
 - [x] Keep all downstream arrow origins visually inside the runner block span
