@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-24 Auto Release On Runner Version Bump
+- [x] Update runner release workflow to trigger from `main` push changes in `apps/runner/package.json`
+- [x] Add version-bump detection so release runs only when `apps/runner/package.json` version increases
+- [x] Keep manual release path via `workflow_dispatch` (`tag_name` input)
+- [x] Update runner release documentation to match new behavior
+- [x] Run verification checks (`prisma:generate`, `tsc`, `sns build`, runner `node --check`)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Changed `.github/workflows/runner-binary-release.yml` to watch `main` pushes touching `apps/runner/package.json` and added a `detect` job that compares previous/current runner versions (`x.y.z`) and gates build/publish unless version increased. Manual dispatch remains supported with explicit `tag_name`. Publish now uses resolved tag output (`v<runner version>` for auto path), skips if tag already exists on origin, and releases binaries + `SHA256SUMS.txt`. Updated `apps/runner/README.md` release trigger documentation accordingly. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `npm -w apps/sns run build`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-24 Switch Runner Release Automation To Tag Push
 - [x] Change runner release workflow trigger from GitHub Release publish to tag push (`v*`)
 - [x] Keep manual workflow dispatch path usable without duplicate publish behavior

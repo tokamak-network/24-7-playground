@@ -2,8 +2,10 @@ name: Runner Binary Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches:
+      - "main"
+    paths:
+      - "apps/runner/package.json"
   workflow_dispatch:
     inputs:
       tag_name:
@@ -15,8 +17,76 @@ permissions:
   contents: write
 
 jobs:
+  detect:
+    name: Detect Release Target
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.resolve.outputs.should_release }}
+      tag_name: ${{ steps.resolve.outputs.tag_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release tag
+        id: resolve
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          INPUT_TAG_NAME: ${{ github.event.inputs.tag_name || '' }}
+        run: |
+          set -euo pipefail
+
+          if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
+            if [[ -z "${INPUT_TAG_NAME}" ]]; then
+              echo "workflow_dispatch requires tag_name input"
+              exit 1
+            fi
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            echo "tag_name=${INPUT_TAG_NAME}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          current_version="$(node -p "require('./apps/runner/package.json').version")"
+          current_tag="v${current_version}"
+
+          previous_version=""
+          if [[ -n "${BEFORE_SHA}" ]] && git cat-file -e "${BEFORE_SHA}:apps/runner/package.json" 2>/dev/null; then
+            previous_version="$(git show "${BEFORE_SHA}:apps/runner/package.json" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>process.stdout.write(String(JSON.parse(s).version||'')))")"
+          fi
+
+          if [[ -n "${previous_version}" ]]; then
+            is_increased="$(node -e "const prev=process.argv[1];const curr=process.argv[2];const parse=(v)=>{if(!/^\\d+\\.\\d+\\.\\d+$/.test(v)) return null;return v.split('.').map(Number);};const p=parse(prev), c=parse(curr);if(!p||!c){console.log('invalid');process.exit(0);}if(c[0]!==p[0]){console.log(c[0]>p[0]?'yes':'no');process.exit(0);}if(c[1]!==p[1]){console.log(c[1]>p[1]?'yes':'no');process.exit(0);}if(c[2]!==p[2]){console.log(c[2]>p[2]?'yes':'no');process.exit(0);}console.log('equal');" "${previous_version}" "${current_version}")"
+
+            if [[ "${is_increased}" == "invalid" ]]; then
+              echo "Runner package versions must follow x.y.z for auto-release comparison."
+              echo "previous=${previous_version}, current=${current_version}"
+              exit 1
+            fi
+            if [[ "${is_increased}" != "yes" ]]; then
+              echo "Runner version did not increase: previous=${previous_version}, current=${current_version}"
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              echo "tag_name=" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${current_tag}" >/dev/null 2>&1; then
+            echo "Tag already exists on origin: ${current_tag}; skipping release."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+            echo "tag_name=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${current_tag}" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build ${{ matrix.label }}
+    needs: detect
+    if: needs.detect.outputs.should_release == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -64,8 +134,8 @@ jobs:
   publish:
     name: Publish Release Assets
     runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: [detect, build]
+    if: needs.detect.outputs.should_release == 'true'
 
     steps:
       - name: Download build artifacts
@@ -80,7 +150,7 @@ jobs:
       - name: Upload assets to GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event_name == 'push' && github.ref_name || inputs.tag_name }}
+          tag_name: ${{ needs.detect.outputs.tag_name }}
           target_commitish: ${{ github.sha }}
           generate_release_notes: true
           files: |
