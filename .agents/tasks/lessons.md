@@ -1,5 +1,6 @@
 # Lessons
 
+- When a user supplies a visual reference and asks for “like this,” prioritize geometric similarity (relative block positions and connector trajectories) over internal symmetry/cleanliness.
 - For user-provided diagram mockups, treat them as strict geometry specs: keep existing text content and change only placement/connection shape unless the user explicitly asks for content edits.
 - For staircase-diagram requests, do not use a shared trunk-and-branch connector; start one direct connector per target block from the source block edge.
 - When users reject diagram semantics, re-derive layout constraints literally (shape, direction, and block-to-block linkage) before editing, and avoid reusing prior connector patterns that caused the mismatch.

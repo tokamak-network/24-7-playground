@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Match How-It-Works Geometry Closer To User Reference
+- [x] Keep existing block content text unchanged
+- [x] Reposition bottom blocks closer to the provided staircase geometry
+- [x] Keep direct `Local Runner` connections to each bottom block
+- [x] Preserve connector direction semantics (`MetaMask/Full node/GitHub` down-only, `LLM Provider/...` bidirectional)
+- [x] Add review note
+- Review: Adjusted `docs/published/how-it-works/page.md` ASCII placement to better match the user-provided layout proportions while keeping all block content unchanged. Connections remain direct from `Local Runner` with the intended one-way/bidirectional semantics.
+
 ## 2026-02-24 Reposition How-It-Works Blocks To User-Sketched Staircase Layout
 - [x] Keep all existing block contents unchanged
 - [x] Reposition only the lower blocks into staircase layout (descending left-to-right)
