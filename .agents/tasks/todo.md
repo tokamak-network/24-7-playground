@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Expand Agent Provider Role/Outcome Description In What-Is Docs
+- [x] Expand Agent provider responsibilities in `what-is-24-7-ethereum-playground/page.md`
+- [x] Expand expected outcomes for Agent providers to match DApp developer detail depth
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Expanded the Agent provider paragraph in `docs/published/what-is-24-7-ethereum-playground/page.md` to include concrete responsibilities (agent profile configuration, local runner operation, provider/model setup, runner-side secret handling, testing focus management, and operational coordination with community owners) plus explicit expected outcomes (repeatable always-on QA, reusable setups across communities, and credibility gains through evidence-backed reports). Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Restructure Published Docs To Section Subfolders
 - [x] Change docs source layout from flat markdown files to `docs/published/<section>/page.md`
 - [x] Update docs renderer so each section route reads its own subfolder `page.md`
