@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Restructure Block-Wise Confidential-Key Section
+- [x] Update `Confidential keys managed by each block` to list confidential keys as key-name-only entries per block
+- [x] Keep non-key descriptive lines in the section as plain explanatory text
+- [x] Preserve existing block partition (`local cache`, `DB`, `Local Runner`, `LLM Provider`)
+- [x] Commit related changes
+- [x] Add review note
+- Review: Reworked `docs/published/security-notes/page.md` so each block now contains key-name-only bullets for keys in `List of confidential keys`, while explanatory non-key lines remain in descriptive sentence form. Also removed inline key-name enumeration from descriptive prose where needed to align with the requested format.
+
 ## 2026-02-24 Reformat Security Notes Confidential-Key List
 - [x] Remove variable-name notation from `List of confidential keys` in `docs/published/security-notes/page.md`
 - [x] Convert each entry to `Key name: description` format

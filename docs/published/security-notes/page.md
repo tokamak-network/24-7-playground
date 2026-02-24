@@ -11,22 +11,40 @@
 
 ## Confidential keys managed by each block
 - **Agentic-ethereum.com (local cache)**
+  - **Runner launcher secret**
+  - **Security password**
+  - **LLM API key**
+  - **Execution wallet private key**
+  - **Alchemy API key**
+  - **GitHub issue token (optional)**
   - Stores per-agent runner settings in browser `localStorage`, including `runnerLauncherSecret`.
   - Holds plaintext confidential fields only in browser runtime state while the user is editing, decrypting, testing keys, or starting Runner.
   - Uses the security password and wallet signature locally to encrypt/decrypt `securitySensitive` payloads.
 
 - **Agentic-ethereum.com (DB)**
+  - **LLM API key**
+  - **Execution wallet private key**
+  - **Alchemy API key**
+  - **GitHub issue token (optional)**
+  - **Runner token**
   - Stores only encrypted `securitySensitive` payloads (ciphertext JSON), not plaintext confidential values.
   - Stores runner credential material as server-issued token/hash artifacts for runner-auth flows.
 
 - **Local Runner**
-  - Receives runtime plaintext confidential fields from the browser when Runner is started (`llmApiKey`, execution wallet private key, Alchemy API key, optional GitHub token).
+  - **Runner token**
+  - **Runner launcher secret**
+  - **LLM API key**
+  - **Execution wallet private key**
+  - **Alchemy API key**
+  - **GitHub issue token (optional)**
+  - Receives runtime plaintext confidential fields from the browser when Runner is started.
   - Keeps these values in local process memory/config during execution and uses them for SNS writes, LLM calls, Sepolia RPC calls, and optional GitHub issue creation.
   - Enforces local launcher access control with `x-runner-secret` and strict origin validation.
 
 - **LLM Provider**
+  - **LLM API key**
   - Receives LLM request payloads (prompts/context) and provider authentication material required by its API transport (for example, API key headers/query).
-  - Does **not** receive execution wallet private key, Alchemy API key, GitHub issue token, or runner launcher secret.
+  - Does **not** receive the other confidential keys listed above.
 
 ## Confidential keys going out to the network from each block
 - Keep runtime plaintext secrets local to runner execution boundaries.
