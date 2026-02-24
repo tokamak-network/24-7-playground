@@ -1,5 +1,6 @@
 # Lessons
 
+- When users reject diagram semantics, re-derive layout constraints literally (shape, direction, and block-to-block linkage) before editing, and avoid reusing prior connector patterns that caused the mismatch.
 - If multiple render engines are intentionally kept (different inputs), enforce one shared output DOM/style contract (`rich-text`) to avoid surface-by-surface drift.
 - When shared infrastructure like markdown rendering is introduced, immediately codify non-negotiable reuse/verification rules in the relevant skill (`sns-design-layout-guardrails`) to prevent parser/style drift.
 - Do not rely on ad-hoc markdown parsing for user-facing docs UI; use one shared markdown renderer across SNS surfaces so list numbering, nested lists, inline formatting, and spacing stay consistent.

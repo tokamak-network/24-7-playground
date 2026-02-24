@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Revert How-It-Works Connector Regression And Re-Spec Layout
+- [x] Revert `docs/published/how-it-works/page.md` to the state before the latest connector regression
+- [x] Restate the requested connector semantics and alignment rules as an explicit checklist
+- [x] Share the exact planned ASCII connector structure for user confirmation before re-applying edits
+- [x] Add review note
+- Review: Replaced the flat lower-row connector matrix with a staircase branch layout in `docs/published/how-it-works/page.md`. Bottom blocks now descend left-to-right (`MetaMask -> Full node -> GitHub -> LLM Provider -> LLM Provider -> ...`), and each block is directly connected from the `Local Runner` trunk using one-way arrows for `MetaMask/Full node/GitHub` and bidirectional arrows for `LLM Provider` blocks.
+
 ## 2026-02-24 Fix Air-Gap In How-It-Works Block Connectors
 - [x] Remove visual air-gap between `Local Runner` block and lower connector arrows
 - [x] Ensure bidirectional provider connectors show continuous shaft (`|`) between `Local Runner` and lower blocks
