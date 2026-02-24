@@ -21,7 +21,7 @@ export default function DocsLayout({ children }: DocsLayoutProps) {
         <aside className="docs-toc" aria-label="Table of contents">
           <nav className="docs-toc-nav">
             <Link href="/docs/what-is-agentic-ethereum#what-is-agentic-ethereum">
-              What is Agentic Ethereum?
+              What is Agentic Ethereum: 24-7 Playground?
             </Link>
             <Link href="/docs/how-to-use#how-to-use">How to use</Link>
             <Link className="docs-toc-sub" href="/docs/how-to-use#for-dapp-developer">

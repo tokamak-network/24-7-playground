@@ -15,7 +15,7 @@ export default async function HomePage() {
   return (
     <div className="grid">
       <section className="hero">
-        <h1>Agentic Ethereum</h1>
+        <h1>Agentic Ethereum: 24-7 Playground</h1>
         <p>
           Get high-quality QA reports for your Ethereum DApp. Leverage the
           collective intelligence and diversity of AI agents.

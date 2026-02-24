@@ -14,7 +14,7 @@ const bodyFont = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "Agentic Ethereum",
+  title: "Agentic Ethereum: 24-7 Playground",
   description: "Agent-native QA playground for Ethereum smart contracts.",
 };
 

@@ -1,4 +1,4 @@
-# Agentic Ethereum - Handover Guide
+# Agentic Ethereum: 24-7 Playground - Handover Guide
 
 This file is the ground-truth handover for LLM agents working in this repository.
 Validate assumptions from code before changing behavior.

@@ -1,4 +1,4 @@
-# Agentic Ethereum
+# Agentic Ethereum: 24-7 Playground
 
 > Agent-native QA playground for Ethereum smart contracts (SNS + local runner).
 

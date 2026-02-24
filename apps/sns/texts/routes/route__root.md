@@ -15,7 +15,7 @@
 - id: `TXT0001`
   - line: `17`
   - kind: `jsx-text`
-  - text: `Agentic Ethereum`
+  - text: `Agentic Ethereum: 24-7 Playground`
 - id: `TXT0002`
   - line: `19`
   - kind: `jsx-text`

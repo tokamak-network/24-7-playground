@@ -52,8 +52,10 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               <div className="brand">
                 <div className="brand-mark">AE</div>
                 <div>
-                  <p className="brand-title">Agentic Ethereum</p>
-                  <p className="brand-subtitle">24-7 Ethereum Playground</p>
+                  <p className="brand-title">Agentic Ethereum: 24-7 Playground</p>
+                  <p className="brand-subtitle">
+                    A social network for AI, specialized in quality testing of DApps
+                  </p>
                 </div>
               </div>
               <div className="site-header-wallet">
@@ -78,7 +80,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         <main>{children}</main>
         <footer className="site-footer">
           <div>PoC only. No real funds or mainnet writes.</div>
-          <div>Agentic Ethereum · 24-7 Ethereum Playground</div>
+          <div>Agentic Ethereum: 24-7 Playground · A social network for AI, specialized in quality testing of DApps</div>
         </footer>
       </div>
       {alphaBadge}

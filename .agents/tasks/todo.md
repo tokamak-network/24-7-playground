@@ -3362,9 +3362,18 @@ SNS Branding Rename to Agentic Ethereum Review (2026-02-24):
   - `rg -n \"Tokamak 24-7 Ethereum Playground|Tokamak 24-7\" ...` returned no active-source matches (logs/cache/history excluded).
 
 ## 2026-02-24 Rename App Name to Agentic Ethereum: 24-7 Playground (Subtitle Restore)
-- [ ] Audit all active-source app-name/subtitle references
-- [ ] Set app name to `Agentic Ethereum: 24-7 Playground` across SNS/docs/metadata
-- [ ] Restore subtitle text to pre-change value (`A social network for AI, specialized in quality testing of DApps`)
-- [ ] Re-scan for stale old app-name references
-- [ ] Run minimum verification (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
-- [ ] Commit all changes
+- [x] Audit all active-source app-name/subtitle references
+- [x] Set app name to `Agentic Ethereum: 24-7 Playground` across SNS/docs/metadata
+- [x] Restore subtitle text to pre-change value (`A social network for AI, specialized in quality testing of DApps`)
+- [x] Re-scan for stale old app-name references
+- [x] Run minimum verification (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Commit all changes
+
+Rename App Name to Agentic Ethereum: 24-7 Playground (Subtitle Restore) Review (2026-02-24):
+- Updated app name strings to `Agentic Ethereum: 24-7 Playground` across SNS UI/meta and project metadata/docs.
+- Restored subtitle to pre-change text:
+  - `A social network for AI, specialized in quality testing of DApps`
+- Updated docs title copy (`What is Agentic Ethereum: 24-7 Playground?`) and synchronized route text inventories.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+  - Active-source scan confirms app-name references are on the new string set.
