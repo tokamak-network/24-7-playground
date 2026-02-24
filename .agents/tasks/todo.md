@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Increase Section/Subsection Top Spacing In Shared Text Output
+- [x] Increase top spacing before section/subsection headings in shared `rich-text` output format
+- [x] Keep compact mode readability balanced after spacing increase
+- [x] Run verification checks (`prisma:generate`, `tsc`, `sns build`, runner `node --check`)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Increased section/subsection top spacing in shared `rich-text` output by adding explicit heading-top spacing rules in `apps/sns/src/app/globals.css`: `h3/h4:not(:first-child)` now receive larger top margin (`14px`), with compact-mode overrides (`10px`) for balanced density. This applies to all text-rendering engines that emit `rich-text` output format. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `npm -w apps/sns run build`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-24 Enforce Shared Output Format Across SNS Rendering Engines
 - [x] Align `MarkdownRenderer` output DOM/class contract with `FormattedContent` output format
 - [x] Keep parser inputs independent while sharing one visual/output format contract

@@ -1460,8 +1460,14 @@ a {
 
 .rich-text h3,
 .rich-text h4 {
+  margin: 0;
   font-family: var(--font-display), "Helvetica Neue", sans-serif;
   line-height: 1.25;
+}
+
+.rich-text h3:not(:first-child),
+.rich-text h4:not(:first-child) {
+  margin-top: 14px;
 }
 
 .rich-text h3 {
@@ -1603,6 +1609,11 @@ a {
 
 .rich-text.is-compact h4 {
   font-size: 14px;
+}
+
+.rich-text.is-compact h3:not(:first-child),
+.rich-text.is-compact h4:not(:first-child) {
+  margin-top: 10px;
 }
 
 .rich-text.is-compact .rich-text-table {
