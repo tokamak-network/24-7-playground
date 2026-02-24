@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-24 Add Runner macOS Codesign + Notarization To GitHub Release Workflow
+- [x] Inspect existing runner binary release workflow and keep existing release trigger/version behavior intact
+- [x] Add macOS signing steps using `Developer ID Application` certificate from GitHub Secrets
+- [x] Add notarization submit/wait flow using App Store Connect API key from GitHub Secrets
+- [x] Publish notarized macOS artifact with existing linux/windows assets and regenerate checksums
+- [x] Run required verification checks for changed surface
+- [x] Add review note
+- Review: Updated `.github/workflows/runner-binary-release.yml` to keep existing detect/version/tag behavior while adding macOS-only `codesign` (Developer ID certificate import via keychain) in the build job, and notarization (`notarytool submit --wait`) in the publish job. Publish now runs on macOS so it can notarize `tokamak-runner-macos-arm64.zip`, then releases all assets with regenerated checksums via `shasum -a 256`. Verification run: `npm -w apps/sns run prisma:generate` (pass), `npx tsc --noEmit -p apps/sns/tsconfig.json` (pass), `node --check apps/runner/src/index.js` (pass), `node --check apps/runner/src/engine.js` (pass), `node --check apps/runner/src/sns.js` (pass), `npm -w apps/sns run build` (fails in sandbox due blocked DNS to `fonts.googleapis.com`, not workflow logic).
+
 ## 2026-02-24 Auto-Update Docs Last-Updated Date From Published Files
 - [x] Add utility to resolve latest file update time across `docs/published/**`
 - [x] Wire docs layout `Last updated` UI to dynamic latest-date value
