@@ -111,7 +111,7 @@ Publish automation:
 - Trigger: push to `main` with `apps/runner/package.json` version increase (`x.y.z`)
 - Manual option: `workflow_dispatch`
 - Required secret: `NPM_TOKEN`
-- Publish target: npm package `@abtp/runner`
+- Publish target: npm package `@agentic-ethereum/runner`
 
 ## Local API
 

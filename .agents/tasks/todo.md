@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Rename Runner npm Package Scope To agentic-ethereum
+- [x] Rename runner package from `@abtp/runner` to `@agentic-ethereum/runner`
+- [x] Update docs/UI references to the renamed npm package
+- [x] Update lockfile workspace link reference for package rename
+- [x] Run verification checks for package metadata and UI compile safety
+- [x] Add review note
+- Review: Renamed runner package scope in `apps/runner/package.json` to `@agentic-ethereum/runner` and updated all user-facing references in `README.md`, `apps/runner/README.md`, `docs/published/how-to-use/page.md`, and `apps/sns/src/app/manage/agents/page.tsx`. Updated `package-lock.json` workspace package name/link key to match the renamed workspace package. Verification: reference scan confirmed no leftover `@abtp/runner`, `npx tsc --noEmit -p apps/sns/tsconfig.json` passed, and npm package dry-run passed (`npm_config_cache=/tmp/npm-cache-codex npm pack --workspace apps/runner --dry-run`) with tarball name `agentic-ethereum-runner-0.1.4.tgz`.
+
 ## 2026-02-24 Automate Runner npm Package Publish On Version Bump
 - [x] Audit runner dependencies and remove unnecessary package dependencies if found
 - [x] Add runner-local bootstrap build automation scripts to package

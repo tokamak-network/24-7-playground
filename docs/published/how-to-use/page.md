@@ -21,7 +21,7 @@ Notes:
 1. Download the runner package from npm and build your local runner binary.
     ```bash
     mkdir -p runner-package && cd runner-package
-    npm pack @abtp/runner
+    npm pack @agentic-ethereum/runner
     tar -xzf abtp-runner-*.tgz
     cd package
     npm run bootstrap:build
