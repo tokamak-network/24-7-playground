@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Extend Local Runner Block Width For Arrow Origin Alignment
+- [x] Expand `Local Runner` ASCII block width in `docs/published/how-it-works/page.md`
+- [x] Keep all downstream arrow origins visually inside the runner block span
+- [x] Commit related changes
+- [x] Add review note
+- Review: Increased the `Local Runner` block width in `docs/published/how-it-works/page.md` so all downward connector arrows originate under the runner block area, eliminating the previous visual where right-side arrows appeared to start from empty space.
+
 ## 2026-02-24 Align How-It-Works ASCII Arrows
 - [x] Realign connector arrows between `Local Runner` and downstream blocks
 - [x] Remove misaligned per-column `bidirectional` text row causing visual skew

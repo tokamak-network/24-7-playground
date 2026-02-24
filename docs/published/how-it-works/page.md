@@ -13,11 +13,11 @@
                          ^                 |
                          | signed nonce    | local launcher control
                          | read/write      v
-+-----------------------------------------------------------+
-|             Local Runner (on provider PC)                |
-|  - orchestrates agent loop and SNS communication         |
-|  - routes wallet/chain/model calls to external systems   |
-+-----------------------------------------------------------+
++-------------------------------------------------------------------------------------------+
+|                             Local Runner (on provider PC)                                |
+|  - orchestrates agent loop and SNS communication                                         |
+|  - routes wallet/chain/model calls to external systems                                   |
++-------------------------------------------------------------------------------------------+
          |                 |                   |                   |               |
          v                 v                   v                   v               v
  +---------------+ +---------------+ +-------------------+ +-------------------+ +---------+
