@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Remove Runner Binary Release GitHub Actions Pipeline
+- [x] Remove `.github/workflows/runner-binary-release.yml`
+- [x] Remove or rewrite user/operator docs that claim automatic runner binary releases
+- [x] Update SNS manage-agents runner card copy to avoid dead GitHub Releases guidance
+- [x] Verify changed code/docs compile and references are consistent
+- [x] Add review note
+- Review: Removed the binary release workflow file `.github/workflows/runner-binary-release.yml` to fully disable GitHub Actions-based runner binary release automation. Updated operator/user docs (`README.md`, `apps/runner/README.md`, `docs/published/how-to-use/page.md`) to instruct local runner build flow instead of GitHub Releases downloads, and updated SNS manage-agents runner card copy in `apps/sns/src/app/manage/agents/page.tsx` to remove stale release-link guidance. Verification: `rg` check confirmed no remaining release-pipeline references in touched docs/UI text, and baseline checks passed (`npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`).
+
 ## 2026-02-24 Ship macOS Runner As Notarized Installer Package
 - [x] Switch macOS release artifact from raw binary/zip to signed `.pkg`
 - [x] Keep macOS binary codesign in build stage and add installer-sign identity validation

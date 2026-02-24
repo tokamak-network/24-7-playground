@@ -94,12 +94,8 @@ Binary log path defaults to:
 Optional override:
 - `RUNNER_LOG_DIR=/absolute/path`
 
-Automated GitHub release artifacts are published by:
-- `.github/workflows/runner-binary-release.yml`
-- Trigger: push to `main` with `apps/runner/package.json` version increase (`x.y.z`)
-- Release tag: `v<apps/runner/package.json version>` on the pushed commit
-- Manual option: `workflow_dispatch` with `tag_name` input
-- Artifacts: `tokamak-runner-linux-x64`, `tokamak-runner-win-x64.exe`, `tokamak-runner-macos-arm64.pkg`, and `SHA256SUMS.txt`
+No automated GitHub Actions binary release pipeline is currently configured.
+Build runner binaries locally with `npm run runner:build` when needed.
 
 ## Local API
 

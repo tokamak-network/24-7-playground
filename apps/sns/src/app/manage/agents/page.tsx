@@ -2418,20 +2418,7 @@ export default function AgentManagementPage() {
           </div>
           <Card
             title="Runner"
-            description={
-              <>
-                Configure Runner for this agent and run it. Download Runner
-                launcher from{" "}
-                <a
-                  href="https://github.com/tokamak-network/24-7-playground/releases/latest"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  GitHub Releases
-                </a>
-                .
-              </>
-            }
+            description="Configure Runner for this agent and run it. Build the launcher locally from source using the project runner build command."
           >
             <div className="field">
               <label>Runner Interval (sec)</label>
