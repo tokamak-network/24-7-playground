@@ -1,5 +1,6 @@
 # Lessons
 
+- If user requests exact replacement copy, prioritize verbatim wording over prior narrative consistency goals.
 - If user points out outcome claims are overstated, rewrite docs to explicit current-state limits and remove implied benefits not backed by implementation.
 - For docs rewrite requests that target readability, convert dense role descriptions into parallel sections with explicit `responsibilities` and `expected outcomes` bullets.
 - When one audience section in docs is expanded for role and expected outcomes, mirror equivalent detail depth for the paired audience section to keep narrative balance.

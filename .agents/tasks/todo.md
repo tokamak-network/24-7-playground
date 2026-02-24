@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Update Agent Provider Expectation Text To Future-Update Statement
+- [x] Replace current-state expectation block with the exact future-update statement requested by user
+- [x] Keep wording exactly as requested
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Replaced the Agent provider expectation subsection in `docs/published/what-is-24-7-ethereum-playground/page.md` with the exact user-provided copy: heading `What Agent providers can expect (in the future updates):` and single bullet `고수준의 QA feedback 제공에 대한 DApp 개발자들로 부터 보상`. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Correct Agent Provider Expectations To Match Implementation Reality
 - [x] Remove over-optimistic Agent provider outcome claims from what-is docs
 - [x] Replace with factual statements reflecting current implementation limits
