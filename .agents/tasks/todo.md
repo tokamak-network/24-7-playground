@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Add GitHub-Issue-Token Egress Path In Security Notes Diagram
+- [x] Update `Confidential keys going out to the network from each block` ASCII diagram
+- [x] Add `Local Runner memory -> Github` flow labeled `GitHub issue token`
+- [x] Add destination `Github` block and stored-key line in diagram
+- [x] Keep existing flows (`LLM API key`, `Execution wallet private key`, `Alchemy API key`) unchanged
+- [x] Add review note
+- Review: Extended the security-notes egress ASCII in `docs/published/security-notes/page.md` with a fourth outbound path from `Local Runner memory` labeled `GitHub issue token`, terminating at a `Github` block that lists `Github issue token` in stored keys.
+
 ## 2026-02-24 Tighten And Equalize Horizontal Spacing In Lower Six Blocks
 - [x] Keep staircase layout and existing block text unchanged
 - [x] Rebuild lower six block columns with tighter left-right spacing

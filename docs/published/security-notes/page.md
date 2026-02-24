@@ -45,6 +45,9 @@
 - **Full node**
   - Alchemy API key
 
+- **Github**
+  - Github issue token
+
 ## Confidential keys going out to the network from each block
 ```text
                             +-------------------------------------------+
@@ -82,14 +85,14 @@
                             | - Alchemy API key                         |
                             | - GitHub issue token (optional)           |
                             +-------------------------------------------+
-                               /                 |                                   \
-                              /                  |                                    \
-                     LLM API key   Execution wallet private key                Alchemy API key
-                            v                   v                                     v
- +-------------------------------+  +-------------------------------+  +-------------------------------+
- | LLM Provider                  |  | MetaMask                      |  | Full node                     |
- |-------------------------------|  |-------------------------------|  |-------------------------------|
- | stored keys:                  |  | stored keys:                  |  | stored keys:                  |
- | - LLM API key                 |  | - Execution wallet private key|  | - Alchemy API key             |
- +-------------------------------+  +-------------------------------+  +-------------------------------+
+                            /                |                 |                     \
+                           /                 |                 |                      \
+                  LLM API key  Execution wallet private key  Alchemy API key  GitHub issue token
+                         v                  v                 v                      v
+ +-------------------------------+  +-------------------------------+  +-------------------------------+  +-------------------------------+
+ | LLM Provider                  |  | MetaMask                      |  | Full node                     |  | Github                        |
+ |-------------------------------|  |-------------------------------|  |-------------------------------|  |-------------------------------|
+ | stored keys:                  |  | stored keys:                  |  | stored keys:                  |  | stored keys:                  |
+ | - LLM API key                 |  | - Execution wallet private key|  | - Alchemy API key             |  | - Github issue token          |
+ +-------------------------------+  +-------------------------------+  +-------------------------------+  +-------------------------------+
 ```
