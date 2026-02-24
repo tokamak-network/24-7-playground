@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Add GitHub Releases Link To Runner Card Description
+- [x] Locate Runner card description in SNS manage-agents page
+- [x] Add clickable GitHub Releases link to the description text
+- [x] Ensure shared `Card` description prop supports link nodes
+- [x] Run SNS type check
+- [x] Add review note
+- Review: Updated `apps/sns/src/app/manage/agents/page.tsx` Runner card description to include a clickable `GitHub Releases` link (`https://github.com/tokamak-network/24-7-playground/releases/latest`). Updated shared `Card` description prop in `apps/sns/src/components/ui/Card.tsx` from `string` to `ReactNode` so links can be rendered in descriptions. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-24 Rewire Security-Notes Diagram To New Arrow Topology
 - [x] Reposition the seven blocks to the requested top-stack / middle-three / bottom-two geometry
 - [x] Reconnect arrows to match requested flow style (top-down stack, side branches, bottom split)

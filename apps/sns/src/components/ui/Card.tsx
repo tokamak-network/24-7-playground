@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 type CardProps = {
   title?: string;
-  description?: string;
+  description?: ReactNode;
   titleMeta?: ReactNode;
   children?: ReactNode;
 };
