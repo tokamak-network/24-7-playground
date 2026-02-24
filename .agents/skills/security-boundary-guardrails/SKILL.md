@@ -6,6 +6,9 @@ description: Enforce non-negotiable security boundaries for SNS and Runner upgra
 # Security Boundary Guardrails
 
 Read `docs/security/security_constraints.md` first.
+For runner key flows and block-wise key handling, also treat the following as authoritative:
+- `docs/published/security-notes/page.md`
+- `docs/published/how-it-works/page.md`
 
 ## 1) Security-Sensitive Key & Constant Inventory (Authoritative)
 
@@ -66,6 +69,31 @@ Read `docs/security/security_constraints.md` first.
 4. API response boundary
 - Never include `ApiKey.value`, runner plaintext token history, env secrets, wallet signatures, or plaintext securitySensitive fields in generic/admin/list APIs.
 - One-time issuance responses are the only exception surface for credential plaintext and must not be replay-exposed.
+
+## 2.1) Published Security Notes Key-Flow Contract (must stay synced)
+Keep these confidential keys and block mappings aligned with `docs/published/security-notes/page.md`:
+- Confidential key set: `LLM API key`, `Execution wallet private key`, `Alchemy API key`, `GitHub issue token (optional)`, `Runner launcher secret`, `Security password`, `Runner token`.
+- Browser-memory block stores user-entered confidential inputs during edit/runtime.
+- Server-DB block stores:
+  - encrypted confidential payload bundle (no plaintext),
+  - runner token (credential for SNS API auth).
+- Local Runner memory block may hold runtime plaintext for execution.
+
+DB encryption contract for confidential payload must remain:
+- AES-256-GCM (`crypto.subtle`, 12-byte IV)
+- HKDF-SHA-256 key derivation
+- current v2 key material: recovered signer address from `24-7-playground-security` signature + `Security password`
+- legacy v1 decrypt compatibility: raw signature + `Security password`
+
+Network egress contract must remain:
+- `Agentic-ethereum.com (local browser memory) -> Agentic-ethereum.com (server DB)`: encrypted confidential payload only.
+- `Local Runner memory -> Agentic-ethereum.com (server DB)`: runner token.
+- `Local Runner memory -> LLM Provider`: LLM API key.
+- `Local Runner memory -> MetaMask`: execution wallet private key.
+- `Local Runner memory -> Full node`: Alchemy API key.
+- `Local Runner memory -> GitHub`: GitHub issue token (optional).
+
+Do not introduce new plaintext secret egress paths without simultaneously updating `docs/published/security-notes/page.md`.
 
 ## 3) Non-Negotiable Invariants
 - Keep runner auth on `x-runner-token + x-agent-id`; do not depend on owner browser session for 24/7 liveness.

@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Sync Guardrail Skills To Published Docs Source-Of-Truth
+- [x] Extract latest protocol/security facts from `docs/published/how-it-works/page.md` and `docs/published/security-notes/page.md`
+- [x] Update related skills (`runner-communication-protocol-guardrails`, `security-boundary-guardrails`, `docs-and-handover-guardrails`) to match published docs
+- [x] Update lessons with the new source-of-truth synchronization rule
+- [x] Verify updated skill wording for consistency and no stale contradictions
+- [x] Add review note
+- Review: Synced guardrail skills to the latest published docs. `runner-communication-protocol-guardrails` now includes explicit actor-direction invariants from `docs/published/how-it-works/page.md`. `security-boundary-guardrails` now includes authoritative key inventory/storage/egress and encryption contract alignment from `docs/published/security-notes/page.md`. `docs-and-handover-guardrails` now requires synchronized updates of published docs and related skills for communication/security changes.
+
 ## 2026-02-24 Add GitHub Releases Link To Runner Card Description
 - [x] Locate Runner card description in SNS manage-agents page
 - [x] Add clickable GitHub Releases link to the description text

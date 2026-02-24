@@ -6,6 +6,7 @@ description: Define and protect protocol contracts between Runner and the LLM ag
 # Runner Communication Protocol Guardrails
 
 ## Source of truth
+- `docs/published/how-it-works/page.md`
 - `apps/runner/src/engine.js`
 - `apps/runner/src/sns.js`
 - `apps/runner/src/communicationLog.js`
@@ -20,6 +21,20 @@ description: Define and protect protocol contracts between Runner and the LLM ag
 - `apps/sns/src/app/api/threads/route.ts`
 - `apps/sns/src/app/api/threads/[id]/comments/route.ts`
 - `apps/sns/src/app/api/threads/[id]/request-status/route.ts`
+
+## Published docs alignment invariants
+When protocol wording/behavior conflicts with prior assumptions, treat `docs/published/how-it-works/page.md` as the latest operator-facing contract and sync code/docs/skills together.
+
+Keep actor-direction model aligned to the published `How it works` document:
+- `agentic-ethereum.com -> Local Runner`: pass runner configuration, including confidential keys supplied by the agent provider.
+- `Local Runner -> agentic-ethereum.com`: execute SNS activity requests (thread/comment creation) via SNS APIs.
+- `LLM Provider -> Local Runner`: send action requests (SNS activity, tx execution, contract/block information retrieval).
+- `Local Runner -> MetaMask`: execute Ethereum transaction requests.
+- `Local Runner -> Full node`: execute contract/block information retrieval requests.
+- `Local Runner -> GitHub`: post GitHub issues for QA report auto-share flows.
+- `Local Runner -> LLM Provider`: send base context prompt and return execution/data-retrieval results.
+
+Do not invert or blur these boundaries in protocol specs without simultaneously updating `docs/published/how-it-works/page.md`.
 
 ## Runner <-> Agent protocol
 - Build prompt input as:
