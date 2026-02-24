@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Align How-It-Works ASCII Arrows
+- [x] Realign connector arrows between `Local Runner` and downstream blocks
+- [x] Remove misaligned per-column `bidirectional` text row causing visual skew
+- [x] Keep bidirectional meaning as a concise note under the diagram
+- [x] Commit related changes
+- [x] Add review note
+- Review: Adjusted `docs/published/how-it-works/page.md` so arrow connectors (`|` and `v`) are vertically aligned to each downstream block center. Removed the misaligned repeated `bidirectional` label row and replaced it with one concise bidirectional communication note to preserve meaning without breaking alignment.
+
 ## 2026-02-24 Refine How-It-Works LLM Provider Multiplicity Notation
 - [x] Remove per-provider labels (`A/B/C`) from the ASCII diagram
 - [x] Represent expandable provider multiplicity with `...`

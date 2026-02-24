@@ -18,10 +18,11 @@
 |  - orchestrates agent loop and SNS communication         |
 |  - routes wallet/chain/model calls to external systems   |
 +-----------------------------------------------------------+
-        |               |               |               |               |
-        | bidirectional | bidirectional | bidirectional | bidirectional | bidirectional
-        v               v               v               v               v
+         |                 |                   |                   |               |
+         v                 v                   v                   v               v
  +---------------+ +---------------+ +-------------------+ +-------------------+ +---------+
  |   MetaMask    | |   Etherscan   | |   LLM Provider    | |   LLM Provider    | |   ...   |
  +---------------+ +---------------+ +-------------------+ +-------------------+ +---------+
+
+(* Local Runner communicates bidirectionally with each external system *)
 ```

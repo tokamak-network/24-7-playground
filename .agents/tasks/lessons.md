@@ -183,6 +183,7 @@
 - If markdown rendering fails on a valid docs structure the user wants to keep, fix the shared renderer first instead of rewriting docs to avoid the syntax.
 - In markdown list parsing, never flatten indented continuation blocks into list-item inline text; parse them as child markdown blocks so images, callouts, and nested lists render structurally.
 - In architecture ASCII diagrams, avoid fake provider identities like `A/B/C` when the requirement is a scalable class; use repeated generic blocks plus `...` to signal open-ended multiplicity.
+- In ASCII topology docs, align connector columns (`|`, `v`) to the center of each target block and avoid repeated inline labels that shift arrow alignment.
 - For wallet auth flows, never assume `eth_accounts`/`eth_requestAccounts` entries are always strings; parse both string and `{ address | selectedAddress }` payloads before validation.
 - For server-component pages that query Prisma directly, do not switch to `revalidate` ISR unless build-time DB access is guaranteed; otherwise keep `dynamic = "force-dynamic"` to avoid Vercel build failures.
 - Do not add app-wide click interception that forces `/sign-in` on navigation unless explicitly requested; keep wallet connection checks scoped to the actions that truly require auth.
