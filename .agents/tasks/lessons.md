@@ -1,5 +1,6 @@
 # Lessons
 
+- After bumping any workspace package version (for example `apps/runner/package.json`), always sync and commit `package-lock.json` in the same change, or GitHub Actions `npm ci` will fail.
 - If user asks to add a statement to a specific role block, append it in that exact block instead of only editing parallel sections.
 - If user-provided copy conflicts with the project’s English-only docs rule, preserve intent but rewrite in English rather than copying non-English text verbatim.
 - If user requests exact replacement copy, prioritize verbatim wording over prior narrative consistency goals.
