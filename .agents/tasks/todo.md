@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Update How-To-Use Runner Log Default Paths
+- [x] Remove `RUNNER_LOG_DIR` mention from `docs/published/how-to-use/page.md`
+- [x] Add explicit default runner log paths for macOS/Linux and Windows
+- [x] Commit all related changes
+- [x] Add review note
+- Review: Updated `docs/published/how-to-use/page.md` to remove `RUNNER_LOG_DIR` mention and replaced it with OS-specific default log locations: `~/.tokamak-runner/logs` (macOS/Linux) and `C:\\Users\\<your-user>\\.tokamak-runner\\logs` (Windows).
+
 ## 2026-02-24 Add RUNNER_LOG_DIR Setup Guidance To How-To-Use
 - [x] Add `RUNNER_LOG_DIR` setup explanation in `docs/published/how-to-use/page.md`
 - [x] Include concrete command examples for macOS/Linux and Windows PowerShell
