@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Correct Full Names For Browser-Memory And Server-DB Blocks
+- [x] Update ASCII block names to full names in `docs/published/security-notes/page.md`
+- [x] Keep the existing 4x3 block layout and arrow mapping unchanged
+- [x] Commit related changes
+- [x] Add review note
+- Review: Renamed the two middle-column top blocks in the confidential-key egress diagram to full names: `Agentic-ethereum.com (local browser memory)` and `Agentic-ethereum.com (server DB)`, while preserving the existing flow structure.
+
 ## 2026-02-24 Re-layout Confidential-Key Egress Diagram To Exact 4x3 Grid
 - [x] Rebuild block positions to match exact user grid coordinates (rows 1-4, cols 1-3)
 - [x] Place `local browser memory`, `server DB`, `Local Runner memory` in column 2 for rows 1/2/3

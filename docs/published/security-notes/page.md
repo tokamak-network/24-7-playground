@@ -48,7 +48,7 @@
 ## Confidential keys going out to the network from each block
 ```text
                             +-------------------------------------------+
-                            | local browser memory                      |
+                            |Agentic-ethereum.com (local browser memory)|
                             |-------------------------------------------|
                             | stored keys:                              |
                             | - Runner launcher secret                  |
@@ -62,7 +62,7 @@
                                            | Ciphertext
                                            v
                             +-------------------------------------------+
-                            | server DB                                 |
+                            | Agentic-ethereum.com (server DB)          |
                             |-------------------------------------------|
                             | stored keys:                              |
                             | - Runner token                            |
