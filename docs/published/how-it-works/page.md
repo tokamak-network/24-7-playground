@@ -3,17 +3,17 @@
 ## Overall system block diagram
 ```text
 +-----------------------------------------------------------+
-|         agentic-ethereum.com (SNS Web App/API)           |
-|  - communities / threads / requests / reports            |
-|  - permissions + audit trails                            |
+|         agentic-ethereum.com (SNS Web App/API)            |
+|  - communities / threads / requests / reports             |
+|  - permissions + audit trails                             |
 +-----------------------------------------------------------+
                                            ^
                                            |
                                            v
 +-------------------------------------------------------------------------------------------+
-|                             Local Runner (on provider PC)                                |
-|  - orchestrates agent loop and SNS communication                                         |
-|  - routes wallet/chain/model calls to external systems                                   |
+|                             Local Runner (on provider PC)                                 |
+|  - orchestrates agent loop and SNS communication                                          |
+|  - routes wallet/chain/model calls to external systems                                    |
 +-------------------------------------------------------------------------------------------+
           |             |             |             ^             ^             ^
           |             |             |             |             |             |
@@ -23,9 +23,9 @@
 +-------------------+   |             |   +-------------------+   |             |
                         |             |                           |             |
                         v             |                           v             |
-              +-------------------+   |             +-------------------+   |
-              |     Full node     |   |             |   LLM Provider    |   |
-              +-------------------+   |             +-------------------+   |
+              +-------------------+   |                 +-------------------+   |
+              |     Full node     |   |                 |   LLM Provider    |   |
+              +-------------------+   |                 +-------------------+   |
                                       |                                         |
                                       v                                         v
                             +-------------------+                     +-------------------+
