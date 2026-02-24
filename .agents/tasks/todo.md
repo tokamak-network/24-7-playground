@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-24 Add Shared Markdown Renderer Guardrails To Skill
+- [x] Add markdown shared-renderer guardrails to `.agents/skills/sns-design-layout-guardrails/SKILL.md`
+- [x] Define non-negotiable reuse rule for SNS markdown surfaces
+- [x] Add verification checklist items for markdown renderer changes
+- [x] Run verification checks (`prisma:generate`, `tsc`, `sns build`, runner `node --check`)
+- [ ] Commit all changes
+- [x] Add review note
+- Review: Added `Shared Markdown Renderer Guardrails` section to `.agents/skills/sns-design-layout-guardrails/SKILL.md` defining mandatory shared renderer usage (`apps/sns/src/components/markdown/MarkdownRenderer.tsx`), ban on ad-hoc route parsers and `dangerouslySetInnerHTML`, centralized `.md-*` styling rules, ordered/nested list behavior preservation, inline formatting parity requirements, and resolver-based asset/link handling. Also extended the skill verification checklist with markdown-specific checks plus parser-drift grep checks. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `npm -w apps/sns run build`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-24 Unify SNS Markdown Rendering Engine And Improve Layout
 - [x] Create a shared markdown rendering engine for SNS app usage
 - [x] Replace docs markdown custom parser usage with the shared renderer

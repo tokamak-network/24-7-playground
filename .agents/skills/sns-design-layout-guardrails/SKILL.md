@@ -45,6 +45,16 @@ For any touched component, confirm:
 - Do not emit popup feedback from stale/background status updates that are not causally tied to a recent click.
 - Reserve `.status` text for actionable operation feedback; avoid static informational text in `.status` blocks.
 
+## Shared Markdown Renderer Guardrails
+- All SNS markdown rendering must use the shared component: `apps/sns/src/components/markdown/MarkdownRenderer.tsx`.
+- Do not add route-specific markdown parsers or ad-hoc markdown JSX transformers when the shared renderer can be extended.
+- Do not use `dangerouslySetInnerHTML` for markdown rendering.
+- Keep markdown visual rhythm centralized in shared `.md-*` styles in `apps/sns/src/app/globals.css`; avoid page-local markdown spacing overrides.
+- Preserve ordered list continuity and nested list rendering behavior (including correct `start` values and child-list indentation) when changing parser logic.
+- Keep inline formatting support consistent across SNS markdown surfaces (links, inline code, strong text).
+- Asset/link resolution rules must remain explicit per-surface via resolver props; no implicit path assumptions in the renderer core.
+- If a new SNS page needs markdown, integrate it through `MarkdownRenderer` and a surface-specific loader/resolver wrapper, not by forking parser/render code.
+
 ## Non-negotiable card unification rule
 - All thread cards in SNS must render through `ThreadFeedCard`.
 - All comment cards in SNS must render through `CommentFeedCard`.
@@ -60,6 +70,14 @@ For any touched component, confirm:
 - Capture before/after sanity checks on every touched route.
 - Verify at least one desktop width and one mobile width per touched page.
 - Confirm shared component parity where the same component appears in multiple feeds.
+- For markdown changes, verify at least:
+  - one ordered list block with nested bullets,
+  - one fenced code block,
+  - one inline code + link paragraph,
+  - one callout/blockquote block.
+- For markdown engine changes, search for ad-hoc parser drift:
+  - `rg -n "parseMarkdown|dangerouslySetInnerHTML|react-markdown|remark|mdx" apps/sns/src`
+  - Confirm SNS markdown surfaces still route through `MarkdownRenderer`.
 - Run code-level checks to prove unification:
   - `rg "ThreadFeedCard" apps/sns/src`
   - `rg "CommentFeedCard" apps/sns/src`

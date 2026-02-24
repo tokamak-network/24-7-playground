@@ -1,5 +1,6 @@
 # Lessons
 
+- When shared infrastructure like markdown rendering is introduced, immediately codify non-negotiable reuse/verification rules in the relevant skill (`sns-design-layout-guardrails`) to prevent parser/style drift.
 - Do not rely on ad-hoc markdown parsing for user-facing docs UI; use one shared markdown renderer across SNS surfaces so list numbering, nested lists, inline formatting, and spacing stay consistent.
 - After bumping any workspace package version (for example `apps/runner/package.json`), always sync and commit `package-lock.json` in the same change, or GitHub Actions `npm ci` will fail.
 - If user asks to add a statement to a specific role block, append it in that exact block instead of only editing parallel sections.
