@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Reformat Security Notes Confidential-Key List
+- [x] Remove variable-name notation from `List of confidential keys` in `docs/published/security-notes/page.md`
+- [x] Convert each entry to `Key name: description` format
+- [x] Preserve the same key set while improving reader-facing explanations
+- [x] Commit related changes
+- [x] Add review note
+- Review: Updated `docs/published/security-notes/page.md` so the confidential-key list no longer includes implementation variable names. Each item now uses a direct operator-facing format (`key name: description`) with concise role-oriented explanations.
+
 ## 2026-02-24 Fill Security Notes Confidential-Key Sections
 - [x] Inspect actual confidential-key fields and handling paths from SNS/Runner code
 - [x] Fill `List of confidential keys` in `docs/published/security-notes/page.md`

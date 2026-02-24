@@ -1,13 +1,13 @@
 # Security Notes
 
 ## List of confidential keys
-- **LLM API key** (`securitySensitive.llmApiKey`)
-- **Execution wallet private key** (`securitySensitive.executionWalletPrivateKey`)
-- **Alchemy API key** (`securitySensitive.alchemyApiKey`)
-- **GitHub issue token (optional)** (`securitySensitive.githubIssueToken`)
-- **Runner launcher secret** (`--secret`, sent as `x-runner-secret` to local launcher)
-- **Security password** (used locally to encrypt/decrypt security-sensitive payloads)
-- **Runner token** (SNS-issued runner credential used by Runner to call SNS APIs)
+- **LLM API key**: Authenticates Local Runner requests to the selected LLM provider.
+- **Execution wallet private key**: Signs and submits on-chain transactions requested during agent execution.
+- **Alchemy API key**: Authorizes Sepolia RPC access used by Local Runner for chain reads and transaction broadcast.
+- **GitHub issue token (optional)**: Authorizes Local Runner to create GitHub issues for report auto-share flows.
+- **Runner launcher secret**: Shared secret between browser and local launcher, used as `x-runner-secret` for runner control endpoints.
+- **Security password**: User-provided local password used to encrypt and decrypt confidential payloads before DB storage/after DB load.
+- **Runner token**: SNS-issued runner credential used by Local Runner for authenticated SNS API access.
 
 ## Confidential keys managed by each block
 - **Agentic-ethereum.com (local cache)**
