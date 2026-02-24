@@ -8,6 +8,7 @@ import { useOwnerSession } from "src/components/ownerSession";
 import {
   decryptAgentSecrets,
   encryptAgentSecrets,
+  SECURITY_SIGNING_MESSAGE,
 } from "src/lib/agentSecretsCrypto";
 import { reportUserError } from "src/lib/userErrorReporter";
 
@@ -48,6 +49,95 @@ type EncryptedSecurity = {
   iv: string;
   ciphertext: string;
 };
+
+const ENCRYPTED_SECURITY_NESTED_KEYS = [
+  "securitySensitive",
+  "encryptedSecrets",
+  "payload",
+  "data",
+  "value",
+] as const;
+const LEGACY_AGENT_SIGNIN_MESSAGE_PREFIX = "24-7-playground";
+
+function normalizeEncryptedSecurity(
+  value: unknown,
+  depth = 0
+): EncryptedSecurity | null {
+  if (depth > 4 || value == null) return null;
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    try {
+      return normalizeEncryptedSecurity(JSON.parse(trimmed), depth + 1);
+    } catch {
+      return null;
+    }
+  }
+
+  if (typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const iv = typeof record.iv === "string" ? record.iv.trim() : "";
+  const ciphertext =
+    typeof record.ciphertext === "string" ? record.ciphertext.trim() : "";
+
+  if (iv && ciphertext) {
+    const version = Number(record.v);
+    return {
+      v: Number.isFinite(version) ? version : undefined,
+      iv,
+      ciphertext,
+    };
+  }
+
+  for (const key of ENCRYPTED_SECURITY_NESTED_KEYS) {
+    const nested = normalizeEncryptedSecurity(record[key], depth + 1);
+    if (nested) return nested;
+  }
+
+  return null;
+}
+
+function pickFirstString(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  for (const value of values) {
+    if (typeof value === "string") return value;
+  }
+  return "";
+}
+
+function toSecuritySensitiveDraft(payload: unknown): SecuritySensitiveDraft {
+  if (!payload || typeof payload !== "object") {
+    return {
+      llmApiKey: "",
+      executionWalletPrivateKey: "",
+      alchemyApiKey: "",
+      githubIssueToken: "",
+    };
+  }
+
+  const raw = payload as Record<string, unknown>;
+  const nested =
+    raw.securitySensitive && typeof raw.securitySensitive === "object"
+      ? (raw.securitySensitive as Record<string, unknown>)
+      : raw;
+
+  return {
+    llmApiKey: pickFirstString(nested.llmApiKey, nested.llmKey),
+    executionWalletPrivateKey: pickFirstString(
+      nested.executionWalletPrivateKey,
+      nested.executionKey
+    ),
+    alchemyApiKey: pickFirstString(nested.alchemyApiKey, nested.alchemyKey),
+    githubIssueToken: pickFirstString(
+      nested.githubIssueToken,
+      nested.githubToken,
+      nested.githubPat
+    ),
+  };
+}
 
 type SecuritySensitiveDraft = {
   llmApiKey: string;
@@ -259,6 +349,7 @@ export default function AgentManagementPage() {
     useState<EncryptedSecurity | null>(null);
   const [securityPassword, setSecurityPassword] = useState("");
   const [securitySignature, setSecuritySignature] = useState("");
+  const [legacyCommunitySignature, setLegacyCommunitySignature] = useState("");
   const [securityPasswordMode, setSecurityPasswordMode] =
     useState<SecurityPasswordMode>("none");
   const decryptPasswordRowRef = useRef<HTMLDivElement | null>(null);
@@ -675,8 +766,16 @@ export default function AgentManagementPage() {
         return;
       }
       const data = await response.json();
-      const encrypted = data?.securitySensitive as EncryptedSecurity | null;
-      setEncryptedSecurity(encrypted || null);
+      const encrypted = normalizeEncryptedSecurity(data?.securitySensitive);
+      setEncryptedSecurity(encrypted);
+      if (!encrypted && data?.securitySensitive != null) {
+        pushBubble(
+          "error",
+          "Loaded encrypted payload format is unsupported. Re-enter confidential values and save again.",
+          anchorEl
+        );
+        return;
+      }
       pushBubble(
         encrypted ? "success" : "error",
         encrypted
@@ -705,13 +804,43 @@ export default function AgentManagementPage() {
     try {
       const provider = new BrowserProvider(ethereum);
       const signer = await provider.getSigner();
-      const message = "24-7-playground-security";
-      const signature = await signer.signMessage(message);
+      const signature = await signer.signMessage(SECURITY_SIGNING_MESSAGE);
       setSecuritySignature(signature);
       pushBubble("success", "Signature generated.", anchorEl);
       return signature;
     } catch {
       pushBubble("error", "Failed to generate signature.", anchorEl);
+      return null;
+    }
+  };
+
+  const acquireLegacyCommunitySignature = async (
+    communitySlug: string,
+    anchorEl?: HTMLElement | null
+  ) => {
+    const slug = String(communitySlug || "").trim();
+    if (!slug) return null;
+
+    const cachedSignature = legacyCommunitySignature.trim();
+    if (cachedSignature) {
+      return cachedSignature;
+    }
+
+    const ethereum = (window as any).ethereum;
+    if (!ethereum) {
+      pushBubble("error", "MetaMask not detected.", anchorEl);
+      return null;
+    }
+
+    try {
+      const provider = new BrowserProvider(ethereum);
+      const signer = await provider.getSigner();
+      const signature = await signer.signMessage(
+        `${LEGACY_AGENT_SIGNIN_MESSAGE_PREFIX}${slug}`
+      );
+      setLegacyCommunitySignature(signature);
+      return signature;
+    } catch {
       return null;
     }
   };
@@ -731,29 +860,67 @@ export default function AgentManagementPage() {
     }
     setSecurityBusy(true);
     try {
-      const decrypted = (await decryptAgentSecrets(
+      const decrypted = await decryptAgentSecrets(
         signature,
         securityPassword,
         encryptedSecurity
-      )) as Partial<SecuritySensitiveDraft>;
-      setSecurityDraft({
-        llmApiKey: String(decrypted?.llmApiKey || ""),
-        executionWalletPrivateKey: String(
-          decrypted?.executionWalletPrivateKey || ""
-        ),
-        alchemyApiKey: String(decrypted?.alchemyApiKey || ""),
-        githubIssueToken: String(decrypted?.githubIssueToken || ""),
-      });
+      );
+      const normalizedDraft = toSecuritySensitiveDraft(decrypted);
+      setSecurityDraft(normalizedDraft);
       pushBubble("success", "Security-sensitive data has been decrypted.", anchorEl);
-      if (String(decrypted?.llmApiKey || "").trim()) {
+      if (String(normalizedDraft.llmApiKey || "").trim()) {
         void fetchModelsByApiKey({
           showSuccessBubble: false,
-          llmApiKeyOverride: String(decrypted?.llmApiKey || ""),
+          llmApiKeyOverride: String(normalizedDraft.llmApiKey || ""),
         });
       }
       return true;
     } catch {
-      pushBubble("error", "Decryption failed. Check password/signature.", anchorEl);
+      const version = Number(encryptedSecurity?.v || 0);
+      const shouldTryLegacyCommunitySignature = version <= 1;
+      if (shouldTryLegacyCommunitySignature) {
+        const legacyCommunitySlug = String(
+          general?.community?.slug || selectedPair?.community?.slug || ""
+        ).trim();
+        const legacySignature = await acquireLegacyCommunitySignature(
+          legacyCommunitySlug,
+          anchorEl
+        );
+        if (legacySignature) {
+          try {
+            const decrypted = await decryptAgentSecrets(
+              legacySignature,
+              securityPassword,
+              encryptedSecurity
+            );
+            const normalizedDraft = toSecuritySensitiveDraft(decrypted);
+            setSecurityDraft(normalizedDraft);
+            pushBubble(
+              "success",
+              "Security-sensitive data has been decrypted.",
+              anchorEl
+            );
+            if (String(normalizedDraft.llmApiKey || "").trim()) {
+              void fetchModelsByApiKey({
+                showSuccessBubble: false,
+                llmApiKeyOverride: String(normalizedDraft.llmApiKey || ""),
+              });
+            }
+            return true;
+          } catch {
+            // Keep primary failure context below.
+          }
+        }
+      }
+
+      const legacyVersion = Number(encryptedSecurity?.v || 0) === 1;
+      pushBubble(
+        "error",
+        legacyVersion
+          ? "Decryption failed. This legacy ciphertext needs the same old signing context (community-signature + password). If it still fails, re-enter values and save to migrate."
+          : "Decryption failed. Check password and wallet signature.",
+        anchorEl
+      );
       return false;
     } finally {
       setSecurityBusy(false);
@@ -1694,6 +1861,7 @@ export default function AgentManagementPage() {
     setSecurityPasswordMode("none");
     setSecurityPassword("");
     setSecuritySignature("");
+    setLegacyCommunitySignature("");
     setRunnerRunning(false);
     setSecurityDraft({
       llmApiKey: "",
@@ -1712,6 +1880,7 @@ export default function AgentManagementPage() {
 
   useEffect(() => {
     setSecuritySignature("");
+    setLegacyCommunitySignature("");
   }, [walletAddress]);
 
   useEffect(() => {

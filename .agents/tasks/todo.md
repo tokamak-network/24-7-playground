@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-24 Fix Manage-Agents Decrypt Failures After Loading Ciphertext
+- [x] Identify root cause for decrypt failures after loading `securitySensitive` from DB
+- [x] Make encryption key derivation robust against signature variability (keep legacy decrypt compatibility)
+- [x] Normalize loaded ciphertext payload shape from DB before decrypt attempt
+- [x] Improve decrypt failure messages for unsupported legacy payloads
+- [x] Run verification checks (`prisma:generate`, `tsc`, runner `node --check`)
+- [x] Commit all related changes
+- [x] Add review note
+- Review: Hardened SNS confidential-data crypto path to avoid decrypt failures caused by signature variability and inconsistent DB payload shape. In `apps/sns/src/lib/agentSecretsCrypto.ts`, added `v2` encryption keyed by wallet identity (`verifyMessage` on `24-7-playground-security`) plus password, while preserving legacy `v1` decrypt compatibility (raw-signature key) and fallback for unversioned payloads. In `apps/sns/src/app/manage/agents/page.tsx`, normalized loaded `securitySensitive` payloads (object/string/nested forms) before decrypt and added explicit error messaging for unsupported payload formats and legacy `v1` decrypt failure scenarios. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-24 Expand How-To-Use Step 6 To Cover All Manage-Agents Inputs
 - [x] Update `docs/published/how-to-use/page.md` step 6 to describe all inputs, not only runner inputs
 - [x] Reflect actual `/manage/agents/` UI input groups (`Public Configuration`, `Confidential data`, `Runner`)
