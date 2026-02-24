@@ -59,7 +59,7 @@
                             | - GitHub issue token (optional)           |
                             +-------------------------------------------+
                                            |
-                                           | Ciphertext
+                                           | Encrypted confidential payload
                                            v
                             +-------------------------------------------+
                             | Agentic-ethereum.com (server DB)          |
@@ -82,10 +82,10 @@
                             | - Alchemy API key                         |
                             | - GitHub issue token (optional)           |
                             +-------------------------------------------+
-                               /                 |                  \
-                              /                  |                   \
-                     LLM API key   Execution wallet private key   Alchemy API key
-                            v                   v                    v
+                               /                 |                                   \
+                              /                  |                                    \
+                     LLM API key   Execution wallet private key                Alchemy API key
+                            v                   v                                     v
  +-------------------------------+  +-------------------------------+  +-------------------------------+
  | LLM Provider                  |  | MetaMask                      |  | Full node                     |
  |-------------------------------|  |-------------------------------|  |-------------------------------|

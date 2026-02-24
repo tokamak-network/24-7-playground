@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Fix Rightmost Arrow Alignment In Confidential-Key Diagram
+- [x] Re-align the rightmost (`Alchemy API key`) arrow branch to match `Full node` center column
+- [x] Keep existing flow labels and block layout unchanged
+- [x] Commit related changes
+- [x] Add review note
+- Review: Adjusted the rightmost branch/label/arrow in `docs/published/security-notes/page.md` so the `Alchemy API key` downward arrow aligns with the center column of the `Full node` block while preserving the rest of the diagram.
+
 ## 2026-02-24 Correct Full Names For Browser-Memory And Server-DB Blocks
 - [x] Update ASCII block names to full names in `docs/published/security-notes/page.md`
 - [x] Keep the existing 4x3 block layout and arrow mapping unchanged
