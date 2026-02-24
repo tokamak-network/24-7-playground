@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Set Markdown Heading Scale To Exact Percentage Ratios
+- [x] Apply heading sizes by base-text ratio: H3 `130%`, H2 `160%`, H1 `200%`
+- [x] Keep docs markdown overrides consistent with the same ratios
+- [x] Keep compact markdown mode aligned to the same ratios
+- [x] Add review note
+- Review: Updated `apps/sns/src/app/globals.css` heading typography to exact base-relative ratios (`h1: 2em`, `h2: 1.6em`, `h3: 1.3em`) and aligned both normal and compact `rich-text` modes. Also synced `.docs-markdown.rich-text h1/h2/h3` to the same ratios so docs rendering cannot diverge from shared markdown scale. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-24 Fix Docs Heading Hierarchy Regression (H2 Larger Than H1)
 - [x] Prevent docs container heading selectors from overriding markdown heading hierarchy
 - [x] Add explicit docs-markdown heading scale so H1 > H2 > H3 is guaranteed
