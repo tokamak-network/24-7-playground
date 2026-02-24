@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Exclude Raw macOS Runner Binary From Release Assets
+- [x] Update runner release workflow so raw `tokamak-runner-macos-arm64` is not published as a release asset
+- [x] Keep notarization flow intact using zipped macOS artifact
+- [x] Verify workflow YAML parses successfully
+- [x] Add review note
+- Review: Added a post-notarization cleanup step in `.github/workflows/runner-binary-release.yml` to delete all raw `tokamak-runner-macos-arm64` files from `dist` before checksum generation and release upload. Notarization still uses `tokamak-runner-macos-arm64.zip` unchanged. Verification: workflow YAML parse check via `ruby -e "require 'yaml'; YAML.load_file(...)"` passed.
+
 ## 2026-02-24 Add Runner macOS Codesign + Notarization To GitHub Release Workflow
 - [x] Inspect existing runner binary release workflow and keep existing release trigger/version behavior intact
 - [x] Add macOS signing steps using `Developer ID Application` certificate from GitHub Secrets

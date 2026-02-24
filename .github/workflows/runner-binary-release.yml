@@ -236,6 +236,11 @@ jobs:
             --issuer "$APPSTORE_CONNECT_ISSUER_ID" \
             --wait
 
+      - name: Remove raw macOS binary from release assets
+        run: |
+          set -euo pipefail
+          find dist -type f -name 'tokamak-runner-macos-arm64' -delete
+
       - name: Build checksums
         run: |
           find dist -type f | LC_ALL=C sort | xargs shasum -a 256 > dist/SHA256SUMS.txt
