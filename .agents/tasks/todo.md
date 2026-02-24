@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Refine Confidential-Key Egress ASCII Arrows
+- [x] Ensure egress arrows are represented as block-origin to open-space (`->`) with key labels
+- [x] Remove local-launcher transfer depiction from `Agentic-ethereum.com (local browser memory)`
+- [x] Mark blocks with no direct confidential-key egress explicitly
+- [x] Commit related changes
+- [x] Add review note
+- Review: Updated `docs/published/security-notes/page.md` egress ASCII so outgoing lines are key-labeled open-space arrows and removed local-launcher transfer depiction for browser memory as requested. Added explicit `no egress` notes for blocks without direct confidential-key network egress in this model.
+
 ## 2026-02-24 Replace Network-Egress Section With Per-Block ASCII Diagrams
 - [x] Replace prose under `Confidential keys going out to the network from each block` with ASCII diagrams
 - [x] Show stored keys inside each block and outgoing confidential keys as rightward arrows

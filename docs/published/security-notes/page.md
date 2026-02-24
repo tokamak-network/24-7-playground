@@ -58,11 +58,8 @@
 | - Alchemy API key                                           |
 | - GitHub issue token (optional)                             |
 +-------------------------------------------------------------+
-  Runner launcher secret ------------------------------------->
-  LLM API key ------------------------------------------------>
-  Execution wallet private key ------------------------------->
-  Alchemy API key -------------------------------------------->
-  GitHub issue token (optional) ------------------------------>
+  (No confidential-key egress to external network in the normal flow)
+  (Local launcher transfer is intentionally omitted here)
 
 +-------------------------------------------------------------+
 | Agentic-ethereum.com (server DB)                           |
@@ -71,7 +68,7 @@
 | - Runner token                                              |
 | - Encrypted confidential payload                            |
 +-------------------------------------------------------------+
-  Runner token ----------------------------------------------->
+  (No direct confidential-key egress from this block)
 
 +-------------------------------------------------------------+
 | Local Runner memory                                         |
@@ -84,10 +81,10 @@
 | - Alchemy API key                                           |
 | - GitHub issue token (optional)                             |
 +-------------------------------------------------------------+
-  Runner token ----------------------------------------------->
-  LLM API key ------------------------------------------------>
-  Alchemy API key -------------------------------------------->
-  GitHub issue token (optional) ------------------------------>
+  Runner token ------------------------------>
+  LLM API key ----------------------------->
+  Alchemy API key ------------------------>
+  GitHub issue token (optional) ---------->
 
 +-------------------------------------------------------------+
 | LLM Provider                                                |
@@ -95,7 +92,7 @@
 | stored keys:                                                |
 | - LLM API key                                               |
 +-------------------------------------------------------------+
-  (no confidential keys from this list are sent out)
+  (No confidential-key egress from this list)
 
 +-------------------------------------------------------------+
 | MetaMask                                                    |
@@ -103,7 +100,7 @@
 | stored keys:                                                |
 | - Execution wallet private key                              |
 +-------------------------------------------------------------+
-  (no confidential keys from this list are sent out)
+  (No confidential-key egress from this list)
 
 +-------------------------------------------------------------+
 | Full node                                                   |
@@ -111,5 +108,5 @@
 | stored keys:                                                |
 | - Alchemy API key                                           |
 +-------------------------------------------------------------+
-  (no confidential keys from this list are sent out)
+  (No confidential-key egress from this list)
 ```

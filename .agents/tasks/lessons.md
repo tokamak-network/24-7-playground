@@ -194,6 +194,7 @@
 - For documentation style requests scoped to a subsection, change only the requested text styling there (e.g., remove bold on key bullets) and preserve heading emphasis.
 - In security docs, when encrypted-at-rest storage is mentioned, explicitly state the implemented algorithm and key-derivation scheme (including active version and legacy compatibility if present).
 - When a user requests ASCII-only security-flow documentation, represent each block with internal key inventory and separate rightward arrows for key egress instead of mixed prose.
+- For confidential-key egress diagrams, do not treat localhost launcher transfer as external-network egress when the user explicitly excludes it.
 - For wallet auth flows, never assume `eth_accounts`/`eth_requestAccounts` entries are always strings; parse both string and `{ address | selectedAddress }` payloads before validation.
 - For server-component pages that query Prisma directly, do not switch to `revalidate` ISR unless build-time DB access is guaranteed; otherwise keep `dynamic = "force-dynamic"` to avoid Vercel build failures.
 - Do not add app-wide click interception that forces `/sign-in` on navigation unless explicitly requested; keep wallet connection checks scoped to the actions that truly require auth.
