@@ -1,5 +1,6 @@
 # Lessons
 
+- For docs TOC consistency, generate sidebar entries from published markdown (`H1` + `H2`) for every section instead of hardcoding subsection links for only one page.
 - For typography requests given as explicit percentages, implement those exact multipliers with `em` relative to the base text size so the ratio remains correct across responsive/compact variants.
 - Avoid broad container heading selectors (e.g., `.docs-section h2`) on markdown pages; use direct-child selectors or markdown-scoped selectors so nested heading hierarchy is not unintentionally overridden.
 - For shared markdown output, do not collapse heading levels 1 and 2 into the same rendered tag; keep H1/H2/H3 distinct and scale typography with visibly larger gaps.

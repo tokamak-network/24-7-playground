@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { slugifyHeading } from "./headingSlug";
 
 type MarkdownRendererProps = {
   markdown: string;
@@ -36,14 +37,6 @@ function normalizeMarkdown(markdown: string) {
 
 function joinClassName(...tokens: Array<string | undefined>) {
   return tokens.filter(Boolean).join(" ");
-}
-
-function slugifyHeading(text: string) {
-  return text
-    .trim()
-    .toLowerCase()
-    .replace(/[`'"!@#$%^&*()_+=[\]{};:\\|,.<>/?~]/g, "")
-    .replace(/\s+/g, "-");
 }
 
 function parseImageAltMeta(rawAlt: string) {

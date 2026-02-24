@@ -1,12 +1,50 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { LAST_UPDATED_ISO, LAST_UPDATED_LABEL } from "./content";
+import {
+  fallbackSectionTitle,
+  loadPublishedMarkdown,
+  parsePublishedHeadings,
+} from "./publishedDocs";
+import { slugifyHeading } from "../../components/markdown/headingSlug";
 
 type DocsLayoutProps = {
   children: ReactNode;
 };
 
-export default function DocsLayout({ children }: DocsLayoutProps) {
+const DOC_SECTION_SLUGS = [
+  "what-is-agentic-ethereum",
+  "how-to-use",
+  "how-it-works",
+  "security-notes",
+  "troubleshooting",
+] as const;
+
+async function loadDocsTocItems() {
+  const items = await Promise.all(
+    DOC_SECTION_SLUGS.map(async (sectionSlug) => {
+      try {
+        const markdown = await loadPublishedMarkdown(sectionSlug);
+        const parsed = parsePublishedHeadings(markdown);
+        const titleFromMarkdown = parsed.h1 ?? parsed.h2[0]?.text ?? null;
+        const title = titleFromMarkdown ?? fallbackSectionTitle(sectionSlug);
+        const titleId = slugifyHeading(title);
+        const h2Items =
+          parsed.h1 == null && parsed.h2.length > 0 ? parsed.h2.slice(1) : parsed.h2;
+        return { sectionSlug, title, titleId, h2Items };
+      } catch {
+        const title = fallbackSectionTitle(sectionSlug);
+        return { sectionSlug, title, titleId: slugifyHeading(title), h2Items: [] };
+      }
+    })
+  );
+
+  return items;
+}
+
+export default async function DocsLayout({ children }: DocsLayoutProps) {
+  const tocItems = await loadDocsTocItems();
+
   return (
     <div className="grid docs-page">
       <section className="hero">
@@ -20,19 +58,20 @@ export default function DocsLayout({ children }: DocsLayoutProps) {
       <section className="card docs-layout-card">
         <aside className="docs-toc" aria-label="Table of contents">
           <nav className="docs-toc-nav">
-            <Link href="/docs/what-is-agentic-ethereum#what-is-agentic-ethereum">
-              What is Agentic Ethereum: 24-7 Playground?
-            </Link>
-            <Link href="/docs/how-to-use#how-to-use">How to use</Link>
-            <Link className="docs-toc-sub" href="/docs/how-to-use#for-dapp-developer">
-              For DApp developer
-            </Link>
-            <Link className="docs-toc-sub" href="/docs/how-to-use#for-agent-provider">
-              For Agent provider
-            </Link>
-            <Link href="/docs/how-it-works#how-it-works">How it works</Link>
-            <Link href="/docs/security-notes#security-notes">Security Notes</Link>
-            <Link href="/docs/troubleshooting#troubleshooting">Troubleshooting</Link>
+            {tocItems.map((item) => (
+              <div key={item.sectionSlug}>
+                <Link href={`/docs/${item.sectionSlug}#${item.titleId}`}>{item.title}</Link>
+                {item.h2Items.map((heading) => (
+                  <Link
+                    key={`${item.sectionSlug}-${heading.id}`}
+                    className="docs-toc-sub"
+                    href={`/docs/${item.sectionSlug}#${heading.id}`}
+                  >
+                    {heading.text}
+                  </Link>
+                ))}
+              </div>
+            ))}
           </nav>
         </aside>
 

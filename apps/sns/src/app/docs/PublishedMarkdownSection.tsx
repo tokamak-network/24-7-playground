@@ -1,30 +1,10 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { MarkdownRenderer } from "../../components/markdown/MarkdownRenderer";
+import { loadPublishedMarkdown } from "./publishedDocs";
 
 type PublishedMarkdownSectionProps = {
   sectionSlug: string;
   sectionId: string;
 };
-
-const PUBLISHED_DOCS_PATH_CANDIDATES = [
-  path.resolve(process.cwd(), "docs/published"),
-  path.resolve(process.cwd(), "../../docs/published"),
-];
-
-async function loadPublishedMarkdown(sectionSlug: string): Promise<string> {
-  const attempts: string[] = [];
-  for (const baseDir of PUBLISHED_DOCS_PATH_CANDIDATES) {
-    const filePath = path.join(baseDir, sectionSlug, "page.md");
-    attempts.push(filePath);
-    try {
-      return await readFile(filePath, "utf8");
-    } catch {
-      continue;
-    }
-  }
-  throw new Error(`Docs markdown file not found: ${attempts.join(", ")}`);
-}
 
 function toPublishedAssetHref(sectionSlug: string, rawPath: string) {
   const href = rawPath.trim();

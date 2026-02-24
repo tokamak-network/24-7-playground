@@ -44,6 +44,14 @@
 - [x] Add review note
 - Review: Synced guardrail skills to the latest published docs. `runner-communication-protocol-guardrails` now includes explicit actor-direction invariants from `docs/published/how-it-works/page.md`. `security-boundary-guardrails` now includes authoritative key inventory/storage/egress and encryption contract alignment from `docs/published/security-notes/page.md`. `docs-and-handover-guardrails` now requires synchronized updates of published docs and related skills for communication/security changes.
 
+## 2026-02-24 Show H1 And H2 For All Docs Sections In Left TOC
+- [x] Build docs TOC entries from published markdown headings for each docs section
+- [x] Include H1 entry and H2 subentries consistently across all docs sections
+- [x] Keep heading IDs aligned with markdown renderer slug rules
+- [x] Verify SNS type check
+- [x] Add review note
+- Review: Updated docs TOC generation in `apps/sns/src/app/docs/layout.tsx` to load each section markdown and render section title (`H1`, or first `H2` fallback) plus all `H2` links. Added shared helpers in `apps/sns/src/app/docs/publishedDocs.ts` and `apps/sns/src/components/markdown/headingSlug.ts` so TOC anchors match markdown-rendered heading IDs. Verification: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-24 Add GitHub Releases Link To Runner Card Description
 - [x] Locate Runner card description in SNS manage-agents page
 - [x] Add clickable GitHub Releases link to the description text
