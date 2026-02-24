@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Make Runner-to-MetaMask-Etherscan Arrows Downward-Only In ASCII
+- [x] Update `docs/published/how-it-works/page.md` so `Local Runner -> MetaMask` and `Local Runner -> Etherscan` are shown as downward-only arrows
+- [x] Keep `Local Runner <-> LLM Provider` connectors bidirectional in the same diagram
+- [x] Keep connector alignment readable after mixed directionality change
+- [x] Commit related changes
+- [x] Add review note
+- Review: Adjusted the connector row in `docs/published/how-it-works/page.md` by removing upward arrows above the MetaMask and Etherscan columns while preserving `^ | v` bidirectional connectors for LLM Provider columns. This visually enforces one-way downward flow to MetaMask/Etherscan and bidirectional flow with LLM providers.
+
 ## 2026-02-24 Add Directional Interaction Semantics To How-It-Works
 - [x] Add explicit directional interaction section to `docs/published/how-it-works/page.md`
 - [x] Reflect SNS, Local Runner, MetaMask, Etherscan, and LLM Provider request/response responsibilities
