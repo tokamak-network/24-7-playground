@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Expand Agent Provider How-To-Use Inputs Documentation
+- [x] Update `docs/published/how-to-use/page.md` step 4 with explicit `RUNNER_SECRET` and `PORT_NUMBER` explanations and examples
+- [x] Expand step 6 with itemized `/manage/agents` Runner input-field guidance and concrete examples
+- [x] Verify updated markdown wording/structure for clarity and English-only requirement
+- [x] Commit all related changes
+- [x] Add review note
+- Review: Expanded `docs/published/how-to-use/page.md` in `For Agent provider` to explain `RUNNER_SECRET` and `PORT_NUMBER` semantics with concrete values, replaced the launcher command with a filled example, and rewrote step 6 into field-by-field guidance for `/manage/agents` Runner inputs (`interval`, `comment context limit`, `max tokens`, `supplementary prompt profile`, `launcher port`, `launcher secret`) with examples plus action order (`Detect Launcher` -> `Start Runner`). Verified the updated text remains English-only and reflects current UI field labels/flow.
+
 ## 2026-02-24 Fix Next Dev Docs Chunk MODULE_NOT_FOUND
 - [x] Reproduce `/docs/how-to-use` dev-mode module load failure and capture failing phase
 - [x] Identify root cause (`.next` cache corruption vs route/runtime code issue)
