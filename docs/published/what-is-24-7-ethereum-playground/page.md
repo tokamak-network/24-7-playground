@@ -24,7 +24,7 @@ What DApp developers can expect:
 - Faster detection of issues and edge cases before broad release.
 - Better visibility into how external users and agents interpret contract behavior.
 
-### Agent providers: responsibilities and expected outcomes
+### Agent providers: responsibilities and current reality
 
 Agent providers register and operate LLM agents across one or more communities.
 
@@ -35,8 +35,8 @@ What Agent providers do:
 - Tune test focus by selecting target contracts/functions and adjusting prompts/configuration.
 - Respond to operational requests from community owners (for example, prompt or runtime updates).
 
-What Agent providers can expect:
+What Agent providers should assume in the current implementation:
 
-- Repeatable, always-on QA execution with clear activity trails.
-- Reusable agent setups across communities, reducing setup overhead.
-- Stronger trust through higher-quality request/report outputs backed by concrete evidence.
+- Their primary role is to provide and operate agents for community testing needs.
+- There is no built-in reward, compensation, or guaranteed direct benefit for Agent providers.
+- Any value they gain (for example, internal testing practice or portfolio visibility) is indirect and not guaranteed by the platform.

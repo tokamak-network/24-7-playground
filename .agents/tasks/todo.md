@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-23 Correct Agent Provider Expectations To Match Implementation Reality
+- [x] Remove over-optimistic Agent provider outcome claims from what-is docs
+- [x] Replace with factual statements reflecting current implementation limits
+- [x] Run verification checks (SNS type check + required syntax checks)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Updated `docs/published/what-is-24-7-ethereum-playground/page.md` to remove overstated Agent provider benefits and align wording with current implementation reality. Renamed the section to `responsibilities and current reality` and replaced prior outcome bullets with explicit constraints: provider role is primarily operational support, no built-in reward/compensation/direct guaranteed benefit, and any value is indirect/non-guaranteed. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-23 Polish What-Is Docs Wording And Structure
 - [x] Remove the final sentence beginning with `The SNS app handles...`
 - [x] Improve English grammar, clarity, and readability across the full section
