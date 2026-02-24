@@ -1,5 +1,12 @@
 # Project Plan
 
+## 2026-02-24 Switch Runner Release Install Step To npm install
+- [x] Change runner release workflow dependency install step from `npm ci` to `npm install`
+- [x] Verify workflow file diff and YAML integrity
+- [x] Commit the workflow change
+- [x] Add review note
+- Review: Updated `.github/workflows/runner-binary-release.yml` install step from `npm ci` to `npm install` so runner binary release jobs no longer fail on lockfile synchronization checks. Confirmed the change is isolated to the install command and workflow structure remains valid. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `npm -w apps/sns run build`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-24 Commit And Push Runner Version Bump For Auto Release
 - [x] Sync `apps/runner/package.json` and `package-lock.json` runner version to `0.1.1`
 - [x] Verify lock/package version alignment for runner workspace
