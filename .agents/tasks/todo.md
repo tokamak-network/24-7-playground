@@ -1,5 +1,15 @@
 # Project Plan
 
+## 2026-02-24 Unify SNS Markdown Rendering Engine And Improve Layout
+- [x] Create a shared markdown rendering engine for SNS app usage
+- [x] Replace docs markdown custom parser usage with the shared renderer
+- [x] Improve ordered-list numbering behavior for mixed nested list content
+- [x] Tune markdown spacing/typography (paragraph rhythm, list spacing, code/callout consistency)
+- [x] Run verification checks (`prisma:generate`, `tsc`, `sns build`, runner `node --check`)
+- [x] Commit all changes
+- [x] Add review note
+- Review: Added shared markdown engine `apps/sns/src/components/markdown/MarkdownRenderer.tsx` and switched docs runtime loader `apps/sns/src/app/docs/PublishedMarkdownSection.tsx` to use it, removing docs-only ad-hoc parsing logic. The shared engine now handles heading anchors, links, inline code, bold text, fenced code blocks, blockquotes, images, ordered list `start` values, and nested lists (so numbered steps remain stable around sub-bullets). Updated markdown style layer in `apps/sns/src/app/globals.css` to unified `.md-*` classes with improved paragraph rhythm and list spacing. Verification: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `npm -w apps/sns run build`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-24 Fix Runner Release Build Failure (Lockfile Sync)
 - [x] Sync `package-lock.json` with `apps/runner/package.json` version bump (`0.1.0`)
 - [ ] Verify CI-equivalent install step (`npm ci`) passes locally

@@ -1973,21 +1973,41 @@ a {
   line-height: 1.2;
 }
 
-.docs-markdown h3 {
+.md-root {
+  min-width: 0;
+  color: #2f4668;
+}
+
+.md-root > * {
+  margin: 0;
+}
+
+.md-root > * + * {
+  margin-top: 14px;
+}
+
+.md-h2 {
+  margin: 0;
+  font-family: var(--font-display), "Helvetica Neue", sans-serif;
+  font-size: clamp(26px, 2.6vw, 34px);
+  line-height: 1.15;
+}
+
+.md-h3 {
   margin: 0;
   font-family: var(--font-display), "Helvetica Neue", sans-serif;
   font-size: clamp(19px, 1.8vw, 24px);
   line-height: 1.2;
 }
 
-.docs-markdown-paragraph {
+.md-paragraph {
   margin: 0;
   color: #2f4668;
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.72;
 }
 
-.docs-inline-code {
+.md-inline-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.92em;
   color: #1b3f70;
@@ -1997,7 +2017,23 @@ a {
   padding: 0 6px;
 }
 
-.docs-callout {
+.md-strong {
+  color: #1f3f69;
+  font-weight: 700;
+}
+
+.md-link {
+  color: #1f4f8c;
+  text-decoration: underline;
+  text-decoration-color: rgba(31, 79, 140, 0.38);
+  text-underline-offset: 2px;
+}
+
+.md-link:hover {
+  text-decoration-color: rgba(31, 79, 140, 0.62);
+}
+
+.md-callout {
   margin: 0;
   border-radius: 12px;
   border: 1px solid #c8d8f1;
@@ -2008,7 +2044,11 @@ a {
   line-height: 1.5;
 }
 
-.docs-figure {
+.md-callout p {
+  margin: 0;
+}
+
+.md-figure {
   margin: 0;
   display: grid;
   gap: 8px;
@@ -2018,7 +2058,7 @@ a {
   padding: 10px;
 }
 
-.docs-figure img {
+.md-figure img {
   width: 100%;
   height: auto;
   display: block;
@@ -2026,13 +2066,13 @@ a {
   border: 1px solid #d3e0f2;
 }
 
-.docs-figure figcaption {
+.md-figure figcaption {
   color: #596b88;
   font-size: 12px;
   line-height: 1.4;
 }
 
-.docs-ascii {
+.md-code {
   margin: 0;
   overflow-x: auto;
   border-radius: 14px;
@@ -2044,14 +2084,34 @@ a {
   line-height: 1.42;
 }
 
-.docs-list {
+.md-list {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 1.55rem;
   color: #2f4668;
-  display: grid;
-  gap: 8px;
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.72;
+}
+
+.md-list + .md-list,
+.md-paragraph + .md-list,
+.md-list + .md-paragraph {
+  margin-top: 12px;
+}
+
+.md-list-item + .md-list-item {
+  margin-top: 0.55rem;
+}
+
+.md-list-item > .md-list {
+  margin-top: 0.55rem;
+}
+
+.md-list-ordered {
+  list-style: decimal;
+}
+
+.md-list-unordered {
+  list-style: disc;
 }
 
 .alpha-test-badge {
