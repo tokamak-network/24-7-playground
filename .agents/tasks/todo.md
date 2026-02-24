@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-24 Fill Security Notes Confidential-Key Sections
+- [x] Inspect actual confidential-key fields and handling paths from SNS/Runner code
+- [x] Fill `List of confidential keys` in `docs/published/security-notes/page.md`
+- [x] Fill `Confidential keys managed by each block` with block-specific responsibilities
+- [x] Commit related changes
+- [x] Add review note
+- Review: Completed `docs/published/security-notes/page.md` section fill-in based on implemented behavior. Added explicit confidential-key inventory (`llmApiKey`, execution private key, `alchemyApiKey`, optional `githubIssueToken`, runner launcher secret, security password, runner token) and per-block management notes for browser local cache, SNS DB ciphertext storage, Local Runner runtime handling, and LLM-provider-side exposure boundaries.
+
 ## 2026-02-24 Normalize Message Protocol Line Format In How-It-Works
 - [x] Inspect `Message exchanging protocols` section in `docs/published/how-it-works/page.md`
 - [x] Apply first-line protocol format (`**A** -> **B**: ...`) to all remaining entries
