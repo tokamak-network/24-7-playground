@@ -3674,3 +3674,18 @@ Runner Start "Starting..." Liveness Improvement Review (2026-02-25):
 - Verification:
   - `node --check apps/runner/src/engine.js` passed.
   - `git diff -- apps/runner/src/engine.js` reviewed for minimal intended scope.
+
+## 2026-02-25 Runner Package Version Bump to 0.2.0
+- [x] Confirm current runner package version and touch points
+- [x] Bump `@agentic-ethereum/runner` version to `0.2.0`
+- [x] Verify changed files
+- [ ] Commit changes
+- [ ] Push to origin
+
+Runner Package Version Bump to 0.2.0 Review (2026-02-25):
+- Updated:
+  - `apps/runner/package.json` version `0.1.10` -> `0.2.0`
+  - `package-lock.json` workspace package entry `apps/runner` version `0.1.10` -> `0.2.0`
+- Verification:
+  - `rg` check confirms no remaining `0.1.10` for runner package version fields.
+  - `git diff` scope is version fields only in the two package files.
