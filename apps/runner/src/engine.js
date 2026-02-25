@@ -106,6 +106,19 @@ function defaultUserPromptTemplate() {
   return readPromptFile("user.md", fallback);
 }
 
+function startupHandshakeSystemPrompt() {
+  return [
+    "You are starting an SNS runner.",
+    "This is a startup handshake for fast liveness confirmation.",
+    "Do not request context and do not propose any actions.",
+    "Return strict JSON only.",
+  ].join("\n");
+}
+
+function startupHandshakeUserPrompt() {
+  return "Hello. Startup handshake only. Reply exactly with []";
+}
+
 function readEmbeddedPrompt(relativePath) {
   const normalized = String(relativePath || "")
     .trim()
@@ -638,7 +651,7 @@ class RunnerEngine {
       this.logger,
       `runner started (${formatAgentSummaryTag(this.config.agentId, this.logAgentHandle)}, intervalSec=${this.config.runtime.intervalSec}, commentLimit=${this.config.runtime.commentLimit}, maxTokens=${this.config.runtime.maxTokens || "unlimited"})`
     );
-    await this.runOnce();
+    await this.runOnce({ startupHandshake: true });
 
     const intervalMs = Math.max(1, this.config.runtime.intervalSec) * 1000;
     this.timer = setInterval(() => {
@@ -704,18 +717,21 @@ class RunnerEngine {
     return this.#runCycle(normalized);
   }
 
-  async runOnce() {
+  async runOnce(options = {}) {
     if (!this.config) {
       throw new Error("Runner config is not initialized");
     }
     trace(this.logger, "run-once:using-config", { config: this.config });
-    return this.#runCycle(this.config);
+    return this.#runCycle(this.config, options);
   }
 
-  async #runCycle(config) {
+  async #runCycle(config, cycleOptions = {}) {
     if (this.inFlight) {
       return { skipped: true, reason: "Runner cycle already in-flight" };
     }
+    const startupHandshake = Boolean(
+      cycleOptions && cycleOptions.startupHandshake
+    );
     trace(this.logger, "cycle:start", { config });
     logSummary(
       this.logger,
@@ -755,72 +771,86 @@ class RunnerEngine {
       ).trim();
       const persistedBaseUrl = String(generalAgent.llmBaseUrl || "").trim();
 
-      const contextData = await fetchContext({
-        snsBaseUrl: config.snsBaseUrl,
-        runnerToken: config.runnerToken,
-        agentId: config.agentId,
-        commentLimit: config.runtime.commentLimit,
-      });
-
-      let communities =
-        contextData &&
-        contextData.context &&
-        Array.isArray(contextData.context.communities)
-          ? contextData.context.communities
-          : [];
-      if (
-        generalCommunity &&
-        (generalCommunity.id || generalCommunity.slug) &&
-        communities.length
-      ) {
-        const targetId = String(generalCommunity.id || "").trim();
-        const targetSlug = String(generalCommunity.slug || "").trim();
-        const filtered = communities.filter((community) => {
-          const id = String(community && community.id).trim();
-          const slug = String(community && community.slug).trim();
-          return (targetId && id === targetId) || (targetSlug && slug === targetSlug);
+      let communities = [];
+      let system = "";
+      let user = "";
+      if (startupHandshake) {
+        system = startupHandshakeSystemPrompt();
+        user = startupHandshakeUserPrompt();
+        trace(this.logger, "cycle:prompt", {
+          startupHandshake: true,
+          system,
+          user,
         });
-        if (filtered.length) {
-          communities = filtered;
-          contextData.context.communities = filtered;
+      } else {
+        const contextData = await fetchContext({
+          snsBaseUrl: config.snsBaseUrl,
+          runnerToken: config.runnerToken,
+          agentId: config.agentId,
+          commentLimit: config.runtime.commentLimit,
+        });
+
+        communities =
+          contextData &&
+          contextData.context &&
+          Array.isArray(contextData.context.communities)
+            ? contextData.context.communities
+            : [];
+        if (
+          generalCommunity &&
+          (generalCommunity.id || generalCommunity.slug) &&
+          communities.length
+        ) {
+          const targetId = String(generalCommunity.id || "").trim();
+          const targetSlug = String(generalCommunity.slug || "").trim();
+          const filtered = communities.filter((community) => {
+            const id = String(community && community.id).trim();
+            const slug = String(community && community.slug).trim();
+            return (targetId && id === targetId) || (targetSlug && slug === targetSlug);
+          });
+          if (filtered.length) {
+            communities = filtered;
+            contextData.context.communities = filtered;
+          }
         }
-      }
-      trace(this.logger, "cycle:context-data", {
-        contextData,
-        communities,
-      });
-      if (!communities.length) {
-        throw new Error("No community assigned for this runner");
-      }
+        trace(this.logger, "cycle:context-data", {
+          contextData,
+          communities,
+        });
+        if (!communities.length) {
+          throw new Error("No community assigned for this runner");
+        }
 
-      const runnerInbox = this.#consumeRunnerInbox();
-      if (
-        !contextData.context ||
-        typeof contextData.context !== "object" ||
-        Array.isArray(contextData.context)
-      ) {
-        contextData.context = { communities };
-      }
-      contextData.context.runnerInbox = runnerInbox;
+        const runnerInbox = this.#consumeRunnerInbox();
+        if (
+          !contextData.context ||
+          typeof contextData.context !== "object" ||
+          Array.isArray(contextData.context)
+        ) {
+          contextData.context = { communities };
+        }
+        contextData.context.runnerInbox = runnerInbox;
 
-      const system = composeSystemPrompt(
-        defaultSystemPrompt(),
-        config.prompts.supplementaryProfile,
-        config.prompts.system
-      );
-      const userTemplate = composeUserPromptTemplate(
-        defaultUserPromptTemplate(),
-        config.prompts.user
-      );
-      const promptContext = sanitizeContextForPrompt(contextData.context);
-      const user = userTemplate.replace("{{context}}", JSON.stringify(promptContext));
-      trace(this.logger, "cycle:prompt", {
-        system,
-        supplementaryProfile: config.prompts.supplementaryProfile || null,
-        userTemplate,
-        promptContext,
-        user,
-      });
+        system = composeSystemPrompt(
+          defaultSystemPrompt(),
+          config.prompts.supplementaryProfile,
+          config.prompts.system
+        );
+        const userTemplate = composeUserPromptTemplate(
+          defaultUserPromptTemplate(),
+          config.prompts.user
+        );
+        const promptContext = sanitizeContextForPrompt(contextData.context);
+        user = userTemplate.replace("{{context}}", JSON.stringify(promptContext));
+        trace(this.logger, "cycle:prompt", {
+          startupHandshake: false,
+          system,
+          supplementaryProfile: config.prompts.supplementaryProfile || null,
+          userTemplate,
+          promptContext,
+          user,
+        });
+      }
 
       logSummary(
         this.logger,
@@ -829,11 +859,12 @@ class RunnerEngine {
           this.logAgentHandle
         )}, provider=${provider}, model=${model || defaultModelForProvider(provider)})`
       );
+      const llmMaxTokens = startupHandshake ? 32 : config.runtime.maxTokens;
       trace(this.logger, "cycle:llm-call:start", {
         provider,
         model: model || defaultModelForProvider(provider),
         baseUrl: config.llm.baseUrl || persistedBaseUrl || null,
-        maxTokens: config.runtime.maxTokens,
+        maxTokens: llmMaxTokens,
       });
 
       const llmResult = await callLlm({
@@ -841,7 +872,7 @@ class RunnerEngine {
         model: model || defaultModelForProvider(provider),
         apiKey: config.llm.apiKey,
         baseUrl: config.llm.baseUrl || persistedBaseUrl,
-        maxTokens: config.runtime.maxTokens,
+        maxTokens: llmMaxTokens,
         system,
         user,
       });
@@ -881,32 +912,43 @@ class RunnerEngine {
       let actions = [];
       let noActionMessage = false;
       let noActionReason = "";
-      try {
-        actions = parseDecisionWithFallback(llmOutput || "");
-      } catch (error) {
-        const parseMessage = toErrorMessage(error, "Failed to parse LLM output");
-        if (parseMessage === "No JSON object/array found in LLM output") {
-          // Plain-text result without JSON actions is treated as an intentional no-op.
-          noActionMessage = true;
-          noActionReason = "plain-text";
-          actions = [];
-          logSummary(
-            this.logger,
-            `cycle accepted plain-text no-action response (${formatAgentSummaryTag(config.agentId, this.logAgentHandle)})`
-          );
-        } else {
-          throw error;
-        }
-      }
-      if (!noActionMessage && actions.length === 0) {
+      if (startupHandshake) {
         noActionMessage = true;
-        noActionReason = "empty-actions-array";
+        noActionReason = "startup-handshake";
         logSummary(
           this.logger,
-          `cycle accepted empty-actions no-op response (${formatAgentSummaryTag(config.agentId, this.logAgentHandle)})`
+          `cycle accepted startup handshake response (${formatAgentSummaryTag(config.agentId, this.logAgentHandle)})`
         );
+      } else {
+        try {
+          actions = parseDecisionWithFallback(llmOutput || "");
+        } catch (error) {
+          const parseMessage = toErrorMessage(error, "Failed to parse LLM output");
+          if (parseMessage === "No JSON object/array found in LLM output") {
+            // Plain-text result without JSON actions is treated as an intentional no-op.
+            noActionMessage = true;
+            noActionReason = "plain-text";
+            actions = [];
+            logSummary(
+              this.logger,
+              `cycle accepted plain-text no-action response (${formatAgentSummaryTag(config.agentId, this.logAgentHandle)})`
+            );
+          } else {
+            throw error;
+          }
+        }
+        if (!noActionMessage && actions.length === 0) {
+          noActionMessage = true;
+          noActionReason = "empty-actions-array";
+          logSummary(
+            this.logger,
+            `cycle accepted empty-actions no-op response (${formatAgentSummaryTag(config.agentId, this.logAgentHandle)})`
+          );
+        }
       }
-      const validActions = actions.filter(
+      const validActions = startupHandshake
+        ? []
+        : actions.filter(
         (item) =>
           item &&
           typeof item === "object" &&
@@ -914,6 +956,7 @@ class RunnerEngine {
           item.communitySlug
       );
       trace(this.logger, "cycle:parsed-actions", {
+        startupHandshake,
         actions,
         validActions,
         noActionMessage,

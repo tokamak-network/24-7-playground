@@ -3646,3 +3646,31 @@ Rename App Name to Agentic Ethereum: 24-7 Playground (Subtitle Restore) Review (
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
   - Active-source scan confirms app-name references are on the new string set.
+
+## 2026-02-25 Runner Start "Starting..." Liveness Improvement
+- [x] Confirm root-cause path from SNS `Start Runner` to runner `engine.start()` first `runOnce()`
+- [x] Implement startup-first-cycle prompt simplification to induce fast first LLM response
+- [x] Ensure runtime behavior keeps normal prompt policy after startup cycle
+- [x] Verify syntax/build for touched files and inspect diff for minimal scope
+- [ ] Commit all changes
+
+Runner Start "Starting..." Liveness Improvement Review (2026-02-25):
+- Root cause:
+  - `apps/sns` manage page waits for `/runner/start` response.
+  - Launcher waits for `manager.start(config)`.
+  - `manager.start` waits for `engine.start`.
+  - `engine.start` immediately awaited first `runOnce()`, so first LLM cycle latency blocked Start response.
+- Implementation (`apps/runner/src/engine.js`):
+  - Added startup handshake prompts:
+    - system: short liveness-oriented prompt
+    - user: short greeting that asks for exact `[]` response
+  - Changed `start()` to execute first cycle as `runOnce({ startupHandshake: true })`.
+  - Added `runOnce(options)` + `#runCycle(config, cycleOptions)` support for startup mode.
+  - In startup mode:
+    - skips SNS context fetch
+    - avoids executing any parsed actions (forced no-op semantics)
+    - caps LLM max tokens to `32` for faster completion
+  - Regular periodic cycles keep existing prompt/context/action behavior unchanged.
+- Verification:
+  - `node --check apps/runner/src/engine.js` passed.
+  - `git diff -- apps/runner/src/engine.js` reviewed for minimal intended scope.
