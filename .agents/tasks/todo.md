@@ -3652,7 +3652,7 @@ Rename App Name to Agentic Ethereum: 24-7 Playground (Subtitle Restore) Review (
 - [x] Implement startup-first-cycle prompt simplification to induce fast first LLM response
 - [x] Ensure runtime behavior keeps normal prompt policy after startup cycle
 - [x] Verify syntax/build for touched files and inspect diff for minimal scope
-- [ ] Commit all changes
+- [x] Commit all changes
 
 Runner Start "Starting..." Liveness Improvement Review (2026-02-25):
 - Root cause:
