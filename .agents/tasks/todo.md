@@ -1,12 +1,13 @@
 # Project Plan
 
 ## 2026-02-25 Bump Runner Version By 0.0.1 And Push
-- [ ] Bump `apps/runner/package.json` version by `+0.0.1`
-- [ ] Sync `package-lock.json` workspace runner version
-- [ ] Run verification floor for touched surfaces (`npx tsc --noEmit -p apps/sns/tsconfig.json`, runner `node --check` trio)
-- [ ] Commit all current changes
-- [ ] Push to `main`
-- [ ] Add review note
+- [x] Bump `apps/runner/package.json` version by `+0.0.1`
+- [x] Sync `package-lock.json` workspace runner version
+- [x] Run verification floor for touched surfaces (`npx tsc --noEmit -p apps/sns/tsconfig.json`, runner `node --check` trio)
+- [x] Commit all current changes
+- [x] Push to `main`
+- [x] Add review note
+- Review: Runner package version was bumped from `0.1.8` to `0.1.9` in `apps/runner/package.json` and synchronized in `package-lock.json` workspace entry. Verification passed: `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`. Committed and pushed to `main` as `1b6f2c5`.
 
 ## 2026-02-25 Log Secret Fingerprint Mismatch On Launcher Unauthorized
 - [x] Inspect current unauthorized branch in launcher auth check and existing safe logging helpers
