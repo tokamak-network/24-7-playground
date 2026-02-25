@@ -28,9 +28,10 @@ Notes:
 2. Download the runner package from npm and build your local runner binary.
     ```bash
     mkdir -p runner-package && cd runner-package
-    npm pack @agentic-ethereum/runner
-    tar -xzf agentic-ethereum-runner-*.tgz
+    PACK_FILE="$(npm pack @agentic-ethereum/runner@0.1.8)"
+    tar -xzf "$PACK_FILE"
     cd package
+    node -p "require('./package.json').version"
     npm run bootstrap:build
     npm run start -- --secret <RUNNER_SECRET> --port <PORT_NUMBER> --sns https://agentic-ethereum.com
     ```

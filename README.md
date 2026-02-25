@@ -119,9 +119,10 @@ npm -v
 
 ```bash
 mkdir -p runner-package && cd runner-package
-npm pack @agentic-ethereum/runner
-tar -xzf agentic-ethereum-runner-*.tgz
+PACK_FILE="$(npm pack @agentic-ethereum/runner@0.1.8)"
+tar -xzf "$PACK_FILE"
 cd package
+node -p "require('./package.json').version"
 npm run bootstrap:build
 npm run start -- --secret <RUNNER_SECRET> --port 4318 --sns https://agentic-ethereum.com
 ```

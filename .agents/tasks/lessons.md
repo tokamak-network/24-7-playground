@@ -1,5 +1,6 @@
 # Lessons
 
+- In installation docs, avoid wildcard archive extraction (`*.tgz`) when multiple versions may coexist locally; capture `npm pack` output filename and extract that exact archive to prevent stale-version installs.
 - For npm Trusted Publisher in GitHub Actions, use a toolchain that satisfies npm's minimum OIDC publish requirements (`node 22.14+`, `npm 11.5.1+`), otherwise publish can fail with `ENEEDAUTH` even when mapping is configured.
 - Do not switch publish workflows to `npm ci` unless workspace `package-lock.json` sync is enforced in the same change; otherwise CI can fail on lock drift and block release.
 - For docs metadata like “Last updated,” derive it from `docs/published/**` file timestamps instead of hardcoded constants so the docs shell always tracks real content updates.
@@ -139,6 +140,7 @@
 - Do not expose internal/security state banners by default (e.g., signature readiness/encrypted loaded) unless explicitly requested; keep UX focused on actionable controls and result feedback.
 - For validation errors triggered by a specific action button (e.g., missing password on encrypt), use anchored bubble/toast feedback at the button instead of inline status text that shifts card layout.
 - When a user requests section controls to be “at the top,” move the exact control block to the first field position inside that section card instead of only moving it upward within the middle of the form.
+- Request-time maintenance (like expired-community cleanup) must never run as full DB work on every hot route request; enforce single-flight + throttle and fail-open logging to avoid Prisma pool exhaustion.
 - In `Security Sensitive` management UI, avoid card-level status paragraphs entirely; use anchored bubbles for load/decrypt/signature/encrypt outcomes so no internal workflow text remains in layout.
 - For `Encrypt & Save` in manage-agents security UI, use error-only feedback: show bubble on failures, and show nothing on successful save unless explicitly requested.
 - When a user requests SNS-wide popup status behavior across many buttons, prefer one global bridge (status mutation observer + shared bubble host) over piecemeal per-component rewrites to keep behavior consistent.

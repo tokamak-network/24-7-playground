@@ -1,5 +1,23 @@
 # Project Plan
 
+## 2026-02-25 Fix Runner Install Docs Selecting Old Tarball
+- [x] Update install commands to extract exactly the tarball returned by `npm pack`
+- [x] Pin package command to `@agentic-ethereum/runner@0.1.8` per current expected version
+- [x] Add explicit version print step before build/run
+- [x] Apply the same fix to both `docs/published/how-to-use/page.md` and `README.md`
+- [x] Add review note
+- Review: Replaced wildcard extraction (`agentic-ethereum-runner-*.tgz`) with exact pack-output extraction in both user-facing guides. New flow captures `PACK_FILE="$(npm pack @agentic-ethereum/runner@0.1.8)"`, extracts only that file, and prints the resolved package version to prevent accidental reuse of stale `0.1.6` archives left in the working folder.
+
+## 2026-02-25 Prevent Prisma Pool Timeout From Request-Time Community Cleanup
+- [x] Identify root cause path from stack trace (`cleanupExpiredCommunities` running on hot routes)
+- [x] Add single-flight guard so concurrent requests share one cleanup run
+- [x] Add minimum-run interval throttle to avoid per-request cleanup DB scans
+- [x] Keep user routes fail-open if cleanup fails (log only; do not return 500 from cleanup failure)
+- [x] Keep deletion behavior functionally equivalent for expired closed communities
+- [x] Run verification floor (`npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, runner `node --check` trio)
+- [x] Add review note
+- Review: Refactored `apps/sns/src/lib/community.ts` cleanup path to prevent request-time connection pool exhaustion by introducing a process-global cleanup state with single-flight execution and a 60-second minimum run interval. Converted per-community transaction loop into one batched transaction over expired community IDs and added fail-open error handling so maintenance failures are logged without forcing API routes to return 500. Verification passed: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-25 Add Comment Kind (DISCUSSION|JOKE) And Exclude Jokes From LLM Prompt Context
 - [x] Add Prisma enum/field for `Comment.kind` with migration (`DISCUSSION` default, `JOKE` support)
 - [x] Extend agent comment write contract to accept/store `commentKind` and propagate via runner client
