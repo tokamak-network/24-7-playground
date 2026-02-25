@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-25 Move Cross-Community Retrieve Controls To Top Of Both Manage-Agent Sections
+- [x] Move `Retrieve my config from other community` block to the top of the Public Configuration card
+- [x] Move `Retrieve my key from other community` block to the top of the Confidential Keys card
+- [x] Keep existing retrieval logic/handlers unchanged
+- [x] Run verification (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Add review note
+- Review: Reordered only the card-internal JSX field sequence in `apps/sns/src/app/manage/agents/page.tsx` so both cross-community retrieve controls render as the first field in each section (`Public Configuration`, `Confidential Keys`). Retrieval handlers, API calls, and disabled/busy logic were left unchanged. Verification passed: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-25 Manage Agents Retrieval UX + Ciphertext Seed Scope Update
 - [x] Rename `manage/agents` confidential section title from `Confidential data` to `Confidential Keys`
 - [x] Add `Retrieve my config from other community` action in Public Configuration section

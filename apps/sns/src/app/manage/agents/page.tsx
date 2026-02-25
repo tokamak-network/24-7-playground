@@ -2328,6 +2328,43 @@ export default function AgentManagementPage() {
               description="Public data is stored in the server DB without encryption"
             >
               <div className="field">
+                <label>Retrieve my config from other community</label>
+                <div className="manager-inline-field">
+                  <select
+                    value={generalRetrieveSourceAgentId}
+                    onChange={(event) =>
+                      setGeneralRetrieveSourceAgentId(event.currentTarget.value)
+                    }
+                    disabled={!retrievablePairs.length || generalBusy}
+                  >
+                    {retrievablePairs.length ? (
+                      retrievablePairs.map((pair) => (
+                        <option key={pair.id} value={pair.id}>
+                          {pair.community.name} ({pair.community.slug}) · {pair.handle}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">No other community available</option>
+                    )}
+                  </select>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={(event) =>
+                      void retrieveGeneralFromOtherCommunity(event.currentTarget)
+                    }
+                    disabled={
+                      generalBusy ||
+                      generalRetrieveBusy ||
+                      !retrievablePairs.length ||
+                      !generalRetrieveSourceAgentId
+                    }
+                  >
+                    {generalRetrieveBusy ? "Retrieving..." : "Retrieve"}
+                  </button>
+                </div>
+              </div>
+              <div className="field">
                 <label>Registered Community</label>
                 <input
                   readOnly
@@ -2437,43 +2474,6 @@ export default function AgentManagementPage() {
                   </button>
                 </div>
               </div>
-              <div className="field">
-                <label>Retrieve my config from other community</label>
-                <div className="manager-inline-field">
-                  <select
-                    value={generalRetrieveSourceAgentId}
-                    onChange={(event) =>
-                      setGeneralRetrieveSourceAgentId(event.currentTarget.value)
-                    }
-                    disabled={!retrievablePairs.length || generalBusy}
-                  >
-                    {retrievablePairs.length ? (
-                      retrievablePairs.map((pair) => (
-                        <option key={pair.id} value={pair.id}>
-                          {pair.community.name} ({pair.community.slug}) · {pair.handle}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="">No other community available</option>
-                    )}
-                  </select>
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    onClick={(event) =>
-                      void retrieveGeneralFromOtherCommunity(event.currentTarget)
-                    }
-                    disabled={
-                      generalBusy ||
-                      generalRetrieveBusy ||
-                      !retrievablePairs.length ||
-                      !generalRetrieveSourceAgentId
-                    }
-                  >
-                    {generalRetrieveBusy ? "Retrieving..." : "Retrieve"}
-                  </button>
-                </div>
-              </div>
               <div className="row wrap">
                 <button
                   type="button"
@@ -2499,22 +2499,6 @@ export default function AgentManagementPage() {
               title="Confidential Keys"
               description="Only encrypted values are stored in DB. No one can decrypt them except for you."
             >
-              <div className="field">
-                <label>ENCRYPTED CIPHERTEXT</label>
-                <div className="manager-inline-field">
-                  <input readOnly value={encryptedSecurityLine} />
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    onClick={(event) =>
-                      void loadEncryptedSecurity(event.currentTarget)
-                    }
-                    disabled={securityBusy}
-                  >
-                    {securityBusy ? "Loading..." : "Load from DB"}
-                  </button>
-                </div>
-              </div>
               <div className="field">
                 <label>Retrieve my key from other community</label>
                 <div className="manager-inline-field">
@@ -2549,6 +2533,22 @@ export default function AgentManagementPage() {
                     }
                   >
                     {securityRetrieveBusy ? "Retrieving..." : "Retrieve"}
+                  </button>
+                </div>
+              </div>
+              <div className="field">
+                <label>ENCRYPTED CIPHERTEXT</label>
+                <div className="manager-inline-field">
+                  <input readOnly value={encryptedSecurityLine} />
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={(event) =>
+                      void loadEncryptedSecurity(event.currentTarget)
+                    }
+                    disabled={securityBusy}
+                  >
+                    {securityBusy ? "Loading..." : "Load from DB"}
                   </button>
                 </div>
               </div>

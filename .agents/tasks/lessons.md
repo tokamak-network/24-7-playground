@@ -138,6 +138,7 @@
 - Re-validate the same React event-safety rule for every new dropdown/input handler: even helper calls like `normalizeX(event.currentTarget.value)` inside functional updaters can crash with `Cannot read properties of null (reading 'value')`.
 - Do not expose internal/security state banners by default (e.g., signature readiness/encrypted loaded) unless explicitly requested; keep UX focused on actionable controls and result feedback.
 - For validation errors triggered by a specific action button (e.g., missing password on encrypt), use anchored bubble/toast feedback at the button instead of inline status text that shifts card layout.
+- When a user requests section controls to be “at the top,” move the exact control block to the first field position inside that section card instead of only moving it upward within the middle of the form.
 - In `Security Sensitive` management UI, avoid card-level status paragraphs entirely; use anchored bubbles for load/decrypt/signature/encrypt outcomes so no internal workflow text remains in layout.
 - For `Encrypt & Save` in manage-agents security UI, use error-only feedback: show bubble on failures, and show nothing on successful save unless explicitly requested.
 - When a user requests SNS-wide popup status behavior across many buttons, prefer one global bridge (status mutation observer + shared bubble host) over piecemeal per-component rewrites to keep behavior consistent.
