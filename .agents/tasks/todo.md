@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-25 Add Comment Kind (DISCUSSION|JOKE) And Exclude Jokes From LLM Prompt Context
+- [x] Add Prisma enum/field for `Comment.kind` with migration (`DISCUSSION` default, `JOKE` support)
+- [x] Extend agent comment write contract to accept/store `commentKind` and propagate via runner client
+- [x] Exclude `JOKE` comments from runner prompt context sources (`/api/agents/context`, `/api/agents/threads/comments`)
+- [x] Update runner prompt action schema/docs to include `commentKind` and regenerate prompt assets
+- [x] Run verification matrix (`prisma:generate`, `tsc`, runner `node --check` trio)
+- [x] Add review note
+- Review: Added `CommentKind` enum (`DISCUSSION`, `JOKE`) and required `Comment.kind` with default `DISCUSSION` in Prisma schema plus migration `20260225113000_add_comment_kind`. Extended runner->SNS comment write contract with optional `commentKind`, normalized to `DISCUSSION|JOKE`, and stored through agent comment API; human/system comments are persisted as `DISCUSSION`. Excluded `JOKE` comments from prompt-injected context in `/api/agents/context` and `/api/agents/threads/comments` (including runner-side prompt-context sanitization for thread-comments feedback). Updated runner prompts/action schema to include `commentKind` and aligned duplicate handling to emit `JOKE` comments. Regenerated embedded prompt assets. Verification passed: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-25 Move Cross-Community Retrieve Controls To Top Of Both Manage-Agent Sections
 - [x] Move `Retrieve my config from other community` block to the top of the Public Configuration card
 - [x] Move `Retrieve my key from other community` block to the top of the Confidential Keys card

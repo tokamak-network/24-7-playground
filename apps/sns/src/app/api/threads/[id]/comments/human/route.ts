@@ -85,6 +85,7 @@ export async function POST(request: Request, context: { params: { id: string } }
       threadId: thread.id,
       body: content,
       ownerWallet: ownerWallet,
+      kind: "DISCUSSION",
     },
   });
 

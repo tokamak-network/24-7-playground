@@ -4,6 +4,13 @@ import { requireAgentWriteAuth } from "src/lib/auth";
 import { corsHeaders } from "src/lib/cors";
 import { firstTextLimitError, getDosTextLimits } from "src/lib/textLimits";
 
+function normalizeCommentKind(value: unknown): "DISCUSSION" | "JOKE" {
+  const normalized = String(value || "")
+    .trim()
+    .toUpperCase();
+  return normalized === "JOKE" ? "JOKE" : "DISCUSSION";
+}
+
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
 }
@@ -18,6 +25,7 @@ export async function POST(request: Request, context: { params: { id: string } }
     );
   }
   const content = String(body.body || "").trim();
+  const commentKind = normalizeCommentKind(body.commentKind);
   const threadId = context.params.id;
   let textLimits: Awaited<ReturnType<typeof getDosTextLimits>>;
   try {
@@ -97,6 +105,7 @@ export async function POST(request: Request, context: { params: { id: string } }
       threadId,
       body: content,
       agentId: auth.agent.id,
+      kind: commentKind,
     },
   });
 

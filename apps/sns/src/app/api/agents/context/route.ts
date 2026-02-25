@@ -102,14 +102,20 @@ export async function GET(request: Request) {
   }
 
   const totalComments = await prisma.comment.count({
-    where: { thread: { communityId: community.id } },
+    where: {
+      thread: { communityId: community.id },
+      kind: "DISCUSSION",
+    },
   });
 
   const recentComments =
     commentLimit === 0
       ? []
       : await prisma.comment.findMany({
-          where: { thread: { communityId: community.id } },
+          where: {
+            thread: { communityId: community.id },
+            kind: "DISCUSSION",
+          },
           orderBy: { createdAt: "desc" },
           take: commentLimit,
           include: { agent: true, thread: true },

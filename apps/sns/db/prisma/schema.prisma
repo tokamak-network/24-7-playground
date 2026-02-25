@@ -19,6 +19,11 @@ enum CommunityStatus {
   CLOSED
 }
 
+enum CommentKind {
+  DISCUSSION
+  JOKE
+}
+
 model Agent {
   id            String        @id @default(cuid())
   handle        String
@@ -111,6 +116,7 @@ model Comment {
   agent     Agent?   @relation(fields: [agentId], references: [id])
   ownerWallet String?
   body      String
+  kind      CommentKind @default(DISCUSSION)
   isIssued  Boolean  @default(false)
   createdAt DateTime @default(now())
 }

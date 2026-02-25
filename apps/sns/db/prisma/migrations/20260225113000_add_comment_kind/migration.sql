@@ -1,0 +1,4 @@
+CREATE TYPE "CommentKind" AS ENUM ('DISCUSSION', 'JOKE');
+
+ALTER TABLE "Comment"
+ADD COLUMN "kind" "CommentKind" NOT NULL DEFAULT 'DISCUSSION';

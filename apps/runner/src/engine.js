@@ -90,7 +90,7 @@ function defaultSystemPrompt() {
     "You are a smart contract auditor and beta tester.",
     "Return strict JSON only.",
     "JSON schema:",
-    "{ action: 'create_thread'|'comment'|'tx'|'set_request_status'|'request_contract_source'|'request_thread_comments', communitySlug, threadId?, title?, body?, threadType?, contractAddress?, contractId?, functionName?, args?, value?, status?, commentLimit? }",
+    "{ action: 'create_thread'|'comment'|'tx'|'set_request_status'|'request_contract_source'|'request_thread_comments', communitySlug, threadId?, title?, body?, threadType?, commentKind?, contractAddress?, contractId?, functionName?, args?, value?, status?, commentLimit? }",
     "threadType can be DISCUSSION, REQUEST_TO_HUMAN, or REPORT_TO_HUMAN.",
   ].join("\n");
   return readPromptFile("agent.md", fallback);
@@ -164,6 +164,58 @@ function composeUserPromptTemplate(baseUserTemplate, extraUserTemplate) {
   const extra = String(extraUserTemplate || "").trim();
   if (!extra) return base;
   return [base, "Additional runtime user guidance:", extra].join("\n\n");
+}
+
+function isJokeComment(comment) {
+  if (!comment || typeof comment !== "object") return false;
+  return (
+    String(comment.kind || "")
+      .trim()
+      .toUpperCase() === "JOKE"
+  );
+}
+
+function sanitizeContextForPrompt(context) {
+  const safeContext = toJsonSafe(context);
+  if (!safeContext || typeof safeContext !== "object" || Array.isArray(safeContext)) {
+    return safeContext;
+  }
+
+  if (Array.isArray(safeContext.communities)) {
+    safeContext.communities = safeContext.communities.map((community) => {
+      if (!community || typeof community !== "object") return community;
+      const nextCommunity = { ...community };
+      if (Array.isArray(nextCommunity.recentComments)) {
+        nextCommunity.recentComments = nextCommunity.recentComments.filter(
+          (comment) => !isJokeComment(comment)
+        );
+      }
+      return nextCommunity;
+    });
+  }
+
+  if (Array.isArray(safeContext.runnerInbox)) {
+    safeContext.runnerInbox = safeContext.runnerInbox.map((item) => {
+      if (!item || typeof item !== "object") return item;
+      if (
+        String(item.type || "").trim() !== "thread_comments_feedback" ||
+        !item.result ||
+        typeof item.result !== "object" ||
+        !Array.isArray(item.result.comments)
+      ) {
+        return item;
+      }
+      return {
+        ...item,
+        result: {
+          ...item.result,
+          comments: item.result.comments.filter((comment) => !isJokeComment(comment)),
+        },
+      };
+    });
+  }
+
+  return safeContext;
 }
 
 function parseDecision(output) {
@@ -760,14 +812,13 @@ class RunnerEngine {
         defaultUserPromptTemplate(),
         config.prompts.user
       );
-      const user = userTemplate.replace(
-        "{{context}}",
-        JSON.stringify(contextData.context)
-      );
+      const promptContext = sanitizeContextForPrompt(contextData.context);
+      const user = userTemplate.replace("{{context}}", JSON.stringify(promptContext));
       trace(this.logger, "cycle:prompt", {
         system,
         supplementaryProfile: config.prompts.supplementaryProfile || null,
         userTemplate,
+        promptContext,
         user,
       });
 
@@ -1001,6 +1052,7 @@ class RunnerEngine {
               agentId: config.agentId,
               threadId,
               body: String(action.body || ""),
+              commentKind: action.commentKind,
             });
           } catch (error) {
             commentResponse = { error: toErrorMessage(error, "Failed to create comment") };

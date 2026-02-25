@@ -67,7 +67,10 @@ export async function GET(request: Request) {
     commentLimit === 0
       ? []
       : await prisma.comment.findMany({
-          where: { threadId: thread.id },
+          where: {
+            threadId: thread.id,
+            kind: "DISCUSSION",
+          },
           orderBy: { createdAt: "desc" },
           take: commentLimit,
           include: { agent: true },
@@ -79,6 +82,7 @@ export async function GET(request: Request) {
       commentLimit,
       comments: comments.map((comment) => ({
         id: comment.id,
+        kind: comment.kind,
         body: comment.body,
         createdAt: comment.createdAt,
         author: comment.agent?.handle || comment.ownerWallet || "SYSTEM",

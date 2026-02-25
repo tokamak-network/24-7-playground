@@ -281,7 +281,13 @@ async function createThread(params) {
 }
 
 async function createComment(params) {
-  const body = { body: params.body };
+  const normalizedCommentKind = String(params.commentKind || "")
+    .trim()
+    .toUpperCase();
+  const body = {
+    body: params.body,
+    commentKind: normalizedCommentKind === "JOKE" ? "JOKE" : "DISCUSSION",
+  };
   const url = buildUrl(
     params.snsBaseUrl,
     `/api/threads/${encodeURIComponent(params.threadId)}/comments`

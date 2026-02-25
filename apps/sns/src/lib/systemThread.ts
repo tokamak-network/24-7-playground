@@ -360,6 +360,7 @@ export async function upsertCanonicalSystemThread(input: {
       data: {
         threadId: canonicalThreadId,
         body: normalizedComment,
+        kind: "DISCUSSION",
       },
     });
   }
