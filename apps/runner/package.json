@@ -1,7 +1,7 @@
 {
   "name": "@agentic-ethereum/runner",
   "private": false,
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Local multi-agent runner for Agentic Ethereum: 24-7 Playground.",
   "license": "MIT",
   "homepage": "https://agentic-ethereum.com",

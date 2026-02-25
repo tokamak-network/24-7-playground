@@ -1,5 +1,45 @@
 # Project Plan
 
+## 2026-02-25 Bump Runner Version By 0.0.1 And Push
+- [ ] Bump `apps/runner/package.json` version by `+0.0.1`
+- [ ] Sync `package-lock.json` workspace runner version
+- [ ] Run verification floor for touched surfaces (`npx tsc --noEmit -p apps/sns/tsconfig.json`, runner `node --check` trio)
+- [ ] Commit all current changes
+- [ ] Push to `main`
+- [ ] Add review note
+
+## 2026-02-25 Log Secret Fingerprint Mismatch On Launcher Unauthorized
+- [x] Inspect current unauthorized branch in launcher auth check and existing safe logging helpers
+- [x] Add sanitized fingerprint mismatch trace log (`incoming` vs `launcher`) when `x-runner-secret` compare fails
+- [x] Keep API response contract unchanged (`401 Unauthorized`)
+- [x] Verify runner syntax checks (`node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`)
+- [x] Add review note
+- Review: Added `runner-auth-mismatch` trace in `apps/runner/src/index.js` unauthorized branch for protected `/runner/*` routes. On secret mismatch, logs now include redacted fingerprints for both incoming header and launcher configured secret using `describeSecretForLog` (`[redacted length=<n> sha256=<12hex>]`) plus explicit reason text. Response contract remains unchanged (`401 { error: "Unauthorized" }`). Verification passed: `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
+## 2026-02-25 Make Runner CLI Secret Parsing Work Without Mandatory Quotes
+- [x] Update runner CLI arg parser to support `--key=value` syntax
+- [x] Update parser to join multi-token values after `--secret` until next `--` flag (so unquoted spaced secret still works)
+- [x] Keep launcher behavior/security checks unchanged (only parsing improved)
+- [x] Verify runner syntax checks (`node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`)
+- [x] Add review note
+- Review: Updated `parseArgs` in `apps/runner/src/index.js` to accept both `--key=value` and multi-token `--key value...` forms (joined until the next `--flag`). This removes the practical requirement to quote `--secret` for common cases while keeping launcher secret validation and auth checks unchanged. Verification passed: `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
+## 2026-02-25 Add Safe Runner Launcher Secret Startup Visibility
+- [x] Review security guardrail and avoid plaintext secret logging
+- [x] Add startup log that shows redacted launcher-secret metadata (length + fingerprint)
+- [x] Keep runner auth behavior unchanged
+- [x] Verify runner syntax checks (`node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`)
+- [x] Add review note
+- Review: Updated `apps/runner/src/index.js` to keep security boundary intact while adding startup visibility for launcher-secret configuration. Added `describeSecretForLog` and startup log output `[runner-launcher] launcher secret: [redacted length=<n> sha256=<fingerprint>]`. This provides deterministic process-level secret identification without exposing plaintext. Runner auth compare logic and `/runner/*` protection behavior were left unchanged. Verification passed: `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
+## 2026-02-25 Fix Manage-Agents Start Runner Preflight Failure Message And Compatibility Check
+- [x] Reproduce current `Detect Launcher -> Start Runner` preflight failure path and identify concrete failure reason handling
+- [x] Keep concrete preflight error from `/runner/status` (do not overwrite with generic message) in both Start and Stop flows
+- [x] Add targeted hint when preflight fails with launcher auth/version mismatch (e.g., unauthorized or missing route)
+- [x] Verify SNS type check (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Add review note
+- Review: `apps/sns/src/app/manage/agents/page.tsx` no longer replaces preflight failures with the generic `Runner status preflight check failed.` message. Added `latestRunnerPreflightErrorRef` so `fetchRunnerStatus` preserves the concrete failure text even in silent preflight mode, and Start/Stop now surface actionable messages. Added explicit guidance for `Unauthorized` (launcher secret mismatch) and `Not found`/missing `/runner/status` (outdated or incompatible launcher), while preserving the existing local-network-access modal path.
+
 ## 2026-02-25 Fix Runner Install Docs Selecting Old Tarball
 - [x] Update install commands to extract exactly the tarball returned by `npm pack`
 - [x] Pin package command to `@agentic-ethereum/runner@0.1.8` per current expected version

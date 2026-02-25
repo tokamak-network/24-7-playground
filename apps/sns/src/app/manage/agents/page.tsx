@@ -390,6 +390,7 @@ export default function AgentManagementPage() {
   const [stopRunnerBusy, setStopRunnerBusy] = useState(false);
   const [runnerRunning, setRunnerRunning] = useState(false);
   const [runnerStatus, setRunnerStatus] = useState("");
+  const latestRunnerPreflightErrorRef = useRef("");
   const [bubbleMessage, setBubbleMessage] = useState<BubbleMessage | null>(null);
   const [localNetworkHelpModal, setLocalNetworkHelpModal] =
     useState<LocalNetworkHelpModalState>({
@@ -520,6 +521,27 @@ export default function AgentManagementPage() {
     }
     return text;
   }, []);
+
+  const buildRunnerPreflightErrorMessage = useCallback(
+    (rawMessage: string, launcherPort: string) => {
+      const message = rawMessage.trim();
+      if (!message) {
+        return `Runner status preflight check failed on localhost:${launcherPort}.`;
+      }
+      const normalized = message.toLowerCase();
+      if (normalized.includes("unauthorized")) {
+        return `Runner status preflight failed: Unauthorized on localhost:${launcherPort}. Check that Runner Launcher Secret matches the local launcher --secret value.`;
+      }
+      if (
+        normalized.includes("not found") ||
+        normalized.includes("cannot get /runner/status")
+      ) {
+        return `Runner status preflight failed: ${message}. Local launcher may be outdated/incompatible. Install the latest runner and restart launcher.`;
+      }
+      return `Runner status preflight failed: ${message}`;
+    },
+    []
+  );
 
   const fetchModelsByApiKey = useCallback(
     async (options?: {
@@ -1443,6 +1465,7 @@ export default function AgentManagementPage() {
         return null;
       }
 
+      latestRunnerPreflightErrorRef.current = "";
       try {
         const statusQuery = new URLSearchParams();
         if (selectedAgentId.trim()) {
@@ -1461,6 +1484,7 @@ export default function AgentManagementPage() {
           const message = await readError(response);
           setRunnerRunning(false);
           setRunnerStatus(message);
+          latestRunnerPreflightErrorRef.current = message;
           if (!options?.silent) {
             pushBubble("error", message, options?.anchorEl);
           }
@@ -1528,6 +1552,7 @@ export default function AgentManagementPage() {
         setLocalNetworkHelpModal((prev) =>
           prev.open ? { ...prev, open: false } : prev
         );
+        latestRunnerPreflightErrorRef.current = "";
 
         return {
           launcherPort,
@@ -1547,6 +1572,7 @@ export default function AgentManagementPage() {
             ? "Browser blocked localhost access. Allow Local Network Access for this site, then retry."
             : "Could not reach local runner launcher. Start apps/runner first.";
         setRunnerStatus(message);
+        latestRunnerPreflightErrorRef.current = message;
         if (
           !options?.silent &&
           isHttpsPage() &&
@@ -1808,7 +1834,10 @@ export default function AgentManagementPage() {
             return;
           }
         }
-        const message = "Runner status preflight check failed.";
+        const message = buildRunnerPreflightErrorMessage(
+          latestRunnerPreflightErrorRef.current,
+          launcherPort
+        );
         setRunnerStatus(message);
         pushBubble("error", message, anchorEl);
         return;
@@ -1912,6 +1941,7 @@ export default function AgentManagementPage() {
     openLocalNetworkHelpModal,
     pushBubble,
     readError,
+    buildRunnerPreflightErrorMessage,
     resolveRunnerLauncherPort,
     runnerDraft.commentContextLimit,
     runnerDraft.intervalSec,
@@ -1967,7 +1997,10 @@ export default function AgentManagementPage() {
               return;
             }
           }
-          const message = "Runner status preflight check failed.";
+          const message = buildRunnerPreflightErrorMessage(
+            latestRunnerPreflightErrorRef.current,
+            launcherPort
+          );
           setRunnerStatus(message);
           pushBubble("error", message, anchorEl);
           return;
@@ -2048,6 +2081,7 @@ export default function AgentManagementPage() {
       openLocalNetworkHelpModal,
       pushBubble,
       readError,
+      buildRunnerPreflightErrorMessage,
       resolveRunnerLauncherPort,
       runnerLauncherSecret,
       selectedAgentId,

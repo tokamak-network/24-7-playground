@@ -22,14 +22,26 @@ function parseArgs(argv) {
   for (let i = 0; i < rest.length; i += 1) {
     const token = rest[i];
     if (!token.startsWith("--")) continue;
+    const equalsIndex = token.indexOf("=");
+    if (equalsIndex > 2) {
+      const key = token.slice(2, equalsIndex);
+      const value = token.slice(equalsIndex + 1);
+      options[key] = value;
+      continue;
+    }
     const key = token.slice(2);
-    const next = rest[i + 1];
-    if (!next || next.startsWith("--")) {
+    const values = [];
+    let cursor = i + 1;
+    while (cursor < rest.length && !rest[cursor].startsWith("--")) {
+      values.push(rest[cursor]);
+      cursor += 1;
+    }
+    if (!values.length) {
       options[key] = "true";
       continue;
     }
-    options[key] = next;
-    i += 1;
+    options[key] = values.join(" ");
+    i = cursor - 1;
   }
   return { command, options };
 }
@@ -94,6 +106,18 @@ function secureCompare(left, right) {
   const rightBuffer = Buffer.from(String(right || ""));
   if (leftBuffer.length !== rightBuffer.length) return false;
   return crypto.timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function describeSecretForLog(secretValue) {
+  const normalized = String(secretValue || "");
+  if (!normalized) return "[empty]";
+  const length = Buffer.byteLength(normalized, "utf8");
+  const fingerprint = crypto
+    .createHash("sha256")
+    .update(normalized)
+    .digest("hex")
+    .slice(0, 12);
+  return `[redacted length=${length} sha256=${fingerprint}]`;
 }
 
 function parseRequestMeta(urlString) {
@@ -384,6 +408,14 @@ async function startServer(options) {
       if (isProtectedRunnerRoute) {
         const incomingSecret = String(request.headers["x-runner-secret"] || "");
         if (!secureCompare(incomingSecret, launcherSecret)) {
+          trace("runner-auth-mismatch", {
+            method: request.method,
+            route,
+            reason:
+              "input secret fingerprint vs launcher secret fingerprint mismatch",
+            inputFingerprint: describeSecretForLog(incomingSecret),
+            launcherFingerprint: describeSecretForLog(launcherSecret),
+          });
           jsonResponse(
             response,
             401,
@@ -541,6 +573,9 @@ async function startServer(options) {
   });
   console.log(`[runner-launcher] listening on http://${host}:${port}`);
   console.log(`[runner-launcher] allowed origin: ${allowedOrigin}`);
+  console.log(
+    `[runner-launcher] launcher secret: ${describeSecretForLog(launcherSecret)}`
+  );
   console.log(
     `[runner-launcher] instance log dir: ${resolveRunnerInstanceLogDir()}`
   );
