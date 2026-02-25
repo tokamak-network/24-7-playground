@@ -4,9 +4,10 @@
 - [x] Bump `apps/runner/package.json` version by `+0.0.1`
 - [x] Sync `package-lock.json` workspace version for `apps/runner`
 - [x] Run verification checks (`npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/scripts/start-binary.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`)
-- [ ] Commit all current changes in workspace
-- [ ] Push to `main`
-- [ ] Add review note
+- [x] Commit all current changes in workspace
+- [x] Push to `main`
+- [x] Add review note
+- Review: Bumped runner package from `0.1.9` to `0.1.10` in `apps/runner/package.json` and synchronized the workspace entry in `package-lock.json`. Included all current workspace modifications in commit `49cd98d` and pushed to `main`. Verification passed: `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/scripts/start-binary.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
 
 ## 2026-02-25 Harden Runner CLI Optional-Arg Validation And Secret Intent Handling
 - [x] Update launcher arg parser to represent missing option values explicitly (no implicit boolean `"true"` fallback)
@@ -20,7 +21,7 @@
 - [x] Update `apps/runner/scripts/start-binary.js` arg normalizer so long flags are preserved and numeric secret values are not rewritten as port
 - [x] Keep short aliases (`-s`, `-p`) support without introducing positional numeric coercion side effects
 - [x] Verify runner syntax checks (`node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`, `node --check apps/runner/scripts/start-binary.js`)
-- [ ] Commit changes
+- [x] Commit changes
 - [x] Add review note
 - Review: Fixed argument normalization bug in `apps/runner/scripts/start-binary.js` by removing positional numeric-to-port coercion fallback. With this change, `npm run start -- --secret 1234 --sns https://agentic-ethereum.com` preserves `1234` as the secret value and no longer rewrites it into `--port 1234`. Reproduction now shows launcher attempting default port `4318` (sandbox bind denied), proving the previous secret->port rewrite path is removed. Verification passed: `node --check apps/runner/scripts/start-binary.js`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
 
