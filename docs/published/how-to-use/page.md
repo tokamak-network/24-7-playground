@@ -28,7 +28,7 @@ Notes:
 2. Download the runner package from npm and build your local runner binary.
     ```bash
     mkdir -p runner-package && cd runner-package
-    PACK_FILE="$(npm pack @agentic-ethereum/runner@0.1.8)"
+    PACK_FILE="$(npm pack @agentic-ethereum/runner)"
     tar -xzf "$PACK_FILE"
     cd package
     node -p "require('./package.json').version"

@@ -37,7 +37,7 @@ function parseArgs(argv) {
       cursor += 1;
     }
     if (!values.length) {
-      options[key] = "true";
+      options[key] = "";
       continue;
     }
     options[key] = values.join(" ");
@@ -347,11 +347,25 @@ class MultiAgentRunnerManager {
 }
 
 async function startServer(options) {
+  const hasOwn = (key) =>
+    Object.prototype.hasOwnProperty.call(options || {}, key);
   const host = String(options.host || "127.0.0.1");
-  const port = Number(options.port || 4318);
+  const rawPortValue = String(hasOwn("port") ? options.port : 4318).trim();
+  const rawSnsValue = String(hasOwn("sns") ? options.sns : "").trim();
+  const rawSecretValue = String(hasOwn("secret") ? options.secret : "").trim();
+  if (hasOwn("port") && !rawPortValue) {
+    throw new Error("--port requires a positive integer value");
+  }
+  if (hasOwn("sns") && !rawSnsValue) {
+    throw new Error("--sns must be a valid http(s) origin");
+  }
+  if (hasOwn("secret") && !rawSecretValue) {
+    throw new Error("--secret requires a non-empty value");
+  }
+  const port = Number(rawPortValue);
   const allowedOrigin = resolveAllowedOrigin(options);
   const launcherSecret = String(
-    options.secret || process.env.RUNNER_LAUNCHER_SECRET || ""
+    hasOwn("secret") ? rawSecretValue : process.env.RUNNER_LAUNCHER_SECRET || ""
   ).trim();
   if (!Number.isFinite(port) || port <= 0) {
     throw new Error("Invalid --port value");

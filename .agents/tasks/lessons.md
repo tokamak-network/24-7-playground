@@ -233,3 +233,5 @@
 - If publish eligibility is fully decided by runtime gate logic (e.g., compare local version vs npm latest), avoid path-based workflow trigger filters that can suppress required checks on non-package.json commits.
 - For runner installation docs, always include Node.js/npm prerequisites and verify command samples against the current package naming/output conventions to avoid stale tarball filenames or OS-specific launch drift.
 - Do not impose “quotes are mandatory” for CLI secret flags; improve argument parsing to accept unquoted forms (including `--key=value` and multi-token values) and explain only the remaining shell-level metacharacter limits.
+- In CLI wrapper normalizers, never reinterpret numeric token values as positional ports after explicit long flags (`--secret`, `--sns`, etc.); preserve long-flag argument semantics end-to-end.
+- When asked to validate “current local updated version,” evaluate working-tree code paths (plus required post-build behavior) first; do not anchor conclusions on previously published `origin/main` behavior.

@@ -58,12 +58,6 @@ function normalizeForwardArgs(argv) {
       continue;
     }
 
-    const positionalPort = normalizePort(token);
-    if (positionalPort) {
-      output.push("--port", positionalPort);
-      continue;
-    }
-
     output.push(token);
   }
 

@@ -1,5 +1,43 @@
 # Project Plan
 
+## 2026-02-25 Bump Runner Version (+0.0.1) And Push All Workspace Changes
+- [x] Bump `apps/runner/package.json` version by `+0.0.1`
+- [x] Sync `package-lock.json` workspace version for `apps/runner`
+- [x] Run verification checks (`npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/scripts/start-binary.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`)
+- [ ] Commit all current changes in workspace
+- [ ] Push to `main`
+- [ ] Add review note
+
+## 2026-02-25 Harden Runner CLI Optional-Arg Validation And Secret Intent Handling
+- [x] Update launcher arg parser to represent missing option values explicitly (no implicit boolean `"true"` fallback)
+- [x] Add strict validation in `startServer` for empty `--secret`, `--port`, and `--sns` values
+- [x] Re-run behavior matrix for start command options/defaults and secret delivery cases
+- [x] Verify runner syntax checks (`node --check apps/runner/src/index.js`, `node --check apps/runner/scripts/start-binary.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`)
+- [x] Add review note
+- Review: Hardened `apps/runner/src/index.js` option handling so missing values are explicit (`parseArgs` now stores `\"\"` instead of implicit `\"true\"`), and `startServer` now fail-fast validates empty `--secret`, `--port`, and `--sns` values. Combined with wrapper fix in `apps/runner/scripts/start-binary.js` (no numeric positional coercion), secret forwarding now preserves user intent for `--secret 1234`, `--secret=1234`, and `-s 1234`. Direct source-run checks confirmed: empty `--secret` now errors immediately, missing `--secret` requires env fallback, and port defaults remain `4318` when omitted.
+
+## 2026-02-25 Fix npm Runner Start Numeric Secret Misparsed As Port
+- [x] Update `apps/runner/scripts/start-binary.js` arg normalizer so long flags are preserved and numeric secret values are not rewritten as port
+- [x] Keep short aliases (`-s`, `-p`) support without introducing positional numeric coercion side effects
+- [x] Verify runner syntax checks (`node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`, `node --check apps/runner/scripts/start-binary.js`)
+- [ ] Commit changes
+- [x] Add review note
+- Review: Fixed argument normalization bug in `apps/runner/scripts/start-binary.js` by removing positional numeric-to-port coercion fallback. With this change, `npm run start -- --secret 1234 --sns https://agentic-ethereum.com` preserves `1234` as the secret value and no longer rewrites it into `--port 1234`. Reproduction now shows launcher attempting default port `4318` (sandbox bind denied), proving the previous secret->port rewrite path is removed. Verification passed: `node --check apps/runner/scripts/start-binary.js`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
+## 2026-02-25 Investigate Published npm Runner Start Argument Behavior
+- [x] Trace npm package `start` execution chain and argument forwarding path
+- [x] Reproduce `npm run start -- --secret 1234 --sns https://agentic-ethereum.com` behavior with current runner package scripts
+- [x] Identify final launcher argv that gets executed and resulting runtime effects
+- [x] Summarize user-visible impact and immediate safe invocation workaround
+- [x] Add review note
+- Review: Investigated published runner start path: `npm run start` runs `node scripts/start-binary.js` (in package). In `start-binary.js`, numeric positional tokens are auto-converted to `--port` (`normalizeForwardArgs`, lines 61-64). Therefore `--secret 1234 --sns ...` is rewritten to `--secret --port 1234 --sns ...`. Then launcher parser (`src/index.js:19-46`) treats `--secret` without value as boolean `"true"`, so effective config becomes `secret="true"` and `port=1234` instead of `secret="1234"` and default port `4318`. Reproduction showed failure to bind `127.0.0.1:1234` in sandbox (`EPERM`), but on normal hosts it may start on port 1234 and later cause auth mismatch if UI expects secret `1234`.
+
+## 2026-02-25 Investigate Root `npm run start -- --secret ... --sns ...` Behavior
+- [ ] Confirm root `start` script target and argument forwarding path
+- [ ] Reproduce command exactly and capture terminal output/exit behavior
+- [ ] Explain why behavior occurs and show correct runner launch command(s)
+- [ ] Add review note
+
 ## 2026-02-25 Bump Runner Version By 0.0.1 And Push
 - [x] Bump `apps/runner/package.json` version by `+0.0.1`
 - [x] Sync `package-lock.json` workspace runner version
