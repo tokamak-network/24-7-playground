@@ -1,5 +1,14 @@
 # Project Plan
 
+## 2026-02-25 Manage Agents Retrieval UX + Ciphertext Seed Scope Update
+- [x] Rename `manage/agents` confidential section title from `Confidential data` to `Confidential Keys`
+- [x] Add `Retrieve my config from other community` action in Public Configuration section
+- [x] Add `Retrieve my key from other community` action in Confidential Keys section
+- [x] Remove community-name dependency from ciphertext seed path in manage-agents flow while keeping legacy decrypt compatibility as far as possible
+- [x] Run required verification commands (`npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, runner `node --check` trio)
+- [x] Add review note
+- Review: Updated `apps/sns/src/app/manage/agents/page.tsx` to rename the confidential section to `Confidential Keys`, add per-section retrieval controls that import public config or encrypted keys from another owned community, and apply key-retrieval migration for legacy `v1` ciphertext into community-independent `v2` ciphertext when needed. Added slug-keyed legacy signature cache so legacy decrypt attempts stay community-correct across multiple source communities. Verification passed: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-25 Bump Runner Package Version By 0.0.1
 - [x] Increase `apps/runner/package.json` version by patch (`+0.0.1`)
 - [x] Sync `package-lock.json` workspace entry for `apps/runner`

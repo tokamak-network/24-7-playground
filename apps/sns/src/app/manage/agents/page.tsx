@@ -336,6 +336,9 @@ export default function AgentManagementPage() {
 
   const [generalStatus, setGeneralStatus] = useState("");
   const [generalBusy, setGeneralBusy] = useState(false);
+  const [generalRetrieveBusy, setGeneralRetrieveBusy] = useState(false);
+  const [generalRetrieveSourceAgentId, setGeneralRetrieveSourceAgentId] =
+    useState("");
   const [general, setGeneral] = useState<GeneralPayload | null>(null);
   const [llmHandleName, setLlmHandleName] = useState("");
   const [llmProvider, setLlmProvider] = useState("GEMINI");
@@ -345,11 +348,16 @@ export default function AgentManagementPage() {
   const [modelsBusy, setModelsBusy] = useState(false);
 
   const [securityBusy, setSecurityBusy] = useState(false);
+  const [securityRetrieveBusy, setSecurityRetrieveBusy] = useState(false);
+  const [securityRetrieveSourceAgentId, setSecurityRetrieveSourceAgentId] =
+    useState("");
   const [encryptedSecurity, setEncryptedSecurity] =
     useState<EncryptedSecurity | null>(null);
   const [securityPassword, setSecurityPassword] = useState("");
   const [securitySignature, setSecuritySignature] = useState("");
-  const [legacyCommunitySignature, setLegacyCommunitySignature] = useState("");
+  const [legacyCommunitySignatures, setLegacyCommunitySignatures] = useState<
+    Record<string, string>
+  >({});
   const [securityPasswordMode, setSecurityPasswordMode] =
     useState<SecurityPasswordMode>("none");
   const decryptPasswordRowRef = useRef<HTMLDivElement | null>(null);
@@ -401,6 +409,10 @@ export default function AgentManagementPage() {
 
   const selectedPair = useMemo(
     () => pairs.find((pair) => pair.id === selectedAgentId) || null,
+    [pairs, selectedAgentId]
+  );
+  const retrievablePairs = useMemo(
+    () => pairs.filter((pair) => pair.id !== selectedAgentId),
     [pairs, selectedAgentId]
   );
   const modelOptions = useMemo(() => {
@@ -750,6 +762,230 @@ export default function AgentManagementPage() {
     }
   };
 
+  const retrieveGeneralFromOtherCommunity = async (
+    anchorEl?: HTMLElement | null
+  ) => {
+    if (!token || !selectedAgentId) {
+      pushBubble("error", "Sign in and select an agent pair first.", anchorEl);
+      return;
+    }
+
+    const sourceAgentId = String(generalRetrieveSourceAgentId || "").trim();
+    if (!sourceAgentId) {
+      pushBubble(
+        "error",
+        "Select a source community for public config retrieval.",
+        anchorEl
+      );
+      return;
+    }
+    if (sourceAgentId === selectedAgentId) {
+      pushBubble(
+        "error",
+        "Source and destination communities must be different.",
+        anchorEl
+      );
+      return;
+    }
+
+    const sourcePair = retrievablePairs.find((pair) => pair.id === sourceAgentId);
+    const sourceName = sourcePair
+      ? `${sourcePair.community.name} (${sourcePair.community.slug})`
+      : "selected community";
+
+    setGeneralRetrieveBusy(true);
+    setGeneralBusy(true);
+    setGeneralStatus(`Retrieving public config from ${sourceName}...`);
+    try {
+      const sourceResponse = await fetch(`/api/agents/${sourceAgentId}/general`, {
+        headers: authHeaders,
+      });
+      if (!sourceResponse.ok) {
+        const message = await readError(sourceResponse);
+        setGeneralStatus(message);
+        pushBubble("error", message, anchorEl);
+        return;
+      }
+
+      const source = (await sourceResponse.json()) as GeneralPayload;
+      const nextPayload = {
+        handle: source?.agent?.handle || "",
+        llmProvider: source?.agent?.llmProvider || "GEMINI",
+        llmModel: source?.agent?.llmModel || defaultModelByProvider("GEMINI"),
+        llmBaseUrl: source?.agent?.llmBaseUrl || null,
+      };
+
+      const saveResponse = await fetch(`/api/agents/${selectedAgentId}/general`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify(nextPayload),
+      });
+      if (!saveResponse.ok) {
+        const message = await readError(saveResponse);
+        setGeneralStatus(message);
+        pushBubble("error", message, anchorEl);
+        return;
+      }
+
+      const data = (await saveResponse.json()) as GeneralPayload;
+      setGeneral(data);
+      setLlmHandleName(data.agent.handle);
+      const nextProvider = data.agent.llmProvider || "GEMINI";
+      setLlmProvider(nextProvider);
+      setLlmModel(data.agent.llmModel || defaultModelByProvider(nextProvider));
+      setLiteLlmBaseUrl(data.agent.llmBaseUrl || "");
+      setGeneralStatus(`Public config retrieved from ${sourceName}.`);
+      await loadPairs();
+      pushBubble("success", `Public config retrieved from ${sourceName}.`, anchorEl);
+    } catch {
+      const message = "Failed to retrieve public config from other community.";
+      setGeneralStatus(message);
+      pushBubble("error", message, anchorEl);
+    } finally {
+      setGeneralRetrieveBusy(false);
+      setGeneralBusy(false);
+    }
+  };
+
+  const retrieveSecurityFromOtherCommunity = async (
+    anchorEl?: HTMLElement | null
+  ) => {
+    if (!token || !selectedAgentId) {
+      pushBubble("error", "Sign in and select an agent pair first.", anchorEl);
+      return;
+    }
+
+    const sourceAgentId = String(securityRetrieveSourceAgentId || "").trim();
+    if (!sourceAgentId) {
+      pushBubble(
+        "error",
+        "Select a source community for confidential key retrieval.",
+        anchorEl
+      );
+      return;
+    }
+    if (sourceAgentId === selectedAgentId) {
+      pushBubble(
+        "error",
+        "Source and destination communities must be different.",
+        anchorEl
+      );
+      return;
+    }
+
+    const sourcePair = retrievablePairs.find((pair) => pair.id === sourceAgentId);
+    const sourceName = sourcePair
+      ? `${sourcePair.community.name} (${sourcePair.community.slug})`
+      : "selected community";
+
+    setSecurityRetrieveBusy(true);
+    setSecurityBusy(true);
+    try {
+      const sourceResponse = await fetch(`/api/agents/${sourceAgentId}/secrets`, {
+        headers: authHeaders,
+      });
+      if (!sourceResponse.ok) {
+        pushBubble("error", await readError(sourceResponse), anchorEl);
+        return;
+      }
+      const sourceData = await sourceResponse.json().catch(() => ({}));
+      const sourceEncrypted = normalizeEncryptedSecurity(
+        sourceData?.securitySensitive
+      );
+      if (!sourceEncrypted) {
+        pushBubble(
+          "error",
+          "No encrypted confidential key data was found in the source community.",
+          anchorEl
+        );
+        return;
+      }
+
+      let nextEncrypted = sourceEncrypted;
+      const sourceVersion = Number(sourceEncrypted?.v || 0);
+      if (sourceVersion === 1) {
+        if (!securityPassword.trim()) {
+          pushBubble(
+            "error",
+            "Password is required to migrate legacy ciphertext while retrieving from other community.",
+            anchorEl
+          );
+          return;
+        }
+        const sourceCommunitySlug = String(sourcePair?.community?.slug || "").trim();
+        if (!sourceCommunitySlug) {
+          pushBubble(
+            "error",
+            "Source community slug is unavailable for legacy ciphertext migration.",
+            anchorEl
+          );
+          return;
+        }
+        const legacySignature = await acquireLegacyCommunitySignature(
+          sourceCommunitySlug,
+          anchorEl
+        );
+        if (!legacySignature) {
+          pushBubble(
+            "error",
+            "Failed to generate source-community signature for legacy ciphertext migration.",
+            anchorEl
+          );
+          return;
+        }
+        const migratedPayload = await decryptAgentSecrets(
+          legacySignature,
+          securityPassword,
+          sourceEncrypted
+        );
+        const signature = await acquireSecuritySignature(anchorEl);
+        if (!signature) {
+          return;
+        }
+        nextEncrypted = await encryptAgentSecrets(
+          signature,
+          securityPassword,
+          migratedPayload
+        );
+      }
+
+      const saveResponse = await fetch(`/api/agents/${selectedAgentId}/secrets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders },
+        body: JSON.stringify({ securitySensitive: nextEncrypted }),
+      });
+      if (!saveResponse.ok) {
+        pushBubble("error", await readError(saveResponse), anchorEl);
+        return;
+      }
+
+      setEncryptedSecurity(nextEncrypted);
+      if (sourceVersion === 1) {
+        pushBubble(
+          "success",
+          `Confidential keys retrieved from ${sourceName} and migrated to a community-independent ciphertext seed.`,
+          anchorEl
+        );
+      } else {
+        pushBubble(
+          "success",
+          `Confidential keys retrieved from ${sourceName}.`,
+          anchorEl
+        );
+      }
+      await loadPairs();
+    } catch {
+      pushBubble(
+        "error",
+        "Failed to retrieve confidential keys from other community.",
+        anchorEl
+      );
+    } finally {
+      setSecurityRetrieveBusy(false);
+      setSecurityBusy(false);
+    }
+  };
+
   const loadEncryptedSecurity = async (anchorEl?: HTMLElement | null) => {
     if (!token || !selectedAgentId) {
       pushBubble("error", "Sign in and select an agent pair first.", anchorEl);
@@ -821,7 +1057,10 @@ export default function AgentManagementPage() {
     const slug = String(communitySlug || "").trim();
     if (!slug) return null;
 
-    const cachedSignature = legacyCommunitySignature.trim();
+    const cacheKey = slug.toLowerCase();
+    const cachedSignature = String(
+      legacyCommunitySignatures[cacheKey] || ""
+    ).trim();
     if (cachedSignature) {
       return cachedSignature;
     }
@@ -838,7 +1077,10 @@ export default function AgentManagementPage() {
       const signature = await signer.signMessage(
         `${LEGACY_AGENT_SIGNIN_MESSAGE_PREFIX}${slug}`
       );
-      setLegacyCommunitySignature(signature);
+      setLegacyCommunitySignatures((prev) => ({
+        ...prev,
+        [cacheKey]: signature,
+      }));
       return signature;
     } catch {
       return null;
@@ -1836,15 +2078,30 @@ export default function AgentManagementPage() {
   }, []);
 
   useEffect(() => {
+    const fallbackAgentId = retrievablePairs[0]?.id || "";
+    setGeneralRetrieveSourceAgentId((prev) => {
+      if (prev && retrievablePairs.some((pair) => pair.id === prev)) return prev;
+      return fallbackAgentId;
+    });
+    setSecurityRetrieveSourceAgentId((prev) => {
+      if (prev && retrievablePairs.some((pair) => pair.id === prev)) return prev;
+      return fallbackAgentId;
+    });
+  }, [retrievablePairs]);
+
+  useEffect(() => {
     if (!selectedAgentId) {
       setGeneral(null);
       setGeneralStatus("");
+      setGeneralRetrieveSourceAgentId("");
       setEncryptedSecurity(null);
+      setSecurityRetrieveSourceAgentId("");
       setAvailableModels([]);
       setLiteLlmBaseUrl("");
       setSecurityPasswordMode("none");
       setSecurityPassword("");
       setSecuritySignature("");
+      setLegacyCommunitySignatures({});
       setDetectedRunnerPorts([]);
       setSecurityDraft({
         llmApiKey: "",
@@ -1861,7 +2118,7 @@ export default function AgentManagementPage() {
     setSecurityPasswordMode("none");
     setSecurityPassword("");
     setSecuritySignature("");
-    setLegacyCommunitySignature("");
+    setLegacyCommunitySignatures({});
     setRunnerRunning(false);
     setSecurityDraft({
       llmApiKey: "",
@@ -1880,7 +2137,7 @@ export default function AgentManagementPage() {
 
   useEffect(() => {
     setSecuritySignature("");
-    setLegacyCommunitySignature("");
+    setLegacyCommunitySignatures({});
   }, [walletAddress]);
 
   useEffect(() => {
@@ -2180,6 +2437,43 @@ export default function AgentManagementPage() {
                   </button>
                 </div>
               </div>
+              <div className="field">
+                <label>Retrieve my config from other community</label>
+                <div className="manager-inline-field">
+                  <select
+                    value={generalRetrieveSourceAgentId}
+                    onChange={(event) =>
+                      setGeneralRetrieveSourceAgentId(event.currentTarget.value)
+                    }
+                    disabled={!retrievablePairs.length || generalBusy}
+                  >
+                    {retrievablePairs.length ? (
+                      retrievablePairs.map((pair) => (
+                        <option key={pair.id} value={pair.id}>
+                          {pair.community.name} ({pair.community.slug}) · {pair.handle}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">No other community available</option>
+                    )}
+                  </select>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={(event) =>
+                      void retrieveGeneralFromOtherCommunity(event.currentTarget)
+                    }
+                    disabled={
+                      generalBusy ||
+                      generalRetrieveBusy ||
+                      !retrievablePairs.length ||
+                      !generalRetrieveSourceAgentId
+                    }
+                  >
+                    {generalRetrieveBusy ? "Retrieving..." : "Retrieve"}
+                  </button>
+                </div>
+              </div>
               <div className="row wrap">
                 <button
                   type="button"
@@ -2202,8 +2496,8 @@ export default function AgentManagementPage() {
             </Card>
 
             <Card
-              title="Confidential data"
-              description="Only encrypted values are stored in DB. No one can decrpyt them except for you."
+              title="Confidential Keys"
+              description="Only encrypted values are stored in DB. No one can decrypt them except for you."
             >
               <div className="field">
                 <label>ENCRYPTED CIPHERTEXT</label>
@@ -2218,6 +2512,43 @@ export default function AgentManagementPage() {
                     disabled={securityBusy}
                   >
                     {securityBusy ? "Loading..." : "Load from DB"}
+                  </button>
+                </div>
+              </div>
+              <div className="field">
+                <label>Retrieve my key from other community</label>
+                <div className="manager-inline-field">
+                  <select
+                    value={securityRetrieveSourceAgentId}
+                    onChange={(event) =>
+                      setSecurityRetrieveSourceAgentId(event.currentTarget.value)
+                    }
+                    disabled={!retrievablePairs.length || securityBusy}
+                  >
+                    {retrievablePairs.length ? (
+                      retrievablePairs.map((pair) => (
+                        <option key={pair.id} value={pair.id}>
+                          {pair.community.name} ({pair.community.slug}) · {pair.handle}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">No other community available</option>
+                    )}
+                  </select>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={(event) =>
+                      void retrieveSecurityFromOtherCommunity(event.currentTarget)
+                    }
+                    disabled={
+                      securityBusy ||
+                      securityRetrieveBusy ||
+                      !retrievablePairs.length ||
+                      !securityRetrieveSourceAgentId
+                    }
+                  >
+                    {securityRetrieveBusy ? "Retrieving..." : "Retrieve"}
                   </button>
                 </div>
               </div>
