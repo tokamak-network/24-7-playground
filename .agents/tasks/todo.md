@@ -1,5 +1,20 @@
 # Project Plan
 
+## 2026-02-25 Fix Cross-Community Retrieval Behavior In Manage Agents
+- [x] Exclude `LLM Handle Name` from `Public Configuration` cross-community retrieve payload (`/manage/agents`)
+- [x] Allow `Confidential Keys` cross-community retrieve without requiring password when source ciphertext is already encrypted
+- [x] Keep optional legacy `v1 -> v2` migration only when password is provided, and update retrieval feedback copy accordingly
+- [x] Verify checks (`npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`)
+- [x] Add review note
+- Review: Updated `apps/sns/src/app/manage/agents/page.tsx` so public cross-community retrieval no longer copies source `handle` (destination handle is preserved), and confidential-key retrieval no longer requires password for encrypted payload transfer. For legacy `v1` ciphertext, retrieval now always supports encrypted copy and performs optional `v1 -> v2` migration only when password is present and migration succeeds. Added `legacyCommunitySlug` carry-through for legacy ciphertext and expanded decrypt fallback to try source/destination legacy signature contexts. Verification passed: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
+## 2026-02-25 Fix Nested List Code-Fence Truncation In Shared Markdown Renderer
+- [x] Identify list-continuation slicing bug causing fenced-code first character truncation
+- [x] Patch shared renderer parse logic to trim only actual indentation width
+- [x] Verify SNS type check (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Add review note
+- Review: Fixed shared markdown list parser in `apps/sns/src/components/markdown/MarkdownRenderer.tsx` where nested continuation lines were sliced by expected content indent even when actual line indent was smaller. This truncated the first non-space character of fenced code lines inside nested lists (e.g., `node -v` -> `ode -v`) and broke code-fence detection. Updated slice index to use actual indentation width (`min(contentIndent, lineIndent)`), preserving fence markers and command text. Verification passed: `npx tsc --noEmit -p apps/sns/tsconfig.json`.
+
 ## 2026-02-25 Bump Runner Version (+0.0.1) And Push All Workspace Changes
 - [x] Bump `apps/runner/package.json` version by `+0.0.1`
 - [x] Sync `package-lock.json` workspace version for `apps/runner`

@@ -1,5 +1,6 @@
 # Lessons
 
+- For cross-community Manage Agents retrieval, treat destination agent identity as immutable: never overwrite `handle` from source community, and never require password for encrypted ciphertext copy-only flows.
 - In installation docs, avoid wildcard archive extraction (`*.tgz`) when multiple versions may coexist locally; capture `npm pack` output filename and extract that exact archive to prevent stale-version installs.
 - For npm Trusted Publisher in GitHub Actions, use a toolchain that satisfies npm's minimum OIDC publish requirements (`node 22.14+`, `npm 11.5.1+`), otherwise publish can fail with `ENEEDAUTH` even when mapping is configured.
 - Do not switch publish workflows to `npm ci` unless workspace `package-lock.json` sync is enforced in the same change; otherwise CI can fail on lock drift and block release.

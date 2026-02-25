@@ -48,6 +48,7 @@ type EncryptedSecurity = {
   v?: number;
   iv: string;
   ciphertext: string;
+  legacyCommunitySlug?: string;
 };
 
 const ENCRYPTED_SECURITY_NESTED_KEYS = [
@@ -83,10 +84,15 @@ function normalizeEncryptedSecurity(
 
   if (iv && ciphertext) {
     const version = Number(record.v);
+    const legacyCommunitySlug =
+      typeof record.legacyCommunitySlug === "string"
+        ? record.legacyCommunitySlug.trim()
+        : "";
     return {
       v: Number.isFinite(version) ? version : undefined,
       iv,
       ciphertext,
+      ...(legacyCommunitySlug ? { legacyCommunitySlug } : {}),
     };
   }
 
@@ -830,8 +836,18 @@ export default function AgentManagementPage() {
       }
 
       const source = (await sourceResponse.json()) as GeneralPayload;
+      const currentHandle = String(
+        llmHandleName || general?.agent?.handle || selectedPair?.handle || ""
+      ).trim();
+      if (!currentHandle) {
+        const message =
+          "Current handle is missing. Load this community data first, then retry retrieval.";
+        setGeneralStatus(message);
+        pushBubble("error", message, anchorEl);
+        return;
+      }
       const nextPayload = {
-        handle: source?.agent?.handle || "",
+        handle: currentHandle,
         llmProvider: source?.agent?.llmProvider || "GEMINI",
         llmModel: source?.agent?.llmModel || defaultModelByProvider("GEMINI"),
         llmBaseUrl: source?.agent?.llmBaseUrl || null,
@@ -925,50 +941,42 @@ export default function AgentManagementPage() {
 
       let nextEncrypted = sourceEncrypted;
       const sourceVersion = Number(sourceEncrypted?.v || 0);
+      let legacyMigrated = false;
       if (sourceVersion === 1) {
-        if (!securityPassword.trim()) {
-          pushBubble(
-            "error",
-            "Password is required to migrate legacy ciphertext while retrieving from other community.",
+        const sourceCommunitySlug = String(
+          sourceEncrypted.legacyCommunitySlug || sourcePair?.community?.slug || ""
+        ).trim();
+        nextEncrypted = sourceCommunitySlug
+          ? { ...sourceEncrypted, legacyCommunitySlug: sourceCommunitySlug }
+          : sourceEncrypted;
+
+        const migrationPassword = securityPassword.trim();
+        if (migrationPassword && sourceCommunitySlug) {
+          const legacySignature = await acquireLegacyCommunitySignature(
+            sourceCommunitySlug,
             anchorEl
           );
-          return;
+          if (legacySignature) {
+            try {
+              const migratedPayload = await decryptAgentSecrets(
+                legacySignature,
+                migrationPassword,
+                sourceEncrypted
+              );
+              const signature = await acquireSecuritySignature(anchorEl);
+              if (signature) {
+                nextEncrypted = await encryptAgentSecrets(
+                  signature,
+                  migrationPassword,
+                  migratedPayload
+                );
+                legacyMigrated = true;
+              }
+            } catch {
+              // Keep copied ciphertext as-is when migration fails.
+            }
+          }
         }
-        const sourceCommunitySlug = String(sourcePair?.community?.slug || "").trim();
-        if (!sourceCommunitySlug) {
-          pushBubble(
-            "error",
-            "Source community slug is unavailable for legacy ciphertext migration.",
-            anchorEl
-          );
-          return;
-        }
-        const legacySignature = await acquireLegacyCommunitySignature(
-          sourceCommunitySlug,
-          anchorEl
-        );
-        if (!legacySignature) {
-          pushBubble(
-            "error",
-            "Failed to generate source-community signature for legacy ciphertext migration.",
-            anchorEl
-          );
-          return;
-        }
-        const migratedPayload = await decryptAgentSecrets(
-          legacySignature,
-          securityPassword,
-          sourceEncrypted
-        );
-        const signature = await acquireSecuritySignature(anchorEl);
-        if (!signature) {
-          return;
-        }
-        nextEncrypted = await encryptAgentSecrets(
-          signature,
-          securityPassword,
-          migratedPayload
-        );
       }
 
       const saveResponse = await fetch(`/api/agents/${selectedAgentId}/secrets`, {
@@ -982,10 +990,16 @@ export default function AgentManagementPage() {
       }
 
       setEncryptedSecurity(nextEncrypted);
-      if (sourceVersion === 1) {
+      if (sourceVersion === 1 && legacyMigrated) {
         pushBubble(
           "success",
           `Confidential keys retrieved from ${sourceName} and migrated to a community-independent ciphertext seed.`,
+          anchorEl
+        );
+      } else if (sourceVersion === 1) {
+        pushBubble(
+          "success",
+          `Confidential keys retrieved from ${sourceName} as encrypted legacy ciphertext.`,
           anchorEl
         );
       } else {
@@ -1143,14 +1157,33 @@ export default function AgentManagementPage() {
       const version = Number(encryptedSecurity?.v || 0);
       const shouldTryLegacyCommunitySignature = version <= 1;
       if (shouldTryLegacyCommunitySignature) {
-        const legacyCommunitySlug = String(
-          general?.community?.slug || selectedPair?.community?.slug || ""
-        ).trim();
-        const legacySignature = await acquireLegacyCommunitySignature(
-          legacyCommunitySlug,
-          anchorEl
-        );
-        if (legacySignature) {
+        const candidateLegacySlugs: string[] = [];
+        const seenLegacySlugKeys = new Set<string>();
+        for (const rawSlug of [
+          encryptedSecurity.legacyCommunitySlug,
+          general?.community?.slug,
+          selectedPair?.community?.slug,
+          ...Object.keys(legacyCommunitySignatures || {}),
+        ]) {
+          const slug = String(rawSlug || "").trim();
+          if (!slug) continue;
+          const cacheKey = slug.toLowerCase();
+          if (seenLegacySlugKeys.has(cacheKey)) continue;
+          seenLegacySlugKeys.add(cacheKey);
+          candidateLegacySlugs.push(slug);
+        }
+
+        for (const legacyCommunitySlug of candidateLegacySlugs) {
+          const cacheKey = legacyCommunitySlug.toLowerCase();
+          const cachedSignature = String(
+            legacyCommunitySignatures[cacheKey] || ""
+          ).trim();
+          const legacySignature =
+            cachedSignature ||
+            (await acquireLegacyCommunitySignature(legacyCommunitySlug, anchorEl));
+          if (!legacySignature) {
+            continue;
+          }
           try {
             const decrypted = await decryptAgentSecrets(
               legacySignature,
@@ -1172,7 +1205,7 @@ export default function AgentManagementPage() {
             }
             return true;
           } catch {
-            // Keep primary failure context below.
+            // Try next candidate slug/signature.
           }
         }
       }
