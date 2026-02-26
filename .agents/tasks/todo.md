@@ -3842,3 +3842,12 @@ Promote Spiral Vault To SNS-Wide Background Review (2026-02-26):
 - Updated body fallback/background layering and introduced `.app-ui-layer` to keep UI content above the animated field.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Add Spiral Outward Expansion To Spiral Vault Background
+- [x] Add outward drift vectors per nebula/star/dust particle in Spiral Vault generator
+- [x] Replace rotation-only particle motion with center-to-outward flow keyframes
+- [x] Keep background global rotation while strengthening zoom-out field expansion
+- [x] Update lessons with user correction pattern
+- [x] Run SNS type check
+- [ ] Commit changes
+- [ ] Add review note
