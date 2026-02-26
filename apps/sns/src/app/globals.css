@@ -36,9 +36,171 @@ body {
   color: var(--text-strong);
   font-family: var(--font-body), "Helvetica Neue", sans-serif;
   background:
-    radial-gradient(circle at 12% 18%, rgba(24, 104, 219, 0.22), transparent 44%),
-    radial-gradient(circle at 90% 8%, rgba(16, 145, 191, 0.16), transparent 36%),
-    linear-gradient(145deg, var(--bg-base), var(--bg-soft));
+    radial-gradient(circle at 12% 16%, rgba(87, 126, 255, 0.34), transparent 42%),
+    radial-gradient(circle at 84% 10%, rgba(120, 182, 255, 0.24), transparent 36%),
+    linear-gradient(160deg, #030818, #070d28 48%, #0b1029);
+}
+
+.app-ui-layer {
+  position: relative;
+  z-index: 20;
+}
+
+.spiral-vault-bg {
+  position: fixed;
+  inset: -32vmax;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  transform: scale(1.08);
+  transform-origin: 50% 50%;
+  background:
+    radial-gradient(circle at 18% 14%, rgba(89, 146, 255, 0.2), transparent 34%),
+    radial-gradient(circle at 76% 80%, rgba(84, 104, 211, 0.2), transparent 48%),
+    radial-gradient(circle at 50% 50%, rgba(43, 73, 163, 0.14), transparent 52%),
+    linear-gradient(180deg, rgba(2, 6, 18, 0.92), rgba(5, 11, 28, 0.95) 58%, rgba(7, 12, 31, 0.96));
+  animation: sv-field-drift 68s linear infinite;
+}
+
+.spiral-vault-bg__veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(58% 40% at 50% 46%, rgba(128, 181, 255, 0.14), transparent 74%),
+    radial-gradient(54% 32% at 50% 58%, rgba(157, 128, 255, 0.1), transparent 78%);
+  filter: blur(2px);
+  animation: sv-veil-breath 16s ease-in-out infinite alternate;
+}
+
+.spiral-vault-bg__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  mix-blend-mode: screen;
+  background-image:
+    radial-gradient(circle at 14% 16%, rgba(255, 255, 255, 0.76) 0 0.4px, transparent 0.62px),
+    radial-gradient(circle at 68% 34%, rgba(255, 255, 255, 0.68) 0 0.36px, transparent 0.58px),
+    radial-gradient(circle at 47% 82%, rgba(255, 255, 255, 0.64) 0 0.32px, transparent 0.54px);
+  background-size: 130px 130px, 150px 150px, 120px 120px;
+}
+
+.spiral-vault-nebula,
+.spiral-vault-dust,
+.spiral-vault-star,
+.spiral-vault-bright {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+}
+
+.spiral-vault-nebula {
+  width: var(--w);
+  height: var(--h);
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 26% 36%, rgba(192, 249, 255, 0.78), rgba(113, 166, 255, 0.3) 38%, transparent 72%),
+    radial-gradient(circle at 68% 52%, rgba(241, 178, 255, 0.36), transparent 66%);
+  opacity: var(--alpha);
+  filter: blur(28px) hue-rotate(var(--hue-shift));
+  animation: sv-nebula-float var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+.spiral-vault-dust,
+.spiral-vault-star,
+.spiral-vault-bright {
+  border-radius: 999px;
+  animation: sv-twinkle var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+.spiral-vault-dust {
+  width: var(--size);
+  height: var(--size);
+  opacity: var(--alpha);
+  filter: blur(var(--blur));
+  background: rgba(227, 240, 255, 0.76);
+}
+
+.spiral-vault-star {
+  width: var(--size);
+  height: var(--size);
+  opacity: var(--alpha);
+  filter: blur(var(--blur));
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.88), rgba(166, 208, 255, 0.4) 58%, transparent 78%);
+  box-shadow: 0 0 calc(var(--size) * 3.8) rgba(167, 219, 255, 0.4);
+}
+
+.spiral-vault-bright {
+  width: var(--size);
+  height: var(--size);
+  opacity: var(--alpha);
+  filter: blur(var(--blur));
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.96), rgba(217, 237, 255, 0.7) 50%, transparent 76%);
+  box-shadow: 0 0 calc(var(--size) * 5) rgba(215, 237, 255, 0.62), 0 0 calc(var(--size) * 8) rgba(132, 186, 255, 0.36);
+}
+
+.spiral-vault-bright::before,
+.spiral-vault-bright::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(90deg, transparent, rgba(227, 244, 255, 0.62), transparent);
+}
+
+.spiral-vault-bright::before {
+  width: calc(var(--size) * 7);
+  height: 1px;
+}
+
+.spiral-vault-bright::after {
+  width: 1px;
+  height: calc(var(--size) * 7);
+}
+
+@keyframes sv-field-drift {
+  0% {
+    transform: scale(1.08) rotate(0deg);
+  }
+  100% {
+    transform: scale(1.12) rotate(360deg);
+  }
+}
+
+@keyframes sv-veil-breath {
+  0% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes sv-nebula-float {
+  0% {
+    transform: translate(-50%, -50%) scale(0.9) rotate(0deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.08) rotate(5deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.93) rotate(-4deg);
+  }
+}
+
+@keyframes sv-twinkle {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: calc(var(--alpha) * 0.78);
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: calc(var(--alpha) * 1.12);
+  }
 }
 
 .sign-in-main {
@@ -80,6 +242,7 @@ a {
   display: grid;
   gap: 26px;
   position: relative;
+  z-index: 4;
 }
 
 .page-shell::before,
@@ -2355,6 +2518,10 @@ a {
 }
 
 @media (max-width: 720px) {
+  .spiral-vault-bg {
+    inset: -44vmax;
+  }
+
   .page-shell {
     padding: 14px 12px 34px;
     gap: 16px;

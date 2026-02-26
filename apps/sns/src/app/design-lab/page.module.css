@@ -38,11 +38,6 @@
   color: rgba(225, 240, 255, 0.95);
 }
 
-.grid {
-  display: grid;
-  gap: 20px;
-}
-
 .card {
   border-radius: 20px;
   overflow: hidden;
@@ -233,64 +228,7 @@
 }
 
 .variantSpiral {
-  --nebulaTint: 1;
-}
-
-.variantRiver {
-  background:
-    radial-gradient(circle at 4% 10%, rgba(74, 255, 218, 0.14), transparent 34%),
-    radial-gradient(circle at 92% 82%, rgba(71, 137, 255, 0.2), transparent 44%),
-    linear-gradient(180deg, #020a19, #06142a 54%, #081326);
-}
-
-.variantRiver .nebula {
-  opacity: calc(var(--alpha) * 1.06);
-  filter: blur(26px) hue-rotate(calc(var(--hue-shift) - 16deg));
-}
-
-.variantCluster {
-  background:
-    radial-gradient(circle at 86% 10%, rgba(255, 126, 231, 0.12), transparent 34%),
-    radial-gradient(circle at 16% 84%, rgba(108, 214, 255, 0.16), transparent 42%),
-    linear-gradient(180deg, #09051a, #120926 52%, #0f0f22);
-}
-
-.variantCluster .nebula {
-  filter: blur(23px) hue-rotate(calc(var(--hue-shift) + 22deg));
-}
-
-.variantRift {
-  background:
-    linear-gradient(
-      98deg,
-      #030a1f 0%,
-      #08142f 42%,
-      #04040b 49%,
-      #03040a 52%,
-      #08142f 58%,
-      #030a1f 100%
-    );
-}
-
-.variantRift .deepField {
-  background:
-    radial-gradient(circle at 26% 44%, rgba(71, 112, 188, 0.2), transparent 50%),
-    radial-gradient(circle at 74% 58%, rgba(71, 112, 188, 0.2), transparent 50%),
-    linear-gradient(90deg, transparent 42%, rgba(0, 0, 0, 0.45) 49%, rgba(0, 0, 0, 0.45) 52%, transparent 59%);
-}
-
-.variantHalo {
-  background:
-    radial-gradient(circle at 50% 50%, rgba(158, 184, 255, 0.1), transparent 24%),
-    radial-gradient(circle at 10% 18%, rgba(127, 234, 255, 0.16), transparent 34%),
-    radial-gradient(circle at 88% 20%, rgba(199, 133, 255, 0.14), transparent 34%),
-    linear-gradient(180deg, #03061d, #0a0c29 56%, #090d20);
-}
-
-.variantHalo .skyGlow {
-  background:
-    radial-gradient(circle at 50% 50%, rgba(127, 198, 255, 0.18), transparent 28%),
-    radial-gradient(circle at 50% 50%, rgba(143, 114, 255, 0.12), transparent 42%);
+  --spiral-active: 1;
 }
 
 @keyframes twinkle {

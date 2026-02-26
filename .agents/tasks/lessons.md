@@ -237,3 +237,5 @@
 - In CLI wrapper normalizers, never reinterpret numeric token values as positional ports after explicit long flags (`--secret`, `--sns`, etc.); preserve long-flag argument semantics end-to-end.
 - When asked to validate “current local updated version,” evaluate working-tree code paths (plus required post-build behavior) first; do not anchor conclusions on previously published `origin/main` behavior.
 - 디자인 시안 피드백에서 "다 비슷하다"가 나오면 색상만 변경하지 말고, 분포 알고리즘/레이아웃 구조/밀도 자체를 시안별로 다르게 설계해야 한다.
+- 사용자가 디자인 후보를 하나로 확정하면, 나머지 후보의 데이터/렌더링/CSS 분기를 모두 제거해 기준안 단일 구조로 즉시 정리해야 한다.
+- 사용자가 시안 애니메이션을 앱 배경으로 쓰겠다고 하면 카드 크기 재사용이 아니라 전역 고정 레이어(뷰포트 오버스캔 포함)로 승격해 충분한 스케일로 적용해야 한다.

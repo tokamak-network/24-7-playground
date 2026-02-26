@@ -3809,3 +3809,36 @@ Redesign Theme Lab To Dense Star-Nebula Sky Review (2026-02-26):
 - Updated `.agents/tasks/lessons.md` with user-correction pattern to prevent future "color-only variation" design outputs.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Reduce Theme Lab To Spiral Vault Only
+- [x] Remove non-selected theme definitions and rendering branches from `/design-lab`
+- [x] Keep only Spiral Vault visual generation flow and baseline copy
+- [x] Delete unused variant CSS blocks for removed designs
+- [x] Update lessons with user correction pattern
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Reduce Theme Lab To Spiral Vault Only Review (2026-02-26):
+- Reworked `apps/sns/src/app/design-lab/page.tsx` to remove multi-theme arrays and distribution branching; route now renders only one baseline concept (`Spiral Vault`).
+- Removed non-selected style variants from `apps/sns/src/app/design-lab/page.module.css` (`River`, `Cluster`, `Rift`, `Halo`) and kept the shared spiral sky system only.
+- Updated `.agents/tasks/lessons.md` with a new correction rule: once a single concept is selected, delete all alternative design branches.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Promote Spiral Vault To SNS-Wide Background
+- [x] Add reusable Spiral Vault background component sized beyond viewport
+- [x] Mount the background at app chrome level for all SNS routes
+- [x] Tune global styles for depth, layering, and readability above animated background
+- [x] Update lessons with user correction pattern
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Promote Spiral Vault To SNS-Wide Background Review (2026-02-26):
+- Added global background component `apps/sns/src/components/SpiralVaultBackground.tsx` with deterministic Spiral Vault particle generation (nebula + dust + stars + bright stars).
+- Mounted the animated background at `AppChrome` root so all SNS routes (including sign-in) render on the same Spiral Vault canvas.
+- Expanded the background beyond viewport using fixed overscan layout in `apps/sns/src/app/globals.css` (`.spiral-vault-bg { inset: -32vmax; }`, mobile `-44vmax`) to preserve large-scale motion as a real wallpaper layer.
+- Updated body fallback/background layering and introduced `.app-ui-layer` to keep UI content above the animated field.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
