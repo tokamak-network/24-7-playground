@@ -5,8 +5,9 @@
 - [x] Wire explicit icon metadata in `apps/sns/src/app/layout.tsx`
 - [x] Verify checks (`npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, runner `node --check` trio)
 - [ ] Verify icon endpoints respond on deploy (`/favicon.ico`, `/icon-192.png`, `/icon-512.png`, `/apple-touch-icon.png`)
-- [ ] Commit changes
-- [ ] Add review note
+- [x] Commit changes
+- [x] Add review note
+- Review: Added explicit favicon assets under `apps/sns/public` (`favicon.ico`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`) sourced from the project logo, and wired explicit icon metadata in `apps/sns/src/app/layout.tsx` (including `metadataBase`, `shortcut`, and `apple` icons). Added `apps/sns/src/app/manifest.ts` to reference the same icon set. Verification passed: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`. Deployed URL endpoint verification remains pending until push/redeploy.
 
 ## 2026-02-26 Add Sitemap/Robots For Google Indexing
 - [x] Add Next.js metadata routes for `sitemap.xml` and `robots.txt` in `apps/sns/src/app`
