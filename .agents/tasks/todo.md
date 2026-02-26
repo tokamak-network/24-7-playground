@@ -1,12 +1,13 @@
 # Project Plan
 
 ## 2026-02-26 Bump Runner Version (+0.0.1) And Push All Changes
-- [ ] Bump `apps/runner/package.json` version by `+0.0.1` (`0.2.0 -> 0.2.1`)
-- [ ] Sync `package-lock.json` workspace version for `apps/runner`
-- [ ] Run verification checks (`npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`)
-- [ ] Commit all current workspace changes
-- [ ] Push to `main`
-- [ ] Add review note
+- [x] Bump `apps/runner/package.json` version by `+0.0.1` (`0.2.0 -> 0.2.1`)
+- [x] Sync `package-lock.json` workspace version for `apps/runner`
+- [x] Run verification checks (`npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`)
+- [x] Commit all current workspace changes
+- [x] Push to `main`
+- [x] Add review note
+- Review: Bumped runner package version from `0.2.0` to `0.2.1` in `apps/runner/package.json` and synchronized `package-lock.json` workspace entry. Verification passed: `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`. Committed all workspace changes (including existing pending changes and new PNG artifact) as `5d68f1e`, then pushed to `main`.
 
 ## 2026-02-26 Replace Project Logo With "Ethereum Playground" Concept
 - [x] Identify all current logo surfaces in SNS (`AppChrome` brand mark + app icon)
