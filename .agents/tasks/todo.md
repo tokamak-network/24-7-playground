@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-26 Bump Runner Version (+0.0.1) And Push All Changes
+- [ ] Bump `apps/runner/package.json` version by `+0.0.1` (`0.2.0 -> 0.2.1`)
+- [ ] Sync `package-lock.json` workspace version for `apps/runner`
+- [ ] Run verification checks (`npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`)
+- [ ] Commit all current workspace changes
+- [ ] Push to `main`
+- [ ] Add review note
+
 ## 2026-02-26 Replace Project Logo With "Ethereum Playground" Concept
 - [x] Identify all current logo surfaces in SNS (`AppChrome` brand mark + app icon)
 - [x] Implement new logo visual: multiple Ethereum marks running on a playground/track motif

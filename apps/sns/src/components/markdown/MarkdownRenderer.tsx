@@ -138,7 +138,8 @@ function parseList(lines: string[], startIndex: number): ParsedList | null {
       }
 
       if (indentSize(rawLine) > baseIndent) {
-        continuationLines.push(rawLine.slice(Math.min(marker.contentIndent, rawLine.length)));
+        const lineIndent = indentSize(rawLine);
+        continuationLines.push(rawLine.slice(Math.min(marker.contentIndent, lineIndent)));
         cursor += 1;
         continue;
       }
