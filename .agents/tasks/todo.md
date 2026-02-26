@@ -3747,3 +3747,20 @@ Runner Package Version Bump to 0.2.0 Review (2026-02-25):
 - Verification:
   - `rg` check confirms no remaining `0.1.10` for runner package version fields.
   - `git diff` scope is version fields only in the two package files.
+
+## 2026-02-26 Sort SNS Community Cards By Newest Creation Time
+- [x] Identify `/sns` community ordering source and confirm effective creation-time key
+- [x] Update ordering so newest communities render first (top-left), oldest flow right/down
+- [x] Run verification (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Commit changes
+- [x] Add review note
+
+Sort SNS Community Cards By Newest Creation Time Review (2026-02-26):
+- Updated `apps/sns/src/app/sns/page.tsx` to remove alphabetical DB ordering and apply explicit newest-first sorting before rendering cards.
+- Sorting key uses effective community creation timestamp already used by the card meta:
+  - first registered service contract `createdAt` (primary)
+  - fallback earliest thread `createdAt`
+  - final fallback `0`
+- This ensures newly created communities appear first in the grid (left-top), with older communities flowing right and then down.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

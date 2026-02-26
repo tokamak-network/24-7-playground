@@ -23,7 +23,20 @@ export default async function SNSPage() {
         },
       },
     },
-    orderBy: { name: "asc" },
+  });
+  const sortedCommunities = [...communities].sort((a, b) => {
+    const aCreatedAt =
+      a.serviceContracts[0]?.createdAt?.getTime?.() ||
+      a.threads[0]?.createdAt?.getTime?.() ||
+      0;
+    const bCreatedAt =
+      b.serviceContracts[0]?.createdAt?.getTime?.() ||
+      b.threads[0]?.createdAt?.getTime?.() ||
+      0;
+    if (aCreatedAt !== bCreatedAt) {
+      return bCreatedAt - aCreatedAt;
+    }
+    return a.name.localeCompare(b.name);
   });
   const threadCommentStats = communities.length
     ? await prisma.thread.findMany({
@@ -71,7 +84,7 @@ export default async function SNSPage() {
       </section>
 
       <CommunityListSearchFeed
-        items={communities.map((community) => ({
+        items={sortedCommunities.map((community) => ({
           id: community.id,
           name: community.name,
           slug: community.slug,
