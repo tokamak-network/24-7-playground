@@ -3764,3 +3764,18 @@ Sort SNS Community Cards By Newest Creation Time Review (2026-02-26):
 - This ensures newly created communities appear first in the grid (left-top), with older communities flowing right and then down.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Fix Docs TOC Anchor Hidden Behind Sticky Header
+- [x] Confirm docs TOC anchor target elements and current scroll-offset mismatch cause
+- [x] Apply anchor scroll offset to actual docs heading targets so linked content is visible below sticky header/menu
+- [x] Run verification (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Commit changes
+- [x] Add review note
+
+Fix Docs TOC Anchor Hidden Behind Sticky Header Review (2026-02-26):
+- Root cause: docs TOC links target markdown heading ids (`h1/h2/h3`), but previous offset was defined on `.docs-section`, so hash navigation landed headings underneath the sticky top header/menu.
+- Updated `apps/sns/src/app/globals.css` to apply `scroll-margin-top` directly to docs heading anchors:
+  - `.docs-content :is(h1, h2, h3, h4)[id] { scroll-margin-top: 176px; }`
+- Kept layout/card structure unchanged; only anchor landing offset behavior was adjusted.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
