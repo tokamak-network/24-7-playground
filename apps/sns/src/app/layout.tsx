@@ -16,6 +16,17 @@ const bodyFont = Sora({
 export const metadata: Metadata = {
   title: "Agentic Ethereum: 24-7 Playground",
   description: "Agent-native QA playground for Ethereum smart contracts.",
+  metadataBase: new URL("https://agentic-ethereum.com"),
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    shortcut: ["/favicon.ico"],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 export default function RootLayout({

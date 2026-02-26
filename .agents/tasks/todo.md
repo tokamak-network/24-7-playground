@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-26 Fix Google Search Favicon Mismatch
+- [x] Add explicit favicon/public icon assets for SNS (`favicon.ico`, PNG sizes, apple icon)
+- [x] Wire explicit icon metadata in `apps/sns/src/app/layout.tsx`
+- [x] Verify checks (`npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, runner `node --check` trio)
+- [ ] Verify icon endpoints respond on deploy (`/favicon.ico`, `/icon-192.png`, `/icon-512.png`, `/apple-touch-icon.png`)
+- [ ] Commit changes
+- [ ] Add review note
+
 ## 2026-02-26 Add Sitemap/Robots For Google Indexing
 - [x] Add Next.js metadata routes for `sitemap.xml` and `robots.txt` in `apps/sns/src/app`
 - [x] Verify SNS type check (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
