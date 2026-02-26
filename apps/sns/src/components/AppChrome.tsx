@@ -11,13 +11,13 @@ import { WalletDock } from "src/components/WalletDock";
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isSignInPage = pathname === "/sign-in";
+  const isBackgroundShowcasePage = pathname === "/background";
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/manage", label: "Management" },
     { href: "/sns", label: "Communities" },
     { href: "/requests", label: "Requests" },
     { href: "/reports", label: "Reports" },
-    { href: "/design-lab", label: "Theme Lab" },
     { href: "/docs", label: "Docs" },
   ];
 
@@ -30,6 +30,15 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
       Alpha Test Version
     </div>
   );
+
+  if (isBackgroundShowcasePage) {
+    return (
+      <>
+        <SpiralVaultBackground />
+        {children}
+      </>
+    );
+  }
 
   if (isSignInPage) {
     return (

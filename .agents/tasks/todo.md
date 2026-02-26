@@ -3858,3 +3858,23 @@ Add Spiral Outward Expansion To Spiral Vault Background Review (2026-02-26):
 - Strengthened field-level expansion (`sv-field-drift`) from inner scale to outer scale so the background continuously reads as center-originating expansion.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Remove Design Lab And Add Blank Background Showcase Page
+- [x] Remove `/design-lab` route and related files
+- [x] Remove `Theme Lab` navigation entry
+- [x] Add blank page route for unobstructed Spiral Vault viewing (`/background`)
+- [x] Make AppChrome render background-only mode on the showcase route
+- [x] Update lessons with user correction pattern
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Remove Design Lab And Add Blank Background Showcase Page Review (2026-02-26):
+- Removed the `design-lab` route files: `apps/sns/src/app/design-lab/page.tsx`, `apps/sns/src/app/design-lab/page.module.css`.
+- Added a blank background showcase route: `apps/sns/src/app/background/page.tsx` (returns `null`).
+- Updated `apps/sns/src/components/AppChrome.tsx`:
+  - removed `Theme Lab` nav item,
+  - added `/background` chrome-bypass mode that renders only `SpiralVaultBackground` with no header/footer/badge overlays.
+- Verification:
+  - `npm -w apps/sns run clean:next`
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json`
