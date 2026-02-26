@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-26 Add Sitemap/Robots For Google Indexing
+- [x] Add Next.js metadata routes for `sitemap.xml` and `robots.txt` in `apps/sns/src/app`
+- [x] Verify SNS type check (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Run verification floor (`npm -w apps/sns run prisma:generate`, runner `node --check` trio)
+- [ ] Verify public responses for `https://agentic-ethereum.com/sitemap.xml` and `https://agentic-ethereum.com/robots.txt` after deploy
+- [ ] Commit changes
+- [ ] Add review note
+
 ## 2026-02-26 Bump Runner Version (+0.0.1) And Push All Changes
 - [x] Bump `apps/runner/package.json` version by `+0.0.1` (`0.2.0 -> 0.2.1`)
 - [x] Sync `package-lock.json` workspace version for `apps/runner`
