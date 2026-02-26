@@ -3794,3 +3794,18 @@ Create 5 Cosmic Neural Theme Drafts For SNS Review (2026-02-26):
 - Added navigation entry in `apps/sns/src/components/AppChrome.tsx` so the sample page is directly reachable from app header (`Theme Lab`).
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Redesign Theme Lab To Dense Star-Nebula Sky
+- [x] Rework `/design-lab` visuals from similar core pattern to composition-level variants
+- [x] Prioritize dense night-sky expression (stars + nebula) before neural link motifs
+- [x] Update lessons with user correction pattern
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Redesign Theme Lab To Dense Star-Nebula Sky Review (2026-02-26):
+- Replaced `apps/sns/src/app/design-lab/page.tsx` generation logic to prioritize dense starfield + nebula rendering, with composition-level distribution variants (`spiral`, `band`, `cluster`, `rift`, `halo`) instead of shared core-ring motif.
+- Rebuilt `apps/sns/src/app/design-lab/page.module.css` for deep-night sky visuals: layered nebula clouds, high-density dust/stars, bright-star cross glints, and per-variant atmosphere differences.
+- Updated `.agents/tasks/lessons.md` with user-correction pattern to prevent future "color-only variation" design outputs.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

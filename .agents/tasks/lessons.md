@@ -236,3 +236,4 @@
 - Do not impose “quotes are mandatory” for CLI secret flags; improve argument parsing to accept unquoted forms (including `--key=value` and multi-token values) and explain only the remaining shell-level metacharacter limits.
 - In CLI wrapper normalizers, never reinterpret numeric token values as positional ports after explicit long flags (`--secret`, `--sns`, etc.); preserve long-flag argument semantics end-to-end.
 - When asked to validate “current local updated version,” evaluate working-tree code paths (plus required post-build behavior) first; do not anchor conclusions on previously published `origin/main` behavior.
+- 디자인 시안 피드백에서 "다 비슷하다"가 나오면 색상만 변경하지 말고, 분포 알고리즘/레이아웃 구조/밀도 자체를 시안별로 다르게 설계해야 한다.
