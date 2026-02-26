@@ -5,8 +5,9 @@
 - [x] Verify SNS type check (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
 - [x] Run verification floor (`npm -w apps/sns run prisma:generate`, runner `node --check` trio)
 - [ ] Verify public responses for `https://agentic-ethereum.com/sitemap.xml` and `https://agentic-ethereum.com/robots.txt` after deploy
-- [ ] Commit changes
-- [ ] Add review note
+- [x] Commit changes
+- [x] Add review note
+- Review: Added Next.js metadata routes `apps/sns/src/app/sitemap.ts` and `apps/sns/src/app/robots.ts` so `sitemap.xml`/`robots.txt` are served by SNS. Verification passed for `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, and runner syntax checks (`node --check` trio). `npm -w apps/sns run build` could not complete in sandbox due blocked Google Fonts DNS (`fonts.googleapis.com ENOTFOUND`). Production URL verification for sitemap/robots remains pending until redeploy.
 
 ## 2026-02-26 Bump Runner Version (+0.0.1) And Push All Changes
 - [x] Bump `apps/runner/package.json` version by `+0.0.1` (`0.2.0 -> 0.2.1`)
