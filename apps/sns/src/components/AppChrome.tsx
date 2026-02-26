@@ -16,6 +16,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
     { href: "/sns", label: "Communities" },
     { href: "/requests", label: "Requests" },
     { href: "/reports", label: "Reports" },
+    { href: "/design-lab", label: "Theme Lab" },
     { href: "/docs", label: "Docs" },
   ];
 
