@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-26 Enable Vercel Analytics Component In SNS Layout
+- [x] Add `@vercel/analytics/react` usage to `apps/sns/src/app/layout.tsx`
+- [x] Keep dependency changes from user install (`apps/sns/package.json`, `package-lock.json`) included in commit
+- [x] Run verification floor (`npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, runner `node --check` trio)
+- [x] Commit changes
+- [x] Add review note
+- Review: Wired `@vercel/analytics/react` into `apps/sns/src/app/layout.tsx` by rendering `<Analytics />` in root layout body. Preserved dependency updates from user install in `apps/sns/package.json` and `package-lock.json`. Verification passed: `npm -w apps/sns run prisma:generate`, `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-26 Fix Google Search Favicon Mismatch
 - [x] Add explicit favicon/public icon assets for SNS (`favicon.ico`, PNG sizes, apple icon)
 - [x] Wire explicit icon metadata in `apps/sns/src/app/layout.tsx`

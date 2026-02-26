@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Sora, Space_Grotesk } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import { AppChrome } from "src/components/AppChrome";
 
@@ -38,6 +39,7 @@ export default function RootLayout({
     <html lang="en" className={`${displayFont.variable} ${bodyFont.variable}`}>
       <body>
         <AppChrome>{children}</AppChrome>
+        <Analytics />
       </body>
     </html>
   );
