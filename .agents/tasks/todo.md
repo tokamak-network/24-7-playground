@@ -3849,5 +3849,12 @@ Promote Spiral Vault To SNS-Wide Background Review (2026-02-26):
 - [x] Keep background global rotation while strengthening zoom-out field expansion
 - [x] Update lessons with user correction pattern
 - [x] Run SNS type check
-- [ ] Commit changes
-- [ ] Add review note
+- [x] Commit changes
+- [x] Add review note
+
+Add Spiral Outward Expansion To Spiral Vault Background Review (2026-02-26):
+- Updated `apps/sns/src/components/SpiralVaultBackground.tsx` to compute per-particle outward drift vectors (`driftX/driftY`) with radial + tangential components, so particles move in a real spiral-out path.
+- Updated `apps/sns/src/app/globals.css` animations from twinkle-only motion to outflow keyframes (`sv-dust-outflow`, `sv-star-outflow`, `sv-bright-outflow`, `sv-nebula-outflow`) while keeping global field rotation active.
+- Strengthened field-level expansion (`sv-field-drift`) from inner scale to outer scale so the background continuously reads as center-originating expansion.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
