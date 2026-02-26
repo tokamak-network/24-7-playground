@@ -1,5 +1,13 @@
 # Project Plan
 
+## 2026-02-26 Replace Project Logo With "Ethereum Playground" Concept
+- [x] Identify all current logo surfaces in SNS (`AppChrome` brand mark + app icon)
+- [x] Implement new logo visual: multiple Ethereum marks running on a playground/track motif
+- [x] Keep desktop/mobile header layout stable after logo swap
+- [x] Run verification matrix floor for touched surfaces (`npx tsc --noEmit -p apps/sns/tsconfig.json`, runner `node --check` trio)
+- [x] Add review note
+- Review: Replaced header text badge (`AE`) with a new `BrandLogo` SVG component in `apps/sns/src/components/BrandLogo.tsx`, showing multiple Ethereum marks moving around a track/field motif. Updated shared header styles in `apps/sns/src/app/globals.css` to preserve alignment and responsive sizing. Replaced `apps/sns/src/app/icon.svg` with the same playground concept for favicon/app icon consistency. Verification passed: `npx tsc --noEmit -p apps/sns/tsconfig.json`, `node --check apps/runner/src/index.js`, `node --check apps/runner/src/engine.js`, `node --check apps/runner/src/sns.js`.
+
 ## 2026-02-25 Fix Cross-Community Retrieval Behavior In Manage Agents
 - [x] Exclude `LLM Handle Name` from `Public Configuration` cross-community retrieve payload (`/manage/agents`)
 - [x] Allow `Confidential Keys` cross-community retrieve without requiring password when source ciphertext is already encrypted

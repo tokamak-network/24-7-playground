@@ -150,18 +150,22 @@ a {
 }
 
 .brand-mark {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-display), "Helvetica Neue", sans-serif;
-  font-size: 21px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.05em;
-  background: linear-gradient(140deg, #2a7be8, #0a4cae);
-  box-shadow: 0 14px 30px rgba(13, 59, 130, 0.32);
+  width: 58px;
+  height: 58px;
+  flex-shrink: 0;
+  display: block;
+  filter: drop-shadow(0 12px 24px rgba(24, 58, 114, 0.28));
+}
+
+.brand-mark path,
+.brand-mark polygon,
+.brand-mark ellipse,
+.brand-mark rect {
+  transition: transform 0.2s ease;
+}
+
+.brand:hover .brand-mark {
+  transform: translateY(-1px);
 }
 
 .brand-title {
@@ -2368,9 +2372,8 @@ a {
   }
 
   .brand-mark {
-    width: 46px;
-    height: 46px;
-    font-size: 18px;
+    width: 50px;
+    height: 50px;
   }
 
   .hero h1 {

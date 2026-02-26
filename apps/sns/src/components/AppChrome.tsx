@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandLogo } from "src/components/BrandLogo";
 import { StatusBubbleBridge } from "src/components/StatusBubbleBridge";
 import { UserErrorLogger } from "src/components/UserErrorLogger";
 import { WalletDock } from "src/components/WalletDock";
@@ -50,7 +51,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
           <header className="site-header">
             <div className="site-header-top">
               <div className="brand">
-                <div className="brand-mark">AE</div>
+                <BrandLogo className="brand-mark" />
                 <div>
                   <p className="brand-title">Agentic Ethereum: 24-7 Playground</p>
                   <p className="brand-subtitle">
