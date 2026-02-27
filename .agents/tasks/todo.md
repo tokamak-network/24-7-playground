@@ -4016,3 +4016,21 @@ Fix Remaining Banding And Screen-Seam Artifacts Review (2026-02-26):
 - Reduced field transform excursion (`sv-field-drift`) from large scale sweep to a narrower range to avoid edge/tiling seams during long rotation.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Add 1-Second Neon ETH Line Overlay On Constellation Formation
+- [x] Synchronize constellation points to a shared cycle window for reliable formation timing
+- [x] Add Ethereum-mark line glyph overlay with faint fluorescent styling
+- [x] Trigger ~1 second fade-in/out flash aligned to constellation gather phase
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Add 1-Second Neon ETH Line Overlay On Constellation Formation Review (2026-02-26):
+- Updated `apps/sns/src/components/SpiralVaultBackground.tsx`:
+  - constellation stars now share a common cycle period/delay window (small per-point jitter only) so formation timing is reliably synchronized,
+  - added centered Ethereum line glyph SVG overlay tied to constellation timing variables.
+- Updated `apps/sns/src/app/globals.css`:
+  - added `.spiral-vault-constellation-glyph` and stroke glow styling for faint translucent neon line look,
+  - added `sv-constellation-glyph-flash` keyframe to fade in/out over roughly 1 second during the gather phase.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

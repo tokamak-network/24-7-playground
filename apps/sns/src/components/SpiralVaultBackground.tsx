@@ -190,14 +190,13 @@ function createSpiralParticles(
 function createEthereumConstellation(seed: number): ConstellationStar[] {
   const rand = seededRandom(seed * 97 + 13);
   const points = buildEthereumConstellationPoints();
+  const sharedPeriod = 58 + rand() * 8;
+  const sharedDelay = rand() * 1.2;
 
   return points.map((point) => {
     const x = 50 + point.x * 17.8 + (rand() - 0.5) * 0.7;
     const y = 50 + point.y * 24.6 + (rand() - 0.5) * 0.7;
     const hitPolar = toPolar(x, y);
-
-    const period = 58 + rand() * 8;
-    const delay = rand() * 1.2;
 
     const angleOff = hitPolar.angle - (138 + rand() * 88);
     const radiusOff = clamp(hitPolar.dist * 0.12, 1.8, 6.6);
@@ -214,8 +213,8 @@ function createEthereumConstellation(seed: number): ConstellationStar[] {
       radiusExit,
       size: 1.9 + rand() * 2.4,
       alpha: 0.72 + rand() * 0.24,
-      delay,
-      period,
+      delay: sharedDelay + rand() * 0.12,
+      period: sharedPeriod,
       twinkle: 2.3 + rand() * 3,
     };
   });
@@ -230,6 +229,10 @@ const DUST = createSpiralParticles(CONFIG.seed * 29 + 31, CONFIG.dustCount, "dus
 const STARS = createSpiralParticles(CONFIG.seed, CONFIG.starCount, "star");
 const BRIGHT = createSpiralParticles(CONFIG.seed * 17 + 19, CONFIG.brightCount, "bright");
 const CONSTELLATION = createEthereumConstellation(CONFIG.seed);
+const CONSTELLATION_TIMING = {
+  period: CONSTELLATION[0]?.period ?? 62,
+  delay: CONSTELLATION[0]?.delay ?? 0,
+};
 
 export function SpiralVaultBackground() {
   return (
@@ -335,6 +338,20 @@ export function SpiralVaultBackground() {
           })}
         />
       ))}
+
+      <svg
+        className="spiral-vault-constellation-glyph"
+        viewBox="-60 -95 120 190"
+        role="presentation"
+        focusable="false"
+        style={toStyle({
+          "--period": `${CONSTELLATION_TIMING.period.toFixed(3)}s`,
+          "--delay": `${CONSTELLATION_TIMING.delay.toFixed(3)}s`,
+        })}
+      >
+        <path d="M 0 -86 L -42 -14 L 0 0 L 42 -14 Z" />
+        <path d="M 0 0 L -42 14 L 0 86 L 42 14 Z" />
+      </svg>
     </div>
   );
 }
