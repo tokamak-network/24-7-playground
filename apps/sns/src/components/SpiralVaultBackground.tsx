@@ -97,29 +97,29 @@ function toPolar(x: number, y: number) {
 
 const ETHEREUM_VERTICES = {
   apex: [0, -1.08],
-  upperLeft: [-0.6, -0.16],
-  upperRight: [0.6, -0.16],
-  center: [0, 0.12],
-  lowerLeft: [-0.6, 0.28],
-  lowerRight: [0.6, 0.28],
-  bottom: [0, 1.08],
+  shoulderLeft: [-0.78, 0.12],
+  shoulderRight: [0.78, 0.12],
+  innerTop: [0, -0.02],
+  waistLeft: [-0.66, 0.4],
+  waistRight: [0.66, 0.4],
+  innerBottom: [0, 0.56],
+  bottom: [0, 1.32],
 } as const;
 
 type EthereumVertex = keyof typeof ETHEREUM_VERTICES;
 
 const ETHEREUM_SEGMENTS: readonly (readonly [EthereumVertex, EthereumVertex, number])[] = [
-  ["apex", "upperLeft", 5],
-  ["apex", "upperRight", 5],
-  ["upperLeft", "center", 4],
-  ["upperRight", "center", 4],
-  ["upperLeft", "lowerLeft", 4],
-  ["upperRight", "lowerRight", 4],
-  ["center", "lowerLeft", 4],
-  ["center", "lowerRight", 4],
-  ["apex", "center", 4],
-  ["center", "bottom", 5],
-  ["lowerLeft", "bottom", 5],
-  ["lowerRight", "bottom", 5],
+  ["apex", "shoulderLeft", 5],
+  ["apex", "shoulderRight", 5],
+  ["apex", "innerTop", 4],
+  ["innerTop", "shoulderLeft", 4],
+  ["innerTop", "shoulderRight", 4],
+  ["innerTop", "innerBottom", 5],
+  ["waistLeft", "innerBottom", 4],
+  ["waistRight", "innerBottom", 4],
+  ["waistLeft", "bottom", 5],
+  ["waistRight", "bottom", 5],
+  ["innerBottom", "bottom", 5],
 ];
 
 const ETHEREUM_CONSTELLATION_SCALE = {
@@ -156,11 +156,12 @@ function buildEthereumGlyphPaths() {
   };
 
   return [
-    `M ${point("apex")} L ${point("upperLeft")} L ${point("center")} L ${point("upperRight")} Z`,
-    `M ${point("center")} L ${point("lowerLeft")} L ${point("bottom")} L ${point("lowerRight")} Z`,
-    `M ${point("upperLeft")} L ${point("lowerLeft")}`,
-    `M ${point("upperRight")} L ${point("lowerRight")}`,
-    `M ${point("apex")} L ${point("center")} L ${point("bottom")}`,
+    `M ${point("apex")} L ${point("shoulderLeft")} L ${point("innerTop")} L ${point("apex")}`,
+    `M ${point("apex")} L ${point("innerTop")} L ${point("shoulderRight")} L ${point("apex")}`,
+    `M ${point("innerTop")} L ${point("innerBottom")}`,
+    `M ${point("waistLeft")} L ${point("innerBottom")} L ${point("waistRight")}`,
+    `M ${point("waistLeft")} L ${point("bottom")} L ${point("waistRight")}`,
+    `M ${point("innerBottom")} L ${point("bottom")}`,
   ];
 }
 
