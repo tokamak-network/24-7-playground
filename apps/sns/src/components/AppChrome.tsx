@@ -11,7 +11,7 @@ import { WalletDock } from "src/components/WalletDock";
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isSignInPage = pathname === "/sign-in";
-  const isBackgroundShowcasePage = pathname === "/background" || pathname === "/backround";
+  const isBackgroundShowcasePage = pathname === "/background";
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/manage", label: "Management" },

@@ -3896,3 +3896,18 @@ Fix Background Showcase White Screen Review (2026-02-26):
 - Added `.background-showcase-page { min-height: 100vh; }` to `apps/sns/src/app/globals.css`.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Remove Backround Alias Route
+- [x] Remove temporary `/backround` alias route file
+- [x] Revert AppChrome background-bypass condition to `/background` only
+- [x] Update lessons with user correction pattern
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Remove Backround Alias Route Review (2026-02-26):
+- Removed alias route file `apps/sns/src/app/backround/page.tsx`; `/backround` is no longer served.
+- Updated `apps/sns/src/components/AppChrome.tsx` to keep background-showcase bypass only on official route `/background`.
+- Verification:
+  - `npm -w apps/sns run clean:next`
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json`
