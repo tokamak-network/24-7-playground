@@ -84,31 +84,34 @@ body {
 .spiral-vault-dust {
   width: var(--size);
   height: var(--size);
-  opacity: var(--alpha);
+  opacity: 0;
   filter: none;
   background: rgba(227, 240, 255, 0.76);
   animation: sv-dust-spiral var(--duration) linear infinite;
   animation-delay: var(--delay);
+  animation-fill-mode: backwards;
 }
 
 .spiral-vault-star {
   width: var(--size);
   height: var(--size);
-  opacity: var(--alpha);
+  opacity: 0;
   filter: none;
   background: rgba(237, 245, 255, 0.9);
   animation: sv-star-spiral var(--duration) linear infinite;
   animation-delay: var(--delay);
+  animation-fill-mode: backwards;
 }
 
 .spiral-vault-bright {
   width: var(--size);
   height: var(--size);
-  opacity: var(--alpha);
+  opacity: 0;
   filter: none;
   background: rgba(247, 251, 255, 0.95);
   animation: sv-bright-spiral var(--duration) linear infinite;
   animation-delay: var(--delay);
+  animation-fill-mode: backwards;
 }
 
 .spiral-vault-bright::before,
@@ -139,6 +142,7 @@ body {
   background: rgba(242, 248, 255, 0.92);
   animation: sv-constellation-cycle var(--period) linear infinite;
   animation-delay: var(--delay);
+  animation-fill-mode: backwards;
 }
 
 .spiral-vault-constellation-glyph {
@@ -154,6 +158,7 @@ body {
   transform: translate(-50%, -50%);
   animation: sv-constellation-glyph-flash var(--period) linear infinite;
   animation-delay: var(--delay);
+  animation-fill-mode: backwards;
 }
 
 .spiral-vault-constellation-glyph path {
@@ -229,7 +234,7 @@ body {
   0% {
     transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0))
       scale(calc(0.44 + (var(--grow) * 0.22)));
-    opacity: calc(var(--alpha) * 0.24);
+    opacity: 0;
   }
   42% {
     transform: translate(-50%, -50%)
@@ -263,7 +268,7 @@ body {
   0% {
     transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0))
       scale(calc(0.5 + (var(--grow) * 0.3)));
-    opacity: calc(var(--alpha) * 0.38);
+    opacity: 0;
   }
   50% {
     transform: translate(-50%, -50%)
@@ -297,7 +302,7 @@ body {
   0% {
     transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0))
       scale(calc(0.56 + (var(--grow) * 0.26)));
-    opacity: calc(var(--alpha) * 0.42);
+    opacity: 0;
   }
   45% {
     transform: translate(-50%, -50%)
