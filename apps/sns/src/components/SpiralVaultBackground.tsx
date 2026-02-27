@@ -163,8 +163,9 @@ function createSpiralParticles(
     const speed = 0.72 + sizeNorm * 1.18 + grow * 0.22;
 
     const radialTravelBase =
-      type === "dust" ? 3.2 + rand() * 8.2 : type === "star" ? 4.8 + rand() * 11.4 : 6.4 + rand() * 14.2;
-    const radius1 = radius0 + radialTravelBase * (0.82 + sizeNorm * 0.72) * (0.88 + grow * 0.16);
+      type === "dust" ? 10 + rand() * 20 : type === "star" ? 16 + rand() * 30 : 24 + rand() * 36;
+    const edgeBoost = 1 + clamp((polar.dist - 18) / 42, 0, 1) * 0.9;
+    const radius1 = radius0 + radialTravelBase * (0.9 + sizeNorm * 0.85) * (0.9 + grow * 0.2) * edgeBoost;
 
     const spinBase = type === "dust" ? 210 : type === "star" ? 180 : 145;
     const spin = (spinBase + rand() * 88) * (1.1 - sizeNorm * 0.45) * (0.92 + grow * 0.08);

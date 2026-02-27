@@ -4034,3 +4034,20 @@ Add 1-Second Neon ETH Line Overlay On Constellation Formation Review (2026-02-26
   - added `sv-constellation-glyph-flash` keyframe to fade in/out over roughly 1 second during the gather phase.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-27 Expand Spiral Star Disappearance Boundary Toward Screen Edge
+- [x] Increase outward travel radius in `SpiralVaultBackground` particle generation so stars extend farther before reset
+- [x] Delay fade-out timing in spiral particle keyframes so stars remain visible until near animation end
+- [x] Verify SNS type-check (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Commit scoped changes only (exclude unrelated logo files)
+- [x] Add review note
+
+Expand Spiral Star Disappearance Boundary Toward Screen Edge Review (2026-02-27):
+- Updated `apps/sns/src/components/SpiralVaultBackground.tsx`:
+  - increased spiral particle outward travel distance (`radius1`) for `dust`, `star`, and `bright` particles,
+  - added `edgeBoost` so particles sampled farther from center push even further outward before reset.
+- Updated `apps/sns/src/app/globals.css`:
+  - delayed fade-out in `sv-dust-spiral`, `sv-star-spiral`, and `sv-bright-spiral` with new late-phase keyframes (`86~89%`, `97%`) so stars stay visible close to the animation edge path,
+  - changed final keyframe opacity to `0` for clean disappearance at reset.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

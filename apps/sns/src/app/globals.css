@@ -330,10 +330,24 @@ body {
       scale(calc(0.66 + (var(--grow) * 0.4)));
     opacity: calc(var(--alpha) * 0.84);
   }
+  86% {
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.86)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.86)))
+      scale(calc(0.84 + (var(--grow) * 0.74)));
+    opacity: calc(var(--alpha) * 0.56);
+  }
+  97% {
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.97)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.97)))
+      scale(calc(0.88 + (var(--grow) * 0.82)));
+    opacity: calc(var(--alpha) * 0.18);
+  }
   100% {
     transform: translate(-50%, -50%) rotate(var(--angle1)) translateX(var(--radius1))
       scale(calc(0.88 + (var(--grow) * 0.84)));
-    opacity: calc(var(--alpha) * 0.02);
+    opacity: 0;
   }
 }
 
@@ -350,10 +364,24 @@ body {
       scale(calc(0.72 + (var(--grow) * 0.5)));
     opacity: calc(var(--alpha) * 1.08);
   }
+  88% {
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.88)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.88)))
+      scale(calc(0.9 + (var(--grow) * 0.8)));
+    opacity: calc(var(--alpha) * 0.74);
+  }
+  97% {
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.97)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.97)))
+      scale(calc(0.94 + (var(--grow) * 0.9)));
+    opacity: calc(var(--alpha) * 0.24);
+  }
   100% {
     transform: translate(-50%, -50%) rotate(var(--angle1)) translateX(var(--radius1))
       scale(calc(0.94 + (var(--grow) * 0.92)));
-    opacity: calc(var(--alpha) * 0.06);
+    opacity: 0;
   }
 }
 
@@ -370,10 +398,24 @@ body {
       scale(calc(0.8 + (var(--grow) * 0.56)));
     opacity: calc(var(--alpha) * 1.14);
   }
+  89% {
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.89)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.89)))
+      scale(calc(1 + (var(--grow) * 0.86)));
+    opacity: calc(var(--alpha) * 0.82);
+  }
+  97% {
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.97)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.97)))
+      scale(calc(1.04 + (var(--grow) * 0.94)));
+    opacity: calc(var(--alpha) * 0.28);
+  }
   100% {
     transform: translate(-50%, -50%) rotate(var(--angle1)) translateX(var(--radius1))
       scale(calc(1.06 + (var(--grow) * 0.98)));
-    opacity: calc(var(--alpha) * 0.08);
+    opacity: 0;
   }
 }
 
