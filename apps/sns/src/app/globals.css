@@ -149,17 +149,21 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(232, 242, 255, var(--cross-alpha, 0.34));
+  border-radius: 999px;
+  filter: blur(0.2px);
+  box-shadow: 0 0 calc(var(--cross-len, 8px) * 0.18) rgba(190, 221, 255, calc(var(--cross-alpha, 0.34) * 0.74));
 }
 
 .spiral-vault-crossed::before {
   width: var(--cross-len, 8px);
-  height: 1px;
+  height: max(1px, calc(var(--size) * 0.16));
+  background: linear-gradient(90deg, rgba(232, 242, 255, 0), rgba(232, 242, 255, var(--cross-alpha, 0.34)), rgba(232, 242, 255, 0));
 }
 
 .spiral-vault-crossed::after {
-  width: 1px;
+  width: max(1px, calc(var(--size) * 0.16));
   height: var(--cross-len, 8px);
+  background: linear-gradient(180deg, rgba(232, 242, 255, 0), rgba(232, 242, 255, var(--cross-alpha, 0.34)), rgba(232, 242, 255, 0));
 }
 
 .spiral-vault-constellation-star {
