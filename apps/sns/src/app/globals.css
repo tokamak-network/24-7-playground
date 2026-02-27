@@ -255,6 +255,10 @@ body {
   padding: 24px;
 }
 
+.background-showcase-page {
+  min-height: 100vh;
+}
+
 .sign-in-card {
   width: min(520px, 100%);
   display: grid;

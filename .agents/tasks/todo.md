@@ -3878,3 +3878,21 @@ Remove Design Lab And Add Blank Background Showcase Page Review (2026-02-26):
 - Verification:
   - `npm -w apps/sns run clean:next`
   - `npx tsc --noEmit -p apps/sns/tsconfig.json`
+
+## 2026-02-26 Fix Background Showcase White Screen
+- [x] Render Spiral Vault directly in `/background` page instead of returning `null`
+- [x] Add typo alias route `/backround` to mirror `/background`
+- [x] Keep AppChrome in chrome-bypass mode for both paths
+- [x] Add dedicated full-height showcase container style
+- [x] Update lessons with user correction pattern
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Fix Background Showcase White Screen Review (2026-02-26):
+- Updated `apps/sns/src/app/background/page.tsx` to render `SpiralVaultBackground` directly (instead of `null`) with a full-height showcase container.
+- Added route alias `apps/sns/src/app/backround/page.tsx` so `/backround` serves the same background-only page as `/background`.
+- Updated `apps/sns/src/components/AppChrome.tsx` to bypass chrome for both `/background` and `/backround`.
+- Added `.background-showcase-page { min-height: 100vh; }` to `apps/sns/src/app/globals.css`.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
