@@ -3911,3 +3911,18 @@ Remove Backround Alias Route Review (2026-02-26):
 - Verification:
   - `npm -w apps/sns run clean:next`
   - `npx tsc --noEmit -p apps/sns/tsconfig.json`
+
+## 2026-02-26 Add Distance-Based Star Growth For Stronger 3D Depth
+- [x] Add per-particle growth coefficient (`--grow`) in Spiral Vault particle generation
+- [x] Apply growth coefficient to star/dust/bright outflow keyframes so size increases with outward travel
+- [x] Update lessons with user correction pattern
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Add Distance-Based Star Growth For Stronger 3D Depth Review (2026-02-26):
+- Updated `apps/sns/src/components/SpiralVaultBackground.tsx` to compute a per-particle outward growth factor (`grow`) from drift magnitude and inject it as CSS variable `--grow`.
+- Updated `apps/sns/src/app/globals.css` outflow animations to scale each particle by `--grow` throughout the timeline, so particles that travel farther outward become visibly larger.
+- This creates stronger depth perception: stars near the center remain smaller while outward-traveling stars expand progressively.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

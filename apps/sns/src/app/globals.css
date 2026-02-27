@@ -202,48 +202,51 @@ body {
 
 @keyframes sv-dust-outflow {
   0% {
-    transform: translate(-50%, -50%) translate(0px, 0px) scale(0.78);
+    transform: translate(-50%, -50%) translate(0px, 0px) scale(calc(0.5 + (var(--grow) * 0.24)));
     opacity: calc(var(--alpha) * 0.24);
   }
   42% {
     transform: translate(-50%, -50%) translate(calc(var(--drift-x) * 0.56), calc(var(--drift-y) * 0.56))
-      scale(1.04);
+      scale(calc(0.68 + (var(--grow) * 0.42)));
     opacity: calc(var(--alpha) * 0.84);
   }
   100% {
-    transform: translate(-50%, -50%) translate(var(--drift-x), var(--drift-y)) scale(1.3);
+    transform: translate(-50%, -50%) translate(var(--drift-x), var(--drift-y))
+      scale(calc(0.9 + (var(--grow) * 0.82)));
     opacity: calc(var(--alpha) * 0.02);
   }
 }
 
 @keyframes sv-star-outflow {
   0% {
-    transform: translate(-50%, -50%) translate(0px, 0px) scale(0.84);
+    transform: translate(-50%, -50%) translate(0px, 0px) scale(calc(0.52 + (var(--grow) * 0.3)));
     opacity: calc(var(--alpha) * 0.38);
   }
   50% {
     transform: translate(-50%, -50%) translate(calc(var(--drift-x) * 0.58), calc(var(--drift-y) * 0.58))
-      scale(1.08);
+      scale(calc(0.72 + (var(--grow) * 0.5)));
     opacity: calc(var(--alpha) * 1.08);
   }
   100% {
-    transform: translate(-50%, -50%) translate(var(--drift-x), var(--drift-y)) scale(1.28);
+    transform: translate(-50%, -50%) translate(var(--drift-x), var(--drift-y))
+      scale(calc(0.96 + (var(--grow) * 0.92)));
     opacity: calc(var(--alpha) * 0.06);
   }
 }
 
 @keyframes sv-bright-outflow {
   0% {
-    transform: translate(-50%, -50%) translate(0px, 0px) scale(0.9);
+    transform: translate(-50%, -50%) translate(0px, 0px) scale(calc(0.56 + (var(--grow) * 0.28)));
     opacity: calc(var(--alpha) * 0.42);
   }
   45% {
     transform: translate(-50%, -50%) translate(calc(var(--drift-x) * 0.54), calc(var(--drift-y) * 0.54))
-      scale(1.14);
+      scale(calc(0.8 + (var(--grow) * 0.56)));
     opacity: calc(var(--alpha) * 1.14);
   }
   100% {
-    transform: translate(-50%, -50%) translate(var(--drift-x), var(--drift-y)) scale(1.34);
+    transform: translate(-50%, -50%) translate(var(--drift-x), var(--drift-y))
+      scale(calc(1.08 + (var(--grow) * 0.96)));
     opacity: calc(var(--alpha) * 0.08);
   }
 }

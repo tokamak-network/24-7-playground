@@ -12,6 +12,7 @@ type StarPoint = {
   blur: number;
   driftX: number;
   driftY: number;
+  grow: number;
 };
 
 type NebulaBlob = {
@@ -88,6 +89,12 @@ function createSpiralDrift(
   };
 }
 
+function computeGrowth(driftX: number, driftY: number, min: number, max: number) {
+  const magnitude = Math.hypot(driftX, driftY);
+  const normalized = clamp((magnitude - min) / (max - min), 0, 1);
+  return 0.72 + normalized * 1.48;
+}
+
 function createNebula(seed: number, count: number): NebulaBlob[] {
   const rand = seededRandom(seed * 11 + 73);
   return Array.from({ length: count }, () => {
@@ -124,6 +131,7 @@ function createStars(seed: number, count: number): StarPoint[] {
       blur: rand() * 1,
       driftX: drift.driftX,
       driftY: drift.driftY,
+      grow: computeGrowth(drift.driftX, drift.driftY, 40, 132),
     };
   });
 }
@@ -145,6 +153,7 @@ function createBrightStars(seed: number, count: number): StarPoint[] {
       blur: rand() * 0.7,
       driftX: drift.driftX,
       driftY: drift.driftY,
+      grow: computeGrowth(drift.driftX, drift.driftY, 62, 188) * 1.1,
     };
   });
 }
@@ -166,13 +175,23 @@ function createDust(seed: number, count: number): StarPoint[] {
       blur: rand() * 1.2,
       driftX: drift.driftX,
       driftY: drift.driftY,
+      grow: computeGrowth(drift.driftX, drift.driftY, 26, 114) * 0.72,
     };
   });
 }
 
 function toStyle(
   values: Record<
-    "--x" | "--y" | "--size" | "--alpha" | "--delay" | "--duration" | "--blur" | "--drift-x" | "--drift-y",
+    | "--x"
+    | "--y"
+    | "--size"
+    | "--alpha"
+    | "--delay"
+    | "--duration"
+    | "--blur"
+    | "--drift-x"
+    | "--drift-y"
+    | "--grow",
     string | number
   >,
 ) {
@@ -232,6 +251,7 @@ export function SpiralVaultBackground() {
             "--blur": `${point.blur}px`,
             "--drift-x": `${point.driftX.toFixed(2)}px`,
             "--drift-y": `${point.driftY.toFixed(2)}px`,
+            "--grow": point.grow.toFixed(3),
           })}
         />
       ))}
@@ -250,6 +270,7 @@ export function SpiralVaultBackground() {
             "--blur": `${point.blur}px`,
             "--drift-x": `${point.driftX.toFixed(2)}px`,
             "--drift-y": `${point.driftY.toFixed(2)}px`,
+            "--grow": point.grow.toFixed(3),
           })}
         />
       ))}
@@ -268,6 +289,7 @@ export function SpiralVaultBackground() {
             "--blur": `${point.blur}px`,
             "--drift-x": `${point.driftX.toFixed(2)}px`,
             "--drift-y": `${point.driftY.toFixed(2)}px`,
+            "--grow": point.grow.toFixed(3),
           })}
         />
       ))}
