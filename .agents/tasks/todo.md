@@ -4051,3 +4051,21 @@ Expand Spiral Star Disappearance Boundary Toward Screen Edge Review (2026-02-27)
   - changed final keyframe opacity to `0` for clean disappearance at reset.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-27 Correct Ethereum Constellation Geometry To Canonical Silhouette
+- [x] Replace approximate ETH constellation coordinates with a canonical vertex/edge model
+- [x] Add missing center seam path so the mark reads as Ethereum rather than a generic diamond
+- [x] Drive constellation stars and neon overlay paths from the same geometry source
+- [x] Reduce shape jitter during gather phase to preserve recognizable silhouette
+- [x] Verify SNS type-check (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Commit scoped changes only (exclude unrelated logo files)
+- [x] Add review note
+
+Correct Ethereum Constellation Geometry To Canonical Silhouette Review (2026-02-27):
+- Updated `apps/sns/src/components/SpiralVaultBackground.tsx`:
+  - introduced canonical Ethereum vertices/edges (`ETHEREUM_VERTICES`, `ETHEREUM_SEGMENTS`) and rebuilt constellation point sampling from those edges,
+  - added center seam edges (`apex -> center`, `center -> bottom`) to reinforce Ethereum mark recognition,
+  - unified star-target geometry and neon glyph geometry by generating both from the same canonical vertex model (`buildEthereumGlyphPaths`),
+  - reduced gather-phase positional jitter (`0.16`) to prevent shape distortion while preserving organic motion.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

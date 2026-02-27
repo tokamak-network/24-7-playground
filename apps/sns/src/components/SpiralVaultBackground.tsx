@@ -84,28 +84,46 @@ function toPolar(x: number, y: number) {
   return { dist, angle };
 }
 
+const ETHEREUM_VERTICES = {
+  apex: [0, -1.08],
+  upperLeft: [-0.62, -0.12],
+  upperRight: [0.62, -0.12],
+  center: [0, 0.2],
+  lowerLeft: [-0.62, 0.38],
+  lowerRight: [0.62, 0.38],
+  bottom: [0, 1.28],
+} as const;
+
+type EthereumVertex = keyof typeof ETHEREUM_VERTICES;
+
+const ETHEREUM_SEGMENTS: readonly (readonly [EthereumVertex, EthereumVertex, number])[] = [
+  ["apex", "upperLeft", 5],
+  ["apex", "upperRight", 5],
+  ["upperLeft", "center", 4],
+  ["upperRight", "center", 4],
+  ["center", "lowerLeft", 4],
+  ["center", "lowerRight", 4],
+  ["lowerLeft", "bottom", 5],
+  ["lowerRight", "bottom", 5],
+  ["apex", "center", 4],
+  ["center", "bottom", 5],
+];
+
+const ETHEREUM_CONSTELLATION_SCALE = {
+  x: 19.4,
+  y: 27.2,
+};
+
+const ETHEREUM_GLYPH_SCALE = {
+  x: 76,
+  y: 78,
+};
+
 function buildEthereumConstellationPoints() {
-  const apex = [0, -1] as const;
-  const upperLeft = [-0.58, -0.15] as const;
-  const upperRight = [0.58, -0.15] as const;
-  const center = [0, 0] as const;
-  const lowerLeft = [-0.58, 0.15] as const;
-  const lowerRight = [0.58, 0.15] as const;
-  const bottom = [0, 1] as const;
-
-  const segments: readonly (readonly [readonly [number, number], readonly [number, number], number])[] = [
-    [apex, upperLeft, 5],
-    [apex, upperRight, 5],
-    [upperLeft, center, 4],
-    [upperRight, center, 4],
-    [center, lowerLeft, 4],
-    [center, lowerRight, 4],
-    [lowerLeft, bottom, 5],
-    [lowerRight, bottom, 5],
-  ];
-
   const dedupe = new Map<string, { x: number; y: number }>();
-  for (const [start, end, steps] of segments) {
+  for (const [from, to, steps] of ETHEREUM_SEGMENTS) {
+    const start = ETHEREUM_VERTICES[from];
+    const end = ETHEREUM_VERTICES[to];
     for (let i = 0; i <= steps; i += 1) {
       const t = i / steps;
       const nx = start[0] + (end[0] - start[0]) * t;
@@ -116,6 +134,19 @@ function buildEthereumConstellationPoints() {
   }
 
   return [...dedupe.values()];
+}
+
+function buildEthereumGlyphPaths() {
+  const point = (vertex: EthereumVertex) => {
+    const [x, y] = ETHEREUM_VERTICES[vertex];
+    return `${(x * ETHEREUM_GLYPH_SCALE.x).toFixed(3)} ${(y * ETHEREUM_GLYPH_SCALE.y).toFixed(3)}`;
+  };
+
+  return [
+    `M ${point("apex")} L ${point("upperLeft")} L ${point("center")} L ${point("upperRight")} Z`,
+    `M ${point("center")} L ${point("lowerLeft")} L ${point("bottom")} L ${point("lowerRight")} Z`,
+    `M ${point("apex")} L ${point("center")} L ${point("bottom")}`,
+  ];
 }
 
 function createNebula(seed: number, count: number): NebulaBlob[] {
@@ -195,8 +226,8 @@ function createEthereumConstellation(seed: number): ConstellationStar[] {
   const sharedDelay = rand() * 1.2;
 
   return points.map((point) => {
-    const x = 50 + point.x * 17.8 + (rand() - 0.5) * 0.7;
-    const y = 50 + point.y * 24.6 + (rand() - 0.5) * 0.7;
+    const x = 50 + point.x * ETHEREUM_CONSTELLATION_SCALE.x + (rand() - 0.5) * 0.16;
+    const y = 50 + point.y * ETHEREUM_CONSTELLATION_SCALE.y + (rand() - 0.5) * 0.16;
     const hitPolar = toPolar(x, y);
 
     const angleOff = hitPolar.angle - (138 + rand() * 88);
@@ -230,6 +261,7 @@ const DUST = createSpiralParticles(CONFIG.seed * 29 + 31, CONFIG.dustCount, "dus
 const STARS = createSpiralParticles(CONFIG.seed, CONFIG.starCount, "star");
 const BRIGHT = createSpiralParticles(CONFIG.seed * 17 + 19, CONFIG.brightCount, "bright");
 const CONSTELLATION = createEthereumConstellation(CONFIG.seed);
+const ETHEREUM_GLYPH_PATHS = buildEthereumGlyphPaths();
 const CONSTELLATION_TIMING = {
   period: CONSTELLATION[0]?.period ?? 62,
   delay: CONSTELLATION[0]?.delay ?? 0,
@@ -342,7 +374,7 @@ export function SpiralVaultBackground() {
 
       <svg
         className="spiral-vault-constellation-glyph"
-        viewBox="-60 -95 120 190"
+        viewBox="-68 -104 136 224"
         role="presentation"
         focusable="false"
         style={toStyle({
@@ -350,8 +382,9 @@ export function SpiralVaultBackground() {
           "--delay": `${CONSTELLATION_TIMING.delay.toFixed(3)}s`,
         })}
       >
-        <path d="M 0 -86 L -42 -14 L 0 0 L 42 -14 Z" />
-        <path d="M 0 0 L -42 14 L 0 86 L 42 14 Z" />
+        {ETHEREUM_GLYPH_PATHS.map((path, idx) => (
+          <path key={`sv-eth-glyph-${idx}`} d={path} />
+        ))}
       </svg>
     </div>
   );
