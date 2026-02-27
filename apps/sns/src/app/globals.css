@@ -166,6 +166,63 @@ body {
   height: calc(var(--size) * 7);
 }
 
+.spiral-vault-constellation-star {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  height: var(--size);
+  z-index: 12;
+  border-radius: 999px;
+  opacity: 0;
+  transform: translate(-50%, -50%) translate(var(--scatter-x), var(--scatter-y)) scale(0.32);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.98), rgba(215, 236, 255, 0.78) 52%, transparent 80%);
+  box-shadow: 0 0 calc(var(--size) * 6) rgba(208, 235, 255, 0.84), 0 0 calc(var(--size) * 10) rgba(145, 187, 255, 0.46);
+  animation: sv-constellation-cycle var(--period) linear infinite,
+    sv-constellation-twinkle var(--twinkle) ease-in-out infinite;
+  animation-delay: var(--delay), 0s;
+}
+
+@keyframes sv-constellation-cycle {
+  0%,
+  77% {
+    transform: translate(-50%, -50%) translate(var(--scatter-x), var(--scatter-y)) scale(0.3);
+    opacity: 0;
+  }
+  82% {
+    transform: translate(-50%, -50%) translate(calc(var(--scatter-x) * 0.38), calc(var(--scatter-y) * 0.38))
+      scale(0.82);
+    opacity: calc(var(--alpha) * 0.32);
+  }
+  86% {
+    transform: translate(-50%, -50%) translate(0px, 0px) scale(1.12);
+    opacity: var(--alpha);
+  }
+  89% {
+    transform: translate(-50%, -50%) translate(0px, 0px) scale(1.04);
+    opacity: calc(var(--alpha) * 0.94);
+  }
+  93% {
+    transform: translate(-50%, -50%) translate(calc(var(--exit-x) * 0.22), calc(var(--exit-y) * 0.22))
+      scale(1.18);
+    opacity: calc(var(--alpha) * 0.42);
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(var(--exit-x), var(--exit-y)) scale(0.52);
+    opacity: 0;
+  }
+}
+
+@keyframes sv-constellation-twinkle {
+  0%,
+  100% {
+    filter: brightness(0.95);
+  }
+  50% {
+    filter: brightness(1.42);
+  }
+}
+
 @keyframes sv-field-drift {
   0% {
     transform: scale(0.94) rotate(0deg);

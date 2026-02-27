@@ -3926,3 +3926,22 @@ Add Distance-Based Star Growth For Stronger 3D Depth Review (2026-02-26):
 - This creates stronger depth perception: stars near the center remain smaller while outward-traveling stars expand progressively.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Add Long-Cycle Ethereum Constellation Emergence
+- [x] Keep random starfield behavior intact while adding separate long-cycle constellation layer
+- [x] Generate Ethereum-mark constellation point set and map them to occasional emergence animation
+- [x] Ensure constellation naturally disperses after brief formation window
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Add Long-Cycle Ethereum Constellation Emergence Review (2026-02-26):
+- Added an Ethereum-symbol constellation layer in `apps/sns/src/components/SpiralVaultBackground.tsx`:
+  - generated deterministic point set for the ETH mark edges,
+  - mapped each point to long-cycle animation params (`period`, `delay`, `scatter`, `exit`) so emergence timing stays occasional.
+- Added constellation rendering styles and keyframes in `apps/sns/src/app/globals.css`:
+  - `sv-constellation-cycle` for rare formation -> brief hold -> natural dispersion,
+  - `sv-constellation-twinkle` for subtle luminous flicker while formed.
+- Preserved the existing random starfield/outflow motion; constellation runs as a separate overlay event and does not replace the base randomness.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

@@ -15,6 +15,20 @@ type StarPoint = {
   grow: number;
 };
 
+type ConstellationStar = {
+  x: number;
+  y: number;
+  size: number;
+  alpha: number;
+  delay: number;
+  period: number;
+  twinkle: number;
+  scatterX: number;
+  scatterY: number;
+  exitX: number;
+  exitY: number;
+};
+
 type NebulaBlob = {
   x: number;
   y: number;
@@ -93,6 +107,69 @@ function computeGrowth(driftX: number, driftY: number, min: number, max: number)
   const magnitude = Math.hypot(driftX, driftY);
   const normalized = clamp((magnitude - min) / (max - min), 0, 1);
   return 0.72 + normalized * 1.48;
+}
+
+function buildEthereumConstellationPoints() {
+  const apex = [0, -1] as const;
+  const upperLeft = [-0.58, -0.15] as const;
+  const upperRight = [0.58, -0.15] as const;
+  const center = [0, 0] as const;
+  const lowerLeft = [-0.58, 0.15] as const;
+  const lowerRight = [0.58, 0.15] as const;
+  const bottom = [0, 1] as const;
+
+  const segments: readonly (readonly [readonly [number, number], readonly [number, number], number])[] = [
+    [apex, upperLeft, 5],
+    [apex, upperRight, 5],
+    [upperLeft, center, 4],
+    [upperRight, center, 4],
+    [center, lowerLeft, 4],
+    [center, lowerRight, 4],
+    [lowerLeft, bottom, 5],
+    [lowerRight, bottom, 5],
+  ];
+
+  const dedupe = new Map<string, { x: number; y: number }>();
+
+  for (const [start, end, steps] of segments) {
+    for (let i = 0; i <= steps; i += 1) {
+      const t = i / steps;
+      const nx = start[0] + (end[0] - start[0]) * t;
+      const ny = start[1] + (end[1] - start[1]) * t;
+      const key = `${nx.toFixed(4)}:${ny.toFixed(4)}`;
+      if (!dedupe.has(key)) dedupe.set(key, { x: nx, y: ny });
+    }
+  }
+
+  return [...dedupe.values()];
+}
+
+function createEthereumConstellation(seed: number): ConstellationStar[] {
+  const rand = seededRandom(seed * 97 + 13);
+  const points = buildEthereumConstellationPoints();
+  return points.map((point) => {
+    const x = 50 + point.x * 17.8 + (rand() - 0.5) * 0.8;
+    const y = 50 + point.y * 24.4 + (rand() - 0.5) * 0.8;
+    const scatterAngle = rand() * Math.PI * 2;
+    const scatterRadius = 180 + rand() * 420;
+    const scatterX = Math.cos(scatterAngle) * scatterRadius;
+    const scatterY = Math.sin(scatterAngle) * scatterRadius;
+    const exitAngle = scatterAngle + (rand() - 0.5) * 1.6;
+    const exitRadius = 140 + rand() * 340;
+    return {
+      x,
+      y,
+      size: 1.8 + rand() * 2.6,
+      alpha: 0.58 + rand() * 0.34,
+      delay: rand() * 10,
+      period: 260 + rand() * 24,
+      twinkle: 2.4 + rand() * 3.4,
+      scatterX,
+      scatterY,
+      exitX: Math.cos(exitAngle) * exitRadius,
+      exitY: Math.sin(exitAngle) * exitRadius,
+    };
+  });
 }
 
 function createNebula(seed: number, count: number): NebulaBlob[] {
@@ -181,28 +258,13 @@ function createDust(seed: number, count: number): StarPoint[] {
 }
 
 function toStyle(
-  values: Record<
-    | "--x"
-    | "--y"
-    | "--size"
-    | "--alpha"
-    | "--delay"
-    | "--duration"
-    | "--blur"
-    | "--drift-x"
-    | "--drift-y"
-    | "--grow",
-    string | number
-  >,
+  values: Record<string, string | number>,
 ) {
   return values as CSSProperties;
 }
 
 function toNebulaStyle(
-  values: Record<
-    "--x" | "--y" | "--w" | "--h" | "--alpha" | "--hue-shift" | "--delay" | "--duration" | "--drift-x" | "--drift-y",
-    string | number
-  >,
+  values: Record<string, string | number>,
 ) {
   return values as CSSProperties;
 }
@@ -211,6 +273,7 @@ const NEBULA = createNebula(CONFIG.seed, CONFIG.nebulaCount);
 const DUST = createDust(CONFIG.seed, CONFIG.dustCount);
 const STARS = createStars(CONFIG.seed, CONFIG.starCount);
 const BRIGHT = createBrightStars(CONFIG.seed, CONFIG.brightCount);
+const CONSTELLATION = createEthereumConstellation(CONFIG.seed);
 
 export function SpiralVaultBackground() {
   return (
@@ -290,6 +353,26 @@ export function SpiralVaultBackground() {
             "--drift-x": `${point.driftX.toFixed(2)}px`,
             "--drift-y": `${point.driftY.toFixed(2)}px`,
             "--grow": point.grow.toFixed(3),
+          })}
+        />
+      ))}
+
+      {CONSTELLATION.map((point, idx) => (
+        <span
+          key={`sv-constellation-${idx}`}
+          className="spiral-vault-constellation-star"
+          style={toStyle({
+            "--x": `${point.x}%`,
+            "--y": `${point.y}%`,
+            "--size": `${point.size}px`,
+            "--alpha": point.alpha.toFixed(3),
+            "--delay": `${point.delay.toFixed(2)}s`,
+            "--period": `${point.period.toFixed(2)}s`,
+            "--twinkle": `${point.twinkle.toFixed(2)}s`,
+            "--scatter-x": `${point.scatterX.toFixed(2)}px`,
+            "--scatter-y": `${point.scatterY.toFixed(2)}px`,
+            "--exit-x": `${point.exitX.toFixed(2)}px`,
+            "--exit-y": `${point.exitY.toFixed(2)}px`,
           })}
         />
       ))}
