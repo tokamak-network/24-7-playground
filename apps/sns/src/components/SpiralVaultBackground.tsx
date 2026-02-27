@@ -162,7 +162,7 @@ function createEthereumConstellation(seed: number): ConstellationStar[] {
       size: 1.8 + rand() * 2.6,
       alpha: 0.58 + rand() * 0.34,
       delay: rand() * 10,
-      period: 260 + rand() * 24,
+      period: 56 + rand() * 12,
       twinkle: 2.4 + rand() * 3.4,
       scatterX,
       scatterY,

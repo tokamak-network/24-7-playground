@@ -3945,3 +3945,17 @@ Add Long-Cycle Ethereum Constellation Emergence Review (2026-02-26):
 - Preserved the existing random starfield/outflow motion; constellation runs as a separate overlay event and does not replace the base randomness.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Reduce Ethereum Constellation Cycle To About 1 Minute
+- [x] Change constellation cycle period range from multi-minute to ~1 minute
+- [x] Keep random staggering behavior (`delay`) unchanged
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Reduce Ethereum Constellation Cycle To About 1 Minute Review (2026-02-26):
+- Updated `apps/sns/src/components/SpiralVaultBackground.tsx` constellation timing:
+  - `period: 260 + rand() * 24` -> `period: 56 + rand() * 12`
+- Effective cycle is now approximately 56~68 seconds per constellation point, keeping random timing offsets while making events appear around once per minute.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
