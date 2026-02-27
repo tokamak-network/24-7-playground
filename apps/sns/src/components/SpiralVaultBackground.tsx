@@ -85,13 +85,14 @@ function toPolar(x: number, y: number) {
 }
 
 const ETHEREUM_VERTICES = {
-  apex: [0, -1.08],
-  upperLeft: [-0.62, -0.12],
-  upperRight: [0.62, -0.12],
-  center: [0, 0.2],
-  lowerLeft: [-0.62, 0.38],
-  lowerRight: [0.62, 0.38],
-  bottom: [0, 1.28],
+  apex: [0, -1.06],
+  upperLeft: [-0.58, -0.2],
+  centerUpper: [0, 0.02],
+  upperRight: [0.58, -0.2],
+  midLeft: [-0.58, 0.14],
+  centerLower: [0, 0.38],
+  midRight: [0.58, 0.14],
+  bottom: [0, 1.04],
 } as const;
 
 type EthereumVertex = keyof typeof ETHEREUM_VERTICES;
@@ -99,14 +100,17 @@ type EthereumVertex = keyof typeof ETHEREUM_VERTICES;
 const ETHEREUM_SEGMENTS: readonly (readonly [EthereumVertex, EthereumVertex, number])[] = [
   ["apex", "upperLeft", 5],
   ["apex", "upperRight", 5],
-  ["upperLeft", "center", 4],
-  ["upperRight", "center", 4],
-  ["center", "lowerLeft", 4],
-  ["center", "lowerRight", 4],
-  ["lowerLeft", "bottom", 5],
-  ["lowerRight", "bottom", 5],
-  ["apex", "center", 4],
-  ["center", "bottom", 5],
+  ["upperLeft", "centerUpper", 4],
+  ["upperRight", "centerUpper", 4],
+  ["apex", "centerUpper", 4],
+  ["centerUpper", "midLeft", 4],
+  ["centerUpper", "midRight", 4],
+  ["centerUpper", "centerLower", 4],
+  ["midLeft", "centerLower", 4],
+  ["midRight", "centerLower", 4],
+  ["centerLower", "bottom", 5],
+  ["midLeft", "bottom", 5],
+  ["midRight", "bottom", 5],
 ];
 
 const ETHEREUM_CONSTELLATION_SCALE = {
@@ -143,9 +147,10 @@ function buildEthereumGlyphPaths() {
   };
 
   return [
-    `M ${point("apex")} L ${point("upperLeft")} L ${point("center")} L ${point("upperRight")} Z`,
-    `M ${point("center")} L ${point("lowerLeft")} L ${point("bottom")} L ${point("lowerRight")} Z`,
-    `M ${point("apex")} L ${point("center")} L ${point("bottom")}`,
+    `M ${point("apex")} L ${point("upperLeft")} L ${point("centerUpper")} L ${point("upperRight")} Z`,
+    `M ${point("centerUpper")} L ${point("midLeft")} L ${point("centerLower")} L ${point("midRight")} Z`,
+    `M ${point("centerLower")} L ${point("midLeft")} L ${point("bottom")} L ${point("midRight")} Z`,
+    `M ${point("apex")} L ${point("centerUpper")} L ${point("centerLower")} L ${point("bottom")}`,
   ];
 }
 

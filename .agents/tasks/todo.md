@@ -4069,3 +4069,19 @@ Correct Ethereum Constellation Geometry To Canonical Silhouette Review (2026-02-
   - reduced gather-phase positional jitter (`0.16`) to prevent shape distortion while preserving organic motion.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-27 Correct Ethereum Overlay Line To Match Actual Mark Geometry
+- [x] Redefine ETH geometry with split upper/lower center nodes to remove skewed bow-tie appearance
+- [x] Rebuild overlay line paths from the new geometry so the glyph matches Ethereum mark structure
+- [x] Rebuild constellation edge sampling from the same geometry to keep star points and overlay synchronized
+- [x] Verify SNS type-check (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Commit scoped changes only (exclude unrelated logo files)
+- [x] Add review note
+
+Correct Ethereum Overlay Line To Match Actual Mark Geometry Review (2026-02-27):
+- Updated `apps/sns/src/components/SpiralVaultBackground.tsx`:
+  - replaced prior 7-point ETH geometry with an 8-point model (`centerUpper`, `centerLower` split) to match the canonical upper/middle/lower structure,
+  - rewired constellation edge segments to the same model to avoid shape drift between stars and overlay,
+  - rebuilt overlay glyph paths into top/middle/bottom facets + center spine based on the same vertices.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
