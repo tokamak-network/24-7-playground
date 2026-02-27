@@ -54,6 +54,15 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function sampleSpiralPoint(rand: () => number): { x: number; y: number } {
+  if (rand() < 0.36) {
+    const coreT = rand() * Math.PI * 2;
+    const coreR = Math.pow(rand(), 1.8) * 16;
+    return {
+      x: 50 + Math.cos(coreT) * coreR + (rand() - 0.5) * 2.2,
+      y: 50 + Math.sin(coreT) * coreR + (rand() - 0.5) * 2.2,
+    };
+  }
+
   const turns = 3.2;
   const t = Math.pow(rand(), 0.68) * Math.PI * 2 * turns;
   const r = 5 + Math.pow(rand(), 0.78) * 45;
