@@ -80,11 +80,71 @@ body {
   height: var(--h);
   border-radius: 999px;
   opacity: 0;
-  background: hsl(var(--hue, 220) 42% 58% / var(--alpha, 0.12));
+  background:
+    radial-gradient(
+      62% 68% at 34% 42%,
+      hsl(var(--hue-a, 202) 70% 68% / calc(var(--alpha, 0.12) * 0.92)),
+      transparent 74%
+    ),
+    radial-gradient(
+      58% 64% at 70% 54%,
+      hsl(var(--hue-b, 238) 66% 62% / calc(var(--alpha, 0.12) * 0.86)),
+      transparent 78%
+    ),
+    radial-gradient(
+      78% 86% at 52% 64%,
+      hsl(var(--hue-c, 268) 54% 58% / calc(var(--alpha, 0.12) * 0.6)),
+      transparent 90%
+    );
   transform: translate(-50%, -50%) translate(0, 0) rotate(var(--rot)) scale(0.04);
+  filter: blur(calc(var(--w, 12vmax) * 0.09)) saturate(118%);
   animation: sv-nebula-drift var(--duration) linear infinite;
   animation-delay: var(--delay);
   animation-fill-mode: backwards;
+}
+
+.spiral-vault-nebula-drift::before,
+.spiral-vault-nebula-drift::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.spiral-vault-nebula-drift::before {
+  inset: -24%;
+  background: conic-gradient(
+    from 144deg at 50% 52%,
+    transparent 0 14%,
+    hsl(var(--hue-b, 238) 62% 66% / calc(var(--alpha, 0.12) * var(--soft, 0.6))) 28%,
+    transparent 48%,
+    hsl(var(--hue-a, 202) 68% 70% / calc(var(--alpha, 0.12) * 0.66)) 64%,
+    transparent 84%,
+    hsl(var(--hue-c, 268) 50% 62% / calc(var(--alpha, 0.12) * 0.48)) 96%,
+    transparent 100%
+  );
+  transform: rotate(calc(var(--rot) * -0.52)) scale(1.08);
+  filter: blur(calc(var(--w, 12vmax) * 0.11));
+  opacity: 0.84;
+}
+
+.spiral-vault-nebula-drift::after {
+  inset: -12%;
+  background-image:
+    repeating-radial-gradient(
+      circle at 32% 36%,
+      rgba(255, 255, 255, var(--grain, 0.08)) 0 0.54px,
+      rgba(255, 255, 255, 0) 0.54px 2.7px
+    ),
+    repeating-radial-gradient(
+      circle at 68% 62%,
+      rgba(255, 255, 255, calc(var(--grain, 0.08) * 0.72)) 0 0.44px,
+      rgba(255, 255, 255, 0) 0.44px 2.3px
+    );
+  background-size: 28px 28px, 18px 18px;
+  filter: blur(0.35px);
+  mix-blend-mode: soft-light;
+  opacity: 0.42;
 }
 
 .spiral-vault-dust,

@@ -28,7 +28,11 @@ type NebulaParticle = {
   delay: number;
   duration: number;
   rotate: number;
-  hue: number;
+  hueA: number;
+  hueB: number;
+  hueC: number;
+  grain: number;
+  soft: number;
 };
 
 type ConstellationStar = {
@@ -50,7 +54,7 @@ const CONFIG = {
   starCount: 360,
   brightCount: 56,
   dustCount: 320,
-  nebulaCount: 14,
+  nebulaCount: 9,
 };
 
 function seededRandom(seed: number) {
@@ -170,20 +174,44 @@ function createNebulaParticles(seed: number, count: number): NebulaParticle[] {
 
   return Array.from({ length: count }, () => {
     const angle = rand() * Math.PI * 2;
-    const dist = 26 + rand() * 44;
+    const dist = 24 + rand() * 46;
     const dx = Math.cos(angle) * dist;
     const dy = Math.sin(angle) * dist;
+    const palettePick = rand();
+
+    const hueA =
+      palettePick < 0.4
+        ? 190 + rand() * 24
+        : palettePick < 0.75
+          ? 220 + rand() * 36
+          : 18 + rand() * 24;
+    const hueB =
+      palettePick < 0.4
+        ? 220 + rand() * 32
+        : palettePick < 0.75
+          ? 248 + rand() * 34
+          : 196 + rand() * 26;
+    const hueC =
+      palettePick < 0.4
+        ? 178 + rand() * 24
+        : palettePick < 0.75
+          ? 268 + rand() * 24
+          : 272 + rand() * 22;
 
     return {
       dx,
       dy,
-      width: 8 + rand() * 14,
-      height: 6 + rand() * 12,
-      alpha: 0.08 + rand() * 0.1,
+      width: 12 + rand() * 20,
+      height: 8 + rand() * 16,
+      alpha: 0.12 + rand() * 0.16,
       delay: rand() * 18,
-      duration: 54 + rand() * 48,
+      duration: 68 + rand() * 56,
       rotate: -24 + rand() * 48,
-      hue: 202 + rand() * 36,
+      hueA,
+      hueB,
+      hueC,
+      grain: 0.06 + rand() * 0.1,
+      soft: 0.46 + rand() * 0.34,
     };
   });
 }
@@ -308,7 +336,11 @@ export function SpiralVaultBackground() {
             "--delay": `${cloud.delay.toFixed(3)}s`,
             "--duration": `${cloud.duration.toFixed(3)}s`,
             "--rot": `${cloud.rotate.toFixed(3)}deg`,
-            "--hue": cloud.hue.toFixed(3),
+            "--hue-a": cloud.hueA.toFixed(3),
+            "--hue-b": cloud.hueB.toFixed(3),
+            "--hue-c": cloud.hueC.toFixed(3),
+            "--grain": cloud.grain.toFixed(3),
+            "--soft": cloud.soft.toFixed(3),
           })}
         />
       ))}
