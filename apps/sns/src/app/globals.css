@@ -35,7 +35,7 @@ body {
   margin: 0;
   color: var(--text-strong);
   font-family: var(--font-body), "Helvetica Neue", sans-serif;
-  background: linear-gradient(160deg, #030818, #070d28 48%, #0b1029);
+  background: #030818;
 }
 
 .app-ui-layer {
@@ -54,9 +54,7 @@ body {
   will-change: transform;
   transform: translateZ(0) scale(1.02);
   transform-origin: 50% 50%;
-  background-color: #050a1d;
-  background:
-    linear-gradient(180deg, rgba(2, 6, 18, 0.92), rgba(5, 11, 28, 0.95) 58%, rgba(7, 12, 31, 0.96));
+  background: #050a1d;
   animation: sv-field-drift 74s linear infinite;
 }
 
@@ -65,41 +63,15 @@ body {
 }
 
 .spiral-vault-bg__grain {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  opacity: 0.18;
-  background-image:
-    radial-gradient(circle at 14% 16%, rgba(255, 255, 255, 0.54) 0 0.4px, transparent 0.66px),
-    radial-gradient(circle at 68% 34%, rgba(255, 255, 255, 0.46) 0 0.36px, transparent 0.62px),
-    radial-gradient(circle at 47% 82%, rgba(255, 255, 255, 0.42) 0 0.32px, transparent 0.58px),
-    repeating-radial-gradient(
-      circle at 50% 50%,
-      rgba(255, 255, 255, 0.015) 0 1px,
-      rgba(255, 255, 255, 0) 1px 3px
-    );
-  background-size: 130px 130px, 150px 150px, 120px 120px, 4px 4px;
+  display: none;
 }
 
-.spiral-vault-nebula,
 .spiral-vault-dust,
 .spiral-vault-star,
 .spiral-vault-bright {
   position: absolute;
   left: 50%;
   top: 50%;
-}
-
-.spiral-vault-nebula {
-  width: var(--w);
-  height: var(--h);
-  transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0));
-  border-radius: 999px;
-  background: rgba(92, 116, 178, 0.18);
-  opacity: var(--alpha);
-  filter: hue-rotate(var(--hue-shift));
-  animation: sv-nebula-spiral var(--duration) linear infinite;
-  animation-delay: var(--delay);
 }
 
 .spiral-vault-dust,
@@ -250,23 +222,6 @@ body {
   }
   100% {
     transform: translateZ(0) scale(1.12) rotate(360deg);
-  }
-}
-
-@keyframes sv-nebula-spiral {
-  0% {
-    transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0)) scale(0.8) rotate(-4deg);
-    opacity: calc(var(--alpha) * 0.28);
-  }
-  50% {
-    transform: translate(-50%, -50%)
-      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.56)))
-      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.56))) scale(1.06) rotate(4deg);
-    opacity: calc(var(--alpha) * 1.04);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(var(--angle1)) translateX(var(--radius1)) scale(1.24) rotate(12deg);
-    opacity: calc(var(--alpha) * 0.08);
   }
 }
 
