@@ -3959,3 +3959,23 @@ Reduce Ethereum Constellation Cycle To About 1 Minute Review (2026-02-26):
 - Effective cycle is now approximately 56~68 seconds per constellation point, keeping random timing offsets while making events appear around once per minute.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Enforce Spiral-Only Motion And Visible Ethereum Constellation
+- [x] Replace straight drift motion with polar spiral interpolation for all particles
+- [x] Make size-speed tendency explicit (larger particles generally faster than smaller ones)
+- [x] Rework constellation so formation/dispersal occurs within the same spiral motion model
+- [x] Keep approximately 1-minute constellation cycle while making emergence visually reliable
+- [x] Update lessons with user correction pattern
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Enforce Spiral-Only Motion And Visible Ethereum Constellation Review (2026-02-26):
+- Rebuilt particle motion in `apps/sns/src/components/SpiralVaultBackground.tsx` from Cartesian drift vectors to polar spiral parameters (`angle0/angle1`, `radius0/radius1`) for dust/stars/bright stars, so every white point follows the same spiral-direction rule.
+- Introduced size-dependent speed tendency in generation logic:
+  - larger particles get higher effective speed and shorter durations,
+  - smaller particles remain slower, while growth (`grow`) still increases apparent scale and motion energy over time.
+- Reworked Ethereum constellation layer to use spiral-only motion states (`off -> hit -> exit`) instead of free scatter vectors, with synchronized long-cycle windows for visible formation and natural dispersion.
+- Updated `apps/sns/src/app/globals.css` keyframes to match the new polar model (`sv-nebula-spiral`, `sv-dust-spiral`, `sv-star-spiral`, `sv-bright-spiral`, updated `sv-constellation-cycle`).
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.

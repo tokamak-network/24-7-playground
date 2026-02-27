@@ -2,44 +2,45 @@
 
 import type { CSSProperties } from "react";
 
-type StarPoint = {
-  x: number;
-  y: number;
+type SpiralParticle = {
+  angle0: number;
+  angle1: number;
+  radius0: number;
+  radius1: number;
   size: number;
   alpha: number;
   delay: number;
   duration: number;
   blur: number;
-  driftX: number;
-  driftY: number;
   grow: number;
-};
-
-type ConstellationStar = {
-  x: number;
-  y: number;
-  size: number;
-  alpha: number;
-  delay: number;
-  period: number;
-  twinkle: number;
-  scatterX: number;
-  scatterY: number;
-  exitX: number;
-  exitY: number;
+  spin: number;
 };
 
 type NebulaBlob = {
-  x: number;
-  y: number;
+  angle0: number;
+  angle1: number;
+  radius0: number;
+  radius1: number;
   width: number;
   height: number;
   alpha: number;
   hueShift: number;
   delay: number;
   duration: number;
-  driftX: number;
-  driftY: number;
+};
+
+type ConstellationStar = {
+  angleOff: number;
+  angleHit: number;
+  angleExit: number;
+  radiusOff: number;
+  radiusHit: number;
+  radiusExit: number;
+  size: number;
+  alpha: number;
+  delay: number;
+  period: number;
+  twinkle: number;
 };
 
 const CONFIG = {
@@ -63,12 +64,6 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function gaussian(rand: () => number) {
-  const u = Math.max(rand(), 1e-6);
-  const v = Math.max(rand(), 1e-6);
-  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
-}
-
 function sampleSpiralPoint(rand: () => number): { x: number; y: number } {
   const turns = 3.2;
   const t = Math.pow(rand(), 0.68) * Math.PI * 2 * turns;
@@ -81,32 +76,12 @@ function sampleSpiralPoint(rand: () => number): { x: number; y: number } {
   };
 }
 
-function createSpiralDrift(
-  x: number,
-  y: number,
-  rand: () => number,
-  radialRange: [number, number],
-  tangentialRatio = 0.42,
-) {
+function toPolar(x: number, y: number) {
   const dx = x - 50;
   const dy = y - 50;
-  const dist = Math.max(Math.hypot(dx, dy), 0.8);
-  const nx = dx / dist;
-  const ny = dy / dist;
-  const tx = -ny;
-  const ty = nx;
-  const radialMag = radialRange[0] + rand() * (radialRange[1] - radialRange[0]);
-  const tangentMag = radialMag * tangentialRatio;
-  return {
-    driftX: nx * radialMag + tx * tangentMag,
-    driftY: ny * radialMag + ty * tangentMag,
-  };
-}
-
-function computeGrowth(driftX: number, driftY: number, min: number, max: number) {
-  const magnitude = Math.hypot(driftX, driftY);
-  const normalized = clamp((magnitude - min) / (max - min), 0, 1);
-  return 0.72 + normalized * 1.48;
+  const dist = Math.hypot(dx, dy);
+  const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
+  return { dist, angle };
 }
 
 function buildEthereumConstellationPoints() {
@@ -130,7 +105,6 @@ function buildEthereumConstellationPoints() {
   ];
 
   const dedupe = new Map<string, { x: number; y: number }>();
-
   for (const [start, end, steps] of segments) {
     for (let i = 0; i <= steps; i += 1) {
       const t = i / steps;
@@ -144,135 +118,117 @@ function buildEthereumConstellationPoints() {
   return [...dedupe.values()];
 }
 
-function createEthereumConstellation(seed: number): ConstellationStar[] {
-  const rand = seededRandom(seed * 97 + 13);
-  const points = buildEthereumConstellationPoints();
-  return points.map((point) => {
-    const x = 50 + point.x * 17.8 + (rand() - 0.5) * 0.8;
-    const y = 50 + point.y * 24.4 + (rand() - 0.5) * 0.8;
-    const scatterAngle = rand() * Math.PI * 2;
-    const scatterRadius = 180 + rand() * 420;
-    const scatterX = Math.cos(scatterAngle) * scatterRadius;
-    const scatterY = Math.sin(scatterAngle) * scatterRadius;
-    const exitAngle = scatterAngle + (rand() - 0.5) * 1.6;
-    const exitRadius = 140 + rand() * 340;
-    return {
-      x,
-      y,
-      size: 1.8 + rand() * 2.6,
-      alpha: 0.58 + rand() * 0.34,
-      delay: rand() * 10,
-      period: 56 + rand() * 12,
-      twinkle: 2.4 + rand() * 3.4,
-      scatterX,
-      scatterY,
-      exitX: Math.cos(exitAngle) * exitRadius,
-      exitY: Math.sin(exitAngle) * exitRadius,
-    };
-  });
-}
-
 function createNebula(seed: number, count: number): NebulaBlob[] {
   const rand = seededRandom(seed * 11 + 73);
   return Array.from({ length: count }, () => {
-    const x = 4 + rand() * 92;
-    const y = 6 + rand() * 88;
-    const drift = createSpiralDrift(x, y, rand, [70, 180], 0.52);
+    const sampled = sampleSpiralPoint(rand);
+    const polar = toPolar(sampled.x, sampled.y);
+    const radius0 = 2 + polar.dist * 0.26;
+    const radius1 = radius0 + 6 + rand() * 12;
+    const spin = 84 + rand() * 94;
     return {
-      x,
-      y,
+      angle0: polar.angle,
+      angle1: polar.angle + spin,
+      radius0,
+      radius1,
       width: 24 + rand() * 44,
       height: 18 + rand() * 38,
-      alpha: 0.11 + rand() * 0.24,
+      alpha: 0.1 + rand() * 0.22,
       hueShift: -48 + rand() * 104,
       delay: rand() * 8,
-      duration: 16 + rand() * 24,
-      driftX: drift.driftX,
-      driftY: drift.driftY,
+      duration: 18 + rand() * 22,
     };
   });
 }
 
-function createStars(seed: number, count: number): StarPoint[] {
+function createSpiralParticles(
+  seed: number,
+  count: number,
+  type: "dust" | "star" | "bright",
+): SpiralParticle[] {
   const rand = seededRandom(seed);
+
+  const sizeRange =
+    type === "dust" ? ([0.25, 0.78] as const) : type === "star" ? ([0.5, 2.3] as const) : ([2.1, 4.4] as const);
+
   return Array.from({ length: count }, () => {
     const sampled = sampleSpiralPoint(rand);
-    const drift = createSpiralDrift(sampled.x, sampled.y, rand, [38, 122], 0.56);
+    const polar = toPolar(sampled.x, sampled.y);
+
+    const size = sizeRange[0] + rand() * (sizeRange[1] - sizeRange[0]);
+    const sizeNorm = clamp((size - sizeRange[0]) / (sizeRange[1] - sizeRange[0]), 0, 1);
+
+    const radius0 = 1.6 + polar.dist * 0.34;
+    const grow = 0.72 + sizeNorm * 1.14 + clamp(polar.dist / 70, 0, 1) * 0.28;
+    const speed = 0.72 + sizeNorm * 1.18 + grow * 0.22;
+
+    const radialTravelBase =
+      type === "dust" ? 3.2 + rand() * 8.2 : type === "star" ? 4.8 + rand() * 11.4 : 6.4 + rand() * 14.2;
+    const radius1 = radius0 + radialTravelBase * (0.82 + sizeNorm * 0.72) * (0.88 + grow * 0.16);
+
+    const spinBase = type === "dust" ? 210 : type === "star" ? 180 : 145;
+    const spin = (spinBase + rand() * 88) * (1.1 - sizeNorm * 0.45) * (0.92 + grow * 0.08);
+
+    const durationBase = type === "dust" ? 10 + rand() * 10 : type === "star" ? 6 + rand() * 8 : 4.6 + rand() * 6;
+
     return {
-      x: clamp(sampled.x, 1, 99),
-      y: clamp(sampled.y, 1, 99),
-      size: 0.5 + rand() * 1.8,
-      alpha: 0.2 + rand() * 0.64,
-      delay: rand() * 8,
-      duration: 3 + rand() * 8,
-      blur: rand() * 1,
-      driftX: drift.driftX,
-      driftY: drift.driftY,
-      grow: computeGrowth(drift.driftX, drift.driftY, 40, 132),
+      angle0: polar.angle,
+      angle1: polar.angle + spin,
+      radius0,
+      radius1,
+      size,
+      alpha: type === "dust" ? 0.1 + rand() * 0.24 : type === "star" ? 0.22 + rand() * 0.62 : 0.58 + rand() * 0.34,
+      delay: rand() * 10,
+      duration: durationBase / speed,
+      blur: type === "dust" ? rand() * 1.2 : type === "star" ? rand() * 0.96 : rand() * 0.66,
+      grow,
+      spin,
     };
   });
 }
 
-function createBrightStars(seed: number, count: number): StarPoint[] {
-  const rand = seededRandom(seed * 17 + 19);
-  return Array.from({ length: count }, () => {
-    const sampled = sampleSpiralPoint(rand);
-    const x = clamp(sampled.x + gaussian(rand) * 2.8, 1.5, 98.5);
-    const y = clamp(sampled.y + gaussian(rand) * 2.8, 1.5, 98.5);
-    const drift = createSpiralDrift(x, y, rand, [62, 180], 0.6);
+function createEthereumConstellation(seed: number): ConstellationStar[] {
+  const rand = seededRandom(seed * 97 + 13);
+  const points = buildEthereumConstellationPoints();
+
+  return points.map((point) => {
+    const x = 50 + point.x * 17.8 + (rand() - 0.5) * 0.7;
+    const y = 50 + point.y * 24.6 + (rand() - 0.5) * 0.7;
+    const hitPolar = toPolar(x, y);
+
+    const period = 58 + rand() * 8;
+    const delay = rand() * 1.2;
+
+    const angleOff = hitPolar.angle - (138 + rand() * 88);
+    const radiusOff = clamp(hitPolar.dist * 0.12, 1.8, 6.6);
+
+    const angleExit = hitPolar.angle + (84 + rand() * 62);
+    const radiusExit = 1.6 + hitPolar.dist * 0.34 + 8 + rand() * 16;
+
     return {
-      x,
-      y,
-      size: 2 + rand() * 2.8,
-      alpha: 0.55 + rand() * 0.4,
-      delay: rand() * 8,
-      duration: 3.6 + rand() * 6,
-      blur: rand() * 0.7,
-      driftX: drift.driftX,
-      driftY: drift.driftY,
-      grow: computeGrowth(drift.driftX, drift.driftY, 62, 188) * 1.1,
+      angleOff,
+      angleHit: hitPolar.angle,
+      angleExit,
+      radiusOff,
+      radiusHit: 1.6 + hitPolar.dist * 0.34,
+      radiusExit,
+      size: 1.9 + rand() * 2.4,
+      alpha: 0.72 + rand() * 0.24,
+      delay,
+      period,
+      twinkle: 2.3 + rand() * 3,
     };
   });
 }
 
-function createDust(seed: number, count: number): StarPoint[] {
-  const rand = seededRandom(seed * 29 + 31);
-  return Array.from({ length: count }, () => {
-    const sampled = sampleSpiralPoint(rand);
-    const x = clamp(sampled.x + gaussian(rand) * 6, 0.6, 99.4);
-    const y = clamp(sampled.y + gaussian(rand) * 6, 0.6, 99.4);
-    const drift = createSpiralDrift(x, y, rand, [28, 114], 0.45);
-    return {
-      x,
-      y,
-      size: 0.25 + rand() * 0.62,
-      alpha: 0.1 + rand() * 0.24,
-      delay: rand() * 9,
-      duration: 7 + rand() * 10,
-      blur: rand() * 1.2,
-      driftX: drift.driftX,
-      driftY: drift.driftY,
-      grow: computeGrowth(drift.driftX, drift.driftY, 26, 114) * 0.72,
-    };
-  });
-}
-
-function toStyle(
-  values: Record<string, string | number>,
-) {
-  return values as CSSProperties;
-}
-
-function toNebulaStyle(
-  values: Record<string, string | number>,
-) {
+function toStyle(values: Record<string, string | number>) {
   return values as CSSProperties;
 }
 
 const NEBULA = createNebula(CONFIG.seed, CONFIG.nebulaCount);
-const DUST = createDust(CONFIG.seed, CONFIG.dustCount);
-const STARS = createStars(CONFIG.seed, CONFIG.starCount);
-const BRIGHT = createBrightStars(CONFIG.seed, CONFIG.brightCount);
+const DUST = createSpiralParticles(CONFIG.seed * 29 + 31, CONFIG.dustCount, "dust");
+const STARS = createSpiralParticles(CONFIG.seed, CONFIG.starCount, "star");
+const BRIGHT = createSpiralParticles(CONFIG.seed * 17 + 19, CONFIG.brightCount, "bright");
 const CONSTELLATION = createEthereumConstellation(CONFIG.seed);
 
 export function SpiralVaultBackground() {
@@ -285,17 +241,17 @@ export function SpiralVaultBackground() {
         <span
           key={`sv-nebula-${idx}`}
           className="spiral-vault-nebula"
-          style={toNebulaStyle({
-            "--x": `${blob.x}%`,
-            "--y": `${blob.y}%`,
+          style={toStyle({
+            "--angle0": `${blob.angle0.toFixed(3)}deg`,
+            "--angle1": `${blob.angle1.toFixed(3)}deg`,
+            "--radius0": `${blob.radius0.toFixed(3)}vmax`,
+            "--radius1": `${blob.radius1.toFixed(3)}vmax`,
             "--w": `${blob.width}%`,
             "--h": `${blob.height}%`,
-            "--alpha": blob.alpha,
-            "--hue-shift": `${blob.hueShift}deg`,
-            "--delay": `${blob.delay}s`,
-            "--duration": `${blob.duration}s`,
-            "--drift-x": `${blob.driftX.toFixed(2)}px`,
-            "--drift-y": `${blob.driftY.toFixed(2)}px`,
+            "--alpha": blob.alpha.toFixed(3),
+            "--hue-shift": `${blob.hueShift.toFixed(3)}deg`,
+            "--delay": `${blob.delay.toFixed(3)}s`,
+            "--duration": `${blob.duration.toFixed(3)}s`,
           })}
         />
       ))}
@@ -305,16 +261,17 @@ export function SpiralVaultBackground() {
           key={`sv-dust-${idx}`}
           className="spiral-vault-dust"
           style={toStyle({
-            "--x": `${point.x}%`,
-            "--y": `${point.y}%`,
-            "--size": `${point.size}px`,
-            "--alpha": point.alpha,
-            "--delay": `${point.delay}s`,
-            "--duration": `${point.duration}s`,
-            "--blur": `${point.blur}px`,
-            "--drift-x": `${point.driftX.toFixed(2)}px`,
-            "--drift-y": `${point.driftY.toFixed(2)}px`,
+            "--angle0": `${point.angle0.toFixed(3)}deg`,
+            "--angle1": `${point.angle1.toFixed(3)}deg`,
+            "--radius0": `${point.radius0.toFixed(3)}vmax`,
+            "--radius1": `${point.radius1.toFixed(3)}vmax`,
+            "--size": `${point.size.toFixed(3)}px`,
+            "--alpha": point.alpha.toFixed(3),
+            "--delay": `${point.delay.toFixed(3)}s`,
+            "--duration": `${point.duration.toFixed(3)}s`,
+            "--blur": `${point.blur.toFixed(3)}px`,
             "--grow": point.grow.toFixed(3),
+            "--spin": `${point.spin.toFixed(3)}deg`,
           })}
         />
       ))}
@@ -324,16 +281,17 @@ export function SpiralVaultBackground() {
           key={`sv-star-${idx}`}
           className="spiral-vault-star"
           style={toStyle({
-            "--x": `${point.x}%`,
-            "--y": `${point.y}%`,
-            "--size": `${point.size}px`,
-            "--alpha": point.alpha,
-            "--delay": `${point.delay}s`,
-            "--duration": `${point.duration}s`,
-            "--blur": `${point.blur}px`,
-            "--drift-x": `${point.driftX.toFixed(2)}px`,
-            "--drift-y": `${point.driftY.toFixed(2)}px`,
+            "--angle0": `${point.angle0.toFixed(3)}deg`,
+            "--angle1": `${point.angle1.toFixed(3)}deg`,
+            "--radius0": `${point.radius0.toFixed(3)}vmax`,
+            "--radius1": `${point.radius1.toFixed(3)}vmax`,
+            "--size": `${point.size.toFixed(3)}px`,
+            "--alpha": point.alpha.toFixed(3),
+            "--delay": `${point.delay.toFixed(3)}s`,
+            "--duration": `${point.duration.toFixed(3)}s`,
+            "--blur": `${point.blur.toFixed(3)}px`,
             "--grow": point.grow.toFixed(3),
+            "--spin": `${point.spin.toFixed(3)}deg`,
           })}
         />
       ))}
@@ -343,16 +301,17 @@ export function SpiralVaultBackground() {
           key={`sv-bright-${idx}`}
           className="spiral-vault-bright"
           style={toStyle({
-            "--x": `${point.x}%`,
-            "--y": `${point.y}%`,
-            "--size": `${point.size}px`,
-            "--alpha": point.alpha,
-            "--delay": `${point.delay}s`,
-            "--duration": `${point.duration}s`,
-            "--blur": `${point.blur}px`,
-            "--drift-x": `${point.driftX.toFixed(2)}px`,
-            "--drift-y": `${point.driftY.toFixed(2)}px`,
+            "--angle0": `${point.angle0.toFixed(3)}deg`,
+            "--angle1": `${point.angle1.toFixed(3)}deg`,
+            "--radius0": `${point.radius0.toFixed(3)}vmax`,
+            "--radius1": `${point.radius1.toFixed(3)}vmax`,
+            "--size": `${point.size.toFixed(3)}px`,
+            "--alpha": point.alpha.toFixed(3),
+            "--delay": `${point.delay.toFixed(3)}s`,
+            "--duration": `${point.duration.toFixed(3)}s`,
+            "--blur": `${point.blur.toFixed(3)}px`,
             "--grow": point.grow.toFixed(3),
+            "--spin": `${point.spin.toFixed(3)}deg`,
           })}
         />
       ))}
@@ -362,17 +321,17 @@ export function SpiralVaultBackground() {
           key={`sv-constellation-${idx}`}
           className="spiral-vault-constellation-star"
           style={toStyle({
-            "--x": `${point.x}%`,
-            "--y": `${point.y}%`,
-            "--size": `${point.size}px`,
+            "--angle-off": `${point.angleOff.toFixed(3)}deg`,
+            "--angle-hit": `${point.angleHit.toFixed(3)}deg`,
+            "--angle-exit": `${point.angleExit.toFixed(3)}deg`,
+            "--radius-off": `${point.radiusOff.toFixed(3)}vmax`,
+            "--radius-hit": `${point.radiusHit.toFixed(3)}vmax`,
+            "--radius-exit": `${point.radiusExit.toFixed(3)}vmax`,
+            "--size": `${point.size.toFixed(3)}px`,
             "--alpha": point.alpha.toFixed(3),
-            "--delay": `${point.delay.toFixed(2)}s`,
-            "--period": `${point.period.toFixed(2)}s`,
-            "--twinkle": `${point.twinkle.toFixed(2)}s`,
-            "--scatter-x": `${point.scatterX.toFixed(2)}px`,
-            "--scatter-y": `${point.scatterY.toFixed(2)}px`,
-            "--exit-x": `${point.exitX.toFixed(2)}px`,
-            "--exit-y": `${point.exitY.toFixed(2)}px`,
+            "--delay": `${point.delay.toFixed(3)}s`,
+            "--period": `${point.period.toFixed(3)}s`,
+            "--twinkle": `${point.twinkle.toFixed(3)}s`,
           })}
         />
       ))}

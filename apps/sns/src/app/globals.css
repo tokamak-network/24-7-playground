@@ -89,21 +89,21 @@ body {
 .spiral-vault-star,
 .spiral-vault-bright {
   position: absolute;
-  left: var(--x);
-  top: var(--y);
+  left: 50%;
+  top: 50%;
 }
 
 .spiral-vault-nebula {
   width: var(--w);
   height: var(--h);
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0));
   border-radius: 999px;
   background:
     radial-gradient(circle at 26% 36%, rgba(192, 249, 255, 0.78), rgba(113, 166, 255, 0.3) 38%, transparent 72%),
     radial-gradient(circle at 68% 52%, rgba(241, 178, 255, 0.36), transparent 66%);
   opacity: var(--alpha);
   filter: blur(28px) hue-rotate(var(--hue-shift));
-  animation: sv-nebula-outflow var(--duration) linear infinite;
+  animation: sv-nebula-spiral var(--duration) linear infinite;
   animation-delay: var(--delay);
 }
 
@@ -111,7 +111,7 @@ body {
 .spiral-vault-star,
 .spiral-vault-bright {
   border-radius: 999px;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0));
 }
 
 .spiral-vault-dust {
@@ -120,7 +120,7 @@ body {
   opacity: var(--alpha);
   filter: blur(var(--blur));
   background: rgba(227, 240, 255, 0.76);
-  animation: sv-dust-outflow var(--duration) linear infinite;
+  animation: sv-dust-spiral var(--duration) linear infinite;
   animation-delay: var(--delay);
 }
 
@@ -131,7 +131,7 @@ body {
   filter: blur(var(--blur));
   background: radial-gradient(circle, rgba(255, 255, 255, 0.88), rgba(166, 208, 255, 0.4) 58%, transparent 78%);
   box-shadow: 0 0 calc(var(--size) * 3.8) rgba(167, 219, 255, 0.4);
-  animation: sv-star-outflow var(--duration) linear infinite;
+  animation: sv-star-spiral var(--duration) linear infinite;
   animation-delay: var(--delay);
 }
 
@@ -142,7 +142,7 @@ body {
   filter: blur(var(--blur));
   background: radial-gradient(circle, rgba(255, 255, 255, 0.96), rgba(217, 237, 255, 0.7) 50%, transparent 76%);
   box-shadow: 0 0 calc(var(--size) * 5) rgba(215, 237, 255, 0.62), 0 0 calc(var(--size) * 8) rgba(132, 186, 255, 0.36);
-  animation: sv-bright-outflow var(--duration) linear infinite;
+  animation: sv-bright-spiral var(--duration) linear infinite;
   animation-delay: var(--delay);
 }
 
@@ -168,14 +168,14 @@ body {
 
 .spiral-vault-constellation-star {
   position: absolute;
-  left: var(--x);
-  top: var(--y);
+  left: 50%;
+  top: 50%;
   width: var(--size);
   height: var(--size);
   z-index: 12;
   border-radius: 999px;
   opacity: 0;
-  transform: translate(-50%, -50%) translate(var(--scatter-x), var(--scatter-y)) scale(0.32);
+  transform: translate(-50%, -50%) rotate(var(--angle-off)) translateX(var(--radius-off)) scale(0.34);
   background: radial-gradient(circle, rgba(255, 255, 255, 0.98), rgba(215, 236, 255, 0.78) 52%, transparent 80%);
   box-shadow: 0 0 calc(var(--size) * 6) rgba(208, 235, 255, 0.84), 0 0 calc(var(--size) * 10) rgba(145, 187, 255, 0.46);
   animation: sv-constellation-cycle var(--period) linear infinite,
@@ -185,30 +185,31 @@ body {
 
 @keyframes sv-constellation-cycle {
   0%,
-  77% {
-    transform: translate(-50%, -50%) translate(var(--scatter-x), var(--scatter-y)) scale(0.3);
+  74% {
+    transform: translate(-50%, -50%) rotate(var(--angle-off)) translateX(var(--radius-off)) scale(0.3);
     opacity: 0;
   }
   82% {
-    transform: translate(-50%, -50%) translate(calc(var(--scatter-x) * 0.38), calc(var(--scatter-y) * 0.38))
-      scale(0.82);
-    opacity: calc(var(--alpha) * 0.32);
+    transform: translate(-50%, -50%) rotate(calc(var(--angle-hit) - 16deg))
+      translateX(calc(var(--radius-hit) - 1.6vmax)) scale(0.88);
+    opacity: calc(var(--alpha) * 0.28);
   }
   86% {
-    transform: translate(-50%, -50%) translate(0px, 0px) scale(1.12);
+    transform: translate(-50%, -50%) rotate(var(--angle-hit)) translateX(var(--radius-hit)) scale(1.1);
     opacity: var(--alpha);
   }
-  89% {
-    transform: translate(-50%, -50%) translate(0px, 0px) scale(1.04);
+  90% {
+    transform: translate(-50%, -50%) rotate(calc(var(--angle-hit) + 8deg))
+      translateX(calc(var(--radius-hit) + 0.32vmax)) scale(1.08);
     opacity: calc(var(--alpha) * 0.94);
   }
-  93% {
-    transform: translate(-50%, -50%) translate(calc(var(--exit-x) * 0.22), calc(var(--exit-y) * 0.22))
-      scale(1.18);
-    opacity: calc(var(--alpha) * 0.42);
+  94% {
+    transform: translate(-50%, -50%) rotate(calc(var(--angle-hit) + 22deg))
+      translateX(calc(var(--radius-hit) + 1.4vmax)) scale(1.2);
+    opacity: calc(var(--alpha) * 0.4);
   }
   100% {
-    transform: translate(-50%, -50%) translate(var(--exit-x), var(--exit-y)) scale(0.52);
+    transform: translate(-50%, -50%) rotate(var(--angle-exit)) translateX(var(--radius-exit)) scale(0.52);
     opacity: 0;
   }
 }
@@ -241,69 +242,79 @@ body {
   }
 }
 
-@keyframes sv-nebula-outflow {
+@keyframes sv-nebula-spiral {
   0% {
-    transform: translate(-50%, -50%) translate(0px, 0px) scale(0.84) rotate(-4deg);
+    transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0)) scale(0.8) rotate(-4deg);
     opacity: calc(var(--alpha) * 0.28);
   }
-  38% {
-    transform: translate(-50%, -50%) translate(calc(var(--drift-x) * 0.52), calc(var(--drift-y) * 0.52))
-      scale(1.04) rotate(4deg);
+  50% {
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.56)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.56))) scale(1.06) rotate(4deg);
     opacity: calc(var(--alpha) * 1.04);
   }
   100% {
-    transform: translate(-50%, -50%) translate(var(--drift-x), var(--drift-y)) scale(1.26) rotate(12deg);
+    transform: translate(-50%, -50%) rotate(var(--angle1)) translateX(var(--radius1)) scale(1.24) rotate(12deg);
     opacity: calc(var(--alpha) * 0.08);
   }
 }
 
-@keyframes sv-dust-outflow {
+@keyframes sv-dust-spiral {
   0% {
-    transform: translate(-50%, -50%) translate(0px, 0px) scale(calc(0.5 + (var(--grow) * 0.24)));
+    transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0))
+      scale(calc(0.44 + (var(--grow) * 0.22)));
     opacity: calc(var(--alpha) * 0.24);
   }
   42% {
-    transform: translate(-50%, -50%) translate(calc(var(--drift-x) * 0.56), calc(var(--drift-y) * 0.56))
-      scale(calc(0.68 + (var(--grow) * 0.42)));
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.56)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.56)))
+      scale(calc(0.66 + (var(--grow) * 0.4)));
     opacity: calc(var(--alpha) * 0.84);
   }
   100% {
-    transform: translate(-50%, -50%) translate(var(--drift-x), var(--drift-y))
-      scale(calc(0.9 + (var(--grow) * 0.82)));
+    transform: translate(-50%, -50%) rotate(var(--angle1)) translateX(var(--radius1))
+      scale(calc(0.88 + (var(--grow) * 0.84)));
     opacity: calc(var(--alpha) * 0.02);
   }
 }
 
-@keyframes sv-star-outflow {
+@keyframes sv-star-spiral {
   0% {
-    transform: translate(-50%, -50%) translate(0px, 0px) scale(calc(0.52 + (var(--grow) * 0.3)));
+    transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0))
+      scale(calc(0.5 + (var(--grow) * 0.3)));
     opacity: calc(var(--alpha) * 0.38);
   }
   50% {
-    transform: translate(-50%, -50%) translate(calc(var(--drift-x) * 0.58), calc(var(--drift-y) * 0.58))
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.58)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.58)))
       scale(calc(0.72 + (var(--grow) * 0.5)));
     opacity: calc(var(--alpha) * 1.08);
   }
   100% {
-    transform: translate(-50%, -50%) translate(var(--drift-x), var(--drift-y))
-      scale(calc(0.96 + (var(--grow) * 0.92)));
+    transform: translate(-50%, -50%) rotate(var(--angle1)) translateX(var(--radius1))
+      scale(calc(0.94 + (var(--grow) * 0.92)));
     opacity: calc(var(--alpha) * 0.06);
   }
 }
 
-@keyframes sv-bright-outflow {
+@keyframes sv-bright-spiral {
   0% {
-    transform: translate(-50%, -50%) translate(0px, 0px) scale(calc(0.56 + (var(--grow) * 0.28)));
+    transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0))
+      scale(calc(0.56 + (var(--grow) * 0.26)));
     opacity: calc(var(--alpha) * 0.42);
   }
   45% {
-    transform: translate(-50%, -50%) translate(calc(var(--drift-x) * 0.54), calc(var(--drift-y) * 0.54))
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.54)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.54)))
       scale(calc(0.8 + (var(--grow) * 0.56)));
     opacity: calc(var(--alpha) * 1.14);
   }
   100% {
-    transform: translate(-50%, -50%) translate(var(--drift-x), var(--drift-y))
-      scale(calc(1.08 + (var(--grow) * 0.96)));
+    transform: translate(-50%, -50%) rotate(var(--angle1)) translateX(var(--radius1))
+      scale(calc(1.06 + (var(--grow) * 0.98)));
     opacity: calc(var(--alpha) * 0.08);
   }
 }
