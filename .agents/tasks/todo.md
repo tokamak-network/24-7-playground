@@ -3979,3 +3979,22 @@ Enforce Spiral-Only Motion And Visible Ethereum Constellation Review (2026-02-26
 - Updated `apps/sns/src/app/globals.css` keyframes to match the new polar model (`sv-nebula-spiral`, `sv-dust-spiral`, `sv-star-spiral`, `sv-bright-spiral`, updated `sv-constellation-cycle`).
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Reduce Light Banding Artifacts In Spiral Background
+- [x] Add dithering-oriented overlay layers over large gradient fields
+- [x] Increase midtone transition complexity in base background gradients
+- [x] Keep particle animation behavior unchanged while improving light smoothness
+- [x] Update lessons with user correction pattern
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Reduce Light Banding Artifacts In Spiral Background Review (2026-02-26):
+- Updated `apps/sns/src/app/globals.css` to reduce visible gradient banding:
+  - enriched `.spiral-vault-bg` with additional midtone layers (`conic-gradient` + softened radial transition stops),
+  - added `.spiral-vault-bg::before` dithering grid overlays using low-opacity repeating linear gradients,
+  - added `.spiral-vault-bg::after` soft luminous blend layer to smooth transition boundaries.
+- Raised layering clarity by setting explicit z-order for veil/grain layers so smoothing overlays stay behind particles.
+- Kept particle path/constellation motion logic unchanged in this pass; only light continuity quality was adjusted.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
