@@ -52,84 +52,47 @@ body {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  transform: scale(0.94);
+  isolation: isolate;
+  backface-visibility: hidden;
+  will-change: transform;
+  transform: translateZ(0) scale(1.02);
   transform-origin: 50% 50%;
   background-color: #050a1d;
   background:
-    radial-gradient(circle at 18% 14%, rgba(89, 146, 255, 0.2), rgba(89, 146, 255, 0.08) 26%, transparent 56%),
-    radial-gradient(circle at 76% 80%, rgba(84, 104, 211, 0.2), rgba(84, 104, 211, 0.08) 36%, transparent 64%),
-    radial-gradient(circle at 50% 50%, rgba(43, 73, 163, 0.14), rgba(43, 73, 163, 0.04) 42%, transparent 68%),
-    conic-gradient(
-      from 124deg at 50% 50%,
-      rgba(78, 110, 196, 0.06),
-      rgba(92, 136, 224, 0.04),
-      rgba(68, 91, 176, 0.06),
-      rgba(78, 110, 196, 0.06)
-    ),
+    radial-gradient(circle at 20% 12%, rgba(94, 143, 242, 0.24), rgba(94, 143, 242, 0.08) 34%, transparent 62%),
+    radial-gradient(circle at 80% 84%, rgba(88, 108, 218, 0.22), rgba(88, 108, 218, 0.08) 38%, transparent 66%),
+    radial-gradient(circle at 52% 46%, rgba(59, 92, 189, 0.16), rgba(59, 92, 189, 0.05) 44%, transparent 72%),
+    radial-gradient(circle at 50% 50%, rgba(156, 193, 255, 0.08), rgba(156, 193, 255, 0.03) 54%, transparent 84%),
     linear-gradient(180deg, rgba(2, 6, 18, 0.92), rgba(5, 11, 28, 0.95) 58%, rgba(7, 12, 31, 0.96));
   animation: sv-field-drift 74s linear infinite;
-}
-
-.spiral-vault-bg::before,
-.spiral-vault-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.spiral-vault-bg::before {
-  z-index: 1;
-  opacity: 0.34;
-  mix-blend-mode: soft-light;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      rgba(255, 255, 255, 0.042) 0,
-      rgba(255, 255, 255, 0.016) 0.8px,
-      rgba(255, 255, 255, 0) 2.4px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(162, 196, 255, 0.03) 0,
-      rgba(162, 196, 255, 0.012) 0.9px,
-      rgba(162, 196, 255, 0) 2.5px
-    );
-  background-size: 100% 3px, 3px 100%;
-}
-
-.spiral-vault-bg::after {
-  z-index: 2;
-  opacity: 0.28;
-  mix-blend-mode: screen;
-  background:
-    radial-gradient(circle at 48% 47%, rgba(188, 215, 255, 0.16), rgba(188, 215, 255, 0.05) 40%, transparent 74%),
-    radial-gradient(circle at 52% 53%, rgba(148, 173, 238, 0.1), transparent 68%);
-  filter: blur(22px);
 }
 
 .spiral-vault-bg__veil {
   position: absolute;
   inset: 0;
-  z-index: 3;
+  z-index: 1;
   background:
-    radial-gradient(58% 40% at 50% 46%, rgba(128, 181, 255, 0.14), transparent 74%),
-    radial-gradient(54% 32% at 50% 58%, rgba(157, 128, 255, 0.1), transparent 78%);
-  filter: blur(3px);
+    radial-gradient(60% 42% at 50% 46%, rgba(132, 184, 255, 0.1), transparent 76%),
+    radial-gradient(56% 34% at 50% 58%, rgba(157, 128, 255, 0.08), transparent 80%);
+  filter: blur(2px);
   animation: sv-veil-breath 16s ease-in-out infinite alternate;
 }
 
 .spiral-vault-bg__grain {
   position: absolute;
   inset: 0;
-  z-index: 4;
-  opacity: 0.2;
-  mix-blend-mode: screen;
+  z-index: 2;
+  opacity: 0.18;
   background-image:
-    radial-gradient(circle at 14% 16%, rgba(255, 255, 255, 0.76) 0 0.4px, transparent 0.62px),
-    radial-gradient(circle at 68% 34%, rgba(255, 255, 255, 0.68) 0 0.36px, transparent 0.58px),
-    radial-gradient(circle at 47% 82%, rgba(255, 255, 255, 0.64) 0 0.32px, transparent 0.54px);
-  background-size: 130px 130px, 150px 150px, 120px 120px;
+    radial-gradient(circle at 14% 16%, rgba(255, 255, 255, 0.54) 0 0.4px, transparent 0.66px),
+    radial-gradient(circle at 68% 34%, rgba(255, 255, 255, 0.46) 0 0.36px, transparent 0.62px),
+    radial-gradient(circle at 47% 82%, rgba(255, 255, 255, 0.42) 0 0.32px, transparent 0.58px),
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgba(255, 255, 255, 0.015) 0 1px,
+      rgba(255, 255, 255, 0) 1px 3px
+    );
+  background-size: 130px 130px, 150px 150px, 120px 120px, 4px 4px;
 }
 
 .spiral-vault-nebula,
@@ -274,10 +237,10 @@ body {
 
 @keyframes sv-field-drift {
   0% {
-    transform: scale(0.94) rotate(0deg);
+    transform: translateZ(0) scale(1.02) rotate(0deg);
   }
   100% {
-    transform: scale(1.28) rotate(360deg);
+    transform: translateZ(0) scale(1.12) rotate(360deg);
   }
 }
 

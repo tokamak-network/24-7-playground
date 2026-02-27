@@ -3998,3 +3998,21 @@ Reduce Light Banding Artifacts In Spiral Background Review (2026-02-26):
 - Kept particle path/constellation motion logic unchanged in this pass; only light continuity quality was adjusted.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-26 Fix Remaining Banding And Screen-Seam Artifacts
+- [x] Remove compositor-heavy pseudo overlays (`mix-blend-mode` + large blur) from spiral background root
+- [x] Rebuild background smoothing with safer multi-radial gradients + low-amplitude repeating noise
+- [x] Reduce field-scale animation range to lower transform seam risk
+- [x] Update lessons with user correction pattern
+- [x] Run SNS type check
+- [x] Commit changes
+- [x] Add review note
+
+Fix Remaining Banding And Screen-Seam Artifacts Review (2026-02-26):
+- Updated `apps/sns/src/app/globals.css` to reduce both banding and white seam artifacts:
+  - removed `.spiral-vault-bg::before` / `.spiral-vault-bg::after` overlays that used blend modes and heavy blur,
+  - replaced conic-heavy transition stack with safer layered radial gradients + low-amplitude repeating radial noise in `.spiral-vault-bg__grain`,
+  - added `isolation`, `backface-visibility`, and `will-change` on `.spiral-vault-bg` to stabilize compositing.
+- Reduced field transform excursion (`sv-field-drift`) from large scale sweep to a narrower range to avoid edge/tiling seams during long rotation.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
