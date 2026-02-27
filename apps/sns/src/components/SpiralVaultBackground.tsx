@@ -14,6 +14,9 @@ type SpiralParticle = {
   blur: number;
   grow: number;
   spin: number;
+  hasCross: boolean;
+  crossLen: number;
+  crossAlpha: number;
 };
 
 type ConstellationStar = {
@@ -169,6 +172,9 @@ function createSpiralParticles(
     const spin = (spinBase + rand() * 88) * (1.1 - sizeNorm * 0.45) * (0.92 + grow * 0.08);
 
     const durationBase = type === "dust" ? 10 + rand() * 10 : type === "star" ? 6 + rand() * 8 : 4.6 + rand() * 6;
+    const hasCross = type !== "dust" && rand() < (type === "star" ? 0.18 : 0.42);
+    const crossLen = size * (type === "star" ? 3.2 : 3.8);
+    const crossAlpha = (type === "star" ? 0.22 : 0.3) + sizeNorm * (type === "star" ? 0.22 : 0.26);
 
     return {
       angle0: polar.angle,
@@ -182,6 +188,9 @@ function createSpiralParticles(
       blur: type === "dust" ? rand() * 1.2 : type === "star" ? rand() * 0.96 : rand() * 0.66,
       grow,
       spin,
+      hasCross,
+      crossLen,
+      crossAlpha,
     };
   });
 }
@@ -262,7 +271,7 @@ export function SpiralVaultBackground() {
       {STARS.map((point, idx) => (
         <span
           key={`sv-star-${idx}`}
-          className="spiral-vault-star"
+          className={`spiral-vault-star${point.hasCross ? " spiral-vault-crossed" : ""}`}
           style={toStyle({
             "--angle0": `${point.angle0.toFixed(3)}deg`,
             "--angle1": `${point.angle1.toFixed(3)}deg`,
@@ -275,6 +284,8 @@ export function SpiralVaultBackground() {
             "--blur": `${point.blur.toFixed(3)}px`,
             "--grow": point.grow.toFixed(3),
             "--spin": `${point.spin.toFixed(3)}deg`,
+            "--cross-len": `${point.crossLen.toFixed(3)}px`,
+            "--cross-alpha": point.crossAlpha.toFixed(3),
           })}
         />
       ))}
@@ -282,7 +293,7 @@ export function SpiralVaultBackground() {
       {BRIGHT.map((point, idx) => (
         <span
           key={`sv-bright-${idx}`}
-          className="spiral-vault-bright"
+          className={`spiral-vault-bright${point.hasCross ? " spiral-vault-crossed" : ""}`}
           style={toStyle({
             "--angle0": `${point.angle0.toFixed(3)}deg`,
             "--angle1": `${point.angle1.toFixed(3)}deg`,
@@ -295,6 +306,8 @@ export function SpiralVaultBackground() {
             "--blur": `${point.blur.toFixed(3)}px`,
             "--grow": point.grow.toFixed(3),
             "--spin": `${point.spin.toFixed(3)}deg`,
+            "--cross-len": `${point.crossLen.toFixed(3)}px`,
+            "--cross-alpha": point.crossAlpha.toFixed(3),
           })}
         />
       ))}
