@@ -19,6 +19,18 @@ type SpiralParticle = {
   crossAlpha: number;
 };
 
+type NebulaParticle = {
+  dx: number;
+  dy: number;
+  width: number;
+  height: number;
+  alpha: number;
+  delay: number;
+  duration: number;
+  rotate: number;
+  hue: number;
+};
+
 type ConstellationStar = {
   angleOff: number;
   angleHit: number;
@@ -38,6 +50,7 @@ const CONFIG = {
   starCount: 360,
   brightCount: 56,
   dustCount: 320,
+  nebulaCount: 14,
 };
 
 function seededRandom(seed: number) {
@@ -151,6 +164,29 @@ function buildEthereumGlyphPaths() {
   ];
 }
 
+function createNebulaParticles(seed: number, count: number): NebulaParticle[] {
+  const rand = seededRandom(seed * 61 + 23);
+
+  return Array.from({ length: count }, () => {
+    const angle = rand() * Math.PI * 2;
+    const dist = 26 + rand() * 44;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+
+    return {
+      dx,
+      dy,
+      width: 8 + rand() * 14,
+      height: 6 + rand() * 12,
+      alpha: 0.08 + rand() * 0.1,
+      delay: rand() * 18,
+      duration: 54 + rand() * 48,
+      rotate: -24 + rand() * 48,
+      hue: 202 + rand() * 36,
+    };
+  });
+}
+
 function createSpiralParticles(
   seed: number,
   count: number,
@@ -244,6 +280,7 @@ function toStyle(values: Record<string, string | number>) {
 const DUST = createSpiralParticles(CONFIG.seed * 29 + 31, CONFIG.dustCount, "dust");
 const STARS = createSpiralParticles(CONFIG.seed, CONFIG.starCount, "star");
 const BRIGHT = createSpiralParticles(CONFIG.seed * 17 + 19, CONFIG.brightCount, "bright");
+const NEBULA = createNebulaParticles(CONFIG.seed, CONFIG.nebulaCount);
 const CONSTELLATION = createEthereumConstellation(CONFIG.seed);
 const ETHEREUM_GLYPH_PATHS = buildEthereumGlyphPaths();
 const CONSTELLATION_TIMING = {
@@ -256,6 +293,24 @@ export function SpiralVaultBackground() {
     <div className="spiral-vault-bg" aria-hidden="true">
       <div className="spiral-vault-bg__veil" />
       <div className="spiral-vault-bg__grain" />
+
+      {NEBULA.map((cloud, idx) => (
+        <span
+          key={`sv-nebula-${idx}`}
+          className="spiral-vault-nebula-drift"
+          style={toStyle({
+            "--dx": `${cloud.dx.toFixed(3)}vmax`,
+            "--dy": `${cloud.dy.toFixed(3)}vmax`,
+            "--w": `${cloud.width.toFixed(3)}vmax`,
+            "--h": `${cloud.height.toFixed(3)}vmax`,
+            "--alpha": cloud.alpha.toFixed(3),
+            "--delay": `${cloud.delay.toFixed(3)}s`,
+            "--duration": `${cloud.duration.toFixed(3)}s`,
+            "--rot": `${cloud.rotate.toFixed(3)}deg`,
+            "--hue": cloud.hue.toFixed(3),
+          })}
+        />
+      ))}
 
       {DUST.map((point, idx) => (
         <span

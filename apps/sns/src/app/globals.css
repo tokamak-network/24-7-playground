@@ -66,12 +66,25 @@ body {
   display: none;
 }
 
+.spiral-vault-nebula-drift,
 .spiral-vault-dust,
 .spiral-vault-star,
 .spiral-vault-bright {
   position: absolute;
   left: 50%;
   top: 50%;
+}
+
+.spiral-vault-nebula-drift {
+  width: var(--w);
+  height: var(--h);
+  border-radius: 999px;
+  opacity: 0;
+  background: hsl(var(--hue, 220) 42% 58% / var(--alpha, 0.12));
+  transform: translate(-50%, -50%) translate(0, 0) rotate(var(--rot)) scale(0.04);
+  animation: sv-nebula-drift var(--duration) linear infinite;
+  animation-delay: var(--delay);
+  animation-fill-mode: backwards;
 }
 
 .spiral-vault-dust,
@@ -247,6 +260,23 @@ body {
   }
   100% {
     transform: translateZ(0) scale(1.12) rotate(360deg);
+  }
+}
+
+@keyframes sv-nebula-drift {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) rotate(var(--rot)) scale(0.04);
+    opacity: 0;
+  }
+  10% {
+    opacity: calc(var(--alpha) * 0.7);
+  }
+  72% {
+    opacity: var(--alpha);
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1.9);
+    opacity: 0;
   }
 }
 
