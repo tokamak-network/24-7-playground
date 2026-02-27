@@ -4085,3 +4085,20 @@ Correct Ethereum Overlay Line To Match Actual Mark Geometry Review (2026-02-27):
   - rebuilt overlay glyph paths into top/middle/bottom facets + center spine based on the same vertices.
 - Verification:
   - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
+
+## 2026-02-27 Remove All Spiral Vault Lighting Effects
+- [x] Remove central light-source overlays and radial light wash from Spiral Vault background layer
+- [x] Remove glow, flare, and bloom effects from stars/bright particles/constellation stars
+- [x] Remove overlay glyph glow (`drop-shadow`/blur) and keep non-emissive line rendering
+- [x] Verify SNS type-check (`npx tsc --noEmit -p apps/sns/tsconfig.json`)
+- [x] Commit scoped changes only (exclude unrelated logo files)
+- [x] Add review note
+
+Remove All Spiral Vault Lighting Effects Review (2026-02-27):
+- Updated `apps/sns/src/app/globals.css`:
+  - removed background radial light wash from `body` and `.spiral-vault-bg`,
+  - disabled `.spiral-vault-bg__veil` light layer,
+  - removed star/bright/constellation glow by deleting `box-shadow`, radial bloom backgrounds, flare pseudo-elements, and brightness twinkle animation,
+  - removed glyph blur/drop-shadow and kept plain translucent stroke lines only.
+- Verification:
+  - `npx tsc --noEmit -p apps/sns/tsconfig.json` passed.
