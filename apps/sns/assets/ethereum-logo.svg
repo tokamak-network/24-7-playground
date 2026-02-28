@@ -1,22 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 760" role="img" aria-label="Ethereum logo wireframe">
   <rect width="760" height="760" fill="#e9e9e9"/>
-  <g fill="none" stroke="#666" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M380 70 L200 360"/>
-    <path d="M380 70 L560 360"/>
-    <path d="M380 70 L380 270"/>
+  <g fill="none" stroke="#646464" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M380 64 L198 378"/>
+    <path d="M380 64 L562 378"/>
+    <path d="M380 64 L380 286"/>
 
-    <path d="M200 360 L380 270"/>
-    <path d="M560 360 L380 270"/>
+    <path d="M198 378 L380 286"/>
+    <path d="M562 378 L380 286"/>
 
-    <path d="M200 360 L380 500"/>
-    <path d="M560 360 L380 500"/>
-    <path d="M380 270 L380 500"/>
+    <path d="M198 378 L380 516"/>
+    <path d="M562 378 L380 516"/>
+    <path d="M380 286 L380 516"/>
 
-    <path d="M190 435 L380 535"/>
-    <path d="M570 435 L380 535"/>
+    <path d="M198 446 L380 556"/>
+    <path d="M562 446 L380 556"/>
 
-    <path d="M190 435 L380 720"/>
-    <path d="M570 435 L380 720"/>
-    <path d="M380 535 L380 720"/>
+    <path d="M198 446 L380 724"/>
+    <path d="M562 446 L380 724"/>
+    <path d="M380 556 L380 724"/>
   </g>
 </svg>
