@@ -37,16 +37,19 @@ type NebulaParticle = {
 
 type ConstellationStar = {
   angleOff: number;
+  angleW1: number;
+  angleW2: number;
   angleHit: number;
   angleExit: number;
   radiusOff: number;
+  radiusW1: number;
+  radiusW2: number;
   radiusHit: number;
   radiusExit: number;
   size: number;
   alpha: number;
   delay: number;
   period: number;
-  twinkle: number;
 };
 
 const CONFIG = {
@@ -100,30 +103,30 @@ function toPolar(x: number, y: number) {
 }
 
 const ETHEREUM_VERTICES = {
-  apex: [0, -1.08],
-  shoulderLeft: [-0.78, 0.12],
-  shoulderRight: [0.78, 0.12],
-  innerTop: [0, -0.02],
-  waistLeft: [-0.66, 0.4],
-  waistRight: [0.66, 0.4],
-  innerBottom: [0, 0.56],
-  bottom: [0, 1.32],
+  apex: [0, -0.99],
+  shoulderLeft: [-0.96, -0.02],
+  shoulderRight: [0.96, -0.02],
+  innerTop: [0, -0.28],
+  waistLeft: [-0.96, 0.11],
+  waistRight: [0.96, 0.11],
+  innerBottom: [0, 0.35],
+  bottom: [0, 0.99],
 } as const;
 
 type EthereumVertex = keyof typeof ETHEREUM_VERTICES;
 
 const ETHEREUM_SEGMENTS: readonly (readonly [EthereumVertex, EthereumVertex, number])[] = [
-  ["apex", "shoulderLeft", 5],
-  ["apex", "shoulderRight", 5],
-  ["apex", "innerTop", 4],
-  ["innerTop", "shoulderLeft", 4],
-  ["innerTop", "shoulderRight", 4],
-  ["innerTop", "innerBottom", 5],
-  ["waistLeft", "innerBottom", 4],
-  ["waistRight", "innerBottom", 4],
-  ["waistLeft", "bottom", 5],
-  ["waistRight", "bottom", 5],
-  ["innerBottom", "bottom", 5],
+  ["apex", "shoulderLeft", 2],
+  ["apex", "shoulderRight", 2],
+  ["apex", "innerTop", 1],
+  ["innerTop", "shoulderLeft", 1],
+  ["innerTop", "shoulderRight", 1],
+  ["innerTop", "innerBottom", 2],
+  ["waistLeft", "innerBottom", 1],
+  ["waistRight", "innerBottom", 1],
+  ["waistLeft", "bottom", 2],
+  ["waistRight", "bottom", 2],
+  ["innerBottom", "bottom", 2],
 ];
 
 const ETHEREUM_CONSTELLATION_SCALE = {
@@ -251,32 +254,46 @@ function createSpiralParticles(
 function createEthereumConstellation(seed: number): ConstellationStar[] {
   const rand = seededRandom(seed * 97 + 13);
   const points = buildEthereumConstellationPoints();
-  const sharedPeriod = 58 + rand() * 8;
-  const sharedDelay = rand() * 1.2;
+  const sharedPeriod = 56 + rand() * 9;
+  const sharedDelay = rand() * 2.8;
 
   return points.map((point) => {
     const x = 50 + point.x * ETHEREUM_CONSTELLATION_SCALE.x + (rand() - 0.5) * 0.16;
     const y = 50 + point.y * ETHEREUM_CONSTELLATION_SCALE.y + (rand() - 0.5) * 0.16;
     const hitPolar = toPolar(x, y);
+    const sampled = sampleSpiralPoint(rand);
+    const startPolar = toPolar(sampled.x, sampled.y);
 
-    const angleOff = hitPolar.angle - (138 + rand() * 88);
-    const radiusOff = clamp(hitPolar.dist * 0.12, 1.8, 6.6);
+    const angleOff = startPolar.angle;
+    const radiusOff = 1.5 + startPolar.dist * 0.32;
 
-    const angleExit = hitPolar.angle + (84 + rand() * 62);
-    const radiusExit = 1.6 + hitPolar.dist * 0.34 + 8 + rand() * 16;
+    const angleW1 = angleOff + (72 + rand() * 108);
+    const radiusW1 = radiusOff + 7 + rand() * 10;
+
+    const angleW2 = angleW1 + (58 + rand() * 90);
+    const radiusW2 = radiusW1 + 7 + rand() * 12;
+
+    const angleHit = hitPolar.angle + (rand() - 0.5) * 4.8;
+    const radiusHit = 1.6 + hitPolar.dist * 0.34;
+
+    const angleExit = angleHit + (44 + rand() * 70);
+    const radiusExit = radiusHit + 8 + rand() * 16;
 
     return {
       angleOff,
-      angleHit: hitPolar.angle,
+      angleW1,
+      angleW2,
+      angleHit,
       angleExit,
       radiusOff,
-      radiusHit: 1.6 + hitPolar.dist * 0.34,
+      radiusW1,
+      radiusW2,
+      radiusHit,
       radiusExit,
-      size: 1.9 + rand() * 2.4,
-      alpha: 0.72 + rand() * 0.24,
-      delay: sharedDelay + rand() * 0.12,
+      size: 1.2 + rand() * 1.8,
+      alpha: 0.58 + rand() * 0.22,
+      delay: sharedDelay + rand() * 0.6,
       period: sharedPeriod,
-      twinkle: 2.3 + rand() * 3,
     };
   });
 }
@@ -290,10 +307,6 @@ const STARS = createSpiralParticles(CONFIG.seed, CONFIG.starCount, "star");
 const BRIGHT = createSpiralParticles(CONFIG.seed * 17 + 19, CONFIG.brightCount, "bright");
 const NEBULA = createNebulaParticles(CONFIG.seed, CONFIG.nebulaCount);
 const CONSTELLATION = createEthereumConstellation(CONFIG.seed);
-const CONSTELLATION_TIMING = {
-  period: CONSTELLATION[0]?.period ?? 62,
-  delay: CONSTELLATION[0]?.delay ?? 0,
-};
 
 export function SpiralVaultBackground() {
   return (
@@ -393,31 +406,22 @@ export function SpiralVaultBackground() {
           className="spiral-vault-constellation-star"
           style={toStyle({
             "--angle-off": `${point.angleOff.toFixed(3)}deg`,
+            "--angle-w1": `${point.angleW1.toFixed(3)}deg`,
+            "--angle-w2": `${point.angleW2.toFixed(3)}deg`,
             "--angle-hit": `${point.angleHit.toFixed(3)}deg`,
             "--angle-exit": `${point.angleExit.toFixed(3)}deg`,
             "--radius-off": `${point.radiusOff.toFixed(3)}vmax`,
+            "--radius-w1": `${point.radiusW1.toFixed(3)}vmax`,
+            "--radius-w2": `${point.radiusW2.toFixed(3)}vmax`,
             "--radius-hit": `${point.radiusHit.toFixed(3)}vmax`,
             "--radius-exit": `${point.radiusExit.toFixed(3)}vmax`,
             "--size": `${point.size.toFixed(3)}px`,
             "--alpha": point.alpha.toFixed(3),
             "--delay": `${point.delay.toFixed(3)}s`,
             "--period": `${point.period.toFixed(3)}s`,
-            "--twinkle": `${point.twinkle.toFixed(3)}s`,
           })}
         />
       ))}
-
-      <img
-        className="spiral-vault-constellation-glyph"
-        src="/ethereum-logo.svg"
-        alt=""
-        draggable={false}
-        role="presentation"
-        style={toStyle({
-          "--period": `${CONSTELLATION_TIMING.period.toFixed(3)}s`,
-          "--delay": `${CONSTELLATION_TIMING.delay.toFixed(3)}s`,
-        })}
-      />
     </div>
   );
 }

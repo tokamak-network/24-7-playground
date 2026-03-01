@@ -242,70 +242,35 @@ body {
   animation-fill-mode: backwards;
 }
 
-.spiral-vault-constellation-glyph {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: min(18vmax, 240px);
-  height: auto;
-  z-index: 13;
-  overflow: visible;
-  pointer-events: none;
-  opacity: 0;
-  transform: translate(-50%, -50%);
-  animation: sv-constellation-glyph-flash var(--period) linear infinite;
-  animation-delay: var(--delay);
-  animation-fill-mode: backwards;
-}
-
-.spiral-vault-constellation-glyph {
-  display: block;
-  background: transparent;
-  mix-blend-mode: normal;
-  filter: none;
-}
-
-@keyframes sv-constellation-glyph-flash {
-  0%,
-  84.5% {
-    opacity: 0;
-  }
-  85.2% {
-    opacity: 0.18;
-  }
-  86% {
-    opacity: 0.6;
-  }
-  86.9% {
-    opacity: 0.22;
-  }
-  87.6%,
-  100% {
-    opacity: 0;
-  }
-}
-
 @keyframes sv-constellation-cycle {
   0%,
-  74% {
+  10% {
     transform: translate(-50%, -50%) rotate(var(--angle-off)) translateX(var(--radius-off)) scale(0.3);
     opacity: 0;
   }
-  82% {
+  30% {
+    transform: translate(-50%, -50%) rotate(var(--angle-w1)) translateX(var(--radius-w1)) scale(0.72);
+    opacity: calc(var(--alpha) * 0.72);
+  }
+  62% {
+    transform: translate(-50%, -50%) rotate(var(--angle-w2)) translateX(var(--radius-w2)) scale(0.94);
+    opacity: calc(var(--alpha) * 0.8);
+  }
+  76% {
     transform: translate(-50%, -50%) rotate(calc(var(--angle-hit) - 16deg))
       translateX(calc(var(--radius-hit) - 1.6vmax)) scale(0.88);
-    opacity: calc(var(--alpha) * 0.28);
+    opacity: calc(var(--alpha) * 0.42);
   }
-  86% {
+  88% {
     transform: translate(-50%, -50%) rotate(var(--angle-hit)) translateX(var(--radius-hit)) scale(1.1);
     opacity: var(--alpha);
   }
-  90% {
+  92% {
     transform: translate(-50%, -50%) rotate(calc(var(--angle-hit) + 8deg))
       translateX(calc(var(--radius-hit) + 0.32vmax)) scale(1.08);
     opacity: calc(var(--alpha) * 0.94);
   }
-  94% {
+  96% {
     transform: translate(-50%, -50%) rotate(calc(var(--angle-hit) + 22deg))
       translateX(calc(var(--radius-hit) + 1.4vmax)) scale(1.2);
     opacity: calc(var(--alpha) * 0.4);
