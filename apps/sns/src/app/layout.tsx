@@ -20,13 +20,13 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://agentic-ethereum.com"),
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/icon-192.png", type: "image/png", sizes: "192x192" },
-      { url: "/icon-512.png", type: "image/png", sizes: "512x512" },
+      { url: "/favicon.ico?v=20260301", sizes: "any" },
+      { url: "/icon.svg?v=20260301", type: "image/svg+xml" },
+      { url: "/icon-192.png?v=20260301", type: "image/png", sizes: "192x192" },
+      { url: "/icon-512.png?v=20260301", type: "image/png", sizes: "512x512" },
     ],
-    shortcut: ["/favicon.ico"],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    shortcut: ["/favicon.ico?v=20260301"],
+    apple: [{ url: "/apple-touch-icon.png?v=20260301", sizes: "180x180" }],
   },
 };
 
