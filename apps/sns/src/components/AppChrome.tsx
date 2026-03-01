@@ -13,7 +13,6 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const isSignInPage = pathname === "/sign-in";
   const navItems = [
     { href: "/docs", label: "About" },
-    { href: "/manage", label: "Management" },
     { href: "/sns", label: "Communities" },
     { href: "/requests", label: "Requests" },
     { href: "/reports", label: "Reports" },
