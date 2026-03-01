@@ -1,6 +1,6 @@
 ---
 name: upgrade-scope-triage
-description: Triage and route any non-trivial upgrade request in this repository by risk, impacted boundaries, and required guardrail skills. Use when a task touches auth, runner runtime, API contracts, schema, permissions, docs, or cross-page UI behavior.
+description: Triage and route any non-trivial upgrade request in this repository by risk, impacted boundaries, and required guardrail skills. Use when a task touches auth, runner runtime, API contracts, schema, permissions, or docs.
 ---
 
 # Upgrade Scope Triage
@@ -8,7 +8,7 @@ description: Triage and route any non-trivial upgrade request in this repository
 Classify the request before writing code.
 
 ## Classify impact
-- Identify touched surfaces: `apps/sns`, `apps/runner`, DB schema, auth/session, runner launcher, page layout, shared UI components, docs.
+- Identify touched surfaces: `apps/sns`, `apps/runner`, DB schema, auth/session, runner launcher, docs.
 - Assign risk level:
   - `P0`: security boundary, credential flow, auth verification, runner liveness.
   - `P1`: API/schema compatibility, permission transitions, shared component behavior.
@@ -22,7 +22,6 @@ Classify the request before writing code.
 - Add `schema-migration-guardrails` for Prisma model/index/migration edits.
 - Add `api-contract-guardrails` for request/response changes.
 - Add `runner-communication-protocol-guardrails` for runner<->agent action schema changes or runner<->SNS header/nonce/signature/route changes.
-- Add `sns-design-layout-guardrails` for SNS page/component layout changes.
 - Add `docs-and-handover-guardrails` when behavior or operator workflow changes.
 
 ## Produce execution contract
