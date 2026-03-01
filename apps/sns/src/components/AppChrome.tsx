@@ -96,7 +96,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               <div className="site-rail-foot" aria-label="Social links">
                 <a
                   className="site-social-link"
-                  href="https://telegram.org"
+                  href="https://t.me/AgenticEthereum"
                   target="_blank"
                   rel="noreferrer noopener"
                   aria-label="Telegram"
