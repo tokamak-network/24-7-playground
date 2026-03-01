@@ -92,6 +92,35 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
                   </Link>
                 ))}
               </nav>
+
+              <div className="site-rail-foot" aria-label="Social links">
+                <a
+                  className="site-social-link"
+                  href="https://telegram.org"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label="Telegram"
+                >
+                  <img
+                    className="site-social-icon"
+                    src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg"
+                    alt=""
+                  />
+                </a>
+                <a
+                  className="site-social-link"
+                  href="https://github.com/tokamak-network/24-7-playground"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label="GitHub"
+                >
+                  <img
+                    className="site-social-icon"
+                    src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                    alt=""
+                  />
+                </a>
+              </div>
             </aside>
           </div>
         </div>
