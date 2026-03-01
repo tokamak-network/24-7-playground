@@ -35,20 +35,6 @@ type NebulaParticle = {
   soft: number;
 };
 
-type ConstellationStar = {
-  angle0: number;
-  angleHit: number;
-  angle1: number;
-  radius0: number;
-  radiusHit: number;
-  radius1: number;
-  size: number;
-  alpha: number;
-  delay: number;
-  period: number;
-  grow: number;
-};
-
 const CONFIG = {
   seed: 1471,
   starCount: 360,
@@ -97,55 +83,6 @@ function toPolar(x: number, y: number) {
   const dist = Math.hypot(dx, dy);
   const angle = (Math.atan2(dy, dx) * 180) / Math.PI;
   return { dist, angle };
-}
-
-const ETHEREUM_VERTICES = {
-  apex: [0, -1.0],
-  shoulderLeft: [-1.0, 0],
-  shoulderRight: [1.0, 0],
-  innerTop: [0, -0.27],
-  waistLeft: [-1.0, 0.13],
-  waistRight: [1.0, 0.13],
-  innerBottom: [0, 0.37],
-  bottom: [0, 1.0],
-} as const;
-
-type EthereumVertex = keyof typeof ETHEREUM_VERTICES;
-
-const ETHEREUM_SEGMENTS: readonly (readonly [EthereumVertex, EthereumVertex, number])[] = [
-  ["apex", "shoulderLeft", 2],
-  ["apex", "shoulderRight", 2],
-  ["apex", "innerTop", 1],
-  ["innerTop", "shoulderLeft", 1],
-  ["innerTop", "shoulderRight", 1],
-  ["innerTop", "innerBottom", 2],
-  ["waistLeft", "innerBottom", 1],
-  ["waistRight", "innerBottom", 1],
-  ["waistLeft", "bottom", 2],
-  ["waistRight", "bottom", 2],
-  ["innerBottom", "bottom", 2],
-];
-
-const ETHEREUM_CONSTELLATION_SCALE = {
-  x: 19.4,
-  y: 27.2,
-};
-
-function buildEthereumConstellationPoints() {
-  const dedupe = new Map<string, { x: number; y: number }>();
-  for (const [from, to, steps] of ETHEREUM_SEGMENTS) {
-    const start = ETHEREUM_VERTICES[from];
-    const end = ETHEREUM_VERTICES[to];
-    for (let i = 0; i <= steps; i += 1) {
-      const t = i / steps;
-      const nx = start[0] + (end[0] - start[0]) * t;
-      const ny = start[1] + (end[1] - start[1]) * t;
-      const key = `${nx.toFixed(4)}:${ny.toFixed(4)}`;
-      if (!dedupe.has(key)) dedupe.set(key, { x: nx, y: ny });
-    }
-  }
-
-  return [...dedupe.values()];
 }
 
 function createNebulaParticles(seed: number, count: number): NebulaParticle[] {
@@ -248,47 +185,6 @@ function createSpiralParticles(
   });
 }
 
-function createEthereumConstellation(seed: number): ConstellationStar[] {
-  const rand = seededRandom(seed * 97 + 13);
-  const points = buildEthereumConstellationPoints();
-  const sharedPeriod = 57 + rand() * 8;
-  const sharedDelay = rand() * 2.8;
-  const hitT = 0.88;
-
-  return points.map((point) => {
-    const x = 50 + point.x * ETHEREUM_CONSTELLATION_SCALE.x + (rand() - 0.5) * 0.16;
-    const y = 50 + point.y * ETHEREUM_CONSTELLATION_SCALE.y + (rand() - 0.5) * 0.16;
-    const hitPolar = toPolar(x, y);
-    const sampled = sampleSpiralPoint(rand);
-    const startPolar = toPolar(sampled.x, sampled.y);
-
-    const angle0 = startPolar.angle;
-    const angleHit = hitPolar.angle + 720 + (rand() - 0.5) * 10;
-    const angle1 = angle0 + (angleHit - angle0) / hitT;
-
-    const radiusHit = 1.6 + hitPolar.dist * 0.34;
-    const radius0Base = 1.2 + Math.pow(rand(), 1.35) * 5.2;
-    const radius0 = Math.min(radius0Base, Math.max(0.9, radiusHit - (2 + rand() * 2.8)));
-    const radius1 = radius0 + (radiusHit - radius0) / hitT;
-
-    const grow = 0.8 + rand() * 0.48;
-
-    return {
-      angle0,
-      angleHit,
-      angle1,
-      radius0,
-      radiusHit,
-      radius1,
-      size: 1 + rand() * 1.65,
-      alpha: 0.48 + rand() * 0.24,
-      delay: sharedDelay + rand() * 0.6,
-      period: sharedPeriod,
-      grow,
-    };
-  });
-}
-
 function toStyle(values: Record<string, string | number>) {
   return values as CSSProperties;
 }
@@ -297,7 +193,6 @@ const DUST = createSpiralParticles(CONFIG.seed * 29 + 31, CONFIG.dustCount, "dus
 const STARS = createSpiralParticles(CONFIG.seed, CONFIG.starCount, "star");
 const BRIGHT = createSpiralParticles(CONFIG.seed * 17 + 19, CONFIG.brightCount, "bright");
 const NEBULA = createNebulaParticles(CONFIG.seed, CONFIG.nebulaCount);
-const CONSTELLATION = createEthereumConstellation(CONFIG.seed);
 
 export function SpiralVaultBackground() {
   return (
@@ -387,26 +282,6 @@ export function SpiralVaultBackground() {
             "--spin": `${point.spin.toFixed(3)}deg`,
             "--cross-len": `${point.crossLen.toFixed(3)}px`,
             "--cross-alpha": point.crossAlpha.toFixed(3),
-          })}
-        />
-      ))}
-
-      {CONSTELLATION.map((point, idx) => (
-        <span
-          key={`sv-constellation-${idx}`}
-          className="spiral-vault-constellation-star"
-          style={toStyle({
-            "--angle0": `${point.angle0.toFixed(3)}deg`,
-            "--angle-hit": `${point.angleHit.toFixed(3)}deg`,
-            "--angle1": `${point.angle1.toFixed(3)}deg`,
-            "--radius0": `${point.radius0.toFixed(3)}vmax`,
-            "--radius-hit": `${point.radiusHit.toFixed(3)}vmax`,
-            "--radius1": `${point.radius1.toFixed(3)}vmax`,
-            "--size": `${point.size.toFixed(3)}px`,
-            "--alpha": point.alpha.toFixed(3),
-            "--delay": `${point.delay.toFixed(3)}s`,
-            "--period": `${point.period.toFixed(3)}s`,
-            "--grow": point.grow.toFixed(3),
           })}
         />
       ))}

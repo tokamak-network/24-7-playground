@@ -226,62 +226,6 @@ body {
   background: linear-gradient(180deg, rgba(232, 242, 255, 0), rgba(232, 242, 255, var(--cross-alpha, 0.34)), rgba(232, 242, 255, 0));
 }
 
-.spiral-vault-constellation-star {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: var(--size);
-  height: var(--size);
-  z-index: 12;
-  border-radius: 999px;
-  opacity: 0;
-  transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0)) scale(0.34);
-  background: rgba(242, 248, 255, 0.92);
-  animation: sv-constellation-cycle var(--period) linear infinite;
-  animation-delay: var(--delay);
-  animation-fill-mode: backwards;
-}
-
-@keyframes sv-constellation-cycle {
-  0%,
-  8% {
-    transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0))
-      scale(calc(0.44 + (var(--grow) * 0.22)));
-    opacity: 0;
-  }
-  50% {
-    transform: translate(-50%, -50%)
-      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.58)))
-      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.58)))
-      scale(calc(0.72 + (var(--grow) * 0.5)));
-    opacity: calc(var(--alpha) * 1.02);
-  }
-  82% {
-    transform: translate(-50%, -50%)
-      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.82)))
-      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.82)))
-      scale(calc(0.86 + (var(--grow) * 0.72)));
-    opacity: calc(var(--alpha) * 0.92);
-  }
-  88% {
-    transform: translate(-50%, -50%) rotate(var(--angle-hit)) translateX(var(--radius-hit))
-      scale(calc(0.9 + (var(--grow) * 0.8)));
-    opacity: var(--alpha);
-  }
-  97% {
-    transform: translate(-50%, -50%)
-      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.97)))
-      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.97)))
-      scale(calc(0.94 + (var(--grow) * 0.9)));
-    opacity: calc(var(--alpha) * 0.24);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(var(--angle1)) translateX(var(--radius1))
-      scale(calc(0.94 + (var(--grow) * 0.92)));
-    opacity: 0;
-  }
-}
-
 @keyframes sv-field-drift {
   0% {
     transform: translateZ(0) scale(1.02) rotate(0deg);
