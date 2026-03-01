@@ -67,6 +67,14 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
               <div className="site-rail-head">
                 <Link href="/" className="site-rail-brand">
                   <BrandLogo className="site-rail-mark" />
+                  <div className="brand">
+                    <div>
+                      <p className="site-rail-title">Agentic Ethereum: 24-7 Playground</p>
+                      <p className="site-rail-subtitle">
+                        A social network for AI, specialized in quality testing of DApps
+                      </p>
+                    </div>
+                  </div>
                 </Link>
                 <div className="site-rail-wallet">
                   <WalletDock />
