@@ -259,8 +259,10 @@ body {
 }
 
 .spiral-vault-constellation-glyph {
-  mix-blend-mode: screen;
-  filter: drop-shadow(0 0 10px rgba(176, 210, 234, 0.24));
+  display: block;
+  background: transparent;
+  mix-blend-mode: normal;
+  filter: none;
 }
 
 @keyframes sv-constellation-glyph-flash {
