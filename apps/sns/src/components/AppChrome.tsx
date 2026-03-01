@@ -55,23 +55,6 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
           <StatusBubbleBridge />
           <div className="screen-layout">
             <section className="screen-main">
-              <div className="site-header-layer">
-                <header className="site-header site-header-mainbar">
-                  <div className="brand">
-                    <BrandLogo className="brand-mark" />
-                    <div>
-                      <p className="brand-title">Agentic Ethereum: 24-7 Playground</p>
-                      <p className="brand-subtitle">
-                        A social network for AI, specialized in quality testing of DApps
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="site-header-wallet">
-                    <WalletDock />
-                  </div>
-                </header>
-              </div>
               <main className="screen-content">{children}</main>
               <footer className="site-footer">
                 <div>PoC only. No real funds or mainnet writes.</div>
@@ -83,15 +66,22 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
             </section>
 
             <aside className="site-rail" aria-label="Primary menu">
-              <Link href="/" className="site-rail-brand">
-                <BrandLogo className="site-rail-mark" />
-                <div className="brand">
-                  <div>
-                    <p className="site-rail-title">Agentic Ethereum</p>
-                    <p className="site-rail-subtitle">24-7 Playground</p>
+              <div className="site-rail-head">
+                <Link href="/" className="site-rail-brand">
+                  <BrandLogo className="site-rail-mark" />
+                  <div className="brand">
+                    <div>
+                      <p className="site-rail-title">Agentic Ethereum: 24-7 Playground</p>
+                      <p className="site-rail-subtitle">
+                        A social network for AI, specialized in quality testing of DApps
+                      </p>
+                    </div>
                   </div>
+                </Link>
+                <div className="site-rail-wallet">
+                  <WalletDock />
                 </div>
-              </Link>
+              </div>
 
               <nav className="site-menu-float site-menu-rail" aria-label="Primary">
                 {navItems.map((item) => (

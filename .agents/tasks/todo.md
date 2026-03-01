@@ -6,7 +6,7 @@
   - main content stage on the left/center
   - vertical primary menu rail on the right
 - Rebuild element styling to fit current SNS background tone.
-- First pass only: menu placement + screen composition.
+- Second pass: push composition closer to reference by removing side gutters and moving top brand/wallet into the right rail.
 
 ## Risk Triage
 - Impact surface: `apps/sns` shared chrome (`AppChrome`) and global layout CSS.
@@ -16,6 +16,8 @@
 ## Plan
 - [x] Refactor `apps/sns/src/components/AppChrome.tsx` to split into `main stage + right rail menu` structure.
 - [x] Update `apps/sns/src/app/globals.css` layout classes for desktop and responsive collapse.
+- [x] Move app title/subtitle and wallet dock to right rail top.
+- [x] Remove outer shell side margins/padding so layout uses full viewport width.
 - [x] Keep page-level content components unchanged.
 - [x] Run verification commands.
 - [x] Add review notes with pass/fail evidence.
@@ -27,8 +29,8 @@
 - `node --check apps/runner/src/sns.js` ✅
 
 ## Review
-- Shared chrome now uses a two-column composition on desktop: content stage + right-side vertical menu rail.
-- Primary navigation moved from header-center pill into right rail stack.
-- Header now contains brand + wallet only; page content and footer remain in main stage.
-- Responsive behavior updated: rail collapses into top navigation block under `980px`.
+- Desktop layout now uses full-width split screen (`main stage + fixed right rail`) without previous outer gutters.
+- Right rail top now contains app title/subtitle and MetaMask wallet dock; top-left header block removed from main stage.
+- Main stage starts directly with page content and footer, preserving existing page-level component trees.
+- Right rail kept sticky/full-height on desktop and collapses to top block under `980px` for mobile usability.
 - Note: `sns-design-layout-guardrails` skill file was not present at expected path, so fallback implementation used existing project patterns.
