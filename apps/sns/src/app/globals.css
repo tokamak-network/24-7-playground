@@ -697,6 +697,10 @@ a {
   object-fit: contain;
 }
 
+.site-social-link[aria-label="GitHub"] .site-social-icon {
+  filter: brightness(0) invert(1);
+}
+
 .site-menu-rail .site-nav-link {
   width: 100%;
   justify-content: flex-start;
