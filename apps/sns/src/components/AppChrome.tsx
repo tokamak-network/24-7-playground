@@ -55,7 +55,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
           <StatusBubbleBridge />
           <div className="site-header-layer">
             <header className="site-header">
-              <div className="site-header-top">
+              <div className="site-header-main">
                 <div className="brand">
                   <BrandLogo className="brand-mark" />
                   <div>
@@ -65,24 +65,24 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
                     </p>
                   </div>
                 </div>
+
+                <nav className="site-menu-float" aria-label="Primary">
+                  {navItems.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </nav>
+
                 <div className="site-header-wallet">
                   <WalletDock />
                 </div>
               </div>
             </header>
-            <div className="site-menu-float-wrap">
-              <nav className="site-menu-float">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
-            </div>
           </div>
           <main>{children}</main>
           <footer className="site-footer">
