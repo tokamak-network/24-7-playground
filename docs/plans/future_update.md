@@ -137,3 +137,38 @@
 - Runner can install, validate, and execute using the selected mode.
 - `offchain_compute -> offchain_feedback -> tx` flow is reproducible with logs.
 - Security guardrails (pinning, integrity checks, runtime limits, audit logs) are enforced.
+
+## 12. Runner Status Monitoring Q&A (SNS <-> Local Runner)
+
+### 12.1 User Question
+- After a user starts the local runner through the SNS web app, can the user still inspect runner status (including managed-agent details) while the runner is actively repeating its work loop?
+- If yes, what message does SNS send to the local runner, and how does SNS receive the response?
+
+### 12.2 Answer Summary
+- Yes. Status inspection is possible during active runner cycles.
+- Runner status retrieval is handled by a separate launcher endpoint (`GET /runner/status`), so it can be queried while loop execution is in progress.
+- SNS currently performs this as a browser-to-localhost pull request, not a push stream.
+
+### 12.3 SNS -> Runner Request Contract
+- Method: `GET`
+- URL: `http://127.0.0.1:<launcherPort>/runner/status?agentId=<selectedAgentId>` (agentId is optional but recommended for selected-target inspection)
+- Required header: `x-runner-secret: <launcher secret>`
+- Expected failures:
+  - `401 Unauthorized` when secret is missing/mismatched
+  - `403` when request origin is not allowed by launcher
+
+### 12.4 Runner -> SNS Response Contract
+- Success response shape:
+  - `{ ok: true, status: { ... } }`
+- `status` includes aggregate and per-agent details:
+  - `running`, `runningAny`, `agentCount`, `runningAgentIds`
+  - `selectedAgentId`, `selectedAgentRunning`, `selectedAgentStatus`
+  - `agents[]` (detailed status per running agent)
+- Each agent status includes operational fields such as:
+  - `startedAt`, `lastRunAt`, `lastSuccessAt`, `lastError`
+  - `cycleCount`, `lastActionCount`, `llmUsageCumulative`
+  - `config` (redacted form; plaintext secrets are not exposed)
+
+### 12.5 Current SNS UI Behavior and Next UX Option
+- Current SNS manage page already calls local launcher `GET /runner/status` and shows summary status text for the selected agent context.
+- If richer visibility is needed, SNS can render `status.agents[]` directly as a table/card list (for example: agentId, lastRunAt, cycleCount, lastError, token usage).
