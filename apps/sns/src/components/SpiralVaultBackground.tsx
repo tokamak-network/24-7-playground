@@ -36,20 +36,17 @@ type NebulaParticle = {
 };
 
 type ConstellationStar = {
-  angleOff: number;
-  angleW1: number;
-  angleW2: number;
+  angle0: number;
   angleHit: number;
-  angleExit: number;
-  radiusOff: number;
-  radiusW1: number;
-  radiusW2: number;
+  angle1: number;
+  radius0: number;
   radiusHit: number;
-  radiusExit: number;
+  radius1: number;
   size: number;
   alpha: number;
   delay: number;
   period: number;
+  grow: number;
 };
 
 const CONFIG = {
@@ -103,14 +100,14 @@ function toPolar(x: number, y: number) {
 }
 
 const ETHEREUM_VERTICES = {
-  apex: [0, -0.99],
-  shoulderLeft: [-0.96, -0.02],
-  shoulderRight: [0.96, -0.02],
-  innerTop: [0, -0.28],
-  waistLeft: [-0.96, 0.11],
-  waistRight: [0.96, 0.11],
-  innerBottom: [0, 0.35],
-  bottom: [0, 0.99],
+  apex: [0, -1.0],
+  shoulderLeft: [-1.0, 0],
+  shoulderRight: [1.0, 0],
+  innerTop: [0, -0.27],
+  waistLeft: [-1.0, 0.13],
+  waistRight: [1.0, 0.13],
+  innerBottom: [0, 0.37],
+  bottom: [0, 1.0],
 } as const;
 
 type EthereumVertex = keyof typeof ETHEREUM_VERTICES;
@@ -254,8 +251,9 @@ function createSpiralParticles(
 function createEthereumConstellation(seed: number): ConstellationStar[] {
   const rand = seededRandom(seed * 97 + 13);
   const points = buildEthereumConstellationPoints();
-  const sharedPeriod = 56 + rand() * 9;
+  const sharedPeriod = 57 + rand() * 8;
   const sharedDelay = rand() * 2.8;
+  const hitT = 0.88;
 
   return points.map((point) => {
     const x = 50 + point.x * ETHEREUM_CONSTELLATION_SCALE.x + (rand() - 0.5) * 0.16;
@@ -264,36 +262,29 @@ function createEthereumConstellation(seed: number): ConstellationStar[] {
     const sampled = sampleSpiralPoint(rand);
     const startPolar = toPolar(sampled.x, sampled.y);
 
-    const angleOff = startPolar.angle;
-    const radiusOff = 1.5 + startPolar.dist * 0.32;
+    const angle0 = startPolar.angle;
+    const angleHit = hitPolar.angle + 720 + (rand() - 0.5) * 10;
+    const angle1 = angle0 + (angleHit - angle0) / hitT;
 
-    const angleW1 = angleOff + (72 + rand() * 108);
-    const radiusW1 = radiusOff + 7 + rand() * 10;
-
-    const angleW2 = angleW1 + (58 + rand() * 90);
-    const radiusW2 = radiusW1 + 7 + rand() * 12;
-
-    const angleHit = hitPolar.angle + (rand() - 0.5) * 4.8;
     const radiusHit = 1.6 + hitPolar.dist * 0.34;
+    const radius0Base = 1.2 + Math.pow(rand(), 1.35) * 5.2;
+    const radius0 = Math.min(radius0Base, Math.max(0.9, radiusHit - (2 + rand() * 2.8)));
+    const radius1 = radius0 + (radiusHit - radius0) / hitT;
 
-    const angleExit = angleHit + (44 + rand() * 70);
-    const radiusExit = radiusHit + 8 + rand() * 16;
+    const grow = 0.8 + rand() * 0.48;
 
     return {
-      angleOff,
-      angleW1,
-      angleW2,
+      angle0,
       angleHit,
-      angleExit,
-      radiusOff,
-      radiusW1,
-      radiusW2,
+      angle1,
+      radius0,
       radiusHit,
-      radiusExit,
-      size: 1.2 + rand() * 1.8,
-      alpha: 0.58 + rand() * 0.22,
+      radius1,
+      size: 1 + rand() * 1.65,
+      alpha: 0.48 + rand() * 0.24,
       delay: sharedDelay + rand() * 0.6,
       period: sharedPeriod,
+      grow,
     };
   });
 }
@@ -405,20 +396,17 @@ export function SpiralVaultBackground() {
           key={`sv-constellation-${idx}`}
           className="spiral-vault-constellation-star"
           style={toStyle({
-            "--angle-off": `${point.angleOff.toFixed(3)}deg`,
-            "--angle-w1": `${point.angleW1.toFixed(3)}deg`,
-            "--angle-w2": `${point.angleW2.toFixed(3)}deg`,
+            "--angle0": `${point.angle0.toFixed(3)}deg`,
             "--angle-hit": `${point.angleHit.toFixed(3)}deg`,
-            "--angle-exit": `${point.angleExit.toFixed(3)}deg`,
-            "--radius-off": `${point.radiusOff.toFixed(3)}vmax`,
-            "--radius-w1": `${point.radiusW1.toFixed(3)}vmax`,
-            "--radius-w2": `${point.radiusW2.toFixed(3)}vmax`,
+            "--angle1": `${point.angle1.toFixed(3)}deg`,
+            "--radius0": `${point.radius0.toFixed(3)}vmax`,
             "--radius-hit": `${point.radiusHit.toFixed(3)}vmax`,
-            "--radius-exit": `${point.radiusExit.toFixed(3)}vmax`,
+            "--radius1": `${point.radius1.toFixed(3)}vmax`,
             "--size": `${point.size.toFixed(3)}px`,
             "--alpha": point.alpha.toFixed(3),
             "--delay": `${point.delay.toFixed(3)}s`,
             "--period": `${point.period.toFixed(3)}s`,
+            "--grow": point.grow.toFixed(3),
           })}
         />
       ))}

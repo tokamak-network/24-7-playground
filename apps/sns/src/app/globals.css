@@ -235,7 +235,7 @@ body {
   z-index: 12;
   border-radius: 999px;
   opacity: 0;
-  transform: translate(-50%, -50%) rotate(var(--angle-off)) translateX(var(--radius-off)) scale(0.34);
+  transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0)) scale(0.34);
   background: rgba(242, 248, 255, 0.92);
   animation: sv-constellation-cycle var(--period) linear infinite;
   animation-delay: var(--delay);
@@ -244,39 +244,40 @@ body {
 
 @keyframes sv-constellation-cycle {
   0%,
-  10% {
-    transform: translate(-50%, -50%) rotate(var(--angle-off)) translateX(var(--radius-off)) scale(0.3);
+  8% {
+    transform: translate(-50%, -50%) rotate(var(--angle0)) translateX(var(--radius0))
+      scale(calc(0.44 + (var(--grow) * 0.22)));
     opacity: 0;
   }
-  30% {
-    transform: translate(-50%, -50%) rotate(var(--angle-w1)) translateX(var(--radius-w1)) scale(0.72);
-    opacity: calc(var(--alpha) * 0.72);
+  50% {
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.58)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.58)))
+      scale(calc(0.72 + (var(--grow) * 0.5)));
+    opacity: calc(var(--alpha) * 1.02);
   }
-  62% {
-    transform: translate(-50%, -50%) rotate(var(--angle-w2)) translateX(var(--radius-w2)) scale(0.94);
-    opacity: calc(var(--alpha) * 0.8);
-  }
-  76% {
-    transform: translate(-50%, -50%) rotate(calc(var(--angle-hit) - 16deg))
-      translateX(calc(var(--radius-hit) - 1.6vmax)) scale(0.88);
-    opacity: calc(var(--alpha) * 0.42);
+  82% {
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.82)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.82)))
+      scale(calc(0.86 + (var(--grow) * 0.72)));
+    opacity: calc(var(--alpha) * 0.92);
   }
   88% {
-    transform: translate(-50%, -50%) rotate(var(--angle-hit)) translateX(var(--radius-hit)) scale(1.1);
+    transform: translate(-50%, -50%) rotate(var(--angle-hit)) translateX(var(--radius-hit))
+      scale(calc(0.9 + (var(--grow) * 0.8)));
     opacity: var(--alpha);
   }
-  92% {
-    transform: translate(-50%, -50%) rotate(calc(var(--angle-hit) + 8deg))
-      translateX(calc(var(--radius-hit) + 0.32vmax)) scale(1.08);
-    opacity: calc(var(--alpha) * 0.94);
-  }
-  96% {
-    transform: translate(-50%, -50%) rotate(calc(var(--angle-hit) + 22deg))
-      translateX(calc(var(--radius-hit) + 1.4vmax)) scale(1.2);
-    opacity: calc(var(--alpha) * 0.4);
+  97% {
+    transform: translate(-50%, -50%)
+      rotate(calc(var(--angle0) + ((var(--angle1) - var(--angle0)) * 0.97)))
+      translateX(calc(var(--radius0) + ((var(--radius1) - var(--radius0)) * 0.97)))
+      scale(calc(0.94 + (var(--grow) * 0.9)));
+    opacity: calc(var(--alpha) * 0.24);
   }
   100% {
-    transform: translate(-50%, -50%) rotate(var(--angle-exit)) translateX(var(--radius-exit)) scale(0.52);
+    transform: translate(-50%, -50%) rotate(var(--angle1)) translateX(var(--radius1))
+      scale(calc(0.94 + (var(--grow) * 0.92)));
     opacity: 0;
   }
 }
