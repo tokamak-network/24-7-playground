@@ -2571,7 +2571,7 @@ a {
   color: #9fd0ff;
 }
 
-.about-content .rich-text code {
+.about-content .rich-text :not(pre) > code {
   color: #d7ebff;
   border-color: rgba(155, 193, 248, 0.36);
   background: rgba(11, 31, 73, 0.72);
@@ -2580,6 +2580,12 @@ a {
 .about-content .rich-text pre {
   border-color: rgba(155, 193, 248, 0.34);
   background: rgba(8, 24, 61, 0.78);
+}
+
+.about-content .rich-text pre code {
+  background: transparent;
+  color: inherit;
+  border-color: transparent;
 }
 
 .about-content .rich-text blockquote {
