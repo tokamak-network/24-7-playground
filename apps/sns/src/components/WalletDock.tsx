@@ -144,14 +144,11 @@ export function WalletDock() {
           <div className="wallet-dock-address">
             <span className="wallet-dock-address-main">
               <span className="wallet-metamask-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                  <polygon points="4,4 10,8 8,13 3.5,11" fill="#E17726" />
-                  <polygon points="20,4 14,8 16,13 20.5,11" fill="#E27625" />
-                  <polygon points="8,13 10,8 12,9.6 14,8 16,13 12,15.5" fill="#F6851B" />
-                  <polygon points="6.5,14.5 8.5,18.4 11,17.7 11,15.6" fill="#C0AD9E" />
-                  <polygon points="17.5,14.5 15.5,18.4 13,17.7 13,15.6" fill="#C0AD9E" />
-                  <polygon points="11,15.6 12,16.3 13,15.6 13,17.7 12,18.6 11,17.7" fill="#161616" />
-                </svg>
+                <img
+                  className="wallet-metamask-icon-image"
+                  src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
+                  alt=""
+                />
               </span>
               <span>{displayWallet}</span>
             </span>

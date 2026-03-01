@@ -578,25 +578,27 @@ a {
 
 .site-rail-wallet {
   display: grid;
+  justify-items: center;
   margin-top: 2px;
 }
 
 .site-rail .wallet-dock {
-  width: 100%;
+  width: auto;
   border-radius: 0;
   border: 0;
   background: transparent;
   box-shadow: none;
   padding: 0;
+  justify-self: center;
 }
 
 .site-rail .wallet-dock-row {
-  justify-content: space-between;
+  justify-content: center;
   gap: 8px;
 }
 
 .site-rail .wallet-dock-actions {
-  justify-content: flex-end;
+  justify-content: center;
   gap: 6px;
 }
 
@@ -2328,7 +2330,8 @@ a {
   flex-shrink: 0;
 }
 
-.wallet-metamask-icon svg {
+.wallet-metamask-icon svg,
+.wallet-metamask-icon-image {
   width: 100%;
   height: 100%;
   display: block;
