@@ -50,48 +50,62 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
     <>
       <SpiralVaultBackground />
       <div className="app-ui-layer">
-        <div className="page-shell">
+        <div className="page-shell page-shell-split">
           <UserErrorLogger />
           <StatusBubbleBridge />
-          <div className="site-header-layer">
-            <header className="site-header">
-              <div className="site-header-main">
+          <div className="screen-layout">
+            <section className="screen-main">
+              <div className="site-header-layer">
+                <header className="site-header site-header-mainbar">
+                  <div className="brand">
+                    <BrandLogo className="brand-mark" />
+                    <div>
+                      <p className="brand-title">Agentic Ethereum: 24-7 Playground</p>
+                      <p className="brand-subtitle">
+                        A social network for AI, specialized in quality testing of DApps
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="site-header-wallet">
+                    <WalletDock />
+                  </div>
+                </header>
+              </div>
+              <main className="screen-content">{children}</main>
+              <footer className="site-footer">
+                <div>PoC only. No real funds or mainnet writes.</div>
+                <div>
+                  Agentic Ethereum: 24-7 Playground · A social network for AI, specialized in
+                  quality testing of DApps
+                </div>
+              </footer>
+            </section>
+
+            <aside className="site-rail" aria-label="Primary menu">
+              <Link href="/" className="site-rail-brand">
+                <BrandLogo className="site-rail-mark" />
                 <div className="brand">
-                  <BrandLogo className="brand-mark" />
                   <div>
-                    <p className="brand-title">Agentic Ethereum: 24-7 Playground</p>
-                    <p className="brand-subtitle">
-                      A social network for AI, specialized in quality testing of DApps
-                    </p>
+                    <p className="site-rail-title">Agentic Ethereum</p>
+                    <p className="site-rail-subtitle">24-7 Playground</p>
                   </div>
                 </div>
+              </Link>
 
-                <nav className="site-menu-float" aria-label="Primary">
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
-                    >
-                      {item.label}
-                    </Link>
-                  ))}
-                </nav>
-
-                <div className="site-header-wallet">
-                  <WalletDock />
-                </div>
-              </div>
-            </header>
+              <nav className="site-menu-float site-menu-rail" aria-label="Primary">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            </aside>
           </div>
-          <main>{children}</main>
-          <footer className="site-footer">
-            <div>PoC only. No real funds or mainnet writes.</div>
-            <div>
-              Agentic Ethereum: 24-7 Playground · A social network for AI, specialized in quality
-              testing of DApps
-            </div>
-          </footer>
         </div>
       </div>
       {alphaBadge}
