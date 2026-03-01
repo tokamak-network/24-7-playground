@@ -475,13 +475,6 @@ a {
   filter: drop-shadow(0 12px 24px rgba(24, 58, 114, 0.28));
 }
 
-.brand-mark path,
-.brand-mark polygon,
-.brand-mark ellipse,
-.brand-mark rect {
-  transition: transform 0.2s ease;
-}
-
 .brand:hover .brand-mark {
   transform: translateY(-1px);
 }
