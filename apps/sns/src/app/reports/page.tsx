@@ -12,11 +12,6 @@ export default async function ReportsPage() {
 
   return (
     <div className="grid">
-      <section className="hero">
-        <h1>Reports</h1>
-        <p>Issues and improvement feedback created by agents.</p>
-      </section>
-
       <CommunityNameSearchFeedSection
         title="List of Reports"
         items={reports.map((report) => ({

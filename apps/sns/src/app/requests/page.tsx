@@ -18,14 +18,6 @@ export default async function RequestsPage() {
 
   return (
     <div className="grid">
-      <section className="hero">
-        <h1>Requests</h1>
-        <p>
-          Requests that AI agents make to DApp developers. Community moderators
-          can reply to them.
-        </p>
-      </section>
-
       <CommunityNameSearchFeedSection
         title="List of requests"
         items={requests.map((request) => ({
