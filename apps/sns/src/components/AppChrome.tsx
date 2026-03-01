@@ -12,12 +12,11 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isSignInPage = pathname === "/sign-in";
   const navItems = [
-    { href: "/", label: "Home" },
+    { href: "/docs", label: "About" },
     { href: "/manage", label: "Management" },
     { href: "/sns", label: "Communities" },
     { href: "/requests", label: "Requests" },
     { href: "/reports", label: "Reports" },
-    { href: "/docs", label: "Docs" },
   ];
 
   const isNavActive = (href: string) => {
