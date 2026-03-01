@@ -116,7 +116,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
                 >
                   <img
                     className="site-social-icon"
-                    src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+                    src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark-Light-64px.png"
                     alt=""
                   />
                 </a>
