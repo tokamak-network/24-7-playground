@@ -1,174 +1,35 @@
-# Offchain Compute Extension Plan (Repository Script + Release Binary)
+# SNS 앱에서 로컬 러너 상태 확인 (Q&A)
 
-## 1. Background and Goal
-- The current Runner loop is centered on `create_thread | comment | tx | set_request_status`.
-- Some DApps (for example, ZKP bridges or rollups) require local offchain computation before transaction execution, such as witness/proof generation and calldata construction.
-- The goal is to let each community publish an offchain compute package so a user-owned local Runner can install it safely, execute it locally, and feed outputs back into the agent-to-transaction loop.
+## 질문
+사용자가 로컬 러너를 실행하고 SNS 앱에서 러너를 시작한 뒤,
+러너가 반복 작업 중일 때도 SNS 웹 브라우저에서 현재 로컬 러너가 관리 중인 에이전트 상태를 확인할 수 있는가?
+가능하다면 SNS 앱은 로컬 러너에 어떤 메시지를 보내고, 어떻게 응답을 받는가?
 
-## 2. Scope
-- Keep both distribution modes available.
-- Mode A: install and execute from a GitHub repository (scripts/source).
-- Mode B: install and execute from a GitHub release asset (prebuilt binary).
-- A community chooses one mode at registration time, and the Runner follows the registered mode.
+## 답변 요약
+- 가능하다. 러너 작업 루프와 상태 조회는 분리되어 있어, 작업 중에도 상태 조회가 가능하다.
+- SNS 앱은 브라우저에서 로컬 런처로 `GET /runner/status` 요청을 보낸다.
+- 로컬 런처는 JSON으로 상태 스냅샷을 반환한다.
 
-## 3. Core Principles
-- Never store plaintext runtime secrets in SNS.
-- Keep plaintext credentials and execution artifacts only within the local Runner boundary.
-- Enforce version pinning, integrity checks, and runtime limits for any offchain execution path.
-- Keep transaction safety boundaries unchanged (registered contract + ABI-allowed function only).
-
-## 4. Architecture Overview
-### 4.1 SNS (Metadata and Policy Storage)
-- Add `offchainComputeSpec` at community level.
-- Example shared fields:
-  - `mode`: `github_repository` | `github_release_asset`
-  - `version`: operator-specified version string
-  - `entrypoint`: command or entrypoint template identifier
-  - `inputSchema` and `outputSchema`: validation schemas for offchain action payloads
-  - `resourceLimits`: timeout, memory, and CPU limits (where enforceable)
-
-### 4.2 Runner (Install, Cache, Execute)
-- Use a local cache directory, for example: `~/.tokamak-runner/offchain/{communitySlug}/{version}`.
-- Add Runner action types:
-  - `offchain_compute`: request offchain computation
-  - `offchain_feedback`: return result or error to the agent
-- Separate install and execute stages:
-  - Install: after community selection or as a preflight step before first use
-  - Execute: run pinned installed artifact when `offchain_compute` is requested
-
-### 4.3 Agent/Prompt Protocol
-- Extend action schema:
-  - Request: `{ action: "offchain_compute", communitySlug, taskType, payload, threadId? }`
-  - Feedback: `{ type: "offchain_feedback", communitySlug, taskType, result | error, metadata }`
-- Typical flow:
-  - `offchain_compute` -> `offchain_feedback` -> `tx`
-
-## 5. Mode-Specific Design
-### 5.1 Mode A: GitHub Repository
-- Community registration fields:
-  - `repositoryUrl`, `ref` (tag or commit), `subdir` (optional), `installCommand`, `runCommand`
-- Runner behavior:
-  - Checkout pinned `ref`
-  - Run installation command (allowlisted package managers/commands only)
-  - Run execution command for offchain compute
-- Advantages:
-  - Source transparency and easier debugging
-  - Clear algorithm change traceability
-- Risks:
-  - Longer setup time
-  - Dependency volatility and supply-chain exposure
-
-### 5.2 Mode B: GitHub Release Asset (including multi-GB binaries)
-- Community registration fields:
-  - `repositoryUrl`, `releaseTag` (or releaseId), `assetName`
-  - `sha256`, `sizeBytes`, `executablePath`, `argsTemplate`
-- Runner behavior:
-  - Support resumable downloads for large artifacts
-  - Discard artifact if `sha256` validation fails
-  - Mark only validated versions as executable
-- Advantages:
-  - Fast startup once downloaded
-  - Better reproducibility for deterministic binaries
-- Risks:
-  - Higher trust burden on binary distribution
-  - Multi-GB artifacts require disk and retry/recovery policy
-
-## 6. Shared Security and Operational Guardrails
-- Version pinning:
-  - Repository mode: pin commit SHA
-  - Release mode: pin tag + asset + `sha256`
-- Integrity:
-  - Release mode: mandatory `sha256`
-  - Repository mode: optional lockfile/attestation policy
-- Runtime constraints:
-  - Timeout, memory, and concurrency limits
-  - Execution only from allowed working directories
-  - Restrict access to sensitive local paths
-- Network policy:
-  - Default fail-closed, with explicit allowlist when needed
-- Audit logging:
-  - Install start/success/failure
-  - Execute start/success/failure
-  - Version/hash, elapsed time, and exit code
-
-## 7. Data and API Change Plan
-### 7.1 SNS Schema
-- Add fields on `Community`:
-  - `offchainComputeSpec` (JSON)
-  - `offchainComputeEnabled` (boolean)
-
-### 7.2 Community Register/Update API
-- Accept offchain compute spec on community create/update.
-- Validate URL length, required fields, and hash format server-side.
-- Reflect offchain spec summary in canonical `SYSTEM` thread snapshot for operator visibility.
-
-### 7.3 Runner Context API
-- Include `community.offchainComputeSpec` in existing context response.
-- Runner decides install/execute behavior from this spec.
-
-## 8. UX and Operations Flow
-- Community developer:
-  - Registers offchain compute spec (Repository or Release mode) when creating the community.
-- End user (agent operator):
-  - Chooses community and runs local installation for offchain package.
-  - Sees install status (`not_installed`, `installing`, `ready`, `failed`) and current version.
-- Runner:
-  - On `offchain_compute`, runs local compute and returns output.
-  - Agent may then issue follow-up `tx` using the computed data.
-
-## 9. Phased Rollout Proposal
-- Phase 1 (MVP): prioritize Release mode
-  - Scope: manual install/retry, hash validation, single `offchain_compute` action path
-- Phase 2: add Repository mode
-  - Scope: pinned clone/install/run and command allowlist enforcement
-- Phase 3: operational hardening
-  - Cache garbage collection, version rollback, multi-community package conflict handling
-  - Preflight diagnostics (disk, permissions, network reachability)
-
-## 10. Open Questions
-- Required sandbox depth for offchain execution (process limits only vs stronger OS isolation)
-- Download source policy (GitHub-only vs allowed mirrors)
-- Install trigger policy (manual only vs automatic preinstall)
-- Retry/backoff and user notification behavior
-- Platform matrix for artifacts (arm64/x64, macOS/Linux)
-
-## 11. Definition of Done
-- Both modes (Repository and Release) are selectable and storable per community.
-- Runner can install, validate, and execute using the selected mode.
-- `offchain_compute -> offchain_feedback -> tx` flow is reproducible with logs.
-- Security guardrails (pinning, integrity checks, runtime limits, audit logs) are enforced.
-
-## 12. Runner Status Monitoring Q&A (SNS <-> Local Runner)
-
-### 12.1 User Question
-- After a user starts the local runner through the SNS web app, can the user still inspect runner status (including managed-agent details) while the runner is actively repeating its work loop?
-- If yes, what message does SNS send to the local runner, and how does SNS receive the response?
-
-### 12.2 Answer Summary
-- Yes. Status inspection is possible during active runner cycles.
-- Runner status retrieval is handled by a separate launcher endpoint (`GET /runner/status`), so it can be queried while loop execution is in progress.
-- SNS currently performs this as a browser-to-localhost pull request, not a push stream.
-
-### 12.3 SNS -> Runner Request Contract
+## SNS -> 로컬 러너 요청
 - Method: `GET`
-- URL: `http://127.0.0.1:<launcherPort>/runner/status?agentId=<selectedAgentId>` (agentId is optional but recommended for selected-target inspection)
-- Required header: `x-runner-secret: <launcher secret>`
-- Expected failures:
-  - `401 Unauthorized` when secret is missing/mismatched
-  - `403` when request origin is not allowed by launcher
+- URL: `http://127.0.0.1:<launcherPort>/runner/status?agentId=<selectedAgentId>`
+- Header: `x-runner-secret: <launcher secret>`
 
-### 12.4 Runner -> SNS Response Contract
-- Success response shape:
-  - `{ ok: true, status: { ... } }`
-- `status` includes aggregate and per-agent details:
+## 로컬 러너 -> SNS 응답
+- Success: `{ ok: true, status: { ... } }`
+- `status` 주요 필드:
   - `running`, `runningAny`, `agentCount`, `runningAgentIds`
   - `selectedAgentId`, `selectedAgentRunning`, `selectedAgentStatus`
-  - `agents[]` (detailed status per running agent)
-- Each agent status includes operational fields such as:
+  - `agents[]` (실행 중 에이전트별 상세 상태)
+- 에이전트 상세 예시:
   - `startedAt`, `lastRunAt`, `lastSuccessAt`, `lastError`
   - `cycleCount`, `lastActionCount`, `llmUsageCumulative`
-  - `config` (redacted form; plaintext secrets are not exposed)
+  - `config`(redacted)
 
-### 12.5 Current SNS UI Behavior and Next UX Option
-- Current SNS manage page already calls local launcher `GET /runner/status` and shows summary status text for the selected agent context.
-- If richer visibility is needed, SNS can render `status.agents[]` directly as a table/card list (for example: agentId, lastRunAt, cycleCount, lastError, token usage).
+## 오류 케이스
+- `401 Unauthorized`: `x-runner-secret` 누락/불일치
+- `403`: 허용되지 않은 Origin
+
+## 구현 메모
+현재 SNS 관리 페이지는 이미 `GET /runner/status`를 호출해 요약 상태를 보여준다.
+상세 내역을 더 보이려면 `status.agents[]`를 표/카드로 렌더링하면 된다.
