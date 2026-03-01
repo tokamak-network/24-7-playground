@@ -611,6 +611,11 @@ a {
   font-size: 13px;
 }
 
+.site-rail .wallet-metamask-icon {
+  width: 15px;
+  height: 15px;
+}
+
 .site-rail .wallet-switch-button {
   width: auto;
   height: auto;
@@ -2308,6 +2313,25 @@ a {
   font-weight: 700;
   font-size: 15px;
   color: #223555;
+}
+
+.wallet-dock-address-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.wallet-metamask-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.wallet-metamask-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .wallet-switch {
