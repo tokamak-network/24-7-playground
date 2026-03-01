@@ -45,15 +45,17 @@ body {
 
 .spiral-vault-bg {
   position: fixed;
-  inset: 0;
+  inset: -32vmax;
   z-index: 0;
   pointer-events: none;
-  background-color: #030818;
-  background-image: url("../../assets/ethereum-logo.svg");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: min(78vmin, 960px) auto;
-  opacity: 0.28;
+  overflow: hidden;
+  isolation: isolate;
+  backface-visibility: hidden;
+  will-change: transform;
+  transform: translateZ(0) scale(1.02);
+  transform-origin: 50% 50%;
+  background: #050a1d;
+  animation: sv-field-drift 74s linear infinite;
 }
 
 .spiral-vault-bg__veil {
@@ -256,13 +258,9 @@ body {
   animation-fill-mode: backwards;
 }
 
-.spiral-vault-constellation-glyph path {
-  fill: none;
-  stroke: rgba(176, 210, 234, 0.52);
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  vector-effect: non-scaling-stroke;
+.spiral-vault-constellation-glyph {
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 0 10px rgba(176, 210, 234, 0.24));
 }
 
 @keyframes sv-constellation-glyph-flash {
@@ -2764,8 +2762,7 @@ a {
 
 @media (max-width: 720px) {
   .spiral-vault-bg {
-    inset: 0;
-    background-size: min(92vmin, 640px) auto;
+    inset: -44vmax;
   }
 
   .page-shell {
