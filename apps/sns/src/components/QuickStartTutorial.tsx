@@ -155,6 +155,7 @@ export function QuickStartTutorial() {
   const autoAdvanceStepRef = useRef<number | null>(null);
   const previousNextDisabledRef = useRef<boolean | null>(null);
   const autoAdvancedOnCurrentStepRef = useRef(false);
+  const panelRef = useRef<HTMLElement | null>(null);
   const createdCommunityPath = useMemo(() => {
     const slug = createdCommunitySlug.trim();
     if (!slug) {
@@ -621,6 +622,7 @@ export function QuickStartTutorial() {
   }, [isDappTutorial]);
 
   const isLastStep = stepIndex >= DAPP_TUTORIAL_STEPS.length - 1;
+  const isHighlightInteractionDisabled = stepIndex >= 6;
   const requiresWalletConnection = stepIndex === 0;
   const requiresCreateCommunityModalOpen = stepIndex === 1;
   const requiresRegistrationFormCompletion = stepIndex === 2;
@@ -645,6 +647,84 @@ export function QuickStartTutorial() {
           width: `${targetRect.width + 12}px`,
           height: `${targetRect.height + 12}px`,
         };
+
+  useEffect(() => {
+    if (!isDappTutorial) {
+      return;
+    }
+
+    const isAllowedEventTarget = (eventTarget: EventTarget | null) => {
+      if (!(eventTarget instanceof Node)) {
+        return false;
+      }
+
+      const panelElement = panelRef.current;
+      if (panelElement?.contains(eventTarget)) {
+        return true;
+      }
+
+      if (!isOnStepPath || !targetElement || !targetElement.isConnected) {
+        return false;
+      }
+
+      if (isHighlightInteractionDisabled) {
+        return false;
+      }
+
+      return targetElement.contains(eventTarget);
+    };
+
+    const blockEvent = (event: Event) => {
+      if (isAllowedEventTarget(event.target)) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      if ("stopImmediatePropagation" in event) {
+        (event as Event & { stopImmediatePropagation?: () => void }).stopImmediatePropagation?.();
+      }
+    };
+
+    const handleFocusIn = (event: FocusEvent) => {
+      if (isAllowedEventTarget(event.target)) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+
+      const panelElement = panelRef.current;
+      const fallbackFocusable = panelElement?.querySelector<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      fallbackFocusable?.focus();
+    };
+
+    const blockedEventTypes: Array<keyof DocumentEventMap> = [
+      "click",
+      "dblclick",
+      "mousedown",
+      "mouseup",
+      "pointerdown",
+      "pointerup",
+      "touchstart",
+      "touchend",
+      "contextmenu",
+      "submit",
+      "keydown",
+    ];
+
+    blockedEventTypes.forEach((eventType) => {
+      document.addEventListener(eventType, blockEvent, true);
+    });
+    document.addEventListener("focusin", handleFocusIn, true);
+
+    return () => {
+      blockedEventTypes.forEach((eventType) => {
+        document.removeEventListener(eventType, blockEvent, true);
+      });
+      document.removeEventListener("focusin", handleFocusIn, true);
+    };
+  }, [isDappTutorial, isHighlightInteractionDisabled, isOnStepPath, targetElement]);
 
   useEffect(() => {
     if (autoAdvanceStepRef.current !== stepIndex) {
@@ -689,7 +769,12 @@ export function QuickStartTutorial() {
       {hasTargetRect ? (
         <div className="quickstart-tour-spotlight" style={spotlightStyle} aria-hidden />
       ) : null}
-      <aside className="quickstart-tour-panel" aria-live="polite" aria-label="Quick start tutorial">
+      <aside
+        ref={panelRef}
+        className="quickstart-tour-panel"
+        aria-live="polite"
+        aria-label="Quick start tutorial"
+      >
         <p className="quickstart-tour-step">
           Step {stepIndex + 1} of {DAPP_TUTORIAL_STEPS.length}
         </p>
