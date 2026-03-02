@@ -468,6 +468,125 @@ a {
   -webkit-user-drag: none;
 }
 
+.home-quick-start {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+.home-quick-start-head {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.home-quick-start-head h1 {
+  margin: 0;
+  color: #edf5ff;
+  font-family: var(--font-display), "Helvetica Neue", sans-serif;
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1.08;
+  text-align: center;
+}
+
+.home-quick-start-head p {
+  margin: 0;
+  color: rgba(188, 208, 235, 0.9);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.home-quick-start-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.quick-start-card {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  aspect-ratio: 395 / 417;
+  border-radius: 20px;
+  border: 1px solid rgba(136, 181, 244, 0.5);
+  background: transparent;
+  box-shadow: 0 12px 28px rgba(2, 11, 28, 0.28);
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.quick-start-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(165, 203, 253, 0.74);
+  box-shadow: 0 16px 32px rgba(2, 12, 31, 0.42);
+}
+
+.quick-start-art {
+  position: relative;
+  z-index: 1;
+  width: 85%;
+  height: 85%;
+  display: block;
+  object-fit: contain;
+  background: transparent;
+  border: 0;
+  outline: none;
+  box-shadow: none;
+  transform: translate(var(--quick-start-art-x, 0%), var(--quick-start-art-y, 0%));
+  filter: var(--quick-start-art-filter, brightness(1) saturate(1.06));
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.quick-start-card-dapp {
+  --quick-start-art-x: -0.5%;
+  --quick-start-art-y: 0.5%;
+  --quick-start-art-filter: brightness(1.09) saturate(1.16) contrast(1.05);
+  --quick-start-art-filter-hover: brightness(0.9) saturate(1.14) contrast(1.04);
+}
+
+.quick-start-card-agent {
+  --quick-start-art-x: 0.5%;
+  --quick-start-art-y: 0%;
+  --quick-start-art-filter: brightness(1.02) saturate(1.08);
+  --quick-start-art-filter-hover: brightness(0.84) saturate(1.06);
+}
+
+.quick-start-card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 16px;
+  color: #f2f8ff;
+  font-family: var(--font-display), "Helvetica Neue", sans-serif;
+  font-size: clamp(20px, 2.6vw, 30px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  background: linear-gradient(180deg, rgba(6, 18, 40, 0.05), rgba(6, 18, 40, 0.58));
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.quick-start-card:hover .quick-start-art,
+.quick-start-card:focus-visible .quick-start-art {
+  transform: translate(var(--quick-start-art-x, 0%), var(--quick-start-art-y, 0%)) scale(1.015);
+  filter: var(--quick-start-art-filter-hover, brightness(0.82) saturate(1.03));
+}
+
+.quick-start-card:hover .quick-start-card-overlay,
+.quick-start-card:focus-visible .quick-start-card-overlay {
+  opacity: 1;
+}
+
+.quick-start-card:focus-visible {
+  outline: 2px solid rgba(177, 210, 255, 0.92);
+  outline-offset: 2px;
+}
+
 .site-header-layer {
   position: sticky;
   top: 14px;
@@ -2655,6 +2774,13 @@ a {
   min-width: 0;
   width: 100%;
   height: 100%;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.community-tile:not(.community-tile-create):hover .card,
+.community-tile:not(.community-tile-create):focus-visible .card {
+  border-color: rgba(165, 203, 253, 0.72);
+  background: rgba(14, 39, 84, 0.2);
 }
 
 .sns-page .community-tile .card,
@@ -2669,7 +2795,11 @@ a {
   display: grid;
   gap: 4px;
   align-items: start;
-  justify-items: start;
+  justify-items: stretch;
+}
+
+.community-tile .card-title-row h3 {
+  width: 100%;
 }
 
 .community-tile .card-title-meta {
@@ -3541,6 +3671,10 @@ a {
   .docs-toc-nav {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 4px;
+  }
+
+  .home-quick-start-grid {
+    grid-template-columns: 1fr;
   }
 }
 
