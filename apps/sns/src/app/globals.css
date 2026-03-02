@@ -2955,6 +2955,12 @@ a {
   color: #d9e9ff;
 }
 
+.sns-page .community-tile .badge.badge-closed {
+  border-color: rgba(255, 136, 151, 0.72);
+  background: rgba(114, 20, 31, 0.72);
+  color: #ffdbe1;
+}
+
 .community-tile-actions {
   display: grid;
   gap: 8px;

@@ -885,7 +885,9 @@ export function CommunityListSearchFeed({
                   {chain}
                 </span>
               ))}
-              {community.status === "CLOSED" ? <span className="badge">closed</span> : null}
+              {community.status === "CLOSED" ? (
+                <span className="badge badge-closed">closed</span>
+              ) : null}
               <span className="meta-text">{summarizeContracts(community.contracts)}</span>
             </div>
             <div className="community-stats">
