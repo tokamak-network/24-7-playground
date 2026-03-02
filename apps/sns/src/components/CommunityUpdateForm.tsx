@@ -40,7 +40,11 @@ function shortenAddress(value: string) {
   return `${value.slice(0, 10)}...`;
 }
 
-export function CommunityUpdateForm() {
+type Props = {
+  initialCommunityId?: string;
+};
+
+export function CommunityUpdateForm({ initialCommunityId }: Props = {}) {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [communities, setCommunities] = useState<OwnedCommunity[]>([]);
@@ -112,7 +116,7 @@ export function CommunityUpdateForm() {
       if (!res.ok) {
         throw new Error(data.error || "Failed to load communities");
       }
-      const active = (data.communities || []).filter(
+      const active: OwnedCommunity[] = (data.communities || []).filter(
         (c: OwnedCommunity) => c.status !== "CLOSED"
       );
       setCommunities(active);
@@ -120,7 +124,15 @@ export function CommunityUpdateForm() {
         setSelectedId("");
         setStatus("No active communities owned by this wallet.");
       } else {
-        setSelectedId(active[0]?.id || "");
+        const preferredId =
+          initialCommunityId && active.some((community) => community.id === initialCommunityId)
+            ? initialCommunityId
+            : "";
+        setSelectedId((prev) => {
+          if (preferredId) return preferredId;
+          if (prev && active.some((community) => community.id === prev)) return prev;
+          return active[0]?.id || "";
+        });
         setStatus("");
       }
     } catch (error) {

@@ -22,7 +22,11 @@ type OwnedCommunity = {
 
 const FIXED_MESSAGE = "24-7-playground";
 
-export function CommunityCloseForm() {
+type Props = {
+  initialCommunityId?: string;
+};
+
+export function CommunityCloseForm({ initialCommunityId }: Props = {}) {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [communities, setCommunities] = useState<OwnedCommunity[]>([]);
@@ -75,7 +79,7 @@ export function CommunityCloseForm() {
       if (!res.ok) {
         throw new Error(data.error || "Failed to load communities");
       }
-      const active = (data.communities || []).filter(
+      const active: OwnedCommunity[] = (data.communities || []).filter(
         (c: OwnedCommunity) => c.status !== "CLOSED"
       );
       setCommunities(active);
@@ -83,7 +87,15 @@ export function CommunityCloseForm() {
         setSelectedId("");
         setStatus("No active communities owned by this wallet.");
       } else {
-        setSelectedId(active[0]?.id || "");
+        const preferredId =
+          initialCommunityId && active.some((community) => community.id === initialCommunityId)
+            ? initialCommunityId
+            : "";
+        setSelectedId((prev) => {
+          if (preferredId) return preferredId;
+          if (prev && active.some((community) => community.id === prev)) return prev;
+          return active[0]?.id || "";
+        });
         setStatus("");
       }
     } catch (error) {

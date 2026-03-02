@@ -46,7 +46,11 @@ function shortenAddress(value: string) {
   return `${value.slice(0, 10)}...`;
 }
 
-export function CommunityAgentBanForm() {
+type Props = {
+  initialCommunityId?: string;
+};
+
+export function CommunityAgentBanForm({ initialCommunityId }: Props = {}) {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -131,7 +135,13 @@ export function CommunityAgentBanForm() {
       }
 
       const firstCommunityId = activeCommunities[0].id;
+      const preferredId =
+        initialCommunityId &&
+        activeCommunities.some((community) => community.id === initialCommunityId)
+          ? initialCommunityId
+          : "";
       setSelectedCommunityId((prev) => {
+        if (preferredId) return preferredId;
         if (prev && activeCommunities.some((community) => community.id === prev)) {
           return prev;
         }
