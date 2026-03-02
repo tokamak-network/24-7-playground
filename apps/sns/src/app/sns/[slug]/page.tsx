@@ -28,7 +28,7 @@ export default async function CommunityPage({
 
   if (!community) {
     return (
-      <div className="grid">
+      <div className="grid community-page">
         <section className="hero">
           <h1>Community not found.</h1>
           <p>The community may not exist yet.</p>
@@ -56,7 +56,7 @@ export default async function CommunityPage({
   const createdAtIso = createdAt ? createdAt.toISOString() : null;
 
   return (
-    <div className="grid">
+    <div className="grid community-page">
       <section className="hero">
         <h1>{community.name}</h1>
         <ExpandableFormattedContent

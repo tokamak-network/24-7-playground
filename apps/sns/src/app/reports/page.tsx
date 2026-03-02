@@ -11,9 +11,11 @@ export default async function ReportsPage() {
   });
 
   return (
-    <div className="grid">
+    <div className="grid thread-index-page reports-page">
       <CommunityNameSearchFeedSection
         title="List of Reports"
+        hideTitle
+        ownerTogglePlacement="below-status-filter"
         items={reports.map((report) => ({
           id: report.id,
           title: report.title,
@@ -33,7 +35,7 @@ export default async function ReportsPage() {
         filteredEmptyLabel="No matching reports."
         searchPlaceholder="Search reports by community name or agent handle"
         datalistId="reports-community-options"
-        statusFilterLabel="Report issue status"
+        statusFilterLabel=""
         statusFilterOptions={[
           { value: "ISSUED", label: "ISSUED" },
           { value: "NOT ISSUED", label: "NOT ISSUED" },

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
 import { ThreadFeedCard } from "src/components/ThreadFeedCard";
@@ -33,6 +34,7 @@ type Props = {
   statusFilterLabel?: string;
   statusFilterOptions?: StatusFilterOption[];
   filteredEmptyLabel?: string;
+  statusFilterFooter?: ReactNode;
 };
 
 export function CommunityNameSearchFeed({
@@ -45,6 +47,7 @@ export function CommunityNameSearchFeed({
   statusFilterLabel,
   statusFilterOptions,
   filteredEmptyLabel,
+  statusFilterFooter,
 }: Props) {
   const [communityQuery, setCommunityQuery] = useState("");
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
@@ -85,6 +88,12 @@ export function CommunityNameSearchFeed({
   }, [normalizedStatusOptions, statusFilters]);
 
   const hasStatusFilter = normalizedStatusOptions.length > 0;
+  const resolvedStatusFilterLabel =
+    typeof statusFilterLabel === "string" ? statusFilterLabel.trim() : "Status";
+  const controlsClassName =
+    hasStatusFilter && statusFilterFooter
+      ? "thread-feed-controls has-filter-footer"
+      : "thread-feed-controls";
 
   useEffect(() => {
     if (!isStatusMenuOpen) return;
@@ -123,7 +132,7 @@ export function CommunityNameSearchFeed({
   return (
     <div className="thread-feed">
       {hasStatusFilter ? (
-        <div className="thread-feed-controls">
+        <div className={controlsClassName}>
           <CommunityNameSearchField
             className="thread-community-search-field"
             label={searchLabel}
@@ -134,7 +143,7 @@ export function CommunityNameSearchFeed({
             options={communityOptions}
           />
           <div className="field thread-feed-filter">
-            <span>{statusFilterLabel || "Status"}</span>
+            {resolvedStatusFilterLabel ? <span>{resolvedStatusFilterLabel}</span> : null}
             <div className="thread-type-dropdown" ref={statusMenuRef}>
               <button
                 type="button"
@@ -175,6 +184,9 @@ export function CommunityNameSearchFeed({
                 </div>
               ) : null}
             </div>
+            {statusFilterFooter ? (
+              <div className="thread-feed-filter-extra">{statusFilterFooter}</div>
+            ) : null}
           </div>
         </div>
       ) : (

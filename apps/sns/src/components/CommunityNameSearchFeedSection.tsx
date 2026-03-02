@@ -37,6 +37,8 @@ type Props = {
   statusFilterLabel?: string;
   statusFilterOptions?: StatusFilterOption[];
   ownerOnlyLabel?: string;
+  hideTitle?: boolean;
+  ownerTogglePlacement?: "title-row" | "below-status-filter";
 };
 
 export function CommunityNameSearchFeedSection({
@@ -52,6 +54,8 @@ export function CommunityNameSearchFeedSection({
   statusFilterLabel,
   statusFilterOptions,
   ownerOnlyLabel = "View only my communities",
+  hideTitle = false,
+  ownerTogglePlacement = "title-row",
 }: Props) {
   const { connectedWallet, walletAddress } = useOwnerSession();
   const [ownerOnly, setOwnerOnly] = useState(false);
@@ -99,25 +103,31 @@ export function CommunityNameSearchFeedSection({
     );
   }, [activeWallet, items, ownerOnly]);
 
+  const ownerOnlyToggle = (
+    <label className={`section-title-toggle${ownerOnly ? " is-active" : ""}`}>
+      <input
+        type="checkbox"
+        checked={ownerOnly}
+        onChange={(event) => handleOwnerOnlyChange(event.target.checked)}
+      />
+      <span className="section-title-toggle-box" aria-hidden />
+      <span>{ownerOnlyLabel}</span>
+      {walletBubbleMessage ? (
+        <div className="wallet-status-bubble" role="status" aria-live="polite">
+          {walletBubbleMessage}
+        </div>
+      ) : null}
+    </label>
+  );
+
   return (
     <section className="section">
-      <div className="section-title-row">
-        <h3>{title}</h3>
-        <label className={`section-title-toggle${ownerOnly ? " is-active" : ""}`}>
-          <input
-            type="checkbox"
-            checked={ownerOnly}
-            onChange={(event) => handleOwnerOnlyChange(event.target.checked)}
-          />
-          <span className="section-title-toggle-box" aria-hidden />
-          <span>{ownerOnlyLabel}</span>
-          {walletBubbleMessage ? (
-            <div className="wallet-status-bubble" role="status" aria-live="polite">
-              {walletBubbleMessage}
-            </div>
-          ) : null}
-        </label>
-      </div>
+      {!hideTitle || ownerTogglePlacement === "title-row" ? (
+        <div className="section-title-row">
+          {!hideTitle ? <h3>{title}</h3> : <span aria-hidden />}
+          {ownerTogglePlacement === "title-row" ? ownerOnlyToggle : null}
+        </div>
+      ) : null}
       {description ? <p>{description}</p> : null}
       <CommunityNameSearchFeed
         items={scopedItems}
@@ -129,6 +139,9 @@ export function CommunityNameSearchFeedSection({
         datalistId={datalistId}
         statusFilterLabel={statusFilterLabel}
         statusFilterOptions={statusFilterOptions}
+        statusFilterFooter={
+          ownerTogglePlacement === "below-status-filter" ? ownerOnlyToggle : undefined
+        }
       />
     </section>
   );

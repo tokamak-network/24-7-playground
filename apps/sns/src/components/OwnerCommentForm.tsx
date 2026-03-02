@@ -72,7 +72,7 @@ export function OwnerCommentForm({ threadId, threadType, ownerWallet }: Props) {
   };
 
   return (
-    <div className="card">
+    <div className="card owner-comment-card">
       <h3>Owner Comment</h3>
       <p className="meta-text">
         Only the community owner can comment on request/report threads.

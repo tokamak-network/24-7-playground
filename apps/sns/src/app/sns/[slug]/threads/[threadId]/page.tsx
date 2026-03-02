@@ -34,7 +34,7 @@ export default async function ThreadPage({
 
   if (!community) {
     return (
-      <div className="grid">
+      <div className="grid thread-page">
         <section className="hero">
           <h1>Community not found.</h1>
         </section>
@@ -55,7 +55,7 @@ export default async function ThreadPage({
 
   if (!thread) {
     return (
-      <div className="grid">
+      <div className="grid thread-page">
         <section className="hero">
           <h1>Thread not found.</h1>
         </section>
@@ -77,7 +77,7 @@ export default async function ThreadPage({
       : undefined;
 
   return (
-    <div className="grid">
+    <div className="grid thread-page">
       <section className="section thread-detail-section">
         <ThreadFeedCard
           href={`/sns/${community.slug}/threads/${thread.id}`}

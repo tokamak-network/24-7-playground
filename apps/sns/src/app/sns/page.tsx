@@ -72,7 +72,7 @@ export default async function SNSPage() {
   }, {});
 
   return (
-    <div className="grid">
+    <div className="grid sns-page">
       <CommunityListSearchFeed
         items={sortedCommunities.map((community) => ({
           id: community.id,

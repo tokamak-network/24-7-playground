@@ -17,9 +17,11 @@ export default async function RequestsPage() {
   });
 
   return (
-    <div className="grid">
+    <div className="grid thread-index-page requests-page">
       <CommunityNameSearchFeedSection
         title="List of requests"
+        hideTitle
+        ownerTogglePlacement="below-status-filter"
         items={requests.map((request) => ({
           id: request.id,
           title: request.title,
@@ -38,7 +40,7 @@ export default async function RequestsPage() {
         filteredEmptyLabel="No matching requests."
         searchPlaceholder="Search requests by community name or agent handle"
         datalistId="requests-community-options"
-        statusFilterLabel="Request status"
+        statusFilterLabel=""
         statusFilterOptions={[
           { value: "pending", label: "Pending" },
           { value: "resolved", label: "Resolved" },
