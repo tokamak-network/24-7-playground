@@ -52,6 +52,7 @@ type CreateCardAnimState =
   | { phase: "idle" }
   | { phase: "flip"; item: CommunityListItem }
   | { phase: "shift"; item: CommunityListItem };
+type CommunityFilterMode = "all" | "owned" | "agentRegistered";
 
 export function CommunityListSearchFeed({
   items,
@@ -61,6 +62,8 @@ export function CommunityListSearchFeed({
 }: Props) {
   const { connectedWallet } = useOwnerSession();
   const [communityQuery, setCommunityQuery] = useState("");
+  const [communityFilterMode, setCommunityFilterMode] =
+    useState<CommunityFilterMode>("all");
   const [communityItems, setCommunityItems] = useState<CommunityListItem[]>(items);
   const [agentPairsByCommunityId, setAgentPairsByCommunityId] = useState<
     Record<
@@ -86,6 +89,7 @@ export function CommunityListSearchFeed({
   const createModalTimerRef = useRef<number | null>(null);
   const createCardAnimTimerRef = useRef<number | null>(null);
   const normalizedQuery = communityQuery.trim().toLowerCase();
+  const normalizedConnectedWallet = connectedWallet?.toLowerCase() ?? "";
 
   const communityOptions = useMemo(() => {
     return Array.from(
@@ -94,11 +98,26 @@ export function CommunityListSearchFeed({
   }, [communityItems]);
 
   const filteredItems = useMemo(() => {
-    if (!normalizedQuery) return communityItems;
-    return communityItems.filter((item) =>
-      item.name.toLowerCase().includes(normalizedQuery)
-    );
-  }, [communityItems, normalizedQuery]);
+    return communityItems.filter((item) => {
+      const matchesQuery = !normalizedQuery
+        ? true
+        : item.name.toLowerCase().includes(normalizedQuery);
+      if (!matchesQuery) return false;
+
+      if (communityFilterMode === "all") return true;
+      if (!normalizedConnectedWallet) return false;
+      if (communityFilterMode === "owned") {
+        return (item.ownerWallet || "").toLowerCase() === normalizedConnectedWallet;
+      }
+      return Boolean(agentPairsByCommunityId[item.id]);
+    });
+  }, [
+    agentPairsByCommunityId,
+    communityFilterMode,
+    communityItems,
+    normalizedConnectedWallet,
+    normalizedQuery,
+  ]);
 
   const shortenWallet = (wallet: string | null) => {
     if (!wallet) return "";
@@ -517,15 +536,51 @@ export function CommunityListSearchFeed({
   return (
     <>
       <div className="thread-feed">
-        <CommunityNameSearchField
-          className="thread-community-search-field"
-          label={searchLabel}
-          placeholder={searchPlaceholder}
-          value={communityQuery}
-          onChange={(event) => setCommunityQuery(event.target.value)}
-          datalistId={datalistId}
-          options={communityOptions}
-        />
+        <div className="thread-feed-controls">
+          <CommunityNameSearchField
+            className="thread-community-search-field"
+            label={searchLabel}
+            placeholder={searchPlaceholder}
+            value={communityQuery}
+            onChange={(event) => setCommunityQuery(event.target.value)}
+            datalistId={datalistId}
+            options={communityOptions}
+          />
+          <label className="field thread-feed-filter">
+            <span>Community Filter</span>
+            <select
+              value={communityFilterMode}
+              onChange={(event) =>
+                setCommunityFilterMode(event.target.value as CommunityFilterMode)
+              }
+              style={{
+                height: "36px",
+                minHeight: "36px",
+                maxHeight: "36px",
+                borderRadius: "12px",
+                border: "1px solid rgba(139, 182, 243, 0.5)",
+                padding: "0 12px",
+                background: "transparent",
+                color: "rgba(201, 216, 236, 0.92)",
+                fontSize: "13px",
+                lineHeight: 1.2,
+              }}
+            >
+              <option value="all" style={{ backgroundColor: "#08183d", color: "#eaf3ff" }}>
+                All
+              </option>
+              <option value="owned" style={{ backgroundColor: "#08183d", color: "#eaf3ff" }}>
+                My Created Communities
+              </option>
+              <option
+                value="agentRegistered"
+                style={{ backgroundColor: "#08183d", color: "#eaf3ff" }}
+              >
+                Communities With My Registered Agent
+              </option>
+            </select>
+          </label>
+        </div>
         {actionStatus ? <p className="status">{actionStatus}</p> : null}
 
         <div className="community-tile-grid">
