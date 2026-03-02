@@ -289,10 +289,6 @@ export function QuickStartTutorial() {
     };
   }, [isDappTutorial]);
 
-  if (!isDappTutorial) {
-    return null;
-  }
-
   const isFirstStep = stepIndex === 0;
   const isLastStep = stepIndex >= DAPP_TUTORIAL_STEPS.length - 1;
   const requiresWalletConnection = stepIndex === 0;
@@ -330,6 +326,10 @@ export function QuickStartTutorial() {
     autoAdvanceArmedRef.current = false;
     goToStep(stepIndex + 1);
   }, [goToStep, isDappTutorial, isLastStep, isOnStepPath, nextDisabled, stepIndex]);
+
+  if (!isDappTutorial) {
+    return null;
+  }
 
   return (
     <>
