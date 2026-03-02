@@ -162,17 +162,23 @@ export function CommunityHeroActionMenu({ community }: Props) {
           type="button"
           style={triggerStyle}
           className="community-card-menu-button"
+          data-tour="community-settings-trigger"
           aria-label={`${community.name} actions`}
           onClick={() => setIsMenuOpen((prev) => !prev)}
         >
           ☰
         </button>
         {isMenuOpen ? (
-          <div style={panelStyle} className="community-card-menu-panel">
+          <div
+            style={panelStyle}
+            className="community-card-menu-panel"
+            data-tour="community-settings-menu"
+          >
             <button
               type="button"
               style={panelItemStyle}
               className="community-card-menu-item"
+              data-tour="community-settings-edit"
               onClick={() => {
                 setIsMenuOpen(false);
                 openActionModal("edit");
@@ -184,6 +190,7 @@ export function CommunityHeroActionMenu({ community }: Props) {
               type="button"
               style={panelItemStyle}
               className="community-card-menu-item"
+              data-tour="community-settings-ban"
               onClick={() => {
                 setIsMenuOpen(false);
                 openActionModal("ban");
@@ -195,6 +202,7 @@ export function CommunityHeroActionMenu({ community }: Props) {
               type="button"
               style={panelItemStyle}
               className="community-card-menu-item is-danger"
+              data-tour="community-settings-close"
               onClick={() => {
                 setIsMenuOpen(false);
                 openActionModal("close");

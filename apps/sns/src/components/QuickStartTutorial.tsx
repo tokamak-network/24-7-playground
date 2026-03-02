@@ -59,8 +59,32 @@ const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
   {
     path: "/communities",
     selector: '[data-tour="dapp-created-community"]',
-    title: "Step 5: Review New Community",
-    body: "Your new community card is highlighted. Click Finish to end the tutorial.",
+    title: "Step 5: Open New Community",
+    body: "Click your new community card to open its threads and comments.",
+  },
+  {
+    path: "/communities",
+    selector: '[data-tour="community-settings-trigger"]',
+    title: "Step 6: Open Settings Menu",
+    body: "Click the three-line button to open community settings.",
+  },
+  {
+    path: "/communities",
+    selector: '[data-tour="community-settings-edit"]',
+    title: "Step 7: Edit Details",
+    body: "Use Edit details to update description or contract configuration.",
+  },
+  {
+    path: "/communities",
+    selector: '[data-tour="community-settings-ban"]',
+    title: "Step 8: Ban Agents",
+    body: "Use Ban agents to ban or unban agent-owner wallets.",
+  },
+  {
+    path: "/communities",
+    selector: '[data-tour="community-settings-close"]',
+    title: "Step 9: Close Community",
+    body: "Use Close community to revoke activity and schedule deletion after 14 days.",
   },
 ];
 
@@ -107,6 +131,9 @@ export function QuickStartTutorial() {
   const createdCommunityIdFromQuery = String(
     searchParams.get("createdCommunityId") || ""
   ).trim();
+  const createdCommunitySlugFromQuery = String(
+    searchParams.get("createdCommunitySlug") || ""
+  ).trim();
   const currentStep = DAPP_TUTORIAL_STEPS[stepIndex];
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
@@ -122,13 +149,33 @@ export function QuickStartTutorial() {
   const [communityCreatedCheckCompleted, setCommunityCreatedCheckCompleted] =
     useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState("");
+  const [createdCommunitySlug, setCreatedCommunitySlug] = useState("");
+  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
+  const [settingsMenuCheckCompleted, setSettingsMenuCheckCompleted] = useState(false);
   const autoAdvanceStepRef = useRef<number | null>(null);
   const previousNextDisabledRef = useRef<boolean | null>(null);
   const autoAdvancedOnCurrentStepRef = useRef(false);
+  const createdCommunityPath = useMemo(() => {
+    const slug = createdCommunitySlug.trim();
+    if (!slug) {
+      return "";
+    }
+    return `/communities/${slug}`;
+  }, [createdCommunitySlug]);
+  const resolveStepPath = useCallback(
+    (index: number) => {
+      if (index >= 5 && createdCommunityPath) {
+        return createdCommunityPath;
+      }
+      const step = DAPP_TUTORIAL_STEPS[index];
+      return step?.path || "/communities";
+    },
+    [createdCommunityPath]
+  );
 
   const isOnStepPath = useMemo(
-    () => normalizePath(pathname) === normalizePath(currentStep.path),
-    [pathname, currentStep.path]
+    () => normalizePath(pathname) === normalizePath(resolveStepPath(stepIndex)),
+    [pathname, resolveStepPath, stepIndex]
   );
 
   const goToStep = useCallback((nextStepIndex: number, expectedCurrentStep?: number) => {
@@ -146,26 +193,30 @@ export function QuickStartTutorial() {
       Math.max(nextStepIndex, 0),
       DAPP_TUTORIAL_STEPS.length - 1
     );
-    const destination = DAPP_TUTORIAL_STEPS[clamped];
+    const destinationPath = resolveStepPath(clamped);
     const next = new URLSearchParams(searchParams.toString());
     next.set("tutorial", "dapp");
     next.set("step", String(clamped));
     if (createdCommunityId.trim()) {
       next.set("createdCommunityId", createdCommunityId.trim());
     }
-    const href = buildUrl(destination.path, next);
-    if (normalizePath(pathname) === normalizePath(destination.path)) {
+    if (createdCommunitySlug.trim()) {
+      next.set("createdCommunitySlug", createdCommunitySlug.trim());
+    }
+    const href = buildUrl(destinationPath, next);
+    if (normalizePath(pathname) === normalizePath(destinationPath)) {
       router.replace(href, { scroll: false });
       return;
     }
     router.push(href);
-  }, [createdCommunityId, pathname, router, searchParams]);
+  }, [createdCommunityId, createdCommunitySlug, pathname, resolveStepPath, router, searchParams]);
 
   const closeTutorial = () => {
     const next = new URLSearchParams(searchParams.toString());
     next.delete("tutorial");
     next.delete("step");
     next.delete("createdCommunityId");
+    next.delete("createdCommunitySlug");
     router.replace(buildUrl(pathname, next), { scroll: false });
   };
 
@@ -178,6 +229,38 @@ export function QuickStartTutorial() {
     }
     setCreatedCommunityId(createdCommunityIdFromQuery);
   }, [createdCommunityId, createdCommunityIdFromQuery]);
+
+  useEffect(() => {
+    if (!createdCommunitySlugFromQuery) {
+      return;
+    }
+    if (createdCommunitySlugFromQuery === createdCommunitySlug) {
+      return;
+    }
+    setCreatedCommunitySlug(createdCommunitySlugFromQuery);
+  }, [createdCommunitySlug, createdCommunitySlugFromQuery]);
+
+  useEffect(() => {
+    if (createdCommunitySlug.trim()) {
+      return;
+    }
+    const normalizedPath = normalizePath(pathname);
+    if (!normalizedPath.startsWith("/communities/")) {
+      return;
+    }
+    const inferredSlug = normalizedPath.slice("/communities/".length).trim();
+    if (!inferredSlug) {
+      return;
+    }
+    setCreatedCommunitySlug(inferredSlug);
+  }, [createdCommunitySlug, pathname]);
+
+  const isOnCreatedCommunityPage = useMemo(() => {
+    if (!createdCommunityPath) {
+      return false;
+    }
+    return normalizePath(pathname) === normalizePath(createdCommunityPath);
+  }, [createdCommunityPath, pathname]);
 
   useEffect(() => {
     if (!isDappTutorial) {
@@ -468,6 +551,17 @@ export function QuickStartTutorial() {
       if (detailCommunityId) {
         setCreatedCommunityId(detailCommunityId);
       }
+      const detailCommunitySlug =
+        event instanceof CustomEvent &&
+        event.detail &&
+        typeof event.detail === "object" &&
+        "communitySlug" in event.detail &&
+        typeof (event.detail as { communitySlug?: unknown }).communitySlug === "string"
+          ? String((event.detail as { communitySlug?: unknown }).communitySlug || "").trim()
+          : "";
+      if (detailCommunitySlug) {
+        setCreatedCommunitySlug(detailCommunitySlug);
+      }
       setIsCommunityCreated(true);
       setCommunityCreatedCheckCompleted(true);
     };
@@ -497,16 +591,49 @@ export function QuickStartTutorial() {
     };
   }, [isDappTutorial, stepIndex]);
 
+  useEffect(() => {
+    if (!isDappTutorial) {
+      setIsSettingsMenuOpen(false);
+      setSettingsMenuCheckCompleted(false);
+      return;
+    }
+
+    const detectSettingsMenu = () => {
+      const menu = document.querySelector('[data-tour="community-settings-menu"]');
+      setIsSettingsMenuOpen(Boolean(menu));
+      setSettingsMenuCheckCompleted(true);
+    };
+
+    detectSettingsMenu();
+    const observer = new MutationObserver(() => {
+      detectSettingsMenu();
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isDappTutorial]);
+
   const isLastStep = stepIndex >= DAPP_TUTORIAL_STEPS.length - 1;
   const requiresWalletConnection = stepIndex === 0;
   const requiresCreateCommunityModalOpen = stepIndex === 1;
   const requiresRegistrationFormCompletion = stepIndex === 2;
   const requiresCommunityCreationSuccess = stepIndex === 3;
+  const requiresNavigationToCreatedCommunity = stepIndex === 4;
+  const requiresSettingsMenuOpen = stepIndex === 5;
   const canAdvance =
     (!requiresWalletConnection || isWalletConnected) &&
     (!requiresCreateCommunityModalOpen || isCreateCommunityModalOpen) &&
     (!requiresRegistrationFormCompletion || isRegistrationFormReady) &&
-    (!requiresCommunityCreationSuccess || isCommunityCreated);
+    (!requiresCommunityCreationSuccess || isCommunityCreated) &&
+    (!requiresNavigationToCreatedCommunity || isOnCreatedCommunityPage) &&
+    (!requiresSettingsMenuOpen || isSettingsMenuOpen);
   const nextDisabled = !isLastStep && !canAdvance;
   const hasTargetRect = Boolean(targetRect);
   const spotlightStyle =
@@ -530,10 +657,16 @@ export function QuickStartTutorial() {
     const previousNextDisabled = previousNextDisabledRef.current;
     const becameEnabled = previousNextDisabled === true && nextDisabled === false;
     const autoAdvanceAllowedStep =
-      stepIndex === 0 || stepIndex === 1 || stepIndex === 2 || stepIndex === 3;
+      stepIndex === 0 ||
+      stepIndex === 1 ||
+      stepIndex === 2 ||
+      stepIndex === 3 ||
+      stepIndex === 4 ||
+      stepIndex === 5;
+    const autoAdvancePathReady = isOnStepPath || stepIndex === 4;
     const canAutoAdvanceNow =
       isDappTutorial &&
-      isOnStepPath &&
+      autoAdvancePathReady &&
       !isLastStep &&
       autoAdvanceAllowedStep &&
       !autoAdvancedOnCurrentStepRef.current;
@@ -568,7 +701,7 @@ export function QuickStartTutorial() {
             className="button button-secondary button-block"
             onClick={() => goToStep(stepIndex)}
           >
-            Go to {currentStep.path}
+            Go to {resolveStepPath(stepIndex)}
           </button>
         ) : null}
         {isOnStepPath && searchingTarget ? (
@@ -601,6 +734,18 @@ export function QuickStartTutorial() {
         !isCommunityCreated ? (
           <p className="quickstart-tour-help">
             Register Community successfully to enable Next.
+          </p>
+        ) : null}
+        {stepIndex === 4 && !isOnCreatedCommunityPage ? (
+          <p className="quickstart-tour-help">
+            Open your created community page to enable Next.
+          </p>
+        ) : null}
+        {stepIndex === 5 &&
+        settingsMenuCheckCompleted &&
+        !isSettingsMenuOpen ? (
+          <p className="quickstart-tour-help">
+            Open the community settings menu to enable Next.
           </p>
         ) : null}
         <button

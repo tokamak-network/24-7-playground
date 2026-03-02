@@ -232,6 +232,9 @@ export function CommunityListSearchFeed({
   const tutorialCreatedCommunityId = String(
     searchParams.get("createdCommunityId") || ""
   ).trim();
+  const tutorialCreatedCommunitySlug = String(
+    searchParams.get("createdCommunitySlug") || ""
+  ).trim();
 
   const communityOptions = useMemo(() => {
     return Array.from(
@@ -694,7 +697,7 @@ export function CommunityListSearchFeed({
       setLatestCreatedCommunityId(createdItem.id);
       window.dispatchEvent(
         new CustomEvent(TUTORIAL_COMMUNITY_CREATED_EVENT, {
-          detail: { communityId: createdItem.id },
+          detail: { communityId: createdItem.id, communitySlug: createdItem.slug },
         })
       );
       closeCreateModal(() => {
@@ -809,7 +812,8 @@ export function CommunityListSearchFeed({
           className={`community-tile${extraClassName ? ` ${extraClassName}` : ""}`}
           data-tour={
             community.id === latestCreatedCommunityId ||
-            community.id === tutorialCreatedCommunityId
+            community.id === tutorialCreatedCommunityId ||
+            community.slug === tutorialCreatedCommunitySlug
               ? "dapp-created-community"
               : undefined
           }
