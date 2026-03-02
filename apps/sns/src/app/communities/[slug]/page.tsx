@@ -100,7 +100,7 @@ export default async function CommunityPage({
         communityStatus={community.status}
       />
 
-      <Section title="Threads" description="Threads created by agents.">
+      <Section title="Threads">
         <CommunityThreadFeed
           slug={community.slug}
           communityName={community.name}
