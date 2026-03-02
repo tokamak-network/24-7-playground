@@ -9,6 +9,7 @@ type TutorialStep = {
   title: string;
   body: string;
 };
+const TUTORIAL_COMMUNITY_CREATED_EVENT = "sns-tutorial-community-created";
 
 function extractWalletAddress(value: unknown): string {
   if (typeof value === "string") {
@@ -52,8 +53,14 @@ const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
   {
     path: "/communities",
     selector: '[data-tour="dapp-register-community"]',
-    title: "Step 4: Register Community",
-    body: "Click Register Community, then click Next to complete this tutorial.",
+    title: "Step 4: Create Community",
+    body: "Click Register Community and wait for successful creation.",
+  },
+  {
+    path: "/communities",
+    selector: '[data-tour="dapp-created-community"]',
+    title: "Step 5: Review New Community",
+    body: "Your new community card is highlighted. Click Finish to end the tutorial.",
   },
 ];
 
@@ -107,6 +114,9 @@ export function QuickStartTutorial() {
   const [createModalCheckCompleted, setCreateModalCheckCompleted] = useState(false);
   const [isRegistrationFormReady, setIsRegistrationFormReady] = useState(false);
   const [registrationFormCheckCompleted, setRegistrationFormCheckCompleted] =
+    useState(false);
+  const [isCommunityCreated, setIsCommunityCreated] = useState(false);
+  const [communityCreatedCheckCompleted, setCommunityCreatedCheckCompleted] =
     useState(false);
   const autoAdvanceStepRef = useRef<number | null>(null);
   const previousNextDisabledRef = useRef<boolean | null>(null);
@@ -376,14 +386,65 @@ export function QuickStartTutorial() {
     };
   }, [isDappTutorial]);
 
+  useEffect(() => {
+    if (!isDappTutorial) {
+      setIsCommunityCreated(false);
+      setCommunityCreatedCheckCompleted(false);
+      return;
+    }
+    if (stepIndex === 0) {
+      setIsCommunityCreated(false);
+      setCommunityCreatedCheckCompleted(false);
+    }
+
+    const detectCreatedCommunityCard = () => {
+      const createdCard = document.querySelector('[data-tour="dapp-created-community"]');
+      if (createdCard) {
+        setIsCommunityCreated(true);
+      }
+      setCommunityCreatedCheckCompleted(true);
+    };
+
+    const handleCreated = () => {
+      setIsCommunityCreated(true);
+      setCommunityCreatedCheckCompleted(true);
+    };
+
+    detectCreatedCommunityCard();
+    window.addEventListener(
+      TUTORIAL_COMMUNITY_CREATED_EVENT,
+      handleCreated as EventListener
+    );
+
+    const observer = new MutationObserver(() => {
+      detectCreatedCommunityCard();
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => {
+      window.removeEventListener(
+        TUTORIAL_COMMUNITY_CREATED_EVENT,
+        handleCreated as EventListener
+      );
+      observer.disconnect();
+    };
+  }, [isDappTutorial, stepIndex]);
+
   const isLastStep = stepIndex >= DAPP_TUTORIAL_STEPS.length - 1;
   const requiresWalletConnection = stepIndex === 0;
   const requiresCreateCommunityModalOpen = stepIndex === 1;
   const requiresRegistrationFormCompletion = stepIndex === 2;
+  const requiresCommunityCreationSuccess = stepIndex === 3;
   const canAdvance =
     (!requiresWalletConnection || isWalletConnected) &&
     (!requiresCreateCommunityModalOpen || isCreateCommunityModalOpen) &&
-    (!requiresRegistrationFormCompletion || isRegistrationFormReady);
+    (!requiresRegistrationFormCompletion || isRegistrationFormReady) &&
+    (!requiresCommunityCreationSuccess || isCommunityCreated);
   const nextDisabled = !isLastStep && !canAdvance;
   const hasTargetRect = Boolean(targetRect);
   const spotlightStyle =
@@ -407,7 +468,7 @@ export function QuickStartTutorial() {
     const previousNextDisabled = previousNextDisabledRef.current;
     const becameEnabled = previousNextDisabled === true && nextDisabled === false;
     const autoAdvanceAllowedStep =
-      stepIndex === 0 || stepIndex === 1 || stepIndex === 2;
+      stepIndex === 0 || stepIndex === 1 || stepIndex === 2 || stepIndex === 3;
     const canAutoAdvanceNow =
       isDappTutorial &&
       isOnStepPath &&
@@ -471,6 +532,13 @@ export function QuickStartTutorial() {
         !isRegistrationFormReady ? (
           <p className="quickstart-tour-help">
             Complete required fields: Service Name and at least one Contract Address.
+          </p>
+        ) : null}
+        {stepIndex === 3 &&
+        communityCreatedCheckCompleted &&
+        !isCommunityCreated ? (
+          <p className="quickstart-tour-help">
+            Register Community successfully to enable Next.
           </p>
         ) : null}
         <button

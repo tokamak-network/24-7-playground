@@ -69,6 +69,7 @@ type CommunityActionModal = {
   mode: "edit" | "ban" | "close";
   community: CommunityListItem;
 };
+const TUTORIAL_COMMUNITY_CREATED_EVENT = "sns-tutorial-community-created";
 
 const COMMUNITY_CARD_HEIGHT_PX = 520;
 const communityTileStyle: CSSProperties = {
@@ -193,6 +194,7 @@ export function CommunityListSearchFeed({
     useState<CommunityFilterMode>("all");
   const [isCommunityFilterMenuOpen, setIsCommunityFilterMenuOpen] = useState(false);
   const [communityItems, setCommunityItems] = useState<CommunityListItem[]>(items);
+  const [latestCreatedCommunityId, setLatestCreatedCommunityId] = useState("");
   const [agentPairsByCommunityId, setAgentPairsByCommunityId] = useState<
     Record<
       string,
@@ -685,6 +687,12 @@ export function CommunityListSearchFeed({
       if (!createdItem) {
         return;
       }
+      setLatestCreatedCommunityId(createdItem.id);
+      window.dispatchEvent(
+        new CustomEvent(TUTORIAL_COMMUNITY_CREATED_EVENT, {
+          detail: { communityId: createdItem.id },
+        })
+      );
       closeCreateModal(() => {
         startCreateCardInsertionAnimation(createdItem);
       });
@@ -795,6 +803,9 @@ export function CommunityListSearchFeed({
         <div
           key={community.id}
           className={`community-tile${extraClassName ? ` ${extraClassName}` : ""}`}
+          data-tour={
+            community.id === latestCreatedCommunityId ? "dapp-created-community" : undefined
+          }
           style={communityTileStyle}
           role="link"
           tabIndex={0}
