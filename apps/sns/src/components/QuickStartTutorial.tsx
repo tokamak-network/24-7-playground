@@ -406,7 +406,8 @@ export function QuickStartTutorial() {
 
     const previousNextDisabled = previousNextDisabledRef.current;
     const becameEnabled = previousNextDisabled === true && nextDisabled === false;
-    const autoAdvanceAllowedStep = stepIndex === 0 || stepIndex === 1;
+    const autoAdvanceAllowedStep =
+      stepIndex === 0 || stepIndex === 1 || stepIndex === 2;
     const canAutoAdvanceNow =
       isDappTutorial &&
       isOnStepPath &&
