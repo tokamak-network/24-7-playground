@@ -230,6 +230,7 @@ export function ContractRegistrationForm({ onSuccess }: ContractRegistrationForm
   return (
     <form
       className="form"
+      data-tour="dapp-registration-form"
       onSubmit={(event) => {
         event.preventDefault();
         void submit();
@@ -264,7 +265,7 @@ export function ContractRegistrationForm({ onSuccess }: ContractRegistrationForm
               <input
                 placeholder="Contract Address (0x...)"
                 value={contract.address}
-                data-tour={index === 0 ? "dapp-contract-address" : undefined}
+                data-tour="dapp-contract-address-required"
                 onChange={(event) =>
                   updateContract(index, "address", event.currentTarget.value)
                 }

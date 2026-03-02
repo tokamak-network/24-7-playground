@@ -45,21 +45,15 @@ const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     path: "/communities",
-    selector: '[data-tour="dapp-service-name"]',
-    title: "Step 3: Service Name",
-    body: "Type your DApp service name here.",
-  },
-  {
-    path: "/communities",
-    selector: '[data-tour="dapp-contract-address"]',
-    title: "Step 4: Contract Address",
-    body: "Provide at least one Sepolia contract address.",
+    selector: '[data-tour="dapp-registration-form"]',
+    title: "Step 3: Fill Required Fields",
+    body: "Fill Service Name and at least one Contract Address in this form.",
   },
   {
     path: "/communities",
     selector: '[data-tour="dapp-register-community"]',
-    title: "Step 5: Register Community",
-    body: "Click this button to submit community registration.",
+    title: "Step 4: Register Community",
+    body: "Click Register Community, then click Next to complete this tutorial.",
   },
 ];
 
@@ -111,6 +105,9 @@ export function QuickStartTutorial() {
   const [walletCheckCompleted, setWalletCheckCompleted] = useState(false);
   const [isCreateCommunityModalOpen, setIsCreateCommunityModalOpen] = useState(false);
   const [createModalCheckCompleted, setCreateModalCheckCompleted] = useState(false);
+  const [isRegistrationFormReady, setIsRegistrationFormReady] = useState(false);
+  const [registrationFormCheckCompleted, setRegistrationFormCheckCompleted] =
+    useState(false);
   const autoAdvanceStepRef = useRef<number | null>(null);
   const previousNextDisabledRef = useRef<boolean | null>(null);
   const autoAdvancedOnCurrentStepRef = useRef(false);
@@ -324,12 +321,69 @@ export function QuickStartTutorial() {
     };
   }, [isDappTutorial]);
 
+  useEffect(() => {
+    if (!isDappTutorial) {
+      setIsRegistrationFormReady(false);
+      setRegistrationFormCheckCompleted(false);
+      return;
+    }
+
+    const detectRegistrationReadiness = () => {
+      const form = document.querySelector(
+        '[data-tour="dapp-registration-form"]'
+      );
+      if (!(form instanceof HTMLElement)) {
+        setIsRegistrationFormReady(false);
+        setRegistrationFormCheckCompleted(true);
+        return;
+      }
+      const serviceNameInput = form.querySelector(
+        '[data-tour="dapp-service-name"] input'
+      );
+      const serviceName = serviceNameInput instanceof HTMLInputElement
+        ? serviceNameInput.value.trim()
+        : "";
+      const contractAddressInputs = form.querySelectorAll(
+        'input[data-tour="dapp-contract-address-required"]'
+      );
+      const hasContractAddress = Array.from(contractAddressInputs).some(
+        (input) => input instanceof HTMLInputElement && input.value.trim().length > 0
+      );
+      setIsRegistrationFormReady(Boolean(serviceName) && hasContractAddress);
+      setRegistrationFormCheckCompleted(true);
+    };
+
+    detectRegistrationReadiness();
+
+    const handleInput = () => {
+      detectRegistrationReadiness();
+    };
+    document.addEventListener("input", handleInput, true);
+
+    const observer = new MutationObserver(() => {
+      detectRegistrationReadiness();
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => {
+      document.removeEventListener("input", handleInput, true);
+      observer.disconnect();
+    };
+  }, [isDappTutorial]);
+
   const isLastStep = stepIndex >= DAPP_TUTORIAL_STEPS.length - 1;
   const requiresWalletConnection = stepIndex === 0;
   const requiresCreateCommunityModalOpen = stepIndex === 1;
+  const requiresRegistrationFormCompletion = stepIndex === 2;
   const canAdvance =
     (!requiresWalletConnection || isWalletConnected) &&
-    (!requiresCreateCommunityModalOpen || isCreateCommunityModalOpen);
+    (!requiresCreateCommunityModalOpen || isCreateCommunityModalOpen) &&
+    (!requiresRegistrationFormCompletion || isRegistrationFormReady);
   const nextDisabled = !isLastStep && !canAdvance;
   const hasTargetRect = Boolean(targetRect);
   const spotlightStyle =
@@ -352,8 +406,13 @@ export function QuickStartTutorial() {
 
     const previousNextDisabled = previousNextDisabledRef.current;
     const becameEnabled = previousNextDisabled === true && nextDisabled === false;
+    const autoAdvanceAllowedStep = stepIndex === 0 || stepIndex === 1;
     const canAutoAdvanceNow =
-      isDappTutorial && isOnStepPath && !isLastStep && !autoAdvancedOnCurrentStepRef.current;
+      isDappTutorial &&
+      isOnStepPath &&
+      !isLastStep &&
+      autoAdvanceAllowedStep &&
+      !autoAdvancedOnCurrentStepRef.current;
     if (becameEnabled && canAutoAdvanceNow) {
       autoAdvancedOnCurrentStepRef.current = true;
       previousNextDisabledRef.current = nextDisabled;
@@ -404,6 +463,13 @@ export function QuickStartTutorial() {
         {stepIndex === 1 && createModalCheckCompleted && !isCreateCommunityModalOpen ? (
           <p className="quickstart-tour-help">
             Click Create New Community and wait for the modal to appear to enable Next.
+          </p>
+        ) : null}
+        {stepIndex === 2 &&
+        registrationFormCheckCompleted &&
+        !isRegistrationFormReady ? (
+          <p className="quickstart-tour-help">
+            Complete required fields: Service Name and at least one Contract Address.
           </p>
         ) : null}
         <button
