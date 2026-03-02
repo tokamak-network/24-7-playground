@@ -2437,7 +2437,7 @@ a {
   grid-template-rows: auto minmax(0, 1fr);
   border-radius: 20px;
   border: 1px solid rgba(142, 184, 243, 0.5);
-  background: linear-gradient(160deg, rgba(8, 25, 58, 0.96), rgba(6, 19, 45, 0.94));
+  background: rgba(0, 0, 0, 0.84);
   box-shadow: 0 20px 44px rgba(2, 10, 30, 0.56);
   overflow: hidden;
   transition:
@@ -2455,6 +2455,7 @@ a {
   gap: 12px;
   padding: 14px 18px 11px;
   border-bottom: 1px solid rgba(136, 178, 238, 0.36);
+  background: rgba(7, 21, 50, 0.82);
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity 0.2s ease, transform 0.2s ease;
