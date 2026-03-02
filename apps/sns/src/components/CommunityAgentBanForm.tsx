@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAddress } from "ethers";
 import { Button } from "src/components/ui";
+import {
+  invalidateOwnedCommunitiesCache,
+  readOwnedCommunitiesCache,
+  writeOwnedCommunitiesCache,
+} from "src/lib/ownedCommunitiesCache";
 
 const FIXED_MESSAGE = "24-7-playground";
 
@@ -48,10 +53,15 @@ function shortenAddress(value: string) {
 
 type Props = {
   initialCommunityId?: string;
+  initialWalletAddress?: string;
   onApplied?: () => void;
 };
 
-export function CommunityAgentBanForm({ initialCommunityId, onApplied }: Props = {}) {
+export function CommunityAgentBanForm({
+  initialCommunityId,
+  initialWalletAddress,
+  onApplied,
+}: Props = {}) {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -105,6 +115,40 @@ export function CommunityAgentBanForm({ initialCommunityId, onApplied }: Props =
       return;
     }
 
+    const normalizedWallet = walletAddress.toLowerCase();
+    const cached = readOwnedCommunitiesCache<{
+      communities: OwnedCommunityWithBans[];
+      banFeatureAvailable: boolean;
+      warning: string;
+    }>("bans-owned", normalizedWallet);
+    if (cached) {
+      setBanFeatureAvailable(cached.banFeatureAvailable);
+      setCommunities(cached.communities);
+      const activeCommunities = cached.communities;
+      if (activeCommunities.length === 0) {
+        setSelectedCommunityId("");
+        setSelectedAgentId("");
+        setSelectedBannedOwnerWallet("");
+        setStatus("No active communities owned by this wallet.");
+        return;
+      }
+      const firstCommunityId = activeCommunities[0].id;
+      const preferredId =
+        initialCommunityId &&
+        activeCommunities.some((community) => community.id === initialCommunityId)
+          ? initialCommunityId
+          : "";
+      setSelectedCommunityId((prev) => {
+        if (preferredId) return preferredId;
+        if (prev && activeCommunities.some((community) => community.id === prev)) {
+          return prev;
+        }
+        return firstCommunityId;
+      });
+      setStatus(cached.warning || "");
+      return;
+    }
+
     setBusy(true);
     setStatus("Loading owned communities...");
     try {
@@ -125,6 +169,14 @@ export function CommunityAgentBanForm({ initialCommunityId, onApplied }: Props =
       const activeCommunities = loadedCommunities.filter(
         (community) => community.status !== "CLOSED"
       );
+      writeOwnedCommunitiesCache("bans-owned", normalizedWallet, {
+        communities: activeCommunities,
+        banFeatureAvailable: featureAvailable,
+        warning:
+          !featureAvailable && typeof data?.warning === "string"
+            ? data.warning
+            : "",
+      });
       setCommunities(activeCommunities);
 
       if (activeCommunities.length === 0) {
@@ -168,6 +220,12 @@ export function CommunityAgentBanForm({ initialCommunityId, onApplied }: Props =
       setBusy(false);
     }
   };
+
+  useEffect(() => {
+    if (!wallet && initialWalletAddress) {
+      setWallet(normalizeAddress(initialWalletAddress));
+    }
+  }, [initialWalletAddress, wallet]);
 
   useEffect(() => {
     const ethereum = (window as any).ethereum;
@@ -277,6 +335,7 @@ export function CommunityAgentBanForm({ initialCommunityId, onApplied }: Props =
       }
 
       setStatus(action === "BAN" ? "Agent banned." : "Ban removed.");
+      invalidateOwnedCommunitiesCache(signerWallet);
       if (onApplied) {
         onApplied();
         return;

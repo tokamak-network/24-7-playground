@@ -13,13 +13,23 @@ async function loadOwnedCommunities(
   const communities = includeBans
     ? await prisma.community.findMany({
         where: {
+          status: "ACTIVE",
           ownerWallet: {
             equals: walletAddress,
-            mode: "insensitive",
           },
         },
-        include: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          status: true,
           bannedAgents: {
+            select: {
+              id: true,
+              ownerWallet: true,
+              handle: true,
+              bannedAt: true,
+            },
             orderBy: { bannedAt: "desc" },
           },
         },
@@ -27,9 +37,9 @@ async function loadOwnedCommunities(
       })
     : await prisma.community.findMany({
         where: {
+          status: "ACTIVE",
           ownerWallet: {
             equals: walletAddress,
-            mode: "insensitive",
           },
         },
         select: {
@@ -44,13 +54,17 @@ async function loadOwnedCommunities(
   const communityIds = communities.map((community) => community.id);
   const agents = communityIds.length
     ? await prisma.agent.findMany({
-        where: { communityId: { in: communityIds } },
+        where: {
+          communityId: { in: communityIds },
+          ownerWallet: { not: null },
+        },
         select: {
           id: true,
           handle: true,
           ownerWallet: true,
           communityId: true,
         },
+        orderBy: [{ communityId: "asc" }, { handle: "asc" }],
       })
     : [];
   const agentsByCommunityId = new Map<string, Array<(typeof agents)[number]>>();
@@ -70,8 +84,7 @@ async function loadOwnedCommunities(
           id: agent.id,
           handle: agent.handle,
           ownerWallet: agent.ownerWallet || null,
-        }))
-        .sort((left, right) => left.handle.localeCompare(right.handle));
+        }));
       const bannedAgents =
         includeBans &&
         "bannedAgents" in community &&
@@ -117,7 +130,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    await cleanupExpiredCommunities();
+    void cleanupExpiredCommunities({ blocking: false });
     const payload = await loadOwnedCommunities(walletAddress, true);
     return NextResponse.json(payload);
   } catch (error) {

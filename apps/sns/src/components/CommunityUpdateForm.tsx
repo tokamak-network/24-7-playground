@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAddress } from "ethers";
 import { Button } from "src/components/ui";
+import {
+  invalidateOwnedCommunitiesCache,
+  readOwnedCommunitiesCache,
+  writeOwnedCommunitiesCache,
+} from "src/lib/ownedCommunitiesCache";
 
 type OwnedCommunity = {
   id: string;
@@ -61,10 +66,15 @@ function shortenAddress(value: string) {
 
 type Props = {
   initialCommunityId?: string;
+  initialWalletAddress?: string;
   onApplied?: (payload: CommunityUpdateAppliedPayload) => void;
 };
 
-export function CommunityUpdateForm({ initialCommunityId, onApplied }: Props = {}) {
+export function CommunityUpdateForm({
+  initialCommunityId,
+  initialWalletAddress,
+  onApplied,
+}: Props = {}) {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [communities, setCommunities] = useState<OwnedCommunity[]>([]);
@@ -124,6 +134,28 @@ export function CommunityUpdateForm({ initialCommunityId, onApplied }: Props = {
 
   const fetchOwned = async (walletAddress: string) => {
     if (!walletAddress) return;
+    const normalizedWallet = walletAddress.toLowerCase();
+    const cached = readOwnedCommunitiesCache<OwnedCommunity[]>("owned", normalizedWallet);
+    if (cached) {
+      setCommunities(cached);
+      if (cached.length === 0) {
+        setSelectedId("");
+        setStatus("No active communities owned by this wallet.");
+      } else {
+        const preferredId =
+          initialCommunityId && cached.some((community) => community.id === initialCommunityId)
+            ? initialCommunityId
+            : "";
+        setSelectedId((prev) => {
+          if (preferredId) return preferredId;
+          if (prev && cached.some((community) => community.id === prev)) return prev;
+          return cached[0]?.id || "";
+        });
+        setStatus("");
+      }
+      return;
+    }
+
     setBusy(true);
     setStatus("Loading owned communities...");
     try {
@@ -139,6 +171,7 @@ export function CommunityUpdateForm({ initialCommunityId, onApplied }: Props = {
       const active: OwnedCommunity[] = (data.communities || []).filter(
         (c: OwnedCommunity) => c.status !== "CLOSED"
       );
+      writeOwnedCommunitiesCache("owned", normalizedWallet, active);
       setCommunities(active);
       if (active.length === 0) {
         setSelectedId("");
@@ -163,6 +196,12 @@ export function CommunityUpdateForm({ initialCommunityId, onApplied }: Props = {
       setBusy(false);
     }
   };
+
+  useEffect(() => {
+    if (!wallet && initialWalletAddress) {
+      setWallet(normalizeAddress(initialWalletAddress));
+    }
+  }, [initialWalletAddress, wallet]);
 
   useEffect(() => {
     const ethereum = (window as any).ethereum;
@@ -433,6 +472,7 @@ export function CommunityUpdateForm({ initialCommunityId, onApplied }: Props = {
       setStatus(
         `${actionLabel || "Update"} applied. SYSTEM thread was updated in-place and a SYSTEM comment was added${changedCount > 0 ? ` (${changedCount} contract change)` : ""}.`
       );
+      invalidateOwnedCommunitiesCache(walletAddress);
 
       let appliedPayload: CommunityUpdateAppliedPayload | null = null;
       if (purpose === "UPDATE_DESCRIPTION") {

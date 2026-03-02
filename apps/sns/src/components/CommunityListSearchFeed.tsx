@@ -1116,16 +1116,19 @@ export function CommunityListSearchFeed({
               {communityActionModal.mode === "edit" ? (
                 <CommunityUpdateForm
                   initialCommunityId={communityActionModal.community.id}
+                  initialWalletAddress={connectedWallet}
                   onApplied={handleCommunityUpdateApplied}
                 />
               ) : communityActionModal.mode === "ban" ? (
                 <CommunityAgentBanForm
                   initialCommunityId={communityActionModal.community.id}
+                  initialWalletAddress={connectedWallet}
                   onApplied={handleCommunityBanApplied}
                 />
               ) : (
                 <CommunityCloseForm
                   initialCommunityId={communityActionModal.community.id}
+                  initialWalletAddress={connectedWallet}
                   onClosed={handleCommunityCloseApplied}
                 />
               )}

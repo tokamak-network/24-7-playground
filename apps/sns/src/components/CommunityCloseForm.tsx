@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { getAddress } from "ethers";
 import { Button } from "src/components/ui";
+import {
+  invalidateOwnedCommunitiesCache,
+  readOwnedCommunitiesCache,
+  writeOwnedCommunitiesCache,
+} from "src/lib/ownedCommunitiesCache";
 
 type OwnedCommunity = {
   id: string;
@@ -24,10 +29,15 @@ const FIXED_MESSAGE = "24-7-playground";
 
 type Props = {
   initialCommunityId?: string;
+  initialWalletAddress?: string;
   onClosed?: (payload: { communityId: string; deleteAt: string | null }) => void;
 };
 
-export function CommunityCloseForm({ initialCommunityId, onClosed }: Props = {}) {
+export function CommunityCloseForm({
+  initialCommunityId,
+  initialWalletAddress,
+  onClosed,
+}: Props = {}) {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [communities, setCommunities] = useState<OwnedCommunity[]>([]);
@@ -68,6 +78,28 @@ export function CommunityCloseForm({ initialCommunityId, onClosed }: Props = {})
 
   const fetchOwned = async (walletAddress: string) => {
     if (!walletAddress) return;
+    const normalizedWallet = walletAddress.toLowerCase();
+    const cached = readOwnedCommunitiesCache<OwnedCommunity[]>("owned", normalizedWallet);
+    if (cached) {
+      setCommunities(cached);
+      if (cached.length === 0) {
+        setSelectedId("");
+        setStatus("No active communities owned by this wallet.");
+      } else {
+        const preferredId =
+          initialCommunityId && cached.some((community) => community.id === initialCommunityId)
+            ? initialCommunityId
+            : "";
+        setSelectedId((prev) => {
+          if (preferredId) return preferredId;
+          if (prev && cached.some((community) => community.id === prev)) return prev;
+          return cached[0]?.id || "";
+        });
+        setStatus("");
+      }
+      return;
+    }
+
     setBusy(true);
     setStatus("Loading owned communities...");
     try {
@@ -83,6 +115,7 @@ export function CommunityCloseForm({ initialCommunityId, onClosed }: Props = {})
       const active: OwnedCommunity[] = (data.communities || []).filter(
         (c: OwnedCommunity) => c.status !== "CLOSED"
       );
+      writeOwnedCommunitiesCache("owned", normalizedWallet, active);
       setCommunities(active);
       if (active.length === 0) {
         setSelectedId("");
@@ -107,6 +140,12 @@ export function CommunityCloseForm({ initialCommunityId, onClosed }: Props = {})
       setBusy(false);
     }
   };
+
+  useEffect(() => {
+    if (!wallet && initialWalletAddress) {
+      setWallet(normalizeAddress(initialWalletAddress));
+    }
+  }, [initialWalletAddress, wallet]);
 
   useEffect(() => {
     const ethereum = (window as any).ethereum;
@@ -183,6 +222,7 @@ export function CommunityCloseForm({ initialCommunityId, onClosed }: Props = {})
         throw new Error(data.error || "Close failed");
       }
       setStatus("Community closed. Deletion scheduled.");
+      invalidateOwnedCommunitiesCache(wallet);
       if (onClosed) {
         onClosed({
           communityId: selectedId,
