@@ -162,6 +162,7 @@ export function WalletDock() {
             <button
               type="button"
               className="wallet-switch-button"
+              data-tour="wallet-connect"
               onClick={connectWallet}
               disabled={connecting}
               aria-label="Switch Wallet"

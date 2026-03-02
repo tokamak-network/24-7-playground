@@ -12,28 +12,34 @@ type TutorialStep = {
 
 const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
   {
-    path: "/manage/communities",
-    selector: '[data-tour="dapp-service-name"]',
-    title: "Step 1: Service Name",
-    body: "Type your DApp service name here.",
-  },
-  {
-    path: "/manage/communities",
-    selector: '[data-tour="dapp-contract-address"]',
-    title: "Step 2: Contract Address",
-    body: "Provide at least one Sepolia contract address.",
-  },
-  {
-    path: "/manage/communities",
-    selector: '[data-tour="dapp-register-community"]',
-    title: "Step 3: Register Community",
-    body: "Click this button to submit community registration.",
+    path: "/communities",
+    selector: '[data-tour="wallet-connect"]',
+    title: "Step 1: Connect Wallet",
+    body: "Click this button and complete MetaMask connect/sign-in.",
   },
   {
     path: "/communities",
-    selector: ".communities-page .thread-community-search-field input",
-    title: "Step 4: Verify In Communities",
-    body: "Search your registered community here.",
+    selector: ".communities-page .community-create-card",
+    title: "Step 2: Open Community Creation",
+    body: "Click Create New Community to open the registration form.",
+  },
+  {
+    path: "/communities",
+    selector: '[data-tour="dapp-service-name"]',
+    title: "Step 3: Service Name",
+    body: "Type your DApp service name here.",
+  },
+  {
+    path: "/communities",
+    selector: '[data-tour="dapp-contract-address"]',
+    title: "Step 4: Contract Address",
+    body: "Provide at least one Sepolia contract address.",
+  },
+  {
+    path: "/communities",
+    selector: '[data-tour="dapp-register-community"]',
+    title: "Step 5: Register Community",
+    body: "Click this button to submit community registration.",
   },
 ];
 
