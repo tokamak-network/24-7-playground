@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
 import {
@@ -58,7 +59,10 @@ type CommunityFilterOption = {
 };
 
 const COMMUNITY_CARD_HEIGHT_PX = 520;
-const communityTileStyle: CSSProperties = { height: `${COMMUNITY_CARD_HEIGHT_PX}px` };
+const communityTileStyle: CSSProperties = {
+  height: `${COMMUNITY_CARD_HEIGHT_PX}px`,
+  cursor: "pointer",
+};
 const communityCreateSurfaceStyle: CSSProperties = {
   height: `${COMMUNITY_CARD_HEIGHT_PX}px`,
   minHeight: `${COMMUNITY_CARD_HEIGHT_PX}px`,
@@ -126,6 +130,7 @@ export function CommunityListSearchFeed({
   searchPlaceholder,
   datalistId,
 }: Props) {
+  const router = useRouter();
   const { connectedWallet } = useOwnerSession();
   const [communityQuery, setCommunityQuery] = useState("");
   const [communityFilterMode, setCommunityFilterMode] =
@@ -209,6 +214,20 @@ export function CommunityListSearchFeed({
     }
     return `${contracts.length} contracts · ${contracts[0].address.slice(0, 10)}... +${contracts.length - 1}`;
   };
+
+  const shouldSkipTileNavigation = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false;
+    return Boolean(
+      target.closest("a, button, input, textarea, select, label, [role='button'], [role='link']")
+    );
+  };
+
+  const openCommunity = useCallback(
+    (communitySlug: string) => {
+      router.push(`/communities/${communitySlug}`);
+    },
+    [router]
+  );
 
   const loadAgentPairs = useCallback(async () => {
     if (!connectedWallet) {
@@ -539,6 +558,20 @@ export function CommunityListSearchFeed({
           key={community.id}
           className={`community-tile${extraClassName ? ` ${extraClassName}` : ""}`}
           style={communityTileStyle}
+          role="link"
+          tabIndex={0}
+          aria-label={`Open ${community.name}`}
+          onClick={(event) => {
+            if (shouldSkipTileNavigation(event.target)) return;
+            openCommunity(community.slug);
+          }}
+          onKeyDown={(event) => {
+            if (shouldSkipTileNavigation(event.target)) return;
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              openCommunity(community.slug);
+            }
+          }}
         >
           <Card title={<span style={communityTitleClampStyle}>{community.name}</span>} titleMeta={titleMeta}>
             <div className="community-description-rich">
@@ -576,9 +609,6 @@ export function CommunityListSearchFeed({
               </div>
             </div>
             <div className="community-tile-actions">
-              <Link className="button button-block" href={`/communities/${community.slug}`}>
-                View Community
-              </Link>
               {agentPairsByCommunityId[community.id] ? (
                 <div className="community-tile-inline-actions">
                   <Link
@@ -617,7 +647,7 @@ export function CommunityListSearchFeed({
         </div>
       );
     },
-    [actionBusyId, agentLoading, agentPairsByCommunityId]
+    [actionBusyId, agentLoading, agentPairsByCommunityId, openCommunity]
   );
 
   const animatedItem =
