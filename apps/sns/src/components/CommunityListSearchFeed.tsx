@@ -76,7 +76,9 @@ const communityCreateSurfaceStyle: CSSProperties = {
   maxHeight: `${COMMUNITY_CARD_HEIGHT_PX}px`,
 };
 const communityTitleClampStyle: CSSProperties = {
-  width: "calc(100% - 56px)",
+  width: "100%",
+  boxSizing: "border-box",
+  paddingRight: "52px",
   lineHeight: 1.2,
   minHeight: "calc(1.2em * 2)",
   display: "-webkit-box",
@@ -141,6 +143,9 @@ const communityCardMenuButtonStyle: CSSProperties = {
   borderRadius: "0",
   border: "0",
   background: "transparent",
+  appearance: "none",
+  WebkitAppearance: "none",
+  padding: 0,
   color: "#e8f2ff",
   fontSize: "26px",
   lineHeight: 1,
@@ -149,6 +154,8 @@ const communityCardMenuButtonStyle: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   zIndex: 3,
+  outline: "none",
+  boxShadow: "none",
 };
 const communityCardMenuPanelStyle: CSSProperties = {
   position: "absolute",
@@ -429,6 +436,21 @@ export function CommunityListSearchFeed({
     return () => window.removeEventListener("mousedown", onClickOutside);
   }, [activeCardMenuId]);
 
+  useEffect(() => {
+    if (!activeCardMenuId) return;
+    const activeCommunity = communityItems.find((item) => item.id === activeCardMenuId);
+    if (!activeCommunity) {
+      setActiveCardMenuId(null);
+      return;
+    }
+    const isOwner =
+      Boolean(normalizedConnectedWallet) &&
+      (activeCommunity.ownerWallet || "").toLowerCase() === normalizedConnectedWallet;
+    if (!isOwner) {
+      setActiveCardMenuId(null);
+    }
+  }, [activeCardMenuId, communityItems, normalizedConnectedWallet]);
+
   const closeCreateModal = useCallback(
     (onClosed?: () => void) => {
       if (createModalPhase === "closed") {
@@ -670,11 +692,13 @@ export function CommunityListSearchFeed({
     [closeCreateModal, startCreateCardInsertionAnimation, toCommunityListItem]
   );
 
-  const renderCommunityTile = useCallback(
-    (community: CommunityListItem, extraClassName?: string) => {
+  const renderCommunityTile = (community: CommunityListItem, extraClassName?: string) => {
       const chainSet = Array.from(
         new Set(community.contracts.map((contract) => contract.chain).filter((chain) => chain))
       );
+      const isOwnedByConnectedWallet =
+        Boolean(normalizedConnectedWallet) &&
+        (community.ownerWallet || "").toLowerCase() === normalizedConnectedWallet;
       const createdBy = community.ownerWallet
         ? `created by ${shortenWallet(community.ownerWallet)}`
         : "created by unknown";
@@ -708,19 +732,21 @@ export function CommunityListSearchFeed({
             ref={activeCardMenuId === community.id ? communityCardMenuRef : null}
             style={{ position: "relative", width: "100%", height: "100%" }}
           >
-            <button
-              type="button"
-              style={communityCardMenuButtonStyle}
-              data-community-menu="true"
-              aria-label={`${community.name} actions`}
-              onClick={(event) => {
-                event.stopPropagation();
-                setActiveCardMenuId((prev) => (prev === community.id ? null : community.id));
-              }}
-            >
-              ☰
-            </button>
-            {activeCardMenuId === community.id ? (
+            {isOwnedByConnectedWallet ? (
+              <button
+                type="button"
+                style={communityCardMenuButtonStyle}
+                data-community-menu="true"
+                aria-label={`${community.name} actions`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setActiveCardMenuId((prev) => (prev === community.id ? null : community.id));
+                }}
+              >
+                ☰
+              </button>
+            ) : null}
+            {isOwnedByConnectedWallet && activeCardMenuId === community.id ? (
               <div style={communityCardMenuPanelStyle}>
                 <button
                   type="button"
@@ -835,9 +861,7 @@ export function CommunityListSearchFeed({
           </div>
         </div>
       );
-    },
-    [actionBusyId, agentLoading, agentPairsByCommunityId, openCommunity]
-  );
+    };
 
   const animatedItem =
     createCardAnimState.phase === "idle" ? null : createCardAnimState.item;
