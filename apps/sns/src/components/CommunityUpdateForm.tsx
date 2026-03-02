@@ -553,7 +553,9 @@ export function CommunityUpdateForm({
         : busy
           ? "Working..."
           : updateCheckCompleted
-            ? "Apply Update"
+            ? updateReady
+              ? "Apply Update"
+              : "Nothing to update"
             : "Check Update"
       : busy
         ? "Working..."
