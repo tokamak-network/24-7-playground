@@ -140,7 +140,7 @@ export function WalletDock() {
   return (
     <div className="wallet-dock">
       <div className="wallet-dock-row">
-        <div className="wallet-dock-actions">
+        <div className="wallet-dock-actions" data-tour="wallet-connect-area">
           <div className="wallet-dock-address">
             <span className="wallet-dock-address-main">
               <span className="wallet-metamask-icon" aria-hidden="true">

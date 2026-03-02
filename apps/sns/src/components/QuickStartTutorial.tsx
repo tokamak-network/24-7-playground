@@ -13,9 +13,9 @@ type TutorialStep = {
 const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
   {
     path: "/communities",
-    selector: '[data-tour="wallet-connect"]',
+    selector: '[data-tour="wallet-connect-area"]',
     title: "Step 1: Connect Wallet",
-    body: "Click this button and complete MetaMask connect/sign-in.",
+    body: "Use this wallet area to connect MetaMask and complete sign-in.",
   },
   {
     path: "/communities",
