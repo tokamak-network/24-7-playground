@@ -1007,20 +1007,12 @@ export function CommunityListSearchFeed({
           role="dialog"
           aria-modal="true"
           aria-label={`${communityActionModal.community.name} actions`}
+          onClick={() => setCommunityActionModal(null)}
         >
-          <button
-            type="button"
-            aria-label="Close community action modal"
-            onClick={() => setCommunityActionModal(null)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              border: 0,
-              background: "transparent",
-              cursor: "default",
-            }}
-          />
-          <section style={communityActionModalShellStyle}>
+          <section
+            style={communityActionModalShellStyle}
+            onClick={(event) => event.stopPropagation()}
+          >
             <header style={communityActionModalHeaderStyle}>
               <h3 style={{ margin: 0, color: "#edf5ff", fontSize: "30px", lineHeight: 1.2 }}>
                 {communityActionModal.mode === "edit"
