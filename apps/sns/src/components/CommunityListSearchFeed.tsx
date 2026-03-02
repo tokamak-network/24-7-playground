@@ -252,121 +252,132 @@ export function CommunityListSearchFeed({
       />
       {actionStatus ? <p className="status">{actionStatus}</p> : null}
 
-      {filteredItems.length ? (
-        <div className="community-tile-grid">
-          {filteredItems.map((community) => {
-            const chainSet = Array.from(
-              new Set(
-                community.contracts
-                  .map((contract) => contract.chain)
-                  .filter((chain) => chain)
-              )
-            );
-            const createdBy = community.ownerWallet
-              ? `created by ${shortenWallet(community.ownerWallet)}`
-              : "created by unknown";
-            const titleMeta = (
-              <>
-                {createdBy} · created at{" "}
-                <LocalDateText value={community.createdAt} mode="date" />
-              </>
-            );
+      <div className="community-tile-grid">
+        <div className="community-tile community-tile-create">
+          <Card
+            title="+ Create a new community"
+            description="Register your DApp community and contracts."
+          >
+            <div className="community-tile-actions">
+              <Link className="button button-block" href="/manage/communities">
+                Open Community Setup
+              </Link>
+            </div>
+          </Card>
+        </div>
+        {filteredItems.map((community) => {
+          const chainSet = Array.from(
+            new Set(
+              community.contracts
+                .map((contract) => contract.chain)
+                .filter((chain) => chain)
+            )
+          );
+          const createdBy = community.ownerWallet
+            ? `created by ${shortenWallet(community.ownerWallet)}`
+            : "created by unknown";
+          const titleMeta = (
+            <>
+              {createdBy} · created at{" "}
+              <LocalDateText value={community.createdAt} mode="date" />
+            </>
+          );
 
-            return (
-              <div key={community.id} className="community-tile">
-                <Card title={community.name} titleMeta={titleMeta}>
-                  <div className="community-description-rich">
-                    <ExpandableFormattedContent
-                      content={community.description || "No description provided."}
-                      className="is-compact"
-                      maxChars={280}
-                    />
-                  </div>
-                  <div className="meta">
-                    {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (
-                      <span className="badge" key={`${community.id}-${chain}`}>
-                        {chain}
-                      </span>
-                    ))}
-                    {community.status === "CLOSED" ? (
-                      <span className="badge">closed</span>
-                    ) : null}
-                    <span className="meta-text">
-                      {summarizeContracts(community.contracts)}
+          return (
+            <div key={community.id} className="community-tile">
+              <Card title={community.name} titleMeta={titleMeta}>
+                <div className="community-description-rich">
+                  <ExpandableFormattedContent
+                    content={community.description || "No description provided."}
+                    className="is-compact"
+                    maxChars={280}
+                  />
+                </div>
+                <div className="meta">
+                  {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (
+                    <span className="badge" key={`${community.id}-${chain}`}>
+                      {chain}
                     </span>
+                  ))}
+                  {community.status === "CLOSED" ? (
+                    <span className="badge">closed</span>
+                  ) : null}
+                  <span className="meta-text">
+                    {summarizeContracts(community.contracts)}
+                  </span>
+                </div>
+                <div className="community-stats">
+                  <div className="community-stat-item">
+                    <span className="community-stat-label">Threads</span>
+                    <strong className="community-stat-value">
+                      {community.threadCount}
+                    </strong>
                   </div>
-                  <div className="community-stats">
-                    <div className="community-stat-item">
-                      <span className="community-stat-label">Threads</span>
-                      <strong className="community-stat-value">
-                        {community.threadCount}
-                      </strong>
-                    </div>
-                    <div className="community-stat-item">
-                      <span className="community-stat-label">Reports</span>
-                      <strong className="community-stat-value">
-                        {community.reportCount}
-                      </strong>
-                    </div>
-                    <div className="community-stat-item">
-                      <span className="community-stat-label">Comments</span>
-                      <strong className="community-stat-value">
-                        {community.commentCount}
-                      </strong>
-                    </div>
-                    <div className="community-stat-item">
-                      <span className="community-stat-label">Registered agents</span>
-                      <strong className="community-stat-value">
-                        {community.registeredHandleCount}
-                      </strong>
-                    </div>
+                  <div className="community-stat-item">
+                    <span className="community-stat-label">Reports</span>
+                    <strong className="community-stat-value">
+                      {community.reportCount}
+                    </strong>
                   </div>
-                  <div className="community-tile-actions">
-                    <Link className="button button-block" href={`/sns/${community.slug}`}>
-                      View Community
-                    </Link>
-                    {agentPairsByCommunityId[community.id] ? (
-                      <div className="community-tile-inline-actions">
-                        <Link
-                          className="button button-secondary button-block"
-                          href="/manage/agents/"
-                        >
-                          Run My Agent
-                        </Link>
-                        <button
-                          type="button"
-                          className="button button-secondary button-danger button-block"
-                          onClick={() => void unregisterHandle(community)}
-                          disabled={actionBusyId === community.id || agentLoading}
-                        >
-                          {actionBusyId === community.id
-                            ? "Working..."
-                            : "Unregister My Agent"}
-                        </button>
-                      </div>
-                    ) : (
+                  <div className="community-stat-item">
+                    <span className="community-stat-label">Comments</span>
+                    <strong className="community-stat-value">
+                      {community.commentCount}
+                    </strong>
+                  </div>
+                  <div className="community-stat-item">
+                    <span className="community-stat-label">Registered agents</span>
+                    <strong className="community-stat-value">
+                      {community.registeredHandleCount}
+                    </strong>
+                  </div>
+                </div>
+                <div className="community-tile-actions">
+                  <Link className="button button-block" href={`/sns/${community.slug}`}>
+                    View Community
+                  </Link>
+                  {agentPairsByCommunityId[community.id] ? (
+                    <div className="community-tile-inline-actions">
+                      <Link
+                        className="button button-secondary button-block"
+                        href="/manage/agents/"
+                      >
+                        Run My Agent
+                      </Link>
                       <button
                         type="button"
-                        className="button button-secondary button-block"
-                        onClick={() => void registerHandle(community)}
-                        disabled={
-                          community.status === "CLOSED" ||
-                          actionBusyId === community.id ||
-                          agentLoading
-                        }
+                        className="button button-secondary button-danger button-block"
+                        onClick={() => void unregisterHandle(community)}
+                        disabled={actionBusyId === community.id || agentLoading}
                       >
                         {actionBusyId === community.id
                           ? "Working..."
-                          : "Register My Agent"}
+                          : "Unregister My Agent"}
                       </button>
-                    )}
-                  </div>
-                </Card>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="button button-secondary button-block"
+                      onClick={() => void registerHandle(community)}
+                      disabled={
+                        community.status === "CLOSED" ||
+                        actionBusyId === community.id ||
+                        agentLoading
+                      }
+                    >
+                      {actionBusyId === community.id
+                        ? "Working..."
+                        : "Register My Agent"}
+                    </button>
+                  )}
+                </div>
+              </Card>
+            </div>
+          );
+        })}
+      </div>
+      {filteredItems.length ? null : (
         <p className="empty">No matching communities.</p>
       )}
     </div>
