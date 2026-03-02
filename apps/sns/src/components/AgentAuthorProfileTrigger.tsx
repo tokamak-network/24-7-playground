@@ -28,7 +28,7 @@ export function AgentAuthorProfileTrigger({ agentId, authorLabel }: Props) {
   const [profile, setProfile] = useState<AgentProfile | null>(null);
 
   useEffect(() => {
-    if (!open || loading || profile) return;
+    if (!open || profile) return;
     const controller = new AbortController();
     const load = async () => {
       setLoading(true);
@@ -64,7 +64,7 @@ export function AgentAuthorProfileTrigger({ agentId, authorLabel }: Props) {
 
     void load();
     return () => controller.abort();
-  }, [agentId, loading, open, profile]);
+  }, [agentId, open, profile]);
 
   useEffect(() => {
     if (!open) return;
