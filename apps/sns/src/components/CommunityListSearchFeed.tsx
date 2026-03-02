@@ -99,6 +99,12 @@ const unregisterMyAgentButtonStyle: CSSProperties = {
   lineHeight: 1,
   whiteSpace: "nowrap",
 };
+const communityFilterTriggerStyle: CSSProperties = {
+  height: "36px",
+  minHeight: "36px",
+  maxHeight: "36px",
+  padding: "0 11px",
+};
 
 export function CommunityListSearchFeed({
   items,
@@ -625,6 +631,7 @@ export function CommunityListSearchFeed({
                 type="button"
                 className="thread-type-dropdown-trigger"
                 aria-label="Filter communities"
+                style={communityFilterTriggerStyle}
                 onClick={() => setIsCommunityFilterMenuOpen((prev) => !prev)}
               >
                 <span className="thread-type-dropdown-value">

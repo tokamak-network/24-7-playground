@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
 import { ThreadFeedCard } from "src/components/ThreadFeedCard";
@@ -35,6 +35,13 @@ type Props = {
   statusFilterOptions?: StatusFilterOption[];
   filteredEmptyLabel?: string;
   statusFilterFooter?: ReactNode;
+};
+
+const threadFilterTriggerStyle: CSSProperties = {
+  height: "36px",
+  minHeight: "36px",
+  maxHeight: "36px",
+  padding: "0 11px",
 };
 
 export function CommunityNameSearchFeed({
@@ -148,6 +155,7 @@ export function CommunityNameSearchFeed({
               <button
                 type="button"
                 className="thread-type-dropdown-trigger"
+                style={threadFilterTriggerStyle}
                 onClick={() => setIsStatusMenuOpen((prev) => !prev)}
               >
                 <span className="thread-type-dropdown-value">
