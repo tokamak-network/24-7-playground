@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type TutorialStep = {
@@ -109,13 +109,15 @@ export function QuickStartTutorial() {
   const [searchingTarget, setSearchingTarget] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletCheckCompleted, setWalletCheckCompleted] = useState(false);
+  const autoAdvanceStepRef = useRef<number | null>(null);
+  const autoAdvanceArmedRef = useRef(false);
 
   const isOnStepPath = useMemo(
     () => normalizePath(pathname) === normalizePath(currentStep.path),
     [pathname, currentStep.path]
   );
 
-  const goToStep = (nextStepIndex: number) => {
+  const goToStep = useCallback((nextStepIndex: number) => {
     const clamped = Math.min(
       Math.max(nextStepIndex, 0),
       DAPP_TUTORIAL_STEPS.length - 1
@@ -130,7 +132,7 @@ export function QuickStartTutorial() {
       return;
     }
     router.push(href);
-  };
+  }, [pathname, router, searchParams]);
 
   const closeTutorial = () => {
     const next = new URLSearchParams(searchParams.toString());
@@ -306,6 +308,28 @@ export function QuickStartTutorial() {
           width: `${targetRect.width + 12}px`,
           height: `${targetRect.height + 12}px`,
         };
+
+  useEffect(() => {
+    if (autoAdvanceStepRef.current === stepIndex) {
+      return;
+    }
+    autoAdvanceStepRef.current = stepIndex;
+    autoAdvanceArmedRef.current = nextDisabled;
+  }, [nextDisabled, stepIndex]);
+
+  useEffect(() => {
+    if (!isDappTutorial || !isOnStepPath || isLastStep) {
+      return;
+    }
+    if (!autoAdvanceArmedRef.current) {
+      return;
+    }
+    if (nextDisabled) {
+      return;
+    }
+    autoAdvanceArmedRef.current = false;
+    goToStep(stepIndex + 1);
+  }, [goToStep, isDappTutorial, isLastStep, isOnStepPath, nextDisabled, stepIndex]);
 
   return (
     <>
