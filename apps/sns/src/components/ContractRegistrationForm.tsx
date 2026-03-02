@@ -236,71 +236,73 @@ export function ContractRegistrationForm({ onSuccess }: ContractRegistrationForm
         void submit();
       }}
     >
-      <div data-tour="dapp-service-name">
+      <div data-tour="dapp-registration-fields">
+        <div data-tour="dapp-service-name">
+          <Field
+            label="Service Name"
+            placeholder="Vault, Exchange, Lending"
+            onChange={(event) => setServiceName(event.currentTarget.value)}
+            value={serviceName}
+          />
+        </div>
         <Field
-          label="Service Name"
-          placeholder="Vault, Exchange, Lending"
-          onChange={(event) => setServiceName(event.currentTarget.value)}
-          value={serviceName}
+          label="Service Description (Optional)"
+          placeholder="Describe what this Ethereum service does"
+          as="textarea"
+          onChange={(event) => setDescription(event.currentTarget.value)}
+          value={description}
         />
-      </div>
-      <Field
-        label="Service Description (Optional)"
-        placeholder="Describe what this Ethereum service does"
-        as="textarea"
-        onChange={(event) => setDescription(event.currentTarget.value)}
-        value={description}
-      />
 
-      <div className="field">
-        <label>Service Contracts</label>
-        <div className="contract-entry-list">
-          {contracts.map((contract, index) => (
-            <div className="contract-entry-grid" key={`contract-entry-${index}`}>
-              <input
-                placeholder="Contract Name (optional)"
-                value={contract.name}
-                onChange={(event) => updateContract(index, "name", event.currentTarget.value)}
-              />
-              <input
-                placeholder="Contract Address (0x...)"
-                value={contract.address}
-                data-tour="dapp-contract-address-required"
-                onChange={(event) =>
-                  updateContract(index, "address", event.currentTarget.value)
-                }
-              />
-              <button
-                type="button"
-                className="button button-secondary contract-entry-remove"
-                onClick={() => removeContractRow(index)}
-                disabled={contracts.length <= 1 || busy}
-              >
-                Remove
-              </button>
-            </div>
-          ))}
+        <div className="field">
+          <label>Service Contracts</label>
+          <div className="contract-entry-list">
+            {contracts.map((contract, index) => (
+              <div className="contract-entry-grid" key={`contract-entry-${index}`}>
+                <input
+                  placeholder="Contract Name (optional)"
+                  value={contract.name}
+                  onChange={(event) => updateContract(index, "name", event.currentTarget.value)}
+                />
+                <input
+                  placeholder="Contract Address (0x...)"
+                  value={contract.address}
+                  data-tour="dapp-contract-address-required"
+                  onChange={(event) =>
+                    updateContract(index, "address", event.currentTarget.value)
+                  }
+                />
+                <button
+                  type="button"
+                  className="button button-secondary contract-entry-remove"
+                  onClick={() => removeContractRow(index)}
+                  disabled={contracts.length <= 1 || busy}
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="contract-entry-actions">
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={addContractRow}
+              disabled={busy}
+            >
+              Add Contract
+            </button>
+          </div>
         </div>
-        <div className="contract-entry-actions">
-          <button
-            type="button"
-            className="button button-secondary"
-            onClick={addContractRow}
-            disabled={busy}
-          >
-            Add Contract
-          </button>
-        </div>
-      </div>
 
-      <Field label="Target Chain" as="select" options={["Sepolia"]} />
-      <Field
-        label="GitHub Repository URL (Optional. By providing it, you consent to AI ​​agents creating GitHub issues.)"
-        placeholder="https://github.com/owner/repository"
-        onChange={(event) => setGithubRepositoryUrl(event.currentTarget.value)}
-        value={githubRepositoryUrl}
-      />
-      <div className="status">{status}</div>
+        <Field label="Target Chain" as="select" options={["Sepolia"]} />
+        <Field
+          label="GitHub Repository URL (Optional. By providing it, you consent to AI ​​agents creating GitHub issues.)"
+          placeholder="https://github.com/owner/repository"
+          onChange={(event) => setGithubRepositoryUrl(event.currentTarget.value)}
+          value={githubRepositoryUrl}
+        />
+        <div className="status">{status}</div>
+      </div>
       <button
         type="submit"
         className="button"

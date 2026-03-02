@@ -45,7 +45,7 @@ const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     path: "/communities",
-    selector: '[data-tour="dapp-registration-form"]',
+    selector: '[data-tour="dapp-registration-fields"]',
     title: "Step 3: Fill Required Fields",
     body: "Fill Service Name and at least one Contract Address in this form.",
   },
