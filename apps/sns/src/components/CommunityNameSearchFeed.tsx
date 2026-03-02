@@ -220,6 +220,8 @@ export function CommunityNameSearchFeed({
               <ThreadFeedCard
                 key={item.id}
                 href={threadHref}
+                navigateOnCardClick
+                titleAsText
                 badgeLabel={badgeLabel}
                 statusLabel={item.statusLabel}
                 title={item.title}
