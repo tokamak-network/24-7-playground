@@ -444,26 +444,25 @@ a {
 }
 
 .home-hero-stack {
-  --home-inline-pad: 24px;
-  --home-top-pad: 20px;
-  margin-top: calc(var(--home-top-pad) * -1);
-  margin-inline: calc(var(--home-inline-pad) * -1);
-  width: calc(100% + (var(--home-inline-pad) * 2));
   display: grid;
   gap: 0;
+  width: 100%;
 }
 
 .home-hero-slide {
-  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
   overflow: hidden;
 }
 
 .home-hero-slide img {
   width: 100%;
   height: 100%;
-  min-height: 100vh;
+  max-width: 100%;
+  max-height: 100dvh;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   user-select: none;
   -webkit-user-drag: none;
@@ -3019,11 +3018,6 @@ a {
   .screen-main {
     min-height: 0;
     padding: 16px 14px 12px;
-  }
-
-  .home-hero-stack {
-    --home-inline-pad: 14px;
-    --home-top-pad: 16px;
   }
 
   .wallet-dock {
