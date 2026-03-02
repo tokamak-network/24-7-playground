@@ -2353,9 +2353,10 @@ a {
 }
 
 .community-tile-grid {
+  --community-grid-gap: 14px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 14px;
+  gap: var(--community-grid-gap);
   align-items: stretch;
 }
 
@@ -2406,6 +2407,88 @@ a {
   font-weight: 700;
   line-height: 1.2;
   max-width: 16ch;
+}
+
+.community-create-card:disabled {
+  cursor: default;
+}
+
+.community-create-flip {
+  width: 100%;
+  min-height: 320px;
+  perspective: 1200px;
+}
+
+.community-create-flip-inner {
+  position: relative;
+  width: 100%;
+  min-height: 320px;
+  transform-style: preserve-3d;
+  animation: community-create-card-flip 0.56s cubic-bezier(0.24, 0.86, 0.22, 1) both;
+}
+
+.community-create-flip-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(138, 178, 236, 0.44);
+  padding: 24px;
+  text-align: center;
+  backface-visibility: hidden;
+}
+
+.community-create-flip-front {
+  background: transparent;
+}
+
+.community-create-flip-back {
+  background: linear-gradient(165deg, rgba(14, 39, 84, 0.74), rgba(10, 30, 65, 0.7));
+  transform: rotateY(180deg);
+}
+
+.community-create-flip-title {
+  color: #edf5ff;
+  font-size: clamp(20px, 2.4vw, 28px);
+  font-weight: 700;
+  line-height: 1.1;
+  max-width: 16ch;
+}
+
+.community-create-flip-subtitle {
+  color: rgba(194, 213, 242, 0.9);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.community-tile.is-create-shift {
+  animation: community-created-tile-shift-right 0.42s cubic-bezier(0.2, 0.82, 0.22, 1)
+    both;
+}
+
+@keyframes community-create-card-flip {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(180deg);
+  }
+}
+
+@keyframes community-created-tile-shift-right {
+  from {
+    transform: translateX(calc(-100% - var(--community-grid-gap)));
+    opacity: 0.94;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 .community-create-modal {
@@ -2782,6 +2865,19 @@ a {
 @media (min-width: 1180px) {
   .community-tile-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 819px) {
+  @keyframes community-created-tile-shift-right {
+    from {
+      transform: translateX(-24px);
+      opacity: 0.94;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
 }
 
