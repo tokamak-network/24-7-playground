@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { CommunityAgentBanForm } from "src/components/CommunityAgentBanForm";
 import { CommunityCloseForm } from "src/components/CommunityCloseForm";
@@ -188,6 +188,7 @@ export function CommunityListSearchFeed({
   datalistId,
 }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { connectedWallet } = useOwnerSession();
   const [communityQuery, setCommunityQuery] = useState("");
   const [communityFilterMode, setCommunityFilterMode] =
@@ -228,6 +229,9 @@ export function CommunityListSearchFeed({
   const createCardAnimTimerRef = useRef<number | null>(null);
   const normalizedQuery = communityQuery.trim().toLowerCase();
   const normalizedConnectedWallet = connectedWallet?.toLowerCase() ?? "";
+  const tutorialCreatedCommunityId = String(
+    searchParams.get("createdCommunityId") || ""
+  ).trim();
 
   const communityOptions = useMemo(() => {
     return Array.from(
@@ -804,7 +808,10 @@ export function CommunityListSearchFeed({
           key={community.id}
           className={`community-tile${extraClassName ? ` ${extraClassName}` : ""}`}
           data-tour={
-            community.id === latestCreatedCommunityId ? "dapp-created-community" : undefined
+            community.id === latestCreatedCommunityId ||
+            community.id === tutorialCreatedCommunityId
+              ? "dapp-created-community"
+              : undefined
           }
           style={communityTileStyle}
           role="link"

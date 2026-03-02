@@ -104,6 +104,9 @@ export function QuickStartTutorial() {
   const tutorialMode = searchParams.get("tutorial");
   const isDappTutorial = tutorialMode === "dapp";
   const stepIndex = parseStep(searchParams.get("step"));
+  const createdCommunityIdFromQuery = String(
+    searchParams.get("createdCommunityId") || ""
+  ).trim();
   const currentStep = DAPP_TUTORIAL_STEPS[stepIndex];
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
@@ -118,6 +121,7 @@ export function QuickStartTutorial() {
   const [isCommunityCreated, setIsCommunityCreated] = useState(false);
   const [communityCreatedCheckCompleted, setCommunityCreatedCheckCompleted] =
     useState(false);
+  const [createdCommunityId, setCreatedCommunityId] = useState("");
   const autoAdvanceStepRef = useRef<number | null>(null);
   const previousNextDisabledRef = useRef<boolean | null>(null);
   const autoAdvancedOnCurrentStepRef = useRef(false);
@@ -146,20 +150,34 @@ export function QuickStartTutorial() {
     const next = new URLSearchParams(searchParams.toString());
     next.set("tutorial", "dapp");
     next.set("step", String(clamped));
+    if (createdCommunityId.trim()) {
+      next.set("createdCommunityId", createdCommunityId.trim());
+    }
     const href = buildUrl(destination.path, next);
     if (normalizePath(pathname) === normalizePath(destination.path)) {
       router.replace(href, { scroll: false });
       return;
     }
     router.push(href);
-  }, [pathname, router, searchParams]);
+  }, [createdCommunityId, pathname, router, searchParams]);
 
   const closeTutorial = () => {
     const next = new URLSearchParams(searchParams.toString());
     next.delete("tutorial");
     next.delete("step");
+    next.delete("createdCommunityId");
     router.replace(buildUrl(pathname, next), { scroll: false });
   };
+
+  useEffect(() => {
+    if (!createdCommunityIdFromQuery) {
+      return;
+    }
+    if (createdCommunityIdFromQuery === createdCommunityId) {
+      return;
+    }
+    setCreatedCommunityId(createdCommunityIdFromQuery);
+  }, [createdCommunityId, createdCommunityIdFromQuery]);
 
   useEffect(() => {
     if (!isDappTutorial) {
@@ -171,6 +189,15 @@ export function QuickStartTutorial() {
     if (!isOnStepPath) {
       setTargetElement(null);
       setTargetRect(null);
+      setSearchingTarget(false);
+      return;
+    }
+
+    if (
+      targetElement &&
+      targetElement.isConnected &&
+      targetElement.matches(currentStep.selector)
+    ) {
       setSearchingTarget(false);
       return;
     }
@@ -212,7 +239,7 @@ export function QuickStartTutorial() {
         window.clearTimeout(timer);
       }
     };
-  }, [currentStep.selector, isDappTutorial, isOnStepPath]);
+  }, [currentStep.selector, isDappTutorial, isOnStepPath, targetElement]);
 
   useEffect(() => {
     if (!targetElement) {
@@ -223,6 +250,11 @@ export function QuickStartTutorial() {
     targetElement.classList.add("quickstart-tour-target");
 
     const refresh = () => {
+      if (!targetElement.isConnected) {
+        setTargetElement(null);
+        setTargetRect(null);
+        return;
+      }
       setTargetRect(targetElement.getBoundingClientRect());
     };
 
@@ -236,11 +268,20 @@ export function QuickStartTutorial() {
       resizeObserver.observe(targetElement);
     }
 
+    const domObserver = new MutationObserver(() => {
+      refresh();
+    });
+    domObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
     return () => {
       targetElement.classList.remove("quickstart-tour-target");
       window.removeEventListener("resize", refresh);
       window.removeEventListener("scroll", refresh, true);
       resizeObserver?.disconnect();
+      domObserver.disconnect();
     };
   }, [targetElement]);
 
@@ -415,7 +456,18 @@ export function QuickStartTutorial() {
       setCommunityCreatedCheckCompleted(true);
     };
 
-    const handleCreated = () => {
+    const handleCreated = (event: Event) => {
+      const detailCommunityId =
+        event instanceof CustomEvent &&
+        event.detail &&
+        typeof event.detail === "object" &&
+        "communityId" in event.detail &&
+        typeof (event.detail as { communityId?: unknown }).communityId === "string"
+          ? String((event.detail as { communityId?: unknown }).communityId || "").trim()
+          : "";
+      if (detailCommunityId) {
+        setCreatedCommunityId(detailCommunityId);
+      }
       setIsCommunityCreated(true);
       setCommunityCreatedCheckCompleted(true);
     };
