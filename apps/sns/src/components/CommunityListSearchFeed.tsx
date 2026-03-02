@@ -348,7 +348,7 @@ export function CommunityListSearchFeed({
               <span className="community-create-plus" aria-hidden>
                 +
               </span>
-              <span className="community-create-label">Create a new community</span>
+              <span className="community-create-label">Create New Community</span>
             </button>
           </div>
           {filteredItems.map((community) => {

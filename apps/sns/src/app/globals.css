@@ -2436,9 +2436,9 @@ a {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   border-radius: 20px;
-  border: 1px solid rgba(182, 204, 236, 0.88);
-  background: linear-gradient(165deg, rgba(246, 250, 255, 0.97), rgba(239, 246, 255, 0.95));
-  box-shadow: 0 16px 34px rgba(2, 10, 30, 0.32);
+  border: 1px solid rgba(142, 184, 243, 0.5);
+  background: linear-gradient(160deg, rgba(8, 25, 58, 0.96), rgba(6, 19, 45, 0.94));
+  box-shadow: 0 20px 44px rgba(2, 10, 30, 0.56);
   overflow: hidden;
   transition:
     top 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
@@ -2454,7 +2454,7 @@ a {
   justify-content: space-between;
   gap: 12px;
   padding: 14px 18px 11px;
-  border-bottom: 1px solid rgba(187, 204, 228, 0.92);
+  border-bottom: 1px solid rgba(136, 178, 238, 0.36);
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -2462,21 +2462,26 @@ a {
 
 .community-create-modal-head h3 {
   margin: 0;
-  color: #152c4c;
+  color: #edf5ff;
   font-size: clamp(18px, 2vw, 24px);
   line-height: 1.15;
 }
 
 .community-create-modal-close {
-  border: 1px solid rgba(157, 181, 215, 0.82);
-  background: #f5f9ff;
-  color: #2a4670;
+  border: 1px solid rgba(140, 185, 248, 0.56);
+  background: rgba(11, 30, 67, 0.7);
+  color: #e6f2ff;
   border-radius: 999px;
   padding: 7px 13px;
   min-height: 34px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.community-create-modal-close:hover {
+  border-color: rgba(166, 206, 255, 0.74);
+  background: rgba(16, 42, 89, 0.82);
 }
 
 .community-create-modal-body {
@@ -2514,6 +2519,46 @@ a {
 
 .community-create-modal.is-open .community-create-modal-body {
   transition-delay: 0.18s;
+}
+
+.community-create-modal .field label {
+  color: rgba(188, 208, 235, 0.92);
+}
+
+.community-create-modal :is(.field input, .field textarea, .field select) {
+  border-color: rgba(137, 182, 246, 0.52);
+  background: rgba(10, 29, 61, 0.78);
+  color: #ecf4ff;
+}
+
+.community-create-modal :is(.field input, .field textarea, .field select)::placeholder {
+  color: rgba(168, 191, 224, 0.82);
+}
+
+.community-create-modal :is(.field input, .field textarea, .field select):focus {
+  border-color: rgba(164, 202, 252, 0.78);
+  box-shadow: 0 0 0 3px rgba(64, 126, 217, 0.3);
+  background: rgba(11, 33, 70, 0.92);
+  color: #ffffff;
+}
+
+.community-create-modal .button {
+  color: #eef6ff;
+  border: 1px solid rgba(137, 183, 246, 0.56);
+  background: linear-gradient(150deg, rgba(19, 49, 97, 0.9), rgba(11, 30, 67, 0.84));
+  box-shadow: 0 12px 24px rgba(3, 11, 28, 0.38);
+}
+
+.community-create-modal .button:hover {
+  border-color: rgba(162, 200, 252, 0.74);
+  background: linear-gradient(150deg, rgba(26, 62, 118, 0.92), rgba(13, 38, 80, 0.86));
+}
+
+.community-create-modal .button.button-secondary {
+  color: #dcecff;
+  border-color: rgba(125, 174, 240, 0.52);
+  background: linear-gradient(145deg, rgba(13, 34, 72, 0.78), rgba(10, 28, 60, 0.72));
+  box-shadow: none;
 }
 
 .community-tile .card {
