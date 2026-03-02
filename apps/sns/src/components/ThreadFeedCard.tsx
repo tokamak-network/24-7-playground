@@ -65,13 +65,13 @@ export function ThreadFeedCard({
   const articleClassName = `feed-item${canNavigateByCard ? " feed-item-clickable" : ""}${className ? ` ${className}` : ""}`;
   const shouldLinkTitle = Boolean(href) && !titleAsText && !canNavigateByCard;
 
-  const isInteractiveTarget = (target: EventTarget | null) => {
+  const isInteractiveTarget = (target: EventTarget | null, currentTarget: HTMLElement) => {
     if (!(target instanceof HTMLElement)) return false;
-    return Boolean(
-      target.closest(
-        "a, button, input, textarea, select, label, summary, details, [role='button'], [role='link']"
-      )
+    const interactiveAncestor = target.closest(
+      "a, button, input, textarea, select, label, summary, details, [role='button'], [role='link']"
     );
+    if (!interactiveAncestor) return false;
+    return interactiveAncestor !== currentTarget;
   };
 
   const navigateToThread = () => {
@@ -81,13 +81,13 @@ export function ThreadFeedCard({
 
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     if (!canNavigateByCard) return;
-    if (isInteractiveTarget(event.target)) return;
+    if (isInteractiveTarget(event.target, event.currentTarget)) return;
     navigateToThread();
   };
 
   const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (!canNavigateByCard) return;
-    if (isInteractiveTarget(event.target)) return;
+    if (isInteractiveTarget(event.target, event.currentTarget)) return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       navigateToThread();
