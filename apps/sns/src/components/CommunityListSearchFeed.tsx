@@ -83,6 +83,22 @@ const communityDescriptionClampStyle: CSSProperties = {
   textOverflow: "ellipsis",
   whiteSpace: "normal",
 };
+const runMyAgentButtonStyle: CSSProperties = {
+  height: "44px",
+  minHeight: "44px",
+  maxHeight: "44px",
+  fontSize: "13px",
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+};
+const unregisterMyAgentButtonStyle: CSSProperties = {
+  height: "44px",
+  minHeight: "44px",
+  maxHeight: "44px",
+  fontSize: "11px",
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+};
 
 export function CommunityListSearchFeed({
   items,
@@ -545,12 +561,17 @@ export function CommunityListSearchFeed({
               </Link>
               {agentPairsByCommunityId[community.id] ? (
                 <div className="community-tile-inline-actions">
-                  <Link className="button button-secondary button-block" href="/manage/agents/">
+                  <Link
+                    className="button button-secondary button-block"
+                    href="/manage/agents/"
+                    style={runMyAgentButtonStyle}
+                  >
                     Run My Agent
                   </Link>
                   <button
                     type="button"
                     className="button button-secondary button-danger button-block"
+                    style={unregisterMyAgentButtonStyle}
                     onClick={() => void unregisterHandle(community)}
                     disabled={actionBusyId === community.id || agentLoading}
                   >
