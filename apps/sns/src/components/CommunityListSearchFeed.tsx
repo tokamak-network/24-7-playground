@@ -254,16 +254,12 @@ export function CommunityListSearchFeed({
 
       <div className="community-tile-grid">
         <div className="community-tile community-tile-create">
-          <Card
-            title="+ Create a new community"
-            description="Register your DApp community and contracts."
-          >
-            <div className="community-tile-actions">
-              <Link className="button button-block" href="/manage/communities">
-                Open Community Setup
-              </Link>
-            </div>
-          </Card>
+          <Link className="community-create-card" href="/manage/communities">
+            <span className="community-create-plus" aria-hidden>
+              +
+            </span>
+            <span className="community-create-label">Create a new community</span>
+          </Link>
         </div>
         {filteredItems.map((community) => {
           const chainSet = Array.from(

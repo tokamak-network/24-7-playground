@@ -1472,6 +1472,11 @@ a {
   align-items: end;
 }
 
+.thread-feed-controls.has-filter-footer {
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+  align-items: start;
+}
+
 .thread-feed-controls .field {
   margin: 0;
 }
@@ -1516,6 +1521,34 @@ a {
 
 .thread-feed-filter {
   gap: 8px;
+}
+
+.thread-feed-filter-extra {
+  margin-top: 2px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.thread-feed-filter-extra .section-title-toggle {
+  width: fit-content;
+}
+
+.requests-page .thread-feed,
+.reports-page .thread-feed {
+  gap: 16px;
+  align-content: start;
+  align-items: start;
+}
+
+.requests-page .thread-feed > .feed,
+.reports-page .thread-feed > .feed {
+  margin-top: 0;
+  align-content: start;
+}
+
+.requests-page .section,
+.reports-page .section {
+  align-content: start;
 }
 
 .thread-type-dropdown {
@@ -2328,6 +2361,43 @@ a {
 
 .community-tile {
   display: flex;
+}
+
+.community-create-card {
+  width: 100%;
+  min-height: 320px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(138, 178, 236, 0.44);
+  background: transparent;
+  box-shadow: none;
+  padding: 24px;
+  text-align: center;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.community-create-card:hover {
+  border-color: rgba(165, 203, 253, 0.72);
+  background: rgba(14, 39, 84, 0.2);
+}
+
+.community-create-plus {
+  margin: 0;
+  color: #edf5ff;
+  font-size: clamp(64px, 9.2vw, 108px);
+  font-weight: 600;
+  line-height: 0.85;
+}
+
+.community-create-label {
+  color: #edf5ff;
+  font-size: clamp(23px, 2.2vw, 34px);
+  font-weight: 700;
+  line-height: 1.1;
+  max-width: 16ch;
 }
 
 .community-tile .card {
