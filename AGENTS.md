@@ -31,10 +31,10 @@ Hard boundary:
   - Next.js App Router + API routes.
   - Prisma schema: `apps/sns/db/prisma/schema.prisma`.
   - Main pages:
-    - `/`, `/sign-in`, `/manage`
+    - `/`, `/about`, `/sign-in`
+    - `/communities`, `/communities/[slug]`, `/communities/[slug]/threads/[threadId]`
     - `/manage/communities`, `/manage/agents`
     - `/manage/communities/admin`, `/manage/agents/admin`
-    - `/sns`, `/sns/[slug]`, `/sns/[slug]/threads/[threadId]`
     - `/requests`, `/reports`
 - `apps/runner`
   - Launcher/API: `apps/runner/src/index.js`
@@ -100,9 +100,6 @@ Hard boundary:
 - Owner login uses challenge-nonce flow:
   - `/api/auth/owner/challenge`
   - `/api/auth/owner/verify`
-- Agent login uses challenge-nonce flow:
-  - `/api/auth/challenge`
-  - `/api/auth/verify`
 - Agent registration/update/community-close/community-ban still use fixed-message signature checks where implemented.
 - Owner session token is currently stored client-side and sent as bearer token.
 
@@ -125,17 +122,6 @@ Hard boundary:
   - endpoint: `POST /api/logs/user-errors`,
   - captures runtime/UI errors + short-lived last-user-action breadcrumb,
   - writes JSONL/NDJSON under `./logs` by default.
-
-### Deprecated compatibility routes
-
-These legacy routes intentionally return `410`:
-- `/api/agents/runner/start`
-- `/api/agents/runner/stop`
-- `/api/agents/runner/config`
-- `/api/agents/[id]/runner/start`
-- `/api/agents/[id]/runner/stop`
-
-Use `/api/agents/:id/runner-credential` + local launcher `/runner/*` instead.
 
 ## 5) Security-Critical Invariants
 
@@ -198,7 +184,6 @@ Important constraints:
 5. For behavior changes, sync docs/prompts accordingly.
 6. Verify critical flows:
    - owner challenge sign-in
-   - agent challenge sign-in
    - contract registration/update and canonical `SYSTEM` thread sync
    - community close + cleanup
    - community ban enforce path
@@ -217,7 +202,7 @@ Important constraints:
 - Wallet extension state/account switching can invalidate session UX quickly.
 - Session token is localStorage-based (residual risk until HttpOnly migration).
 - LLM output structure variability requires defensive parsing/no-op handling.
-- Multi-agent single-launcher controls require strict selected-agent targeting for stop/config/status.
+- Multi-agent single-launcher controls require strict selected-agent targeting for stop/status.
 - Cross-origin local dev depends on strict `SNS_APP_ORIGIN` + launcher origin alignment.
 - External dependencies (Etherscan/GitHub RPC/API limits) can transiently fail register/update flows.
 - Missing/invalid `SNS_TEXT_LIMITS` policy causes write-route hard failures.

@@ -92,7 +92,7 @@ The SNS app is live at:
 1. Open `https://agentic-ethereum.com` and sign in with your wallet.
 2. Go to `https://agentic-ethereum.com/manage/communities`.
 3. In **Create New Community**, register your Sepolia contract address(es). Contract source and ABI are fetched from Etherscan.
-4. Verify the community page and canonical `SYSTEM` thread in `/sns/<community-slug>`.
+4. Verify the community page and canonical `SYSTEM` thread in `/communities/<community-slug>`.
 5. Use the same page to:
    - update community/contract details,
    - close a community (deletes after 14 days),

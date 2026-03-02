@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
-const fs = require("node:fs");
 const http = require("node:http");
-const path = require("node:path");
 const crypto = require("node:crypto");
 const { RunnerEngine } = require("./engine");
 const {
@@ -271,79 +269,6 @@ class MultiAgentRunnerManager {
     }
     return this.getStatus();
   }
-
-  updateConfig(configPatch) {
-    const requestedAgentId = normalizeAgentId(configPatch && configPatch.agentId);
-    const active = this.#activeStatuses();
-    const agentId =
-      requestedAgentId || (active.length === 1 ? active[0].agentId : "");
-    if (!agentId) {
-      throw new Error("agentId is required for /runner/config when multiple agents are running");
-    }
-    const engine = this.engines.get(agentId);
-    if (!engine || !engine.getStatus().running) {
-      throw new Error(`Runner is not running for agent ${agentId}`);
-    }
-    engine.updateConfig(configPatch);
-    return this.getStatus({ agentId });
-  }
-
-  async runOnceWithConfig(configInput) {
-    const engine = new RunnerEngine(this.logger);
-    return engine.runOnceWithConfig(configInput);
-  }
-
-  async runOnce(options = {}) {
-    const agentId = normalizeAgentId(options.agentId);
-    if (agentId) {
-      const engine = this.engines.get(agentId);
-      if (!engine || !engine.getStatus().running) {
-        throw new Error(`Runner is not running for agent ${agentId}`);
-      }
-      return engine.runOnce();
-    }
-
-    const active = this.#activeStatuses();
-    if (!active.length) {
-      return {
-        ok: true,
-        skipped: true,
-        reason: "No running agents",
-        results: [],
-      };
-    }
-
-    const results = await Promise.all(
-      active.map(async (entry) => {
-        try {
-          const engine = this.engines.get(entry.agentId);
-          if (!engine) {
-            return {
-              agentId: entry.agentId,
-              ok: false,
-              error: "Runner engine not available",
-            };
-          }
-          const result = await engine.runOnce();
-          return {
-            agentId: entry.agentId,
-            ok: Boolean(result && result.ok),
-            result,
-          };
-        } catch (error) {
-          return {
-            agentId: entry.agentId,
-            ok: false,
-            error: toErrorMessage(error, "run-once failed"),
-          };
-        }
-      })
-    );
-    return {
-      ok: results.every((item) => item.ok),
-      results,
-    };
-  }
 }
 
 async function startServer(options) {
@@ -509,52 +434,6 @@ async function startServer(options) {
         return;
       }
 
-      if (request.method === "POST" && route === "/runner/config") {
-        const body = await readJsonBody(request);
-        const nextStatus = manager.updateConfig(body.config || body);
-        logSummary(
-          console,
-          `launcher config updated (route=${route}, method=${request.method})`
-        );
-        jsonResponse(
-          response,
-          200,
-          {
-            ok: true,
-            message: "Runner config updated",
-            status: nextStatus,
-          },
-          { route, method: request.method, body, allowedOrigin }
-        );
-        return;
-      }
-
-      if (request.method === "POST" && route === "/runner/run-once") {
-        const body = await readJsonBody(request);
-        const requestedAgentId =
-          normalizeAgentId((body && body.agentId) || searchParams.get("agentId"));
-        const result = body && (body.config || body.snsBaseUrl)
-          ? await manager.runOnceWithConfig(body.config || body)
-          : await manager.runOnce(
-              requestedAgentId ? { agentId: requestedAgentId } : {}
-            );
-        logSummary(
-          console,
-          `launcher run-once completed (route=${route}, method=${request.method}, ok=${Boolean(result && result.ok)})`
-        );
-        jsonResponse(
-          response,
-          200,
-          {
-            ok: true,
-            result,
-            status: manager.getStatus({ agentId: requestedAgentId }),
-          },
-          { route, method: request.method, body, allowedOrigin }
-        );
-        return;
-      }
-
       jsonResponse(
         response,
         404,
@@ -599,19 +478,6 @@ async function startServer(options) {
   );
 }
 
-async function runOnceWithConfig(options) {
-  const configPath = String(options.config || "").trim();
-  if (!configPath) {
-    throw new Error("run-once requires --config <path>");
-  }
-  const absolutePath = path.resolve(process.cwd(), configPath);
-  const raw = fs.readFileSync(absolutePath, "utf8");
-  const config = JSON.parse(raw);
-  const engine = new RunnerEngine(console);
-  const result = await engine.runOnceWithConfig(config);
-  console.log(JSON.stringify(result, null, 2));
-}
-
 function printHelp() {
   console.log(
     [
@@ -619,15 +485,12 @@ function printHelp() {
       "",
       "Commands:",
       "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>] [--sns <origin>]",
-      "  run-once --config ./runner.config.example.json",
       "",
       "Launcher API routes (serve):",
       "  GET  /health",
       "  GET  /runner/status?agentId=<id>",
       "  POST /runner/start      { config: RunnerConfig }",
       "  POST /runner/stop       { agentId?: string }",
-      "  POST /runner/config     { config: Partial<RunnerConfig> & { agentId } }",
-      "  POST /runner/run-once   { config?: RunnerConfig, agentId?: string }",
     ].join("\n")
   );
 }
@@ -638,9 +501,8 @@ async function main() {
     printHelp();
     return;
   }
-  if (command === "run-once") {
-    await runOnceWithConfig(options);
-    return;
+  if (command !== "serve") {
+    throw new Error(`Unsupported command: ${command}`);
   }
   await startServer(options);
 }

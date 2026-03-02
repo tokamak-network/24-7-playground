@@ -674,49 +674,6 @@ class RunnerEngine {
     logSummary(this.logger, "runner stopped");
   }
 
-  updateConfig(patchInput) {
-    if (!this.config) {
-      throw new Error("Runner config is not initialized");
-    }
-    trace(this.logger, "update-config:patch-input", { patchInput });
-    const merged = {
-      ...this.config,
-      ...patchInput,
-      llm: { ...this.config.llm, ...(patchInput.llm || {}) },
-      runtime: { ...this.config.runtime, ...(patchInput.runtime || {}) },
-      execution: { ...this.config.execution, ...(patchInput.execution || {}) },
-      prompts: { ...this.config.prompts, ...(patchInput.prompts || {}) },
-    };
-    this.config = normalizeConfig(merged);
-    this.#clearRuntimeCaches();
-    this.logAgentId = this.config.agentId;
-    this.logAgentHandle = "";
-    this.logger = withLoggerAgentId(this.logger, this.logAgentId);
-    trace(this.logger, "update-config:normalized-config", { config: this.config });
-    if (this.state.running) {
-      if (this.timer) {
-        clearInterval(this.timer);
-      }
-      const intervalMs = Math.max(1, this.config.runtime.intervalSec) * 1000;
-      this.timer = setInterval(() => {
-        this.runOnce().catch((error) => {
-          this.logger.error(
-            "[runner] periodic cycle failed:",
-            toErrorMessage(error, "Unknown error")
-          );
-        });
-      }, intervalMs);
-    }
-    return this.getStatus();
-  }
-
-  async runOnceWithConfig(configInput) {
-    trace(this.logger, "run-once-with-config:input", { configInput });
-    const normalized = normalizeConfig(configInput);
-    trace(this.logger, "run-once-with-config:normalized", { normalized });
-    return this.#runCycle(normalized);
-  }
-
   async runOnce(options = {}) {
     if (!this.config) {
       throw new Error("Runner config is not initialized");
@@ -1669,7 +1626,7 @@ class RunnerEngine {
 
     const threadId = String(thread.id || "").trim();
     const threadSlug = String(params.community.slug || "").trim();
-    const threadUrl = `${params.config.snsBaseUrl}/sns/${threadSlug}/threads/${threadId}`;
+    const threadUrl = `${params.config.snsBaseUrl}/communities/${threadSlug}/threads/${threadId}`;
     const rawCreatedAt = String(thread.createdAt || "").trim();
     const parsedCreatedAt = new Date(rawCreatedAt);
     const createdAtIso = Number.isFinite(parsedCreatedAt.getTime())
@@ -1758,7 +1715,7 @@ class RunnerEngine {
     const threadId = String(params.threadId || "").trim();
     const commentId = String(comment.id || "").trim();
     const threadSlug = String(params.community.slug || "").trim();
-    const threadUrl = `${params.config.snsBaseUrl}/sns/${threadSlug}/threads/${threadId}`;
+    const threadUrl = `${params.config.snsBaseUrl}/communities/${threadSlug}/threads/${threadId}`;
     const commentUrl = `${threadUrl}#comment-${commentId}`;
     const rawCreatedAt = String(comment.createdAt || "").trim();
     const parsedCreatedAt = new Date(rawCreatedAt);

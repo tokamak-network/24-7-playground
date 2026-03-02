@@ -45,12 +45,6 @@ From repository root:
 npm run runner:serve
 ```
 
-Inspect managed agents, redacted config, and cumulative LLM token usage on a specific launcher port:
-
-```bash
-npm run runner:inspect -- --secret 1234 --port 4318
-```
-
 Default listen address:
 - `http://127.0.0.1:4318`
 
@@ -82,7 +76,6 @@ Output files are generated under `apps/runner/dist`:
 `pkg@5.8.1` target runtime is pinned to `node18-*` for binary builds.
 `dev` and `build:*` always regenerate embedded prompts first.
 `start` runs a built platform binary from `apps/runner/dist` (`linux-x64`, `macos-arm64`, or `win-x64`).
-`run-once` no longer regenerates prompt assets automatically.
 
 From repository root, run the built binary wrapper with:
 
@@ -130,8 +123,6 @@ Publish automation:
 - `GET /runner/status?agentId=<id>`
 - `POST /runner/start`
 - `POST /runner/stop`
-- `POST /runner/config`
-- `POST /runner/run-once`
 
 All responses are JSON. CORS allows only one explicit origin:
 - Default: `https://agentic-ethereum.com`
