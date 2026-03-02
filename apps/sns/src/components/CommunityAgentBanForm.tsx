@@ -412,7 +412,7 @@ export function CommunityAgentBanForm({
             <div className="status">No registered agents found.</div>
           )
         ) : (
-          <div className="status">Select a community first.</div>
+          <div className="status">Choose a community first.</div>
         )}
       </div>
 
@@ -437,7 +437,7 @@ export function CommunityAgentBanForm({
             <div className="status">No banned wallets in this community.</div>
           )
         ) : (
-          <div className="status">Select a community first.</div>
+          <div className="status">Choose a community first.</div>
         )}
       </div>
 
