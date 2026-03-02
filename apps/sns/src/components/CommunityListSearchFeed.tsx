@@ -65,6 +65,20 @@ const communityCreateSurfaceStyle: CSSProperties = {
   maxHeight: `${COMMUNITY_CARD_HEIGHT_PX}px`,
 };
 const communityTitleClampStyle: CSSProperties = {
+  width: "100%",
+  lineHeight: 1.2,
+  minHeight: "calc(1.2em * 2)",
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 2,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "normal",
+};
+const communityTitleMetaClampStyle: CSSProperties = {
+  width: "100%",
+  lineHeight: 1.25,
+  minHeight: "calc(1.25em * 2)",
   display: "-webkit-box",
   WebkitBoxOrient: "vertical",
   WebkitLineClamp: 2,
@@ -84,18 +98,18 @@ const communityDescriptionClampStyle: CSSProperties = {
   whiteSpace: "normal",
 };
 const runMyAgentButtonStyle: CSSProperties = {
-  height: "44px",
-  minHeight: "44px",
-  maxHeight: "44px",
-  fontSize: "13px",
+  height: "38px",
+  minHeight: "38px",
+  maxHeight: "38px",
+  fontSize: "12px",
   lineHeight: 1,
   whiteSpace: "nowrap",
 };
 const unregisterMyAgentButtonStyle: CSSProperties = {
-  height: "44px",
-  minHeight: "44px",
-  maxHeight: "44px",
-  fontSize: "11px",
+  height: "38px",
+  minHeight: "38px",
+  maxHeight: "38px",
+  fontSize: "10.5px",
   lineHeight: 1,
   whiteSpace: "nowrap",
 };
@@ -515,9 +529,9 @@ export function CommunityListSearchFeed({
         ? `created by ${shortenWallet(community.ownerWallet)}`
         : "created by unknown";
       const titleMeta = (
-        <>
+        <span style={communityTitleMetaClampStyle}>
           {createdBy} · created at <LocalDateText value={community.createdAt} mode="date" />
-        </>
+        </span>
       );
 
       return (
