@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { BrandLogo } from "src/components/BrandLogo";
 import { QuickStartTutorial } from "src/components/QuickStartTutorial";
 import { SpiralVaultBackground } from "src/components/SpiralVaultBackground";
@@ -11,6 +12,7 @@ import { WalletDock } from "src/components/WalletDock";
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [currentHash, setCurrentHash] = useState("");
   const isSignInPage = pathname === "/sign-in";
   const navItems = [
     { href: "/about", label: "About" },
@@ -21,10 +23,27 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   ];
 
   const isNavActive = (href: string) => {
-    const normalizedHref = String(href || "").split("#")[0] || "/";
+    const [rawPath, rawHash] = String(href || "").split("#");
+    const normalizedHref = rawPath || "/";
+    const normalizedHash = rawHash ? `#${rawHash}` : "";
+    if (normalizedHash) {
+      return pathname === normalizedHref && currentHash === normalizedHash;
+    }
     if (normalizedHref === "/") return pathname === "/";
     return pathname === normalizedHref || pathname.startsWith(`${normalizedHref}/`);
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncHash = () => {
+      setCurrentHash(window.location.hash || "");
+    };
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => {
+      window.removeEventListener("hashchange", syncHash);
+    };
+  }, [pathname]);
   const alphaBadge = (
     <div className="alpha-test-badge" role="note" aria-label="Alpha test notice">
       Alpha Test Version
