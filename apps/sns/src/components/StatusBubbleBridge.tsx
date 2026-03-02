@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { reportUserError } from "src/lib/userErrorReporter";
 
 type BubbleKind = "success" | "error" | "info";
-type BubblePlacement = "above";
+type BubblePlacement = "above" | "below";
 
 type BubbleMessage = {
   kind: BubbleKind;
@@ -17,6 +17,10 @@ type BubbleMessage = {
 const STATUS_SELECTOR = ".status";
 const CLICK_CONTEXT_WINDOW_MS = 120000;
 const BUBBLE_DISMISS_DELAY_MS = 3200;
+const BUBBLE_HORIZONTAL_MARGIN = 80;
+const BUBBLE_ESTIMATED_HEIGHT = 72;
+const BUBBLE_VERTICAL_OFFSET = 10;
+const BUBBLE_BOUNDARY_PADDING = 16;
 
 type AnchorSnapshot = {
   element: HTMLElement | null;
@@ -99,7 +103,7 @@ export function StatusBubbleBridge() {
 
       let left = defaultLeft;
       let top = defaultTop;
-      const placement: BubblePlacement = "above";
+      let placement: BubblePlacement = "above";
 
       bubbleAnchorElementRef.current = null;
       if (anchor && typeof window !== "undefined") {
@@ -111,8 +115,63 @@ export function StatusBubbleBridge() {
             : anchor.rect;
         if (rect) {
           const nextLeft = rect.left + rect.width / 2;
-          left = Math.min(Math.max(nextLeft, 80), viewportWidth - 80);
-          top = rect.top;
+          const modalShell = anchor.element?.closest(
+            ".community-create-modal-shell, .agent-author-modal"
+          ) as HTMLElement | null;
+          const boundaryRect = modalShell?.getBoundingClientRect() || null;
+          const requiredSpace = BUBBLE_ESTIMATED_HEIGHT + BUBBLE_VERTICAL_OFFSET;
+
+          if (boundaryRect) {
+            const boundaryMinLeft = Math.max(
+              boundaryRect.left + BUBBLE_BOUNDARY_PADDING,
+              BUBBLE_HORIZONTAL_MARGIN
+            );
+            const boundaryMaxLeft = Math.min(
+              boundaryRect.right - BUBBLE_BOUNDARY_PADDING,
+              viewportWidth - BUBBLE_HORIZONTAL_MARGIN
+            );
+            if (boundaryMinLeft <= boundaryMaxLeft) {
+              left = Math.min(Math.max(nextLeft, boundaryMinLeft), boundaryMaxLeft);
+            } else {
+              left = Math.min(
+                Math.max((boundaryRect.left + boundaryRect.right) / 2, BUBBLE_HORIZONTAL_MARGIN),
+                viewportWidth - BUBBLE_HORIZONTAL_MARGIN
+              );
+            }
+
+            const spaceAbove = rect.top - boundaryRect.top;
+            const spaceBelow = boundaryRect.bottom - rect.bottom;
+            if (spaceAbove < requiredSpace && spaceBelow > spaceAbove) {
+              placement = "below";
+              top = rect.bottom;
+            } else {
+              placement = "above";
+              top = rect.top;
+            }
+
+            if (placement === "above" && spaceAbove < requiredSpace) {
+              top = boundaryRect.top + requiredSpace;
+            }
+            if (placement === "below" && spaceBelow < requiredSpace) {
+              top = boundaryRect.bottom - requiredSpace;
+            }
+          } else {
+            left = Math.min(
+              Math.max(nextLeft, BUBBLE_HORIZONTAL_MARGIN),
+              viewportWidth - BUBBLE_HORIZONTAL_MARGIN
+            );
+            const viewportHeight =
+              typeof window !== "undefined" ? window.innerHeight : 900;
+            const spaceAbove = rect.top;
+            const spaceBelow = viewportHeight - rect.bottom;
+            if (spaceAbove < requiredSpace && spaceBelow > spaceAbove) {
+              placement = "below";
+              top = rect.bottom;
+            } else {
+              placement = "above";
+              top = rect.top;
+            }
+          }
         }
       }
 

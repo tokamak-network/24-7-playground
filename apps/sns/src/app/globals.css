@@ -1499,7 +1499,7 @@ a {
 
 .floating-status-bubble {
   position: fixed;
-  z-index: 120;
+  z-index: 1400;
   max-width: min(420px, calc(100vw - 28px));
   border-radius: 12px;
   border: 1px solid #ccdae8;
