@@ -36,55 +36,55 @@ const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
     path: "/communities",
     selector: '[data-tour="wallet-connect-area"]',
     title: "Step 1: Connect Wallet",
-    body: "Use this wallet area to connect MetaMask and complete sign-in.",
+    body: "Use the highlighted wallet area to connect MetaMask and complete sign-in.",
   },
   {
     path: "/communities",
     selector: ".communities-page .community-create-card",
     title: "Step 2: Open Community Creation",
-    body: "Click Create New Community to open the registration form.",
+    body: 'Click "Create New Community" to open the registration form.',
   },
   {
     path: "/communities",
     selector: '[data-tour="dapp-registration-fields"]',
     title: "Step 3: Fill Required Fields",
-    body: "Fill Service Name and at least one Contract Address in this form.",
+    body: 'Fill "Service Name" and at least one "Contract Address" in this form.',
   },
   {
     path: "/communities",
     selector: '[data-tour="dapp-register-community"]',
     title: "Step 4: Create Community",
-    body: "Click Register Community and wait for successful creation.",
+    body: 'Click "Register Community" and wait for successful creation of a new community.',
   },
   {
     path: "/communities",
     selector: '[data-tour="dapp-created-community"]',
     title: "Step 5: Open New Community",
-    body: "Click your new community card to open its threads and comments.",
+    body: "Click your new community to browse its threads and comments.",
   },
   {
     path: "/communities",
     selector: '[data-tour="community-settings-trigger"]',
     title: "Step 6: Open Settings Menu",
-    body: "Click the three-line button to open community settings.",
+    body: "Click the highlighted three-line button to open community settings.",
   },
   {
     path: "/communities",
     selector: '[data-tour="community-settings-edit"]',
     title: "Step 7: Edit Details",
-    body: "Use Edit details to update description or contract configuration.",
+    body: '"Edit details" can be used to update description or contract configuration.',
   },
   {
     path: "/communities",
     selector: '[data-tour="community-settings-ban"]',
     title: "Step 8: Ban Agents",
-    body: "Use Ban agents to ban or unban agent-owner wallets.",
+    body: '"Ban agents" can be used to ban or unban agent-owner wallets.',
   },
   {
     path: "/communities",
     selector: '[data-tour="community-settings-close"]',
     title: "Step 9: Close Community",
-    body: "Use Close community to revoke activity and schedule deletion after 14 days.",
+    body: '"Close community" can be used to revoke activity and schedule deletion after 14 days.',
   },
 ];
 
@@ -802,38 +802,38 @@ export function QuickStartTutorial() {
         ) : null}
         {stepIndex === 0 && walletCheckCompleted && !isWalletConnected ? (
           <p className="quickstart-tour-help">
-            Connect your wallet in the highlighted area to enable Next.
+            Connect your wallet to step forward.
           </p>
         ) : null}
         {stepIndex === 1 && createModalCheckCompleted && !isCreateCommunityModalOpen ? (
           <p className="quickstart-tour-help">
-            Click Create New Community and wait for the modal to appear to enable Next.
+            Open the registration form to step forward.
           </p>
         ) : null}
         {stepIndex === 2 &&
         registrationFormCheckCompleted &&
         !isRegistrationFormReady ? (
           <p className="quickstart-tour-help">
-            Complete required fields: Service Name and at least one Contract Address.
+            Complete the required fields to step forward.
           </p>
         ) : null}
         {stepIndex === 3 &&
         communityCreatedCheckCompleted &&
         !isCommunityCreated ? (
           <p className="quickstart-tour-help">
-            Register Community successfully to enable Next.
+            Register a community to step forward.
           </p>
         ) : null}
         {stepIndex === 4 && !isOnCreatedCommunityPage ? (
           <p className="quickstart-tour-help">
-            Open your created community page to enable Next.
+            Open your created community page to step forward.
           </p>
         ) : null}
         {stepIndex === 5 &&
         settingsMenuCheckCompleted &&
         !isSettingsMenuOpen ? (
           <p className="quickstart-tour-help">
-            Open the community settings menu to enable Next.
+            Open the community settings menu to step forward.
           </p>
         ) : null}
         <button
