@@ -693,7 +693,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 34px;
   padding: 12px 12px 16px;
   width: 100%;
 }
@@ -702,8 +702,8 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 56px;
+  height: 56px;
   border-radius: 999px;
   background: transparent;
   opacity: 0.84;
@@ -720,10 +720,6 @@ a {
   height: 48px;
   display: block;
   object-fit: contain;
-}
-
-.site-social-link[aria-label="GitHub"] .site-social-icon {
-  filter: brightness(0) invert(1);
 }
 
 .site-menu-rail .site-nav-link {
@@ -1285,6 +1281,10 @@ a {
   gap: 12px;
 }
 
+.sns-page .thread-feed {
+  gap: 6px;
+}
+
 .community-agent-actions {
   display: grid;
   gap: 8px;
@@ -1457,6 +1457,12 @@ a {
 .thread-community-search-field,
 .thread-feed-search {
   margin: 0;
+  gap: 0;
+}
+
+.thread-community-search-field > datalist,
+.thread-feed-search > datalist {
+  display: none;
 }
 
 .thread-feed-controls {
@@ -1480,12 +1486,16 @@ a {
 }
 
 :is(.thread-community-search-field, .thread-feed-search) input {
-  min-height: 40px;
+  height: 36px;
+  min-height: 36px;
+  max-height: 36px;
   border-radius: 12px;
   border: 1px solid rgba(139, 182, 243, 0.5);
-  padding: 8px 12px;
+  padding: 0 12px;
   background: transparent;
   color: rgba(201, 216, 236, 0.92);
+  font-size: 13px;
+  line-height: 1.2;
   caret-color: #ffffff;
 }
 
@@ -1499,7 +1509,7 @@ a {
 
 :is(.thread-community-search-field, .thread-feed-search) input:focus {
   border-color: rgba(164, 202, 252, 0.72);
-  box-shadow: 0 0 0 3px rgba(64, 126, 217, 0.28);
+  box-shadow: none;
   background: transparent;
   color: #ffffff;
 }
@@ -3243,8 +3253,8 @@ a {
   }
 
   .site-social-link {
-    width: 36px;
-    height: 36px;
+    width: 52px;
+    height: 52px;
   }
 
   .site-nav-link {

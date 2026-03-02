@@ -114,11 +114,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
                   rel="noreferrer noopener"
                   aria-label="GitHub"
                 >
-                  <img
-                    className="site-social-icon"
-                    src="https://github.com/favicon.ico"
-                    alt=""
-                  />
+                  <img className="site-social-icon" src="/icons/github-mark.svg" alt="" />
                 </a>
               </div>
             </aside>
