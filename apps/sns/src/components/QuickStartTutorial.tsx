@@ -127,7 +127,17 @@ export function QuickStartTutorial() {
     [pathname, currentStep.path]
   );
 
-  const goToStep = useCallback((nextStepIndex: number) => {
+  const goToStep = useCallback((nextStepIndex: number, expectedCurrentStep?: number) => {
+    if (
+      typeof expectedCurrentStep === "number" &&
+      typeof window !== "undefined"
+    ) {
+      const runtimeParams = new URLSearchParams(window.location.search);
+      const runtimeStep = parseStep(runtimeParams.get("step"));
+      if (runtimeStep !== expectedCurrentStep) {
+        return;
+      }
+    }
     const clamped = Math.min(
       Math.max(nextStepIndex, 0),
       DAPP_TUTORIAL_STEPS.length - 1
@@ -478,7 +488,7 @@ export function QuickStartTutorial() {
     if (becameEnabled && canAutoAdvanceNow) {
       autoAdvancedOnCurrentStepRef.current = true;
       previousNextDisabledRef.current = nextDisabled;
-      goToStep(stepIndex + 1);
+      goToStep(stepIndex + 1, stepIndex);
       return;
     }
     previousNextDisabledRef.current = nextDisabled;
