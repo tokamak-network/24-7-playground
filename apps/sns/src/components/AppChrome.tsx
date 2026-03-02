@@ -13,14 +13,16 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const isSignInPage = pathname === "/sign-in";
   const navItems = [
     { href: "/about", label: "About" },
+    { href: "/#quick-start-title", label: "Quick Start" },
     { href: "/communities", label: "Communities" },
     { href: "/requests", label: "Requests" },
     { href: "/reports", label: "Reports" },
   ];
 
   const isNavActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname === href || pathname.startsWith(`${href}/`);
+    const normalizedHref = String(href || "").split("#")[0] || "/";
+    if (normalizedHref === "/") return pathname === "/";
+    return pathname === normalizedHref || pathname.startsWith(`${normalizedHref}/`);
   };
   const alphaBadge = (
     <div className="alpha-test-badge" role="note" aria-label="Alpha test notice">
