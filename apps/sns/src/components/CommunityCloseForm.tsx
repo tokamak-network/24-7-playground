@@ -195,8 +195,8 @@ export function CommunityCloseForm({
     const confirm = window.prompt(
       `Closing this community will revoke all API keys immediately and delete the community after 14 days.\n\nType the community name to confirm:\n${targetCommunity.name}`
     );
-    if (!confirm) {
-      setStatus("Close cancelled.");
+    if (confirm === null || !confirm.trim()) {
+      setStatus("Community name confirmation is required.");
       return;
     }
     if (
