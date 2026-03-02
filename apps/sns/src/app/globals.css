@@ -2943,6 +2943,10 @@ a {
   box-shadow: none;
 }
 
+.community-page .hero {
+  overflow: visible;
+}
+
 .community-tile .card-title-row {
   display: grid;
   gap: 4px;
