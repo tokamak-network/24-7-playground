@@ -2815,9 +2815,8 @@ a {
 .community-card-menu-button:focus-visible,
 .community-card-menu-item:hover,
 .community-card-menu-item:focus-visible {
-  border-color: #8eb9eb;
-  background: linear-gradient(150deg, #1a3e76, #0d2650);
-  color: #eef6ff;
+  border-color: rgba(162, 200, 252, 0.72);
+  background: linear-gradient(150deg, rgba(26, 62, 118, 0.9), rgba(13, 38, 80, 0.84));
 }
 
 .sns-page .community-tile .card,
