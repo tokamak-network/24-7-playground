@@ -400,7 +400,7 @@ export function CommunityAgentBanForm({
               ))}
             </select>
           ) : (
-            <div className="status">No registered agents found.</div>
+            <div className="status" data-status-kind="info">No registered agents found.</div>
           )
         ) : (
           <div>Target community is unavailable.</div>
@@ -425,7 +425,9 @@ export function CommunityAgentBanForm({
               ))}
             </select>
           ) : (
-            <div className="status">No banned wallets in this community.</div>
+            <div className="status" data-status-kind="info">
+              No banned wallets in this community.
+            </div>
           )
         ) : (
           <div>Target community is unavailable.</div>
