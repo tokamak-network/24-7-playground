@@ -10,6 +10,26 @@ type TutorialStep = {
   body: string;
 };
 
+function extractWalletAddress(value: unknown): string {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+  if (!value || typeof value !== "object") {
+    return "";
+  }
+  const candidate = value as {
+    address?: unknown;
+    selectedAddress?: unknown;
+  };
+  if (typeof candidate.address === "string") {
+    return candidate.address.trim();
+  }
+  if (typeof candidate.selectedAddress === "string") {
+    return candidate.selectedAddress.trim();
+  }
+  return "";
+}
+
 const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
   {
     path: "/communities",
@@ -87,6 +107,8 @@ export function QuickStartTutorial() {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
   const [searchingTarget, setSearchingTarget] = useState(false);
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
+  const [walletCheckCompleted, setWalletCheckCompleted] = useState(false);
 
   const isOnStepPath = useMemo(
     () => normalizePath(pathname) === normalizePath(currentStep.path),
@@ -200,12 +222,80 @@ export function QuickStartTutorial() {
     };
   }, [targetElement]);
 
+  useEffect(() => {
+    if (!isDappTutorial) {
+      setIsWalletConnected(false);
+      setWalletCheckCompleted(false);
+      return;
+    }
+
+    let canceled = false;
+    const ethereum = (window as any).ethereum;
+
+    const updateWalletConnection = async () => {
+      if (!ethereum?.request) {
+        if (!canceled) {
+          setIsWalletConnected(false);
+          setWalletCheckCompleted(true);
+        }
+        return;
+      }
+
+      try {
+        const accounts = (await ethereum.request({
+          method: "eth_accounts",
+        })) as unknown;
+        const connected = Array.isArray(accounts)
+          ? accounts.some((account) => Boolean(extractWalletAddress(account)))
+          : Boolean(extractWalletAddress(accounts));
+        if (!canceled) {
+          setIsWalletConnected(connected);
+          setWalletCheckCompleted(true);
+        }
+      } catch {
+        if (!canceled) {
+          setIsWalletConnected(false);
+          setWalletCheckCompleted(true);
+        }
+      }
+    };
+
+    const handleAccountsChanged = (accounts: unknown[]) => {
+      const connected = Array.isArray(accounts)
+        ? accounts.some((account) => Boolean(extractWalletAddress(account)))
+        : false;
+      setIsWalletConnected(connected);
+      setWalletCheckCompleted(true);
+    };
+
+    const handleFocus = () => {
+      void updateWalletConnection();
+    };
+
+    void updateWalletConnection();
+    window.addEventListener("focus", handleFocus);
+    ethereum?.on?.("accountsChanged", handleAccountsChanged);
+    ethereum?.on?.("connect", handleFocus);
+    ethereum?.on?.("disconnect", handleFocus);
+
+    return () => {
+      canceled = true;
+      window.removeEventListener("focus", handleFocus);
+      ethereum?.removeListener?.("accountsChanged", handleAccountsChanged);
+      ethereum?.removeListener?.("connect", handleFocus);
+      ethereum?.removeListener?.("disconnect", handleFocus);
+    };
+  }, [isDappTutorial]);
+
   if (!isDappTutorial) {
     return null;
   }
 
   const isFirstStep = stepIndex === 0;
   const isLastStep = stepIndex >= DAPP_TUTORIAL_STEPS.length - 1;
+  const requiresWalletConnection = stepIndex === 0;
+  const canAdvance = !requiresWalletConnection || isWalletConnected;
+  const nextDisabled = !isLastStep && !canAdvance;
   const hasTargetRect = Boolean(targetRect);
   const spotlightStyle =
     targetRect === null
@@ -246,6 +336,11 @@ export function QuickStartTutorial() {
             Could not find the target element on this page.
           </p>
         ) : null}
+        {stepIndex === 0 && walletCheckCompleted && !isWalletConnected ? (
+          <p className="quickstart-tour-help">
+            Connect your wallet in the highlighted area to enable Next.
+          </p>
+        ) : null}
         <div className="quickstart-tour-actions">
           <button
             type="button"
@@ -258,9 +353,13 @@ export function QuickStartTutorial() {
           <button
             type="button"
             className="button"
+            disabled={nextDisabled}
             onClick={() => {
               if (isLastStep) {
                 closeTutorial();
+                return;
+              }
+              if (!canAdvance) {
                 return;
               }
               goToStep(stepIndex + 1);
