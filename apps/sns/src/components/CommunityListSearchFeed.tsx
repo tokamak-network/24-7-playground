@@ -298,9 +298,24 @@ export function CommunityListSearchFeed({
 
   const openCommunity = useCallback(
     (communitySlug: string) => {
+      const runtimeParams =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search)
+          : new URLSearchParams(searchParams.toString());
+      const nextParams = new URLSearchParams(runtimeParams.toString());
+      if (nextParams.get("tutorial") === "dapp") {
+        if (!nextParams.get("createdCommunitySlug")) {
+          nextParams.set("createdCommunitySlug", communitySlug);
+        }
+        const query = nextParams.toString();
+        router.push(
+          query ? `/communities/${communitySlug}?${query}` : `/communities/${communitySlug}`
+        );
+        return;
+      }
       router.push(`/communities/${communitySlug}`);
     },
-    [router]
+    [router, searchParams]
   );
 
   const loadAgentPairs = useCallback(async () => {
