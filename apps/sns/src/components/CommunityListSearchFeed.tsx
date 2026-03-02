@@ -47,6 +47,7 @@ type Props = {
 };
 
 type CreateModalPhase = "closed" | "opening" | "open" | "closing";
+type CommunityActionModalPhase = "closed" | "opening" | "open" | "closing";
 type CreateModalOrigin = {
   top: number;
   left: number;
@@ -177,49 +178,6 @@ const communityCardMenuItemStyle: CSSProperties = {
 const communityCardMenuDangerItemStyle: CSSProperties = {
   ...communityCardMenuItemStyle,
 };
-const communityActionModalOverlayStyle: CSSProperties = {
-  position: "fixed",
-  inset: 0,
-  zIndex: 1200,
-  display: "grid",
-  placeItems: "center",
-  background: "rgba(2, 8, 20, 0.56)",
-  backdropFilter: "blur(1px)",
-};
-const communityActionModalShellStyle: CSSProperties = {
-  width: "min(980px, calc(100vw - 28px))",
-  maxHeight: "calc(100dvh - 28px)",
-  borderRadius: "18px",
-  border: "1px solid rgba(140, 186, 246, 0.5)",
-  background: "linear-gradient(165deg, rgba(7, 22, 49, 0.95), rgba(8, 24, 52, 0.92))",
-  boxShadow: "0 20px 44px rgba(2, 10, 28, 0.55)",
-  overflow: "hidden",
-  display: "grid",
-  gridTemplateRows: "auto 1fr",
-};
-const communityActionModalHeaderStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: "12px",
-  padding: "14px 16px",
-  borderBottom: "1px solid rgba(129, 176, 241, 0.38)",
-};
-const communityActionModalBodyStyle: CSSProperties = {
-  overflow: "auto",
-  padding: "14px 16px 16px",
-};
-const communityActionModalCloseStyle: CSSProperties = {
-  minHeight: "34px",
-  borderRadius: "999px",
-  border: "1px solid rgba(137, 183, 246, 0.54)",
-  background: "rgba(12, 35, 74, 0.66)",
-  color: "#ebf5ff",
-  padding: "0 12px",
-  fontWeight: 700,
-  fontSize: "12px",
-  cursor: "pointer",
-};
 
 export function CommunityListSearchFeed({
   items,
@@ -257,10 +215,13 @@ export function CommunityListSearchFeed({
   const [activeCardMenuId, setActiveCardMenuId] = useState<string | null>(null);
   const [communityActionModal, setCommunityActionModal] =
     useState<CommunityActionModal | null>(null);
+  const [communityActionModalPhase, setCommunityActionModalPhase] =
+    useState<CommunityActionModalPhase>("closed");
   const createCardRef = useRef<HTMLButtonElement | null>(null);
   const communityFilterMenuRef = useRef<HTMLDivElement | null>(null);
   const communityCardMenuRef = useRef<HTMLDivElement | null>(null);
   const createModalTimerRef = useRef<number | null>(null);
+  const communityActionModalTimerRef = useRef<number | null>(null);
   const createCardAnimTimerRef = useRef<number | null>(null);
   const normalizedQuery = communityQuery.trim().toLowerCase();
   const normalizedConnectedWallet = connectedWallet?.toLowerCase() ?? "";
@@ -392,6 +353,9 @@ export function CommunityListSearchFeed({
       if (createModalTimerRef.current !== null) {
         window.clearTimeout(createModalTimerRef.current);
       }
+      if (communityActionModalTimerRef.current !== null) {
+        window.clearTimeout(communityActionModalTimerRef.current);
+      }
       if (createCardAnimTimerRef.current !== null) {
         window.clearTimeout(createCardAnimTimerRef.current);
       }
@@ -483,6 +447,42 @@ export function CommunityListSearchFeed({
   }, []);
 
   const isCreateModalVisible = createModalPhase !== "closed" && Boolean(createModalOrigin);
+  const isCommunityActionModalVisible =
+    communityActionModalPhase !== "closed" && Boolean(communityActionModal);
+
+  const closeCommunityActionModal = useCallback((onClosed?: () => void) => {
+    if (communityActionModalPhase === "closed") {
+      onClosed?.();
+      return;
+    }
+    if (communityActionModalPhase === "closing") {
+      return;
+    }
+    setCommunityActionModalPhase("closing");
+    if (communityActionModalTimerRef.current !== null) {
+      window.clearTimeout(communityActionModalTimerRef.current);
+    }
+    communityActionModalTimerRef.current = window.setTimeout(() => {
+      setCommunityActionModalPhase("closed");
+      setCommunityActionModal(null);
+      communityActionModalTimerRef.current = null;
+      onClosed?.();
+    }, 300);
+  }, [communityActionModalPhase]);
+
+  const openCommunityActionModal = useCallback((modal: CommunityActionModal) => {
+    if (communityActionModalTimerRef.current !== null) {
+      window.clearTimeout(communityActionModalTimerRef.current);
+      communityActionModalTimerRef.current = null;
+    }
+    setCommunityActionModal(modal);
+    setCommunityActionModalPhase("opening");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setCommunityActionModalPhase("open");
+      });
+    });
+  }, []);
 
   useEffect(() => {
     if (!isCreateModalVisible) return;
@@ -494,13 +494,13 @@ export function CommunityListSearchFeed({
   }, [isCreateModalVisible]);
 
   useEffect(() => {
-    if (!communityActionModal) return;
+    if (!isCommunityActionModalVisible) return;
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previous;
     };
-  }, [communityActionModal]);
+  }, [isCommunityActionModalVisible]);
 
   useEffect(() => {
     if (!isCreateModalVisible) return;
@@ -514,6 +514,19 @@ export function CommunityListSearchFeed({
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [isCreateModalVisible, closeCreateModal]);
+
+  useEffect(() => {
+    if (!isCommunityActionModalVisible) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeCommunityActionModal();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [closeCommunityActionModal, isCommunityActionModalVisible]);
 
   const readError = async (response: Response) => {
     const text = await response.text().catch(() => "");
@@ -723,10 +736,11 @@ export function CommunityListSearchFeed({
           return item;
         })
       );
-      setCommunityActionModal(null);
-      router.refresh();
+      closeCommunityActionModal(() => {
+        router.refresh();
+      });
     },
-    [router]
+    [closeCommunityActionModal, router]
   );
 
   const handleCommunityCloseApplied = useCallback(
@@ -747,16 +761,18 @@ export function CommunityListSearchFeed({
         delete next[payload.communityId];
         return next;
       });
-      setCommunityActionModal(null);
-      router.refresh();
+      closeCommunityActionModal(() => {
+        router.refresh();
+      });
     },
-    [router]
+    [closeCommunityActionModal, router]
   );
 
   const handleCommunityBanApplied = useCallback(() => {
-    setCommunityActionModal(null);
-    router.refresh();
-  }, [router]);
+    closeCommunityActionModal(() => {
+      router.refresh();
+    });
+  }, [closeCommunityActionModal, router]);
 
   const renderCommunityTile = (community: CommunityListItem, extraClassName?: string) => {
       const chainSet = Array.from(
@@ -823,7 +839,7 @@ export function CommunityListSearchFeed({
                   onClick={(event) => {
                     event.stopPropagation();
                     setActiveCardMenuId(null);
-                    setCommunityActionModal({ mode: "edit", community });
+                    openCommunityActionModal({ mode: "edit", community });
                   }}
                 >
                   Edit details
@@ -836,7 +852,7 @@ export function CommunityListSearchFeed({
                   onClick={(event) => {
                     event.stopPropagation();
                     setActiveCardMenuId(null);
-                    setCommunityActionModal({ mode: "ban", community });
+                    openCommunityActionModal({ mode: "ban", community });
                   }}
                 >
                   Ban agents
@@ -849,7 +865,7 @@ export function CommunityListSearchFeed({
                   onClick={(event) => {
                     event.stopPropagation();
                     setActiveCardMenuId(null);
-                    setCommunityActionModal({ mode: "close", community });
+                    openCommunityActionModal({ mode: "close", community });
                   }}
                 >
                   Close community
@@ -1084,20 +1100,25 @@ export function CommunityListSearchFeed({
         </div>
       ) : null}
 
-      {communityActionModal ? (
+      {isCommunityActionModalVisible && communityActionModal ? (
         <div
-          style={communityActionModalOverlayStyle}
+          className={`community-create-modal community-action-modal${communityActionModalPhase === "open" ? " is-open" : ""}`}
           role="dialog"
           aria-modal="true"
           aria-label={`${communityActionModal.community.name} actions`}
-          onClick={() => setCommunityActionModal(null)}
         >
+          <button
+            type="button"
+            className="community-create-modal-backdrop"
+            aria-label="Close community action modal"
+            onClick={() => closeCommunityActionModal()}
+          />
           <section
-            style={communityActionModalShellStyle}
+            className="community-create-modal-shell community-action-modal-shell"
             onClick={(event) => event.stopPropagation()}
           >
-            <header style={communityActionModalHeaderStyle}>
-              <h3 style={{ margin: 0, color: "#edf5ff", fontSize: "30px", lineHeight: 1.2 }}>
+            <header className="community-create-modal-head community-action-modal-head">
+              <h3>
                 {communityActionModal.mode === "edit"
                   ? "Edit details"
                   : communityActionModal.mode === "ban"
@@ -1106,13 +1127,16 @@ export function CommunityListSearchFeed({
               </h3>
               <button
                 type="button"
-                style={communityActionModalCloseStyle}
-                onClick={() => setCommunityActionModal(null)}
+                className="community-create-modal-close"
+                onClick={() => closeCommunityActionModal()}
               >
                 Close
               </button>
             </header>
-            <div style={communityActionModalBodyStyle} data-status-bubble="error-only">
+            <div
+              className="community-create-modal-body community-action-modal-body"
+              data-status-bubble="error-only"
+            >
               {communityActionModal.mode === "edit" ? (
                 <CommunityUpdateForm
                   initialCommunityId={communityActionModal.community.id}
