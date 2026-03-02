@@ -76,7 +76,7 @@ const communityCreateSurfaceStyle: CSSProperties = {
   maxHeight: `${COMMUNITY_CARD_HEIGHT_PX}px`,
 };
 const communityTitleClampStyle: CSSProperties = {
-  width: "100%",
+  width: "calc(100% - 56px)",
   lineHeight: 1.2,
   minHeight: "calc(1.2em * 2)",
   display: "-webkit-box",
@@ -132,17 +132,17 @@ const communityFilterTriggerStyle: CSSProperties = {
 };
 const communityCardMenuButtonStyle: CSSProperties = {
   position: "absolute",
-  top: "14px",
-  right: "14px",
-  width: "32px",
-  height: "32px",
-  minHeight: "32px",
-  maxHeight: "32px",
-  borderRadius: "10px",
-  border: "1px solid rgba(137, 183, 246, 0.52)",
-  background: "rgba(10, 31, 66, 0.82)",
+  top: "12px",
+  right: "10px",
+  width: "36px",
+  height: "36px",
+  minHeight: "36px",
+  maxHeight: "36px",
+  borderRadius: "0",
+  border: "0",
+  background: "transparent",
   color: "#e8f2ff",
-  fontSize: "18px",
+  fontSize: "26px",
   lineHeight: 1,
   cursor: "pointer",
   display: "inline-flex",
@@ -152,8 +152,8 @@ const communityCardMenuButtonStyle: CSSProperties = {
 };
 const communityCardMenuPanelStyle: CSSProperties = {
   position: "absolute",
-  top: "52px",
-  right: "14px",
+  top: "42px",
+  right: "10px",
   width: "184px",
   borderRadius: "12px",
   border: "1px solid rgba(137, 183, 246, 0.5)",
@@ -326,7 +326,9 @@ export function CommunityListSearchFeed({
   const shouldSkipTileNavigation = (target: EventTarget | null) => {
     if (!(target instanceof HTMLElement)) return false;
     return Boolean(
-      target.closest("a, button, input, textarea, select, label, [role='button'], [role='link']")
+      target.closest(
+        "a, button, input, textarea, select, label, [role='button'], [data-community-menu], [data-community-menu-item]"
+      )
     );
   };
 
@@ -709,6 +711,7 @@ export function CommunityListSearchFeed({
             <button
               type="button"
               style={communityCardMenuButtonStyle}
+              data-community-menu="true"
               aria-label={`${community.name} actions`}
               onClick={(event) => {
                 event.stopPropagation();
@@ -722,6 +725,7 @@ export function CommunityListSearchFeed({
                 <button
                   type="button"
                   style={communityCardMenuItemStyle}
+                  data-community-menu-item="true"
                   onClick={(event) => {
                     event.stopPropagation();
                     setActiveCardMenuId(null);
@@ -733,6 +737,7 @@ export function CommunityListSearchFeed({
                 <button
                   type="button"
                   style={communityCardMenuItemStyle}
+                  data-community-menu-item="true"
                   onClick={(event) => {
                     event.stopPropagation();
                     setActiveCardMenuId(null);
@@ -744,6 +749,7 @@ export function CommunityListSearchFeed({
                 <button
                   type="button"
                   style={communityCardMenuDangerItemStyle}
+                  data-community-menu-item="true"
                   onClick={(event) => {
                     event.stopPropagation();
                     setActiveCardMenuId(null);
