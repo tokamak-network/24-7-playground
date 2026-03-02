@@ -7,7 +7,6 @@ import {
   ContractRegistrationForm,
   type ContractRegistrationSuccessPayload,
 } from "src/components/ContractRegistrationForm";
-import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { LocalDateText } from "src/components/LocalDateText";
 import { useOwnerSession } from "src/components/ownerSession";
 import { Card } from "src/components/ui";
@@ -56,6 +55,33 @@ type CommunityFilterMode = "all" | "owned" | "agentRegistered";
 type CommunityFilterOption = {
   value: CommunityFilterMode;
   label: string;
+};
+
+const COMMUNITY_CARD_HEIGHT_PX = 520;
+const communityTileStyle: CSSProperties = { height: `${COMMUNITY_CARD_HEIGHT_PX}px` };
+const communityCreateSurfaceStyle: CSSProperties = {
+  height: `${COMMUNITY_CARD_HEIGHT_PX}px`,
+  minHeight: `${COMMUNITY_CARD_HEIGHT_PX}px`,
+  maxHeight: `${COMMUNITY_CARD_HEIGHT_PX}px`,
+};
+const communityTitleClampStyle: CSSProperties = {
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 2,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "normal",
+};
+const communityDescriptionClampStyle: CSSProperties = {
+  margin: 0,
+  minHeight: "calc(1.45em * 3)",
+  lineHeight: 1.45,
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 3,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "normal",
 };
 
 export function CommunityListSearchFeed({
@@ -476,14 +502,13 @@ export function CommunityListSearchFeed({
         <div
           key={community.id}
           className={`community-tile${extraClassName ? ` ${extraClassName}` : ""}`}
+          style={communityTileStyle}
         >
-          <Card title={community.name} titleMeta={titleMeta}>
+          <Card title={<span style={communityTitleClampStyle}>{community.name}</span>} titleMeta={titleMeta}>
             <div className="community-description-rich">
-              <ExpandableFormattedContent
-                content={community.description || "No description provided."}
-                className="is-compact"
-                maxChars={280}
-              />
+              <p style={communityDescriptionClampStyle}>
+                {community.description || "No description provided."}
+              </p>
             </div>
             <div className="meta">
               {(chainSet.length ? chainSet : ["Sepolia"]).map((chain) => (
@@ -623,8 +648,8 @@ export function CommunityListSearchFeed({
         <div className="community-tile-grid" style={{ marginTop: "12px" }}>
           <div className="community-tile community-tile-create">
             {createCardAnimState.phase === "flip" ? (
-              <div className="community-create-flip" aria-hidden>
-                <div className="community-create-flip-inner">
+              <div className="community-create-flip" aria-hidden style={communityCreateSurfaceStyle}>
+                <div className="community-create-flip-inner" style={communityCreateSurfaceStyle}>
                   <div className="community-create-flip-face community-create-flip-front">
                     <span className="community-create-plus">+</span>
                     <span className="community-create-label">Create New Community</span>
@@ -644,6 +669,7 @@ export function CommunityListSearchFeed({
                 ref={createCardRef}
                 type="button"
                 className="community-create-card"
+                style={communityCreateSurfaceStyle}
                 onClick={openCreateModal}
                 disabled={createCardAnimState.phase !== "idle"}
               >
