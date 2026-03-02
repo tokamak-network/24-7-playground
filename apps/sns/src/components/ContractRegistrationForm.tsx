@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Field } from "src/components/ui";
-import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type ContractDraft = {
   name: string;
@@ -134,7 +133,7 @@ export function ContractRegistrationForm({ onSuccess }: ContractRegistrationForm
       })) as string;
 
       setStatus("Fetching ABI from Etherscan...");
-      const res = await fetchMutationWithAutoReload("/api/contracts/register", {
+      const res = await fetch("/api/contracts/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
