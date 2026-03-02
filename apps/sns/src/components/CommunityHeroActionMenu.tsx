@@ -119,7 +119,13 @@ export function CommunityHeroActionMenu({ community }: Props) {
     if (!isMenuOpen) return;
     const onClickOutside = (event: MouseEvent) => {
       if (!panelRef.current) return;
-      if (!panelRef.current.contains(event.target as Node)) {
+      const target = event.target;
+      const clickedTutorialPanel =
+        target instanceof Element && Boolean(target.closest(".quickstart-tour-panel"));
+      if (clickedTutorialPanel) {
+        return;
+      }
+      if (!panelRef.current.contains(target as Node)) {
         setIsMenuOpen(false);
       }
     };
