@@ -57,6 +57,18 @@ const PURPOSE_OPTIONS: Array<{ value: UpdatePurpose; label: string }> = [
 
 const FIXED_MESSAGE = "24-7-playground";
 
+function resolveTargetCommunityId(
+  items: OwnedCommunity[],
+  preferredCommunityId?: string
+) {
+  if (preferredCommunityId) {
+    return items.some((community) => community.id === preferredCommunityId)
+      ? preferredCommunityId
+      : "";
+  }
+  return items[0]?.id || "";
+}
+
 function shortenAddress(value: string) {
   if (value.length <= 14) {
     return value;
@@ -78,7 +90,6 @@ export function CommunityUpdateForm({
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [communities, setCommunities] = useState<OwnedCommunity[]>([]);
-  const [selectedId, setSelectedId] = useState("");
   const [purpose, setPurpose] = useState<UpdatePurpose>("UPDATE_DESCRIPTION");
   const [selectedContractId, setSelectedContractId] = useState("");
   const [descriptionDraft, setDescriptionDraft] = useState("");
@@ -90,6 +101,10 @@ export function CommunityUpdateForm({
   const [checkBusy, setCheckBusy] = useState(false);
   const [updateCheckCompleted, setUpdateCheckCompleted] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
+  const targetCommunityId = useMemo(
+    () => resolveTargetCommunityId(communities, initialCommunityId),
+    [communities, initialCommunityId]
+  );
 
   const normalizeAddress = (value: string) => {
     try {
@@ -100,8 +115,8 @@ export function CommunityUpdateForm({
   };
 
   const selectedCommunity = useMemo(
-    () => communities.find((community) => community.id === selectedId) || null,
-    [communities, selectedId]
+    () => communities.find((community) => community.id === targetCommunityId) || null,
+    [communities, targetCommunityId]
   );
 
   const selectedContract = useMemo(
@@ -139,19 +154,14 @@ export function CommunityUpdateForm({
     if (cached) {
       setCommunities(cached);
       if (cached.length === 0) {
-        setSelectedId("");
         setStatus("No active communities owned by this wallet.");
       } else {
-        const preferredId =
-          initialCommunityId && cached.some((community) => community.id === initialCommunityId)
-            ? initialCommunityId
-            : "";
-        setSelectedId((prev) => {
-          if (preferredId) return preferredId;
-          if (prev && cached.some((community) => community.id === prev)) return prev;
-          return cached[0]?.id || "";
-        });
-        setStatus("");
+        const targetCommunityId = resolveTargetCommunityId(cached, initialCommunityId);
+        setStatus(
+          targetCommunityId
+            ? ""
+            : "The selected community could not be loaded for this wallet."
+        );
       }
       return;
     }
@@ -174,23 +184,17 @@ export function CommunityUpdateForm({
       writeOwnedCommunitiesCache("owned", normalizedWallet, active);
       setCommunities(active);
       if (active.length === 0) {
-        setSelectedId("");
         setStatus("No active communities owned by this wallet.");
       } else {
-        const preferredId =
-          initialCommunityId && active.some((community) => community.id === initialCommunityId)
-            ? initialCommunityId
-            : "";
-        setSelectedId((prev) => {
-          if (preferredId) return preferredId;
-          if (prev && active.some((community) => community.id === prev)) return prev;
-          return active[0]?.id || "";
-        });
-        setStatus("");
+        const targetCommunityId = resolveTargetCommunityId(active, initialCommunityId);
+        setStatus(
+          targetCommunityId
+            ? ""
+            : "The selected community could not be loaded for this wallet."
+        );
       }
     } catch (error) {
       setCommunities([]);
-      setSelectedId("");
       setStatus(error instanceof Error ? error.message : "Unexpected error");
     } finally {
       setBusy(false);
@@ -264,7 +268,7 @@ export function CommunityUpdateForm({
   useEffect(() => {
     setUpdateCheckCompleted(false);
     setUpdateReady(false);
-  }, [purpose, selectedId, selectedContractId, updateName, updateAddress]);
+  }, [purpose, selectedCommunity?.id, selectedContractId, updateName, updateAddress]);
 
   const buildUpdateContractPayload = () => {
     const payload: Record<string, unknown> = {
@@ -283,7 +287,7 @@ export function CommunityUpdateForm({
       return;
     }
     if (!selectedCommunity) {
-      setStatus("Select a community.");
+      setStatus("The selected community could not be loaded.");
       return;
     }
     if (!selectedContractId) {
@@ -370,7 +374,7 @@ export function CommunityUpdateForm({
       return;
     }
     if (!selectedCommunity) {
-      setStatus("Select a community.");
+      setStatus("The selected community could not be loaded.");
       return;
     }
 
@@ -569,25 +573,18 @@ export function CommunityUpdateForm({
   return (
     <div className="form">
       <div className="field">
-        <label>Owned Communities</label>
+        <label>Target Community</label>
         {wallet ? (
-          communities.length > 0 ? (
-            <select
-              value={selectedId}
-              onChange={(event) => setSelectedId(event.currentTarget.value)}
-            >
-              {communities.map((community) => (
-                <option key={community.id} value={community.id}>
-                  {community.slug} · {community.contracts.length} contract
-                  {community.contracts.length === 1 ? "" : "s"}
-                </option>
-              ))}
-            </select>
+          selectedCommunity ? (
+            <input
+              readOnly
+              value={`${selectedCommunity.name} (${selectedCommunity.slug})`}
+            />
           ) : (
-            <div className="status">No active communities found.</div>
+            <div>The selected community could not be loaded for this wallet.</div>
           )
         ) : (
-          <div className="status">Connect MetaMask to load communities.</div>
+          <div>Connect MetaMask to load community data.</div>
         )}
       </div>
 
