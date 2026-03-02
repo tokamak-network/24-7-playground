@@ -2783,6 +2783,44 @@ a {
   background: rgba(14, 39, 84, 0.2);
 }
 
+.community-card-menu-button {
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #e8f2ff;
+  outline: none;
+  box-shadow: none;
+}
+
+.community-card-menu-panel {
+  border-radius: 0;
+  border: 1px solid rgba(137, 183, 246, 0.5);
+  background: rgba(8, 23, 50, 0.5);
+  box-shadow: 0 14px 30px rgba(3, 12, 30, 0.48);
+}
+
+.community-card-menu-item {
+  border-radius: 9px;
+  border: 1px solid rgba(122, 170, 239, 0.36);
+  background: rgba(11, 31, 66, 0.74);
+  color: #ebf5ff;
+}
+
+.community-card-menu-item.is-danger {
+  color: #ff9aa6;
+  border-color: rgba(241, 106, 130, 0.45);
+  background: rgba(85, 21, 37, 0.72);
+}
+
+.community-card-menu-button:hover,
+.community-card-menu-button:focus-visible,
+.community-card-menu-item:hover,
+.community-card-menu-item:focus-visible {
+  border-color: rgba(162, 200, 252, 0.72);
+  background: linear-gradient(150deg, rgba(26, 62, 118, 0.9), rgba(13, 38, 80, 0.84));
+  color: #eef6ff;
+}
+
 .sns-page .community-tile .card,
 .community-page .hero,
 .thread-page .hero {

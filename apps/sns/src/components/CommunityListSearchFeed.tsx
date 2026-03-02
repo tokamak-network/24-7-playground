@@ -140,13 +140,9 @@ const communityCardMenuButtonStyle: CSSProperties = {
   height: "36px",
   minHeight: "36px",
   maxHeight: "36px",
-  borderRadius: "0",
-  border: "0",
-  background: "transparent",
   appearance: "none",
   WebkitAppearance: "none",
   padding: 0,
-  color: "#e8f2ff",
   fontSize: "26px",
   lineHeight: 1,
   cursor: "pointer",
@@ -154,18 +150,12 @@ const communityCardMenuButtonStyle: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   zIndex: 3,
-  outline: "none",
-  boxShadow: "none",
 };
 const communityCardMenuPanelStyle: CSSProperties = {
   position: "absolute",
   top: "42px",
   right: "10px",
   width: "184px",
-  borderRadius: "12px",
-  border: "1px solid rgba(137, 183, 246, 0.5)",
-  background: "rgba(8, 23, 50, 0.98)",
-  boxShadow: "0 14px 30px rgba(3, 12, 30, 0.48)",
   padding: "8px",
   display: "grid",
   gap: "6px",
@@ -174,10 +164,6 @@ const communityCardMenuPanelStyle: CSSProperties = {
 const communityCardMenuItemStyle: CSSProperties = {
   width: "100%",
   minHeight: "34px",
-  borderRadius: "9px",
-  border: "1px solid rgba(122, 170, 239, 0.36)",
-  background: "rgba(11, 31, 66, 0.74)",
-  color: "#ebf5ff",
   fontSize: "12px",
   fontWeight: 700,
   letterSpacing: "0.02em",
@@ -187,9 +173,6 @@ const communityCardMenuItemStyle: CSSProperties = {
 };
 const communityCardMenuDangerItemStyle: CSSProperties = {
   ...communityCardMenuItemStyle,
-  color: "#ff9aa6",
-  border: "1px solid rgba(241, 106, 130, 0.45)",
-  background: "rgba(85, 21, 37, 0.72)",
 };
 const communityActionModalOverlayStyle: CSSProperties = {
   position: "fixed",
@@ -736,6 +719,7 @@ export function CommunityListSearchFeed({
               <button
                 type="button"
                 style={communityCardMenuButtonStyle}
+                className="community-card-menu-button"
                 data-community-menu="true"
                 aria-label={`${community.name} actions`}
                 onClick={(event) => {
@@ -747,10 +731,11 @@ export function CommunityListSearchFeed({
               </button>
             ) : null}
             {isOwnedByConnectedWallet && activeCardMenuId === community.id ? (
-              <div style={communityCardMenuPanelStyle}>
+              <div style={communityCardMenuPanelStyle} className="community-card-menu-panel">
                 <button
                   type="button"
                   style={communityCardMenuItemStyle}
+                  className="community-card-menu-item"
                   data-community-menu-item="true"
                   onClick={(event) => {
                     event.stopPropagation();
@@ -763,6 +748,7 @@ export function CommunityListSearchFeed({
                 <button
                   type="button"
                   style={communityCardMenuItemStyle}
+                  className="community-card-menu-item"
                   data-community-menu-item="true"
                   onClick={(event) => {
                     event.stopPropagation();
@@ -775,6 +761,7 @@ export function CommunityListSearchFeed({
                 <button
                   type="button"
                   style={communityCardMenuDangerItemStyle}
+                  className="community-card-menu-item is-danger"
                   data-community-menu-item="true"
                   onClick={(event) => {
                     event.stopPropagation();
