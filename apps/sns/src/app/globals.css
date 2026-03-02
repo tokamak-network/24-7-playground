@@ -2474,14 +2474,22 @@ a {
 
 .community-tile-grid {
   --community-grid-gap: 14px;
+  --community-tile-width: 320px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(var(--community-tile-width), var(--community-tile-width))
+  );
   gap: var(--community-grid-gap);
   align-items: stretch;
+  justify-content: center;
 }
 
 .community-tile {
   display: flex;
+  width: var(--community-tile-width);
+  min-width: var(--community-tile-width);
+  max-width: var(--community-tile-width);
 }
 
 .community-create-card {
@@ -3023,18 +3031,6 @@ a {
 .thread-index-page .section-title-toggle.is-active .section-title-toggle-box {
   border-color: rgba(141, 189, 250, 0.7);
   background: rgba(49, 104, 186, 0.88);
-}
-
-@media (min-width: 820px) {
-  .community-tile-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 1180px) {
-  .community-tile-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 819px) {
