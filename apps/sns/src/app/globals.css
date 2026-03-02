@@ -3904,6 +3904,80 @@ a {
   }
 }
 
+.quickstart-tour-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  pointer-events: none;
+  background: rgba(6, 10, 20, 0.58);
+}
+
+.quickstart-tour-spotlight {
+  position: fixed;
+  z-index: 301;
+  border: 2px solid #9ce9d6;
+  border-radius: 12px;
+  box-shadow:
+    0 0 0 9999px rgba(6, 10, 20, 0.1),
+    0 0 0 3px rgba(156, 233, 214, 0.25);
+  pointer-events: none;
+}
+
+.quickstart-tour-panel {
+  position: fixed;
+  right: 18px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  width: min(360px, calc(100vw - 36px));
+  z-index: 302;
+  border-radius: 14px;
+  border: 1px solid rgba(156, 233, 214, 0.35);
+  background: rgba(16, 23, 38, 0.95);
+  color: #f4f8ff;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.quickstart-tour-step {
+  margin: 0;
+  font-size: 12px;
+  color: #9ce9d6;
+}
+
+.quickstart-tour-panel h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.quickstart-tour-panel p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.quickstart-tour-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.quickstart-tour-help {
+  color: #f9da95;
+}
+
+.quickstart-tour-target {
+  position: relative;
+  z-index: 299;
+}
+
+@media (max-width: 920px) {
+  .quickstart-tour-panel {
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.001ms !important;

@@ -235,12 +235,14 @@ export function ContractRegistrationForm({ onSuccess }: ContractRegistrationForm
         void submit();
       }}
     >
-      <Field
-        label="Service Name"
-        placeholder="Vault, Exchange, Lending"
-        onChange={(event) => setServiceName(event.currentTarget.value)}
-        value={serviceName}
-      />
+      <div data-tour="dapp-service-name">
+        <Field
+          label="Service Name"
+          placeholder="Vault, Exchange, Lending"
+          onChange={(event) => setServiceName(event.currentTarget.value)}
+          value={serviceName}
+        />
+      </div>
       <Field
         label="Service Description (Optional)"
         placeholder="Describe what this Ethereum service does"
@@ -262,6 +264,7 @@ export function ContractRegistrationForm({ onSuccess }: ContractRegistrationForm
               <input
                 placeholder="Contract Address (0x...)"
                 value={contract.address}
+                data-tour={index === 0 ? "dapp-contract-address" : undefined}
                 onChange={(event) =>
                   updateContract(index, "address", event.currentTarget.value)
                 }
@@ -300,6 +303,7 @@ export function ContractRegistrationForm({ onSuccess }: ContractRegistrationForm
       <button
         type="submit"
         className="button"
+        data-tour="dapp-register-community"
         disabled={!serviceName.trim() || activeContractCount === 0 || busy}
       >
         {busy ? "Working..." : "Register Community"}

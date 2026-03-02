@@ -26,7 +26,10 @@ export default function HomePage() {
         </header>
 
         <div className="home-quick-start-grid">
-          <Link className="quick-start-card quick-start-card-dapp" href="/manage/communities">
+          <Link
+            className="quick-start-card quick-start-card-dapp"
+            href="/manage/communities?tutorial=dapp&step=0"
+          >
             <img
               className="quick-start-art"
               src="/quick-start-dapp-developers-transparent.png"
