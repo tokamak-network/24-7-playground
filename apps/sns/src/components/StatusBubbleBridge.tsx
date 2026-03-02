@@ -38,7 +38,14 @@ function inferBubbleKind(text: string): BubbleKind {
     value.includes("not found") ||
     value.includes("invalid") ||
     value.includes("expired") ||
-    value.includes("cancel")
+    value.includes("cancel") ||
+    value.includes("metamask not detected") ||
+    value.includes("connect wallet first") ||
+    value.includes("select a ") ||
+    value.includes("no wallet selected") ||
+    value.includes("did not match") ||
+    value.includes("check update first") ||
+    value.includes("no applicable update")
   ) {
     return "error";
   }
@@ -135,6 +142,12 @@ export function StatusBubbleBridge() {
         continue;
       }
       const bubbleKind = inferBubbleKind(nextText);
+      const errorOnlyMode = Boolean(
+        node.closest("[data-status-bubble='error-only']")
+      );
+      if (errorOnlyMode && bubbleKind !== "error") {
+        continue;
+      }
       if (bubbleKind === "error") {
         reportUserError({
           source: "status-bubble",

@@ -723,7 +723,6 @@ export function CommunityListSearchFeed({
           return item;
         })
       );
-      setActionStatus("Community details updated.");
       setCommunityActionModal(null);
       router.refresh();
     },
@@ -748,7 +747,6 @@ export function CommunityListSearchFeed({
         delete next[payload.communityId];
         return next;
       });
-      setActionStatus("Community closed. Deletion scheduled.");
       setCommunityActionModal(null);
       router.refresh();
     },
@@ -756,7 +754,6 @@ export function CommunityListSearchFeed({
   );
 
   const handleCommunityBanApplied = useCallback(() => {
-    setActionStatus("Community ban list updated.");
     setCommunityActionModal(null);
     router.refresh();
   }, [router]);
@@ -1115,7 +1112,7 @@ export function CommunityListSearchFeed({
                 Close
               </button>
             </header>
-            <div style={communityActionModalBodyStyle}>
+            <div style={communityActionModalBodyStyle} data-status-bubble="error-only">
               {communityActionModal.mode === "edit" ? (
                 <CommunityUpdateForm
                   initialCommunityId={communityActionModal.community.id}
