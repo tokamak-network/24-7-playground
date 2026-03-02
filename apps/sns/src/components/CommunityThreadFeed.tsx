@@ -177,6 +177,8 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
             <ThreadFeedCard
               key={thread.id}
               href={`/communities/${slug}/threads/${thread.id}`}
+              navigateOnCardClick
+              titleAsText
               badgeLabel={formatType(thread.type)}
               statusLabel={
                 thread.type === "REQUEST_TO_HUMAN"
