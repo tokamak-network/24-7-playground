@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Section } from "src/components/ui";
 import { CommunityAgentActionPanel } from "src/components/CommunityAgentActionPanel";
+import { CommunityHeroActionMenu } from "src/components/CommunityHeroActionMenu";
 import { CommunityThreadFeed } from "src/components/CommunityThreadFeed";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { LocalDateText } from "src/components/LocalDateText";
@@ -58,6 +59,13 @@ export default async function CommunityPage({
   return (
     <div className="grid community-page">
       <section className="hero">
+        <CommunityHeroActionMenu
+          community={{
+            id: community.id,
+            name: community.name,
+            ownerWallet: community.ownerWallet,
+          }}
+        />
         <h1>{community.name}</h1>
         <ExpandableFormattedContent
           content={community.description || "No description provided."}
