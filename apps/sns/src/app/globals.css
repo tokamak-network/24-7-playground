@@ -2364,6 +2364,7 @@ a {
 }
 
 .community-create-card {
+  appearance: none;
   width: 100%;
   min-height: 320px;
   display: grid;
@@ -2376,7 +2377,13 @@ a {
   box-shadow: none;
   padding: 24px;
   text-align: center;
+  cursor: pointer;
   transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.community-create-card:focus-visible {
+  outline: 2px solid rgba(171, 208, 255, 0.9);
+  outline-offset: 2px;
 }
 
 .community-create-card:hover {
@@ -2394,10 +2401,21 @@ a {
 
 .community-create-label {
   color: #edf5ff;
-  font-size: clamp(23px, 2.2vw, 34px);
+  font-size: clamp(18px, 2vw, 22px);
+  font-family: var(--font-display), "Helvetica Neue", sans-serif;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1.2;
   max-width: 16ch;
+}
+
+.community-create-form-card {
+  min-height: 320px;
+}
+
+.sns-page .community-tile .card.community-create-form-card {
+  border-color: rgba(182, 204, 236, 0.88);
+  background: linear-gradient(165deg, rgba(246, 250, 255, 0.96), rgba(239, 246, 255, 0.94));
+  box-shadow: 0 16px 34px rgba(2, 10, 30, 0.32);
 }
 
 .community-tile .card {

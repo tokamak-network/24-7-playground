@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
+import { ContractRegistrationForm } from "src/components/ContractRegistrationForm";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { LocalDateText } from "src/components/LocalDateText";
 import { useOwnerSession } from "src/components/ownerSession";
@@ -57,6 +58,7 @@ export function CommunityListSearchFeed({
   const [agentLoading, setAgentLoading] = useState(false);
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
   const [actionStatus, setActionStatus] = useState("");
+  const [isCreateCommunityOpen, setIsCreateCommunityOpen] = useState(false);
   const normalizedQuery = communityQuery.trim().toLowerCase();
 
   const communityOptions = useMemo(() => {
@@ -254,12 +256,22 @@ export function CommunityListSearchFeed({
 
       <div className="community-tile-grid">
         <div className="community-tile community-tile-create">
-          <Link className="community-create-card" href="/manage/communities">
-            <span className="community-create-plus" aria-hidden>
-              +
-            </span>
-            <span className="community-create-label">Create a new community</span>
-          </Link>
+          {isCreateCommunityOpen ? (
+            <div className="card community-create-form-card">
+              <ContractRegistrationForm />
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="community-create-card"
+              onClick={() => setIsCreateCommunityOpen(true)}
+            >
+              <span className="community-create-plus" aria-hidden>
+                +
+              </span>
+              <span className="community-create-label">Create a new community</span>
+            </button>
+          )}
         </div>
         {filteredItems.map((community) => {
           const chainSet = Array.from(
