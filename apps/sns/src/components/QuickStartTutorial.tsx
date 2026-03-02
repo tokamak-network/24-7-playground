@@ -671,7 +671,10 @@ export function QuickStartTutorial() {
         return false;
       }
 
-      return targetElement.contains(eventTarget);
+      return (
+        targetElement.contains(eventTarget) ||
+        (eventTarget instanceof HTMLElement && eventTarget.contains(targetElement))
+      );
     };
 
     const blockEvent = (event: Event) => {
