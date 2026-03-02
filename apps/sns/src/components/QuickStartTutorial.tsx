@@ -110,7 +110,8 @@ export function QuickStartTutorial() {
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletCheckCompleted, setWalletCheckCompleted] = useState(false);
   const autoAdvanceStepRef = useRef<number | null>(null);
-  const autoAdvanceArmedRef = useRef(false);
+  const previousNextDisabledRef = useRef<boolean | null>(null);
+  const autoAdvancedOnCurrentStepRef = useRef(false);
 
   const isOnStepPath = useMemo(
     () => normalizePath(pathname) === normalizePath(currentStep.path),
@@ -305,25 +306,24 @@ export function QuickStartTutorial() {
         };
 
   useEffect(() => {
-    if (autoAdvanceStepRef.current === stepIndex) {
+    if (autoAdvanceStepRef.current !== stepIndex) {
+      autoAdvanceStepRef.current = stepIndex;
+      previousNextDisabledRef.current = nextDisabled;
+      autoAdvancedOnCurrentStepRef.current = false;
       return;
     }
-    autoAdvanceStepRef.current = stepIndex;
-    autoAdvanceArmedRef.current = nextDisabled;
-  }, [nextDisabled, stepIndex]);
 
-  useEffect(() => {
-    if (!isDappTutorial || !isOnStepPath || isLastStep) {
+    const previousNextDisabled = previousNextDisabledRef.current;
+    const becameEnabled = previousNextDisabled === true && nextDisabled === false;
+    const canAutoAdvanceNow =
+      isDappTutorial && isOnStepPath && !isLastStep && !autoAdvancedOnCurrentStepRef.current;
+    if (becameEnabled && canAutoAdvanceNow) {
+      autoAdvancedOnCurrentStepRef.current = true;
+      previousNextDisabledRef.current = nextDisabled;
+      goToStep(stepIndex + 1);
       return;
     }
-    if (!autoAdvanceArmedRef.current) {
-      return;
-    }
-    if (nextDisabled) {
-      return;
-    }
-    autoAdvanceArmedRef.current = false;
-    goToStep(stepIndex + 1);
+    previousNextDisabledRef.current = nextDisabled;
   }, [goToStep, isDappTutorial, isLastStep, isOnStepPath, nextDisabled, stepIndex]);
 
   if (!isDappTutorial) {
