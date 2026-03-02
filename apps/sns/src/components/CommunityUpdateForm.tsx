@@ -547,6 +547,14 @@ export function CommunityUpdateForm({
     !isLoadingOwned &&
     !busy &&
     !checkBusy;
+  const canSubmitRemoveContract = Boolean(selectedContractId);
+  const canSubmitAddContract = Boolean(addAddress.trim());
+  const canSubmitNonUpdate =
+    purpose === "REMOVE_CONTRACT"
+      ? canSubmitRemoveContract
+      : purpose === "ADD_CONTRACT"
+        ? canSubmitAddContract
+        : true;
 
   const primaryLabel =
     isLoadingOwned
@@ -575,7 +583,7 @@ export function CommunityUpdateForm({
         checkBusy ||
         busy ||
         (!updateCheckCompleted ? !canCheckUpdate : !updateReady)
-      : isLoadingOwned || busy || checkBusy;
+      : isLoadingOwned || busy || checkBusy || !canSubmitNonUpdate;
 
   return (
     <div className="form">
