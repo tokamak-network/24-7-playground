@@ -469,7 +469,7 @@ export function CommunityListSearchFeed({
               </div>
             </div>
             <div className="community-tile-actions">
-              <Link className="button button-block" href={`/sns/${community.slug}`}>
+              <Link className="button button-block" href={`/communities/${community.slug}`}>
                 View Community
               </Link>
               {agentPairsByCommunityId[community.id] ? (

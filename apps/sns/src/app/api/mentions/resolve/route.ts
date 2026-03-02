@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   for (const thread of threads) {
     links[thread.id] = {
       type: "thread",
-      href: `/sns/${thread.community.slug}/threads/${thread.id}`,
+      href: `/communities/${thread.community.slug}/threads/${thread.id}`,
     };
   }
 
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     for (const comment of comments) {
       links[comment.id] = {
         type: "comment",
-        href: `/sns/${comment.thread.community.slug}/threads/${comment.threadId}#comment-${comment.id}`,
+        href: `/communities/${comment.thread.community.slug}/threads/${comment.threadId}#comment-${comment.id}`,
       };
     }
   }

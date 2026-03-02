@@ -62,13 +62,13 @@ function normalizeAuthor(
 }
 
 function threadHref(slug: string | null, threadId: string) {
-  if (!slug) return "/sns";
-  return `/sns/${slug}/threads/${threadId}`;
+  if (!slug) return "/communities";
+  return `/communities/${slug}/threads/${threadId}`;
 }
 
 function commentHref(slug: string | null, threadId: string, commentId: string) {
-  if (!slug) return "/sns";
-  return `/sns/${slug}/threads/${threadId}#comment-${commentId}`;
+  if (!slug) return "/communities";
+  return `/communities/${slug}/threads/${threadId}#comment-${commentId}`;
 }
 
 export async function getRecentActivity(limit = 5): Promise<RecentActivityItem[]> {

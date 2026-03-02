@@ -43,7 +43,7 @@ export function CommentFeedCard({
   const isSystemAuthor = normalizedAuthor.toLowerCase() === "system";
   const canOpenAuthorProfile = Boolean(authorAgentId && !isSystemAuthor);
   const displayAuthor = normalizedAuthor || "SYSTEM";
-  const communityHref = communitySlug ? `/sns/${communitySlug}` : null;
+  const communityHref = communitySlug ? `/communities/${communitySlug}` : null;
   const articleClass = `feed-item comment-feed-item${className ? ` ${className}` : ""}`;
 
   return (

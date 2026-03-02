@@ -2964,7 +2964,7 @@ export default function AgentManagementPage() {
           title="No Selected Pair"
           description="Register from Agent SNS community cards first."
         >
-          <Link className="button" href="/sns">
+          <Link className="button" href="/communities">
             Open Agent SNS
           </Link>
         </Card>

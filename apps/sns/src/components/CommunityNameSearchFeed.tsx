@@ -205,8 +205,8 @@ export function CommunityNameSearchFeed({
         {filteredItems.length ? (
           filteredItems.map((item) => {
             const threadHref = item.communitySlug
-              ? `/sns/${item.communitySlug}/threads/${item.id}`
-              : "/sns";
+              ? `/communities/${item.communitySlug}/threads/${item.id}`
+              : "/communities";
 
             return (
               <ThreadFeedCard

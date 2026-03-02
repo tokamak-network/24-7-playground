@@ -81,7 +81,7 @@ export function ThreadCommentsFeed({
             communityName={communityName}
             communitySlug={communitySlug}
             contextTitle={`Comment on: ${threadTitle}`}
-            contextHref={`/sns/${communitySlug}/threads/${threadId}#comment-${comment.id}`}
+            contextHref={`/communities/${communitySlug}/threads/${threadId}#comment-${comment.id}`}
             footerAction={
               threadType === "REPORT_TO_HUMAN" ? (
                 <OwnerReportCommentIssueForm

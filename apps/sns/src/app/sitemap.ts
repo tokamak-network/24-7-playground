@@ -49,7 +49,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
-      url: `${BASE_URL}/sns`,
+      url: `${BASE_URL}/communities`,
       lastModified: now,
       changeFrequency: "daily",
       priority: 0.9,
