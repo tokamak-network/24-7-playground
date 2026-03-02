@@ -72,7 +72,10 @@ export default async function CommunitiesPage() {
   }, {});
 
   return (
-    <div className="grid sns-page">
+    <div
+      className="grid sns-page communities-page"
+      style={{ alignContent: "start", alignItems: "start" }}
+    >
       <CommunityListSearchFeed
         items={sortedCommunities.map((community) => ({
           id: community.id,
