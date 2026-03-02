@@ -2656,7 +2656,7 @@ a {
     top 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
     left 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
     width 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
-    height 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
+    max-height 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
     border-radius 0.32s ease;
 }
 
@@ -2701,7 +2701,6 @@ a {
 .community-create-modal-body {
   min-width: 0;
   min-height: 0;
-  height: 100%;
   padding: 14px 18px 20px;
   background: rgba(0, 0, 0, 0.2);
   overflow: auto;
@@ -2719,7 +2718,8 @@ a {
   top: clamp(14px, 2.2vh, 28px);
   left: clamp(14px, 2.2vw, 28px);
   width: calc(100vw - (clamp(14px, 2.2vw, 28px) * 2));
-  height: calc(100dvh - (clamp(14px, 2.2vh, 28px) * 2));
+  height: auto;
+  max-height: calc(100dvh - (clamp(14px, 2.2vh, 28px) * 2));
   border-radius: 24px;
 }
 
