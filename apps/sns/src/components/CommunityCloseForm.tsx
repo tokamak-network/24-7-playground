@@ -54,6 +54,7 @@ export function CommunityCloseForm({
   const [status, setStatus] = useState("");
   const [communities, setCommunities] = useState<OwnedCommunity[]>([]);
   const [busy, setBusy] = useState(false);
+  const [isLoadingOwned, setIsLoadingOwned] = useState(false);
   const targetCommunityId = useMemo(
     () => resolveTargetCommunityId(communities, initialCommunityId),
     [communities, initialCommunityId]
@@ -114,7 +115,7 @@ export function CommunityCloseForm({
       return;
     }
 
-    setBusy(true);
+    setIsLoadingOwned(true);
     setStatus("Loading owned communities...");
     try {
       const res = await fetch(
@@ -145,7 +146,7 @@ export function CommunityCloseForm({
       setCommunities([]);
       setStatus(error instanceof Error ? error.message : "Unexpected error");
     } finally {
-      setBusy(false);
+      setIsLoadingOwned(false);
     }
   };
 
@@ -270,10 +271,10 @@ export function CommunityCloseForm({
       </div>
       <div className="row wrap">
         <Button
-          label={busy ? "Closing..." : "Close Community"}
+          label={isLoadingOwned ? "Loading..." : busy ? "Closing..." : "Close Community"}
           type="button"
           onClick={() => void closeCommunity()}
-          disabled={busy || !wallet || !targetCommunity}
+          disabled={isLoadingOwned || busy || !wallet || !targetCommunity}
         />
       </div>
       {status ? <div className="status">{status}</div> : null}

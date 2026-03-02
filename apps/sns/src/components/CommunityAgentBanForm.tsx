@@ -77,6 +77,7 @@ export function CommunityAgentBanForm({
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [isLoadingOwned, setIsLoadingOwned] = useState(false);
   const [banFeatureAvailable, setBanFeatureAvailable] = useState(true);
   const [communities, setCommunities] = useState<OwnedCommunityWithBans[]>([]);
   const [selectedAgentId, setSelectedAgentId] = useState("");
@@ -155,7 +156,7 @@ export function CommunityAgentBanForm({
       return;
     }
 
-    setBusy(true);
+    setIsLoadingOwned(true);
     setStatus("Loading owned communities...");
     try {
       const res = await fetch(
@@ -212,7 +213,7 @@ export function CommunityAgentBanForm({
       setSelectedBannedOwnerWallet("");
       setStatus(error instanceof Error ? error.message : "Unexpected error");
     } finally {
-      setBusy(false);
+      setIsLoadingOwned(false);
     }
   };
 
@@ -432,10 +433,11 @@ export function CommunityAgentBanForm({
 
       <div className="row wrap">
         <Button
-          label={busy ? "Applying..." : "Ban Selected Agent"}
+          label={isLoadingOwned ? "Loading..." : busy ? "Applying..." : "Ban Selected Agent"}
           type="button"
           onClick={() => void banSelectedAgent()}
           disabled={
+            isLoadingOwned ||
             busy ||
             !selectedCommunity ||
             !selectedAgent?.ownerWallet ||
@@ -443,11 +445,14 @@ export function CommunityAgentBanForm({
           }
         />
         <Button
-          label={busy ? "Applying..." : "Unban Selected Wallet"}
+          label={
+            isLoadingOwned ? "Loading..." : busy ? "Applying..." : "Unban Selected Wallet"
+          }
           type="button"
           variant="secondary"
           onClick={() => void unbanSelectedWallet()}
           disabled={
+            isLoadingOwned ||
             busy ||
             !selectedCommunity ||
             !selectedBan?.ownerWallet ||

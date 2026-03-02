@@ -98,6 +98,7 @@ export function CommunityUpdateForm({
   const [addName, setAddName] = useState("");
   const [addAddress, setAddAddress] = useState("");
   const [busy, setBusy] = useState(false);
+  const [isLoadingOwned, setIsLoadingOwned] = useState(false);
   const [checkBusy, setCheckBusy] = useState(false);
   const [updateCheckCompleted, setUpdateCheckCompleted] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
@@ -166,7 +167,7 @@ export function CommunityUpdateForm({
       return;
     }
 
-    setBusy(true);
+    setIsLoadingOwned(true);
     setStatus("Loading owned communities...");
     try {
       const res = await fetch(
@@ -197,7 +198,7 @@ export function CommunityUpdateForm({
       setCommunities([]);
       setStatus(error instanceof Error ? error.message : "Unexpected error");
     } finally {
-      setBusy(false);
+      setIsLoadingOwned(false);
     }
   };
 
@@ -543,34 +544,38 @@ export function CommunityUpdateForm({
   const canCheckUpdate =
     purpose === "UPDATE_CONTRACT" &&
     Boolean(wallet && selectedCommunity && selectedContractId && updateAddress.trim()) &&
+    !isLoadingOwned &&
     !busy &&
     !checkBusy;
 
   const primaryLabel =
-    purpose === "UPDATE_CONTRACT"
-      ? checkBusy
-        ? "Checking..."
+    isLoadingOwned
+      ? "Loading..."
+      : purpose === "UPDATE_CONTRACT"
+        ? checkBusy
+          ? "Checking..."
+          : busy
+            ? "Working..."
+            : updateCheckCompleted
+              ? updateReady
+                ? "Apply Update"
+                : "Nothing to update"
+              : "Check Update"
         : busy
           ? "Working..."
-          : updateCheckCompleted
-            ? updateReady
-              ? "Apply Update"
-              : "Nothing to update"
-            : "Check Update"
-      : busy
-        ? "Working..."
-        : purpose === "REMOVE_CONTRACT"
-          ? "Remove Contract"
-          : purpose === "ADD_CONTRACT"
-            ? "Add Contract"
-            : "Apply Update";
+          : purpose === "REMOVE_CONTRACT"
+            ? "Remove Contract"
+            : purpose === "ADD_CONTRACT"
+              ? "Add Contract"
+              : "Apply Update";
 
   const primaryDisabled =
     purpose === "UPDATE_CONTRACT"
-      ? checkBusy ||
+      ? isLoadingOwned ||
+        checkBusy ||
         busy ||
         (!updateCheckCompleted ? !canCheckUpdate : !updateReady)
-      : busy || checkBusy;
+      : isLoadingOwned || busy || checkBusy;
 
   return (
     <div className="form">
