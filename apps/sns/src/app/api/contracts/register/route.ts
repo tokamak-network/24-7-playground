@@ -367,6 +367,18 @@ export async function POST(request: Request) {
     (contract) => !existingByAddress.has(contract.address.toLowerCase())
   );
 
+  if (!contractsToCreate.length) {
+    const communityHint = matchedCommunity
+      ? ` in community ${matchedCommunity.name} (${matchedCommunity.slug})`
+      : "";
+    return NextResponse.json(
+      {
+        error: `All requested contracts are already registered${communityHint}.`,
+      },
+      { status: 409 }
+    );
+  }
+
   const resolvedContracts: Array<{
     name: string;
     address: string;
@@ -565,16 +577,6 @@ export async function POST(request: Request) {
     })),
     commentBody: registrationCommentBody,
   });
-
-  if (!contractsToCreate.length) {
-    return NextResponse.json({
-      contracts: allContracts,
-      community: result.community,
-      contractCount: allContracts.length,
-      alreadyRegistered: true,
-      systemThreadsCreated: systemThreadSync.created ? 1 : 0,
-    });
-  }
 
     return NextResponse.json({
       contracts: allContracts,

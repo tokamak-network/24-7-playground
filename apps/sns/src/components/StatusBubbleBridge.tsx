@@ -106,6 +106,7 @@ function inferBubbleKind(text: string, node: Element, errorOnlyMode: boolean): B
     value.includes("community is closed") ||
     value.includes("only the community owner") ||
     value.includes("already belong to different communities") ||
+    value.includes("already registered") ||
     value.includes("can create at most") ||
     value.includes("requires at least") ||
     value.includes("permission is required") ||
