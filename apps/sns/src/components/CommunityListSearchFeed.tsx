@@ -53,6 +53,10 @@ type CreateCardAnimState =
   | { phase: "flip"; item: CommunityListItem }
   | { phase: "shift"; item: CommunityListItem };
 type CommunityFilterMode = "all" | "owned" | "agentRegistered";
+type CommunityFilterOption = {
+  value: CommunityFilterMode;
+  label: string;
+};
 
 export function CommunityListSearchFeed({
   items,
@@ -64,6 +68,7 @@ export function CommunityListSearchFeed({
   const [communityQuery, setCommunityQuery] = useState("");
   const [communityFilterMode, setCommunityFilterMode] =
     useState<CommunityFilterMode>("all");
+  const [isCommunityFilterMenuOpen, setIsCommunityFilterMenuOpen] = useState(false);
   const [communityItems, setCommunityItems] = useState<CommunityListItem[]>(items);
   const [agentPairsByCommunityId, setAgentPairsByCommunityId] = useState<
     Record<
@@ -86,6 +91,7 @@ export function CommunityListSearchFeed({
     phase: "idle",
   });
   const createCardRef = useRef<HTMLButtonElement | null>(null);
+  const communityFilterMenuRef = useRef<HTMLDivElement | null>(null);
   const createModalTimerRef = useRef<number | null>(null);
   const createCardAnimTimerRef = useRef<number | null>(null);
   const normalizedQuery = communityQuery.trim().toLowerCase();
@@ -96,6 +102,15 @@ export function CommunityListSearchFeed({
       new Set(communityItems.map((item) => item.name).filter(Boolean))
     ).sort((a, b) => a.localeCompare(b));
   }, [communityItems]);
+
+  const communityFilterOptions = useMemo<CommunityFilterOption[]>(
+    () => [
+      { value: "all", label: "All" },
+      { value: "owned", label: "Communities I created" },
+      { value: "agentRegistered", label: "Communities with my agents" },
+    ],
+    []
+  );
 
   const filteredItems = useMemo(() => {
     return communityItems.filter((item) => {
@@ -198,6 +213,18 @@ export function CommunityListSearchFeed({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!isCommunityFilterMenuOpen) return;
+    const onClickOutside = (event: MouseEvent) => {
+      if (!communityFilterMenuRef.current) return;
+      if (!communityFilterMenuRef.current.contains(event.target as Node)) {
+        setIsCommunityFilterMenuOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", onClickOutside);
+    return () => window.removeEventListener("mousedown", onClickOutside);
+  }, [isCommunityFilterMenuOpen]);
 
   const closeCreateModal = useCallback(
     (onClosed?: () => void) => {
@@ -546,44 +573,54 @@ export function CommunityListSearchFeed({
             datalistId={datalistId}
             options={communityOptions}
           />
-          <label className="field thread-feed-filter">
-            <span>Community Filter</span>
-            <select
-              value={communityFilterMode}
-              onChange={(event) =>
-                setCommunityFilterMode(event.target.value as CommunityFilterMode)
-              }
-              style={{
-                height: "36px",
-                minHeight: "36px",
-                maxHeight: "36px",
-                borderRadius: "12px",
-                border: "1px solid rgba(139, 182, 243, 0.5)",
-                padding: "0 12px",
-                background: "transparent",
-                color: "rgba(201, 216, 236, 0.92)",
-                fontSize: "13px",
-                lineHeight: 1.2,
-              }}
-            >
-              <option value="all" style={{ backgroundColor: "#08183d", color: "#eaf3ff" }}>
-                All
-              </option>
-              <option value="owned" style={{ backgroundColor: "#08183d", color: "#eaf3ff" }}>
-                My Created Communities
-              </option>
-              <option
-                value="agentRegistered"
-                style={{ backgroundColor: "#08183d", color: "#eaf3ff" }}
+          <div className="field thread-feed-filter">
+            <div className="thread-type-dropdown" ref={communityFilterMenuRef}>
+              <button
+                type="button"
+                className="thread-type-dropdown-trigger"
+                aria-label="Filter communities"
+                onClick={() => setIsCommunityFilterMenuOpen((prev) => !prev)}
               >
-                Communities With My Registered Agent
-              </option>
-            </select>
-          </label>
+                <span className="thread-type-dropdown-value">
+                  {communityFilterOptions.find((option) => option.value === communityFilterMode)
+                    ?.label || "All"}
+                </span>
+                <span
+                  className={`thread-type-dropdown-caret${isCommunityFilterMenuOpen ? " is-open" : ""}`}
+                  aria-hidden
+                >
+                  ▼
+                </span>
+              </button>
+              {isCommunityFilterMenuOpen ? (
+                <div className="thread-type-dropdown-menu">
+                  {communityFilterOptions.map((option) => {
+                    const isSelected = communityFilterMode === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`thread-type-dropdown-item${isSelected ? " is-selected" : ""}`}
+                        onClick={() => {
+                          setCommunityFilterMode(option.value);
+                          setIsCommunityFilterMenuOpen(false);
+                        }}
+                      >
+                        <span className="thread-type-option-label">{option.label}</span>
+                        {isSelected ? (
+                          <span className="thread-type-option-state">Selected</span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
         {actionStatus ? <p className="status">{actionStatus}</p> : null}
 
-        <div className="community-tile-grid">
+        <div className="community-tile-grid" style={{ marginTop: "12px" }}>
           <div className="community-tile community-tile-create">
             {createCardAnimState.phase === "flip" ? (
               <div className="community-create-flip" aria-hidden>
