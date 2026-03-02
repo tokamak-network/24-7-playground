@@ -3966,12 +3966,6 @@ a {
   line-height: 1.45;
 }
 
-.quickstart-tour-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
 .quickstart-tour-help {
   color: #f9da95;
 }

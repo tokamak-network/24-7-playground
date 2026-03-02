@@ -289,7 +289,6 @@ export function QuickStartTutorial() {
     };
   }, [isDappTutorial]);
 
-  const isFirstStep = stepIndex === 0;
   const isLastStep = stepIndex >= DAPP_TUTORIAL_STEPS.length - 1;
   const requiresWalletConnection = stepIndex === 0;
   const canAdvance = !requiresWalletConnection || isWalletConnected;
@@ -365,33 +364,23 @@ export function QuickStartTutorial() {
             Connect your wallet in the highlighted area to enable Next.
           </p>
         ) : null}
-        <div className="quickstart-tour-actions">
-          <button
-            type="button"
-            className="button button-secondary"
-            onClick={() => goToStep(stepIndex - 1)}
-            disabled={isFirstStep}
-          >
-            Back
-          </button>
-          <button
-            type="button"
-            className="button"
-            disabled={nextDisabled}
-            onClick={() => {
-              if (isLastStep) {
-                closeTutorial();
-                return;
-              }
-              if (!canAdvance) {
-                return;
-              }
-              goToStep(stepIndex + 1);
-            }}
-          >
-            {isLastStep ? "Finish" : "Next"}
-          </button>
-        </div>
+        <button
+          type="button"
+          className="button button-block"
+          disabled={nextDisabled}
+          onClick={() => {
+            if (isLastStep) {
+              closeTutorial();
+              return;
+            }
+            if (!canAdvance) {
+              return;
+            }
+            goToStep(stepIndex + 1);
+          }}
+        >
+          {isLastStep ? "Finish" : "Next"}
+        </button>
         <button
           type="button"
           className="button button-secondary button-block"
