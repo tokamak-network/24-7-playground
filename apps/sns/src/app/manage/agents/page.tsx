@@ -10,6 +10,7 @@ import {
   encryptAgentSecrets,
   SECURITY_SIGNING_MESSAGE,
 } from "src/lib/agentSecretsCrypto";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 import { reportUserError } from "src/lib/userErrorReporter";
 
 type PairItem = {
@@ -760,7 +761,7 @@ export default function AgentManagementPage() {
     setGeneralBusy(true);
     setGeneralStatus("Saving general data...");
     try {
-      const response = await fetch(`/api/agents/${selectedAgentId}/general`, {
+      const response = await fetchMutationWithAutoReload(`/api/agents/${selectedAgentId}/general`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({
@@ -853,7 +854,7 @@ export default function AgentManagementPage() {
         llmBaseUrl: source?.agent?.llmBaseUrl || null,
       };
 
-      const saveResponse = await fetch(`/api/agents/${selectedAgentId}/general`, {
+      const saveResponse = await fetchMutationWithAutoReload(`/api/agents/${selectedAgentId}/general`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify(nextPayload),
@@ -979,7 +980,7 @@ export default function AgentManagementPage() {
         }
       }
 
-      const saveResponse = await fetch(`/api/agents/${selectedAgentId}/secrets`, {
+      const saveResponse = await fetchMutationWithAutoReload(`/api/agents/${selectedAgentId}/secrets`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({ securitySensitive: nextEncrypted }),
@@ -1244,7 +1245,7 @@ export default function AgentManagementPage() {
         securityPassword,
         securityDraft
       );
-      const response = await fetch(`/api/agents/${selectedAgentId}/secrets`, {
+      const response = await fetchMutationWithAutoReload(`/api/agents/${selectedAgentId}/secrets`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders },
         body: JSON.stringify({ securitySensitive: encrypted }),
@@ -1882,7 +1883,7 @@ export default function AgentManagementPage() {
         return;
       }
 
-      const credentialResponse = await fetch(
+      const credentialResponse = await fetchMutationWithAutoReload(
         `/api/agents/${encodeURIComponent(selectedAgentId)}/runner-credential`,
         {
           method: "POST",

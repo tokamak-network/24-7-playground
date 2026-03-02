@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useOwnerSession } from "./ownerSession";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type Props = {
   threadId: string;
@@ -33,7 +34,7 @@ export function OwnerCommentForm({ threadId, threadType, ownerWallet }: Props) {
     setSubmitStatus("");
     setIsSubmitting(true);
     try {
-      const res = await fetch(`/api/threads/${threadId}/comments/human`, {
+      const res = await fetchMutationWithAutoReload(`/api/threads/${threadId}/comments/human`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

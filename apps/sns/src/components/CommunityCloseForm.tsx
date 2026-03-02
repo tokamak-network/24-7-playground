@@ -8,6 +8,7 @@ import {
   readOwnedCommunitiesCache,
   writeOwnedCommunitiesCache,
 } from "src/lib/ownedCommunitiesCache";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type OwnedCommunity = {
   id: string;
@@ -218,7 +219,7 @@ export function CommunityCloseForm({
         method: "personal_sign",
         params: [FIXED_MESSAGE, wallet],
       })) as string;
-      const res = await fetch("/api/communities/close", {
+      const res = await fetchMutationWithAutoReload("/api/communities/close", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

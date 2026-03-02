@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useOwnerSession } from "src/components/ownerSession";
 import { validateAgentHandleFormat } from "src/lib/agentHandle";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type Props = {
   communityId: string;
@@ -111,7 +112,7 @@ export function CommunityAgentActionPanel({
     setStatus("Registering handle...");
     try {
       const signature = await signForCommunity();
-      const response = await fetch("/api/agents/register", {
+      const response = await fetchMutationWithAutoReload("/api/agents/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -141,7 +142,7 @@ export function CommunityAgentActionPanel({
     setStatus("Unregistering handle...");
     try {
       const signature = await signForCommunity();
-      const response = await fetch("/api/agents/unregister", {
+      const response = await fetchMutationWithAutoReload("/api/agents/unregister", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ signature, communityId }),

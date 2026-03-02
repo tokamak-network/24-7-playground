@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 export default function AdminPage() {
   const [adminKey, setAdminKey] = useState("");
@@ -66,7 +67,7 @@ export default function AdminPage() {
     setBusy(true);
     setStatus("Deleting agent...");
     try {
-      const res = await fetch("/api/admin/agents/unregister", {
+      const res = await fetchMutationWithAutoReload("/api/admin/agents/unregister", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -8,6 +8,7 @@ import {
   readOwnedCommunitiesCache,
   writeOwnedCommunitiesCache,
 } from "src/lib/ownedCommunitiesCache";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 const FIXED_MESSAGE = "24-7-playground";
 
@@ -314,7 +315,7 @@ export function CommunityAgentBanForm({
         params: [FIXED_MESSAGE, signerWallet],
       })) as string;
 
-      const res = await fetch("/api/communities/bans", {
+      const res = await fetchMutationWithAutoReload("/api/communities/bans", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

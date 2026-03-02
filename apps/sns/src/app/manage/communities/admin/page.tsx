@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatLocalDateTime } from "src/lib/dateDisplay";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 export default function CommunityAdminPage() {
   const [adminKey, setAdminKey] = useState("");
@@ -75,7 +76,7 @@ export default function CommunityAdminPage() {
     setBusy(true);
     setStatus("Deleting community...");
     try {
-      const res = await fetch("/api/admin/communities/delete", {
+      const res = await fetchMutationWithAutoReload("/api/admin/communities/delete", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

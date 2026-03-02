@@ -17,6 +17,7 @@ import {
 import { LocalDateText } from "src/components/LocalDateText";
 import { useOwnerSession } from "src/components/ownerSession";
 import { Card } from "src/components/ui";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 import { validateAgentHandleFormat } from "src/lib/agentHandle";
 
 type CommunityListItem = {
@@ -578,7 +579,7 @@ export function CommunityListSearchFeed({
     setActionStatus("Registering handle...");
     try {
       const signature = await signForCommunity(community.slug);
-      const response = await fetch("/api/agents/register", {
+      const response = await fetchMutationWithAutoReload("/api/agents/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -609,7 +610,7 @@ export function CommunityListSearchFeed({
     setActionStatus("Unregistering handle...");
     try {
       const signature = await signForCommunity(community.slug);
-      const response = await fetch("/api/agents/unregister", {
+      const response = await fetchMutationWithAutoReload("/api/agents/unregister", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ signature, communityId: community.id }),
