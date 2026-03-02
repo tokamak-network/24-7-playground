@@ -6,7 +6,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { CommunityAgentBanForm } from "src/components/CommunityAgentBanForm";
 import { CommunityCloseForm } from "src/components/CommunityCloseForm";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
-import { CommunityUpdateForm } from "src/components/CommunityUpdateForm";
+import {
+  CommunityUpdateForm,
+  type CommunityUpdateAppliedPayload,
+} from "src/components/CommunityUpdateForm";
 import {
   ContractRegistrationForm,
   type ContractRegistrationSuccessPayload,
@@ -675,6 +678,89 @@ export function CommunityListSearchFeed({
     [closeCreateModal, startCreateCardInsertionAnimation, toCommunityListItem]
   );
 
+  const handleCommunityUpdateApplied = useCallback(
+    (payload: CommunityUpdateAppliedPayload) => {
+      setCommunityItems((prev) =>
+        prev.map((item) => {
+          if (item.id !== payload.communityId) return item;
+
+          if (payload.purpose === "UPDATE_DESCRIPTION") {
+            return {
+              ...item,
+              description: payload.description || "",
+            };
+          }
+
+          if (payload.purpose === "UPDATE_CONTRACT" && payload.contract) {
+            return {
+              ...item,
+              contracts: item.contracts.map((contract) =>
+                contract.id === payload.contract?.id ? { ...contract, ...payload.contract } : contract
+              ),
+            };
+          }
+
+          if (payload.purpose === "REMOVE_CONTRACT" && payload.removedContractId) {
+            return {
+              ...item,
+              contracts: item.contracts.filter(
+                (contract) => contract.id !== payload.removedContractId
+              ),
+            };
+          }
+
+          if (payload.purpose === "ADD_CONTRACT" && payload.addedContract) {
+            const nextAddress = payload.addedContract.address.toLowerCase();
+            if (item.contracts.some((contract) => contract.address.toLowerCase() === nextAddress)) {
+              return item;
+            }
+            return {
+              ...item,
+              contracts: [...item.contracts, payload.addedContract],
+            };
+          }
+
+          return item;
+        })
+      );
+      setActionStatus("Community details updated.");
+      setCommunityActionModal(null);
+      router.refresh();
+    },
+    [router]
+  );
+
+  const handleCommunityCloseApplied = useCallback(
+    (payload: { communityId: string; deleteAt: string | null }) => {
+      setCommunityItems((prev) =>
+        prev.map((item) =>
+          item.id === payload.communityId
+            ? {
+                ...item,
+                status: "CLOSED",
+                registeredHandleCount: 0,
+              }
+            : item
+        )
+      );
+      setAgentPairsByCommunityId((prev) => {
+        const next = { ...prev };
+        delete next[payload.communityId];
+        return next;
+      });
+      setActionStatus("Community closed. Deletion scheduled.");
+      setCommunityActionModal(null);
+      router.refresh();
+    },
+    [router]
+  );
+
+  const handleCommunityBanApplied = useCallback(() => {
+    setActionStatus("Community ban list updated.");
+    setCommunityActionModal(null);
+    router.refresh();
+  }, [router]);
+
   const renderCommunityTile = (community: CommunityListItem, extraClassName?: string) => {
       const chainSet = Array.from(
         new Set(community.contracts.map((contract) => contract.chain).filter((chain) => chain))
@@ -1031,11 +1117,20 @@ export function CommunityListSearchFeed({
             </header>
             <div style={communityActionModalBodyStyle}>
               {communityActionModal.mode === "edit" ? (
-                <CommunityUpdateForm initialCommunityId={communityActionModal.community.id} />
+                <CommunityUpdateForm
+                  initialCommunityId={communityActionModal.community.id}
+                  onApplied={handleCommunityUpdateApplied}
+                />
               ) : communityActionModal.mode === "ban" ? (
-                <CommunityAgentBanForm initialCommunityId={communityActionModal.community.id} />
+                <CommunityAgentBanForm
+                  initialCommunityId={communityActionModal.community.id}
+                  onApplied={handleCommunityBanApplied}
+                />
               ) : (
-                <CommunityCloseForm initialCommunityId={communityActionModal.community.id} />
+                <CommunityCloseForm
+                  initialCommunityId={communityActionModal.community.id}
+                  onClosed={handleCommunityCloseApplied}
+                />
               )}
             </div>
           </section>

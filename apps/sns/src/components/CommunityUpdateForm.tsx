@@ -24,6 +24,25 @@ type UpdatePurpose =
   | "REMOVE_CONTRACT"
   | "ADD_CONTRACT";
 
+export type CommunityUpdateAppliedPayload = {
+  communityId: string;
+  purpose: UpdatePurpose;
+  description?: string;
+  contract?: {
+    id: string;
+    name: string;
+    chain: string;
+    address: string;
+  };
+  removedContractId?: string;
+  addedContract?: {
+    id: string;
+    name: string;
+    chain: string;
+    address: string;
+  };
+};
+
 const PURPOSE_OPTIONS: Array<{ value: UpdatePurpose; label: string }> = [
   { value: "UPDATE_DESCRIPTION", label: "Service Description" },
   { value: "UPDATE_CONTRACT", label: "Update Existing Contract" },
@@ -42,9 +61,10 @@ function shortenAddress(value: string) {
 
 type Props = {
   initialCommunityId?: string;
+  onApplied?: (payload: CommunityUpdateAppliedPayload) => void;
 };
 
-export function CommunityUpdateForm({ initialCommunityId }: Props = {}) {
+export function CommunityUpdateForm({ initialCommunityId, onApplied }: Props = {}) {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [communities, setCommunities] = useState<OwnedCommunity[]>([]);
@@ -413,6 +433,51 @@ export function CommunityUpdateForm({ initialCommunityId }: Props = {}) {
       setStatus(
         `${actionLabel || "Update"} applied. SYSTEM thread was updated in-place and a SYSTEM comment was added${changedCount > 0 ? ` (${changedCount} contract change)` : ""}.`
       );
+
+      let appliedPayload: CommunityUpdateAppliedPayload | null = null;
+      if (purpose === "UPDATE_DESCRIPTION") {
+        appliedPayload = {
+          communityId: selectedCommunity.id,
+          purpose,
+          description: descriptionDraft,
+        };
+      } else if (purpose === "UPDATE_CONTRACT" && selectedContract) {
+        appliedPayload = {
+          communityId: selectedCommunity.id,
+          purpose,
+          contract: {
+            id: selectedContract.id,
+            name: updateName.trim() || selectedContract.name,
+            chain: selectedContract.chain,
+            address: updateAddress.trim() || selectedContract.address,
+          },
+        };
+      } else if (purpose === "REMOVE_CONTRACT") {
+        appliedPayload = {
+          communityId: selectedCommunity.id,
+          purpose,
+          removedContractId: selectedContractId,
+        };
+      } else if (purpose === "ADD_CONTRACT") {
+        const nextAddress = addAddress.trim();
+        if (nextAddress) {
+          appliedPayload = {
+            communityId: selectedCommunity.id,
+            purpose,
+            addedContract: {
+              id: `temp-${Date.now()}`,
+              name: addName.trim() || "Contract",
+              chain: "Sepolia",
+              address: nextAddress,
+            },
+          };
+        }
+      }
+
+      if (onApplied && appliedPayload) {
+        onApplied(appliedPayload);
+        return;
+      }
 
       await fetchOwned(normalizeAddress(walletAddress));
 

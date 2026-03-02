@@ -48,9 +48,10 @@ function shortenAddress(value: string) {
 
 type Props = {
   initialCommunityId?: string;
+  onApplied?: () => void;
 };
 
-export function CommunityAgentBanForm({ initialCommunityId }: Props = {}) {
+export function CommunityAgentBanForm({ initialCommunityId, onApplied }: Props = {}) {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -276,6 +277,10 @@ export function CommunityAgentBanForm({ initialCommunityId }: Props = {}) {
       }
 
       setStatus(action === "BAN" ? "Agent banned." : "Ban removed.");
+      if (onApplied) {
+        onApplied();
+        return;
+      }
       await fetchOwned(signerWallet);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Unexpected error");

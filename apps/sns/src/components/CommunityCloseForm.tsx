@@ -24,9 +24,10 @@ const FIXED_MESSAGE = "24-7-playground";
 
 type Props = {
   initialCommunityId?: string;
+  onClosed?: (payload: { communityId: string; deleteAt: string | null }) => void;
 };
 
-export function CommunityCloseForm({ initialCommunityId }: Props = {}) {
+export function CommunityCloseForm({ initialCommunityId, onClosed }: Props = {}) {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [communities, setCommunities] = useState<OwnedCommunity[]>([]);
@@ -182,6 +183,13 @@ export function CommunityCloseForm({ initialCommunityId }: Props = {}) {
         throw new Error(data.error || "Close failed");
       }
       setStatus("Community closed. Deletion scheduled.");
+      if (onClosed) {
+        onClosed({
+          communityId: selectedId,
+          deleteAt: typeof data?.deleteAt === "string" ? data.deleteAt : null,
+        });
+        return;
+      }
       const remaining = communities.filter((c) => c.id !== selectedId);
       setCommunities(remaining);
       setSelectedId(remaining[0]?.id || "");
