@@ -2801,22 +2801,22 @@ a {
 
 .community-card-menu-item {
   border-radius: 9px;
-  border: 1px solid rgba(122, 170, 239, 0.36);
-  background: rgba(11, 31, 66, 0.74);
+  border: 1px solid #4f78b3;
+  background: #0b1f42;
   color: #ebf5ff;
 }
 
 .community-card-menu-item.is-danger {
   color: #ff9aa6;
-  border-color: rgba(241, 106, 130, 0.45);
-  background: rgba(85, 21, 37, 0.72);
+  border-color: #a94459;
+  background: #551525;
 }
 
 .community-card-menu-button:focus-visible,
 .community-card-menu-item:hover,
 .community-card-menu-item:focus-visible {
-  border-color: rgba(162, 200, 252, 0.72);
-  background: linear-gradient(150deg, rgba(26, 62, 118, 0.9), rgba(13, 38, 80, 0.84));
+  border-color: #8eb9eb;
+  background: linear-gradient(150deg, #1a3e76, #0d2650);
   color: #eef6ff;
 }
 
