@@ -588,7 +588,7 @@ export function CommunityListSearchFeed({
   return (
     <>
       <div className="thread-feed" style={{ alignContent: "start", alignItems: "start" }}>
-        <div className="thread-feed-controls">
+        <div className="thread-feed-controls has-filter-footer">
           <CommunityNameSearchField
             className="thread-community-search-field"
             label={searchLabel}
