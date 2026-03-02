@@ -109,6 +109,8 @@ export function QuickStartTutorial() {
   const [searchingTarget, setSearchingTarget] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletCheckCompleted, setWalletCheckCompleted] = useState(false);
+  const [isCreateCommunityModalOpen, setIsCreateCommunityModalOpen] = useState(false);
+  const [createModalCheckCompleted, setCreateModalCheckCompleted] = useState(false);
   const autoAdvanceStepRef = useRef<number | null>(null);
   const previousNextDisabledRef = useRef<boolean | null>(null);
   const autoAdvancedOnCurrentStepRef = useRef(false);
@@ -290,9 +292,44 @@ export function QuickStartTutorial() {
     };
   }, [isDappTutorial]);
 
+  useEffect(() => {
+    if (!isDappTutorial) {
+      setIsCreateCommunityModalOpen(false);
+      setCreateModalCheckCompleted(false);
+      return;
+    }
+
+    const detectCreateModal = () => {
+      const modal = document.querySelector(
+        ".community-create-modal.is-open:not(.community-action-modal)"
+      );
+      setIsCreateCommunityModalOpen(Boolean(modal));
+      setCreateModalCheckCompleted(true);
+    };
+
+    detectCreateModal();
+
+    const observer = new MutationObserver(() => {
+      detectCreateModal();
+    });
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isDappTutorial]);
+
   const isLastStep = stepIndex >= DAPP_TUTORIAL_STEPS.length - 1;
   const requiresWalletConnection = stepIndex === 0;
-  const canAdvance = !requiresWalletConnection || isWalletConnected;
+  const requiresCreateCommunityModalOpen = stepIndex === 1;
+  const canAdvance =
+    (!requiresWalletConnection || isWalletConnected) &&
+    (!requiresCreateCommunityModalOpen || isCreateCommunityModalOpen);
   const nextDisabled = !isLastStep && !canAdvance;
   const hasTargetRect = Boolean(targetRect);
   const spotlightStyle =
@@ -362,6 +399,11 @@ export function QuickStartTutorial() {
         {stepIndex === 0 && walletCheckCompleted && !isWalletConnected ? (
           <p className="quickstart-tour-help">
             Connect your wallet in the highlighted area to enable Next.
+          </p>
+        ) : null}
+        {stepIndex === 1 && createModalCheckCompleted && !isCreateCommunityModalOpen ? (
+          <p className="quickstart-tour-help">
+            Click Create New Community and wait for the modal to appear to enable Next.
           </p>
         ) : null}
         <button
