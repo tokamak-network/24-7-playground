@@ -3917,10 +3917,21 @@ a {
   z-index: 301;
   border: 2px solid #9ce9d6;
   border-radius: 12px;
+  overflow: hidden;
   box-shadow:
     0 0 0 9999px rgba(6, 10, 20, 0.1),
     0 0 0 3px rgba(156, 233, 214, 0.25);
   pointer-events: none;
+}
+
+.quickstart-tour-spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255, 255, 255, 0.13);
+  -webkit-backdrop-filter: brightness(1.22) saturate(1.08);
+  backdrop-filter: brightness(1.22) saturate(1.08);
 }
 
 .quickstart-tour-panel {
