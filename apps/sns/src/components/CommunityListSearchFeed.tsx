@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
 import { ContractRegistrationForm } from "src/components/ContractRegistrationForm";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
@@ -37,6 +37,14 @@ type Props = {
   datalistId: string;
 };
 
+type CreateModalPhase = "closed" | "opening" | "open" | "closing";
+type CreateModalOrigin = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+};
+
 export function CommunityListSearchFeed({
   items,
   searchLabel,
@@ -58,7 +66,12 @@ export function CommunityListSearchFeed({
   const [agentLoading, setAgentLoading] = useState(false);
   const [actionBusyId, setActionBusyId] = useState<string | null>(null);
   const [actionStatus, setActionStatus] = useState("");
-  const [isCreateCommunityOpen, setIsCreateCommunityOpen] = useState(false);
+  const [createModalPhase, setCreateModalPhase] = useState<CreateModalPhase>("closed");
+  const [createModalOrigin, setCreateModalOrigin] = useState<CreateModalOrigin | null>(
+    null
+  );
+  const createCardRef = useRef<HTMLButtonElement | null>(null);
+  const createModalTimerRef = useRef<number | null>(null);
   const normalizedQuery = communityQuery.trim().toLowerCase();
 
   const communityOptions = useMemo(() => {
@@ -140,6 +153,75 @@ export function CommunityListSearchFeed({
   useEffect(() => {
     void loadAgentPairs();
   }, [loadAgentPairs]);
+
+  useEffect(() => {
+    return () => {
+      if (createModalTimerRef.current !== null) {
+        window.clearTimeout(createModalTimerRef.current);
+      }
+    };
+  }, []);
+
+  const closeCreateModal = useCallback(() => {
+    if (createModalPhase === "closed" || createModalPhase === "closing") {
+      return;
+    }
+    setCreateModalPhase("closing");
+    if (createModalTimerRef.current !== null) {
+      window.clearTimeout(createModalTimerRef.current);
+    }
+    createModalTimerRef.current = window.setTimeout(() => {
+      setCreateModalPhase("closed");
+      setCreateModalOrigin(null);
+      createModalTimerRef.current = null;
+    }, 360);
+  }, [createModalPhase]);
+
+  const openCreateModal = useCallback(() => {
+    const rect = createCardRef.current?.getBoundingClientRect();
+    const fallback = {
+      top: window.innerHeight * 0.2,
+      left: window.innerWidth * 0.2,
+      width: window.innerWidth * 0.6,
+      height: Math.max(280, window.innerHeight * 0.44),
+    };
+    setCreateModalOrigin({
+      top: rect?.top ?? fallback.top,
+      left: rect?.left ?? fallback.left,
+      width: rect?.width ?? fallback.width,
+      height: rect?.height ?? fallback.height,
+    });
+    setCreateModalPhase("opening");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setCreateModalPhase("open");
+      });
+    });
+  }, []);
+
+  const isCreateModalVisible = createModalPhase !== "closed" && Boolean(createModalOrigin);
+
+  useEffect(() => {
+    if (!isCreateModalVisible) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [isCreateModalVisible]);
+
+  useEffect(() => {
+    if (!isCreateModalVisible) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeCreateModal();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isCreateModalVisible, closeCreateModal]);
 
   const readError = async (response: Response) => {
     const text = await response.text().catch(() => "");
@@ -242,38 +324,34 @@ export function CommunityListSearchFeed({
   };
 
   return (
-    <div className="thread-feed">
-      <CommunityNameSearchField
-        className="thread-community-search-field"
-        label={searchLabel}
-        placeholder={searchPlaceholder}
-        value={communityQuery}
-        onChange={(event) => setCommunityQuery(event.target.value)}
-        datalistId={datalistId}
-        options={communityOptions}
-      />
-      {actionStatus ? <p className="status">{actionStatus}</p> : null}
+    <>
+      <div className="thread-feed">
+        <CommunityNameSearchField
+          className="thread-community-search-field"
+          label={searchLabel}
+          placeholder={searchPlaceholder}
+          value={communityQuery}
+          onChange={(event) => setCommunityQuery(event.target.value)}
+          datalistId={datalistId}
+          options={communityOptions}
+        />
+        {actionStatus ? <p className="status">{actionStatus}</p> : null}
 
-      <div className="community-tile-grid">
-        <div className="community-tile community-tile-create">
-          {isCreateCommunityOpen ? (
-            <div className="card community-create-form-card">
-              <ContractRegistrationForm />
-            </div>
-          ) : (
+        <div className="community-tile-grid">
+          <div className="community-tile community-tile-create">
             <button
+              ref={createCardRef}
               type="button"
               className="community-create-card"
-              onClick={() => setIsCreateCommunityOpen(true)}
+              onClick={openCreateModal}
             >
               <span className="community-create-plus" aria-hidden>
                 +
               </span>
               <span className="community-create-label">Create a new community</span>
             </button>
-          )}
-        </div>
-        {filteredItems.map((community) => {
+          </div>
+          {filteredItems.map((community) => {
           const chainSet = Array.from(
             new Set(
               community.contracts
@@ -383,11 +461,52 @@ export function CommunityListSearchFeed({
               </Card>
             </div>
           );
-        })}
+          })}
+        </div>
+        {filteredItems.length ? null : (
+          <p className="empty">No matching communities.</p>
+        )}
       </div>
-      {filteredItems.length ? null : (
-        <p className="empty">No matching communities.</p>
-      )}
-    </div>
+      {isCreateModalVisible && createModalOrigin ? (
+        <div
+          className={`community-create-modal${createModalPhase === "open" ? " is-open" : ""}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Create New Community"
+        >
+          <button
+            type="button"
+            className="community-create-modal-backdrop"
+            aria-label="Close create community modal"
+            onClick={closeCreateModal}
+          />
+          <section
+            className="community-create-modal-shell"
+            style={
+              {
+                "--create-origin-top": `${createModalOrigin.top}px`,
+                "--create-origin-left": `${createModalOrigin.left}px`,
+                "--create-origin-width": `${createModalOrigin.width}px`,
+                "--create-origin-height": `${createModalOrigin.height}px`,
+              } as CSSProperties
+            }
+          >
+            <header className="community-create-modal-head">
+              <h3>Create New Community</h3>
+              <button
+                type="button"
+                className="community-create-modal-close"
+                onClick={closeCreateModal}
+              >
+                Close
+              </button>
+            </header>
+            <div className="community-create-modal-body">
+              <ContractRegistrationForm />
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </>
   );
 }

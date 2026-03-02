@@ -2408,14 +2408,112 @@ a {
   max-width: 16ch;
 }
 
-.community-create-form-card {
-  min-height: 320px;
+.community-create-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  pointer-events: none;
 }
 
-.sns-page .community-tile .card.community-create-form-card {
-  border-color: rgba(182, 204, 236, 0.88);
-  background: linear-gradient(165deg, rgba(246, 250, 255, 0.96), rgba(239, 246, 255, 0.94));
+.community-create-modal-backdrop {
+  pointer-events: auto;
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  background: rgba(2, 9, 28, 0.02);
+  opacity: 0;
+  transition: opacity 0.3s ease, background 0.3s ease;
+}
+
+.community-create-modal-shell {
+  pointer-events: auto;
+  position: fixed;
+  top: var(--create-origin-top);
+  left: var(--create-origin-left);
+  width: var(--create-origin-width);
+  height: var(--create-origin-height);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border-radius: 20px;
+  border: 1px solid rgba(182, 204, 236, 0.88);
+  background: linear-gradient(165deg, rgba(246, 250, 255, 0.97), rgba(239, 246, 255, 0.95));
   box-shadow: 0 16px 34px rgba(2, 10, 30, 0.32);
+  overflow: hidden;
+  transition:
+    top 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
+    left 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
+    width 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
+    height 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
+    border-radius 0.32s ease;
+}
+
+.community-create-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px 11px;
+  border-bottom: 1px solid rgba(187, 204, 228, 0.92);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.community-create-modal-head h3 {
+  margin: 0;
+  color: #152c4c;
+  font-size: clamp(18px, 2vw, 24px);
+  line-height: 1.15;
+}
+
+.community-create-modal-close {
+  border: 1px solid rgba(157, 181, 215, 0.82);
+  background: #f5f9ff;
+  color: #2a4670;
+  border-radius: 999px;
+  padding: 7px 13px;
+  min-height: 34px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.community-create-modal-body {
+  min-width: 0;
+  min-height: 0;
+  padding: 14px 18px 20px;
+  overflow: auto;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.community-create-modal.is-open .community-create-modal-backdrop {
+  background: rgba(2, 9, 28, 0.68);
+  opacity: 1;
+}
+
+.community-create-modal.is-open .community-create-modal-shell {
+  top: clamp(14px, 2.2vh, 28px);
+  left: clamp(14px, 2.2vw, 28px);
+  width: calc(100vw - (clamp(14px, 2.2vw, 28px) * 2));
+  height: calc(100dvh - (clamp(14px, 2.2vh, 28px) * 2));
+  border-radius: 24px;
+}
+
+.community-create-modal.is-open .community-create-modal-head,
+.community-create-modal.is-open .community-create-modal-body {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.community-create-modal.is-open .community-create-modal-head {
+  transition-delay: 0.16s;
+}
+
+.community-create-modal.is-open .community-create-modal-body {
+  transition-delay: 0.18s;
 }
 
 .community-tile .card {
