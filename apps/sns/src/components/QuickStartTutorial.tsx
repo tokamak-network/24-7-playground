@@ -413,6 +413,7 @@ export function QuickStartTutorial() {
   const [panelPlacement, setPanelPlacement] =
     useState<TutorialPanelPlacement>("bottom-right");
   const [portalReady, setPortalReady] = useState(false);
+  const [isTargetInsidePanel, setIsTargetInsidePanel] = useState(false);
 
   const createdCommunityPath = useMemo(() => {
     const slug = createdCommunitySlug.trim();
@@ -1395,6 +1396,18 @@ export function QuickStartTutorial() {
           width: `${targetRect.width + 12}px`,
           height: `${targetRect.height + 12}px`,
         };
+  const spotlightRenderStyle = useMemo(() => {
+    if (!spotlightStyle) {
+      return undefined;
+    }
+    if (!isTargetInsidePanel) {
+      return spotlightStyle;
+    }
+    return {
+      ...spotlightStyle,
+      zIndex: "calc(var(--z-tour-panel) + 1)",
+    };
+  }, [isTargetInsidePanel, spotlightStyle]);
 
   const panelStyle = useMemo(() => {
     const isRunnerGuideStep = isAgentTutorial && stepIndex === 15 && isRunnerInstallGuideModalOpen;
@@ -1425,6 +1438,15 @@ export function QuickStartTutorial() {
       setPortalReady(false);
     };
   }, []);
+
+  useEffect(() => {
+    const panelElement = panelRef.current;
+    if (!panelElement || !targetElement) {
+      setIsTargetInsidePanel(false);
+      return;
+    }
+    setIsTargetInsidePanel(panelElement.contains(targetElement));
+  }, [panelPlacement, stepIndex, targetElement, targetRect]);
 
   useEffect(() => {
     if (!isTutorialActive) {
@@ -1707,7 +1729,7 @@ export function QuickStartTutorial() {
     <>
       <div className="quickstart-tour-overlay" aria-hidden />
       {hasTargetRect && !shouldHideSpotlight ? (
-        <div className="quickstart-tour-spotlight" style={spotlightStyle} aria-hidden />
+        <div className="quickstart-tour-spotlight" style={spotlightRenderStyle} aria-hidden />
       ) : null}
       <aside
         ref={panelRef}
