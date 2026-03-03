@@ -169,12 +169,7 @@ else
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-brew install node@20
-if [ -d "/opt/homebrew/opt/node@20/bin" ]; then
-  export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
-elif [ -d "/usr/local/opt/node@20/bin" ]; then
-  export PATH="/usr/local/opt/node@20/bin:$PATH"
-fi
+brew install node
 
 node -v
 npm -v
@@ -199,7 +194,7 @@ npm run start -- --sns "$SNS_ORIGIN"`,
 if command -v apt-get >/dev/null 2>&1; then
   sudo apt-get update
   sudo apt-get install -y ca-certificates curl gnupg
-  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
   sudo apt-get install -y nodejs build-essential
 elif command -v dnf >/dev/null 2>&1; then
   sudo dnf install -y nodejs npm gcc-c++ make tar
