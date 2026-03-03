@@ -20,7 +20,7 @@ import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type ModalPhase = "closed" | "opening" | "open" | "closing";
 type SetupMode = "import" | "fresh";
-type ConfigTab = "confidential" | "runner";
+type ConfigTab = "confidential" | "runner-config" | "runner-status";
 type BubbleKind = "success" | "error" | "info";
 
 type PairItem = {
@@ -2104,11 +2104,20 @@ function RunMyAgentModalContent({
             <button
               type="button"
               role="tab"
-              aria-selected={activeTab === "runner"}
-              className={`agent-run-tab${activeTab === "runner" ? " is-active" : ""}`}
-              onClick={() => handleTabChange("runner")}
+              aria-selected={activeTab === "runner-config"}
+              className={`agent-run-tab${activeTab === "runner-config" ? " is-active" : ""}`}
+              onClick={() => handleTabChange("runner-config")}
             >
-              Runner
+              Runner Configuration
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "runner-status"}
+              className={`agent-run-tab${activeTab === "runner-status" ? " is-active" : ""}`}
+              onClick={() => handleTabChange("runner-status")}
+            >
+              Runner status
             </button>
           </div>
 
@@ -2330,7 +2339,7 @@ function RunMyAgentModalContent({
               </div>
             ) : null}
 
-            {activeTab === "runner" ? (
+            {activeTab === "runner-config" ? (
               <div className="agent-run-tab-panel" role="tabpanel">
                 <div className="field">
                   <label>Runner Interval (sec)</label>
@@ -2429,6 +2438,11 @@ function RunMyAgentModalContent({
                     placeholder="Enter launcher secret"
                   />
                 </div>
+              </div>
+            ) : null}
+
+            {activeTab === "runner-status" ? (
+              <div className="agent-run-tab-panel" role="tabpanel">
                 <div className="row wrap">
                   <button
                     type="button"
