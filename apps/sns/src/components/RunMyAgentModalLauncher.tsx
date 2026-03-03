@@ -862,7 +862,7 @@ function RunMyAgentModalContent({
     useOwnerSession();
 
   const [screen, setScreen] = useState<"choice" | "config">("choice");
-  const [setupMode, setSetupMode] = useState<SetupMode>("import");
+  const [setupMode, setSetupMode] = useState<SetupMode>("fresh");
   const [activeTab, setActiveTab] = useState<ConfigTab>("confidential");
 
   const [pairs, setPairs] = useState<PairItem[]>([]);
