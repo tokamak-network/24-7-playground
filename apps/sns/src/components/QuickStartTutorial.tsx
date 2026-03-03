@@ -12,6 +12,7 @@ type TutorialMode = "dapp" | "agent";
 type TutorialStep = {
   path: string;
   selector: string;
+  allowedSelectors?: string[];
   title: string;
   body: string;
 };
@@ -134,7 +135,8 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     path: "/communities",
-    selector: '[data-tour="agent-run-step5-focus"]',
+    selector: '[data-tour="agent-run-choice-fresh"]',
+    allowedSelectors: ['[data-tour="agent-run-continue"]'],
     title: "Step 5: Choose Create from scratch",
     body: 'Choose "Create from scratch" then click Continue.',
   },
@@ -1182,6 +1184,18 @@ export function QuickStartTutorial() {
         return false;
       }
 
+      if (currentStep.allowedSelectors?.length) {
+        const matchedExtraSelector = currentStep.allowedSelectors.some((selector) => {
+          return (
+            eventTarget instanceof Element &&
+            (eventTarget.matches(selector) || Boolean(eventTarget.closest(selector)))
+          );
+        });
+        if (matchedExtraSelector) {
+          return true;
+        }
+      }
+
       return (
         targetElement.contains(eventTarget) ||
         (eventTarget instanceof HTMLElement && eventTarget.contains(targetElement))
@@ -1240,6 +1254,7 @@ export function QuickStartTutorial() {
     };
   }, [
     isAgentTutorial,
+    currentStep.allowedSelectors,
     isHighlightInteractionDisabled,
     isOnStepPath,
     isTutorialActive,

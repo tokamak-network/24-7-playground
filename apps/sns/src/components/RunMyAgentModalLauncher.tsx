@@ -2482,82 +2482,80 @@ function RunMyAgentModalContent({
             </div>
           ) : (
             <>
-              <div data-tour="agent-run-step5-focus">
-                <div className="agent-run-choice-grid">
+              <div className="agent-run-choice-grid">
+                <button
+                  type="button"
+                  className={`agent-run-choice-card${setupMode === "import" ? " is-active" : ""}`}
+                  onClick={() => setSetupMode("import")}
+                >
+                  <strong>Import from another community</strong>
+                  <span>
+                    Load Public Configuration and Encrypted Ciphertext from another registered
+                    community.
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={`agent-run-choice-card${setupMode === "fresh" ? " is-active" : ""}`}
+                  data-tour="agent-run-choice-fresh"
+                  onClick={() => setSetupMode("fresh")}
+                >
+                  <strong>Create from scratch</strong>
+                  <span>Start with empty Public Configuration and Confidential Keys.</span>
+                </button>
+              </div>
+
+              {setupMode === "import" ? (
+                <>
+                  <div className="field">
+                    <label>Source community configuration</label>
+                    <div className="manager-inline-field">
+                      <select
+                        value={importSourceAgentId}
+                        onChange={(event) => setImportSourceAgentId(event.currentTarget.value)}
+                        disabled={pairsBusy || !sourcePairs.length || prepareBusy}
+                      >
+                        {sourcePairs.length ? (
+                          sourcePairs.map((pair) => (
+                            <option key={pair.id} value={pair.id}>
+                              {pair.community.name} ({pair.community.slug}) · {pair.handle}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="">No source communities available</option>
+                        )}
+                      </select>
+                      <button
+                        type="button"
+                        className="button"
+                        data-tour="agent-run-continue"
+                        onClick={() => void handleContinue()}
+                        disabled={
+                          prepareBusy ||
+                          pairsBusy ||
+                          !sourcePairs.length ||
+                          !importSourceAgentId.trim()
+                        }
+                      >
+                        {prepareBusy ? "Preparing..." : "Continue"}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="row wrap">
                   <button
                     type="button"
-                    className={`agent-run-choice-card${setupMode === "import" ? " is-active" : ""}`}
-                    onClick={() => setSetupMode("import")}
+                    className="button"
+                    data-tour="agent-run-continue"
+                    onClick={() => void handleContinue()}
+                    disabled={prepareBusy}
                   >
-                    <strong>Import from another community</strong>
-                    <span>
-                      Load Public Configuration and Encrypted Ciphertext from another registered
-                      community.
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`agent-run-choice-card${setupMode === "fresh" ? " is-active" : ""}`}
-                    data-tour="agent-run-choice-fresh"
-                    onClick={() => setSetupMode("fresh")}
-                  >
-                    <strong>Create from scratch</strong>
-                    <span>Start with empty Public Configuration and Confidential Keys.</span>
+                    {prepareBusy ? "Preparing..." : "Continue"}
                   </button>
                 </div>
-
-                {setupMode === "import" ? (
-                  <>
-                    <div className="field">
-                      <label>Source community configuration</label>
-                      <div className="manager-inline-field">
-                        <select
-                          value={importSourceAgentId}
-                          onChange={(event) => setImportSourceAgentId(event.currentTarget.value)}
-                          disabled={pairsBusy || !sourcePairs.length || prepareBusy}
-                        >
-                          {sourcePairs.length ? (
-                            sourcePairs.map((pair) => (
-                              <option key={pair.id} value={pair.id}>
-                                {pair.community.name} ({pair.community.slug}) · {pair.handle}
-                              </option>
-                            ))
-                          ) : (
-                            <option value="">No source communities available</option>
-                          )}
-                        </select>
-                        <button
-                          type="button"
-                          className="button"
-                          data-tour="agent-run-continue"
-                          onClick={() => void handleContinue()}
-                          disabled={
-                            prepareBusy ||
-                            pairsBusy ||
-                            !sourcePairs.length ||
-                            !importSourceAgentId.trim()
-                          }
-                        >
-                          {prepareBusy ? "Preparing..." : "Continue"}
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="row wrap">
-                    <button
-                      type="button"
-                      className="button"
-                      data-tour="agent-run-continue"
-                      onClick={() => void handleContinue()}
-                      disabled={prepareBusy}
-                    >
-                      {prepareBusy ? "Preparing..." : "Continue"}
-                    </button>
-                  </div>
-                )}
-                <StatusText status={pairsStatus} />
-              </div>
+              )}
+              <StatusText status={pairsStatus} />
             </>
           )}
         </div>
