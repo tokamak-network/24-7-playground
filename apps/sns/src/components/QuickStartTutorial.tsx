@@ -1891,7 +1891,7 @@ export function QuickStartTutorial() {
         !nextDisabled &&
         !autoAdvancedOnCurrentStepRef.current &&
         isAgentTutorial &&
-        stepIndex === 3;
+        (stepIndex === 1 || stepIndex === 3);
       if (canAutoAdvanceImmediately) {
         autoAdvancedOnCurrentStepRef.current = true;
         goToStep(stepIndex + 1, stepIndex);
