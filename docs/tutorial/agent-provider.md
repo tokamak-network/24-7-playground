@@ -44,6 +44,7 @@ Recommended fix direction:
 
 - Runner launcher lives on localhost and may not be running.
 - Several confidential fields require user-owned secrets and external keys.
+- Mandatory key tests must pass in order, one field at a time, before moving forward.
 - A tutorial that hard-gates on all production prerequisites can become unusable.
 
 ### Problem C: Agent Provider steps must distinguish action-required vs explanation-only stages
@@ -62,6 +63,10 @@ Recommended fix direction:
 
 - Tutorial should be completable without requiring real secret disclosure in public demos.
 - Tutorial should still reflect real production path and control points.
+- Step 6 must be decomposed into sequential key-input steps.
+- For each required key, `Next` must stay disabled until:
+  - the key input is non-empty, and
+  - the corresponding `Test` action succeeds.
 - It must support both:
   - first-time setup ("Create from scratch")
   - migration path ("Import from another community")
@@ -127,14 +132,29 @@ Rationale:
   - community page navigation,
   - agent registration,
   - modal open,
-  - tab changes,
+  - tab changes and launcher setup,
+  - sequential required-key test pass flow (LLM API key -> execution wallet key -> Alchemy API key),
   - launcher detect.
 - Explanatory (always enabled):
-  - sensitive-key field explanations,
   - optional import guidance,
   - final Start Runner explanation.
 
-## 5.5 Interaction lock policy
+## 5.5 Step 6 decomposition strategy
+
+`Step 6` is treated as a staged pipeline instead of one informational step:
+
+1. Open Confidential Keys tab.
+2. Enter and test LLM API Key.
+3. Enter and test Wallet private key for transaction execution.
+4. Enter and test Alchemy API Key.
+
+Progression rule:
+
+- Each stage has its own tutorial step.
+- Next stage is blocked until current stage's test pass condition is true.
+- Stages are ordered and cannot be skipped.
+
+## 5.6 Interaction lock policy
 
 Default tutorial behavior (same baseline as DApp tutorial):
 
@@ -179,6 +199,9 @@ For high-risk explanatory steps:
     - setup choice cards
     - continue button
     - tab buttons
+    - LLM API key input and test button
+    - execution private key input and test button
+    - Alchemy API key input and test button
     - runner launcher secret input
     - detect launcher button
     - start/stop runner button
@@ -203,14 +226,17 @@ This table is intentionally written for easy review and editing.
 | 1 | `Step 1: Connect Wallet` | `Connect MetaMask and complete owner sign-in to continue.` | `[data-tour="wallet-connect-area"]` | wallet connected and owner session token ready | Yes (edge-triggered) |
 | 2 | `Step 2: Open a Community` | `Select a community card where you want to register your agent.` | `.community-tile` (or dedicated marker) | path changed to `/communities/{selectedCommunitySlug}` | Yes (edge-triggered) |
 | 3 | `Step 3: Register My Agent` | `Click "Register My Agent", enter a handle, and sign the message.` | `[data-tour="agent-register-button"]` | registered agent exists for selected community (`agentId` resolved) | Yes (edge-triggered) |
-| 4 | `Step 4: Open Run Modal` | `Click "Run My Agent" to open runner setup.` | `[data-tour="agent-run-button"]` | run modal visible | Yes (edge-triggered) |
-| 5 | `Step 5: Choose Setup Path` | `Choose "Create from scratch" or "Import from another community", then click Continue.` | `[data-tour="agent-run-continue"]` | setup screen changed from choice to tabbed config screen | Yes (edge-triggered) |
-| 6 | `Step 6: Review Confidential Keys` | `This tab stores encrypted runtime keys. Fill only in trusted local environment.` | `[data-tour="agent-tab-confidential"]` | always enabled (explanation step) | No |
-| 7 | `Step 7: Open Runner Configuration` | `Move to Runner Configuration and set interval/context values.` | `[data-tour="agent-tab-runner-config"]` | Runner Configuration tab selected | Yes (edge-triggered) |
-| 8 | `Step 8: Set Launcher Secret` | `Enter your Runner Launcher Secret used by browser-runner control APIs.` | `[data-tour="agent-runner-secret"]` | launcher secret input is non-empty | Yes (edge-triggered) |
-| 9 | `Step 9: Open Runner Status` | `Switch to Runner Status to connect with your local launcher.` | `[data-tour="agent-tab-runner-status"]` | Runner Status tab selected | Yes (edge-triggered) |
-| 10 | `Step 10: Detect Launcher` | `Click "Detect Launcher" and pick a detected localhost port.` | `[data-tour="agent-detect-launcher"]` | launcher detection success (`runnerLauncher` tested true or detected port selected) | Yes (edge-triggered) |
-| 11 | `Step 11: Start Runner` | `When required checks are complete, click "Start Runner" to begin autonomous operation.` | `[data-tour="agent-start-runner"]` | always enabled (final explanation step) | No (`Finish`) |
+| 4 | `Step 4: Open Run My Agent` | `Click "Run My Agent" to open agent and runner settings.` | `[data-tour="agent-run-button"]` | run modal visible | Yes (edge-triggered) |
+| 5 | `Step 5: Choose Create from scratch` | `Choose "Create from scratch" then click Continue.` | `[data-tour="agent-run-continue"]` | setup screen changed from choice to tabbed config screen | Yes (edge-triggered) |
+| 6 | `Step 6: Open Confidential Keys` | `Move to "Confidential Keys". Required keys will be validated one by one.` | `[data-tour="agent-tab-confidential"]` | Confidential Keys tab selected | Yes (edge-triggered) |
+| 7 | `Step 7: Test LLM API Key` | `Enter LLM API Key and click "Test".` | `[data-tour="agent-llm-api-key-test"]` | LLM API key input non-empty and LLM API key test passed | No |
+| 8 | `Step 8: Test Execution Wallet Key` | `Enter wallet private key for execution and click "Test".` | `[data-tour="agent-execution-key-test"]` | execution key input non-empty and execution key test passed | No |
+| 9 | `Step 9: Test Alchemy API Key` | `Enter Alchemy API Key and click "Test".` | `[data-tour="agent-alchemy-key-test"]` | Alchemy API key input non-empty and Alchemy API key test passed | No |
+| 10 | `Step 10: Open Runner Configuration` | `Move to Runner Configuration and review interval/context values.` | `[data-tour="agent-tab-runner-config"]` | Runner Configuration tab selected | Yes (edge-triggered) |
+| 11 | `Step 11: Set Launcher Secret` | `Enter your Runner Launcher Secret used by browser-runner control APIs.` | `[data-tour="agent-runner-secret"]` | launcher secret input is non-empty | Yes (edge-triggered) |
+| 12 | `Step 12: Open Runner Status` | `Switch to Runner Status to connect with your local launcher.` | `[data-tour="agent-tab-runner-status"]` | Runner Status tab selected | Yes (edge-triggered) |
+| 13 | `Step 13: Detect Launcher` | `Click "Detect Launcher" and select a detected localhost port.` | `[data-tour="agent-detect-launcher"]` | launcher detection success (`runnerLauncher` tested true or detected port selected) | Yes (edge-triggered) |
+| 14 | `Step 14: Start Runner` | `When prerequisites are complete, click "Start Runner" to begin autonomous operation.` | `[data-tour="agent-start-runner"]` | always enabled (final explanation step) | No (`Finish`) |
 
 ## 8. Draft Helper Copy (Editable)
 
@@ -228,11 +254,21 @@ This table is intentionally written for easy review and editing.
   - `Open the Run My Agent modal to enable Next.`
 - Step 5 unmet:
   - `Choose a setup path and continue to enable Next.`
+- Step 6 unmet:
+  - `Open Confidential Keys tab to enable Next.`
+- Step 7 unmet:
+  - `Enter LLM API Key and pass Test to enable Next.`
 - Step 8 unmet:
-  - `Enter Runner Launcher Secret to enable Next.`
+  - `Enter execution wallet key and pass Test to enable Next.`
 - Step 9 unmet:
-  - `Open Runner Status tab to enable Next.`
+  - `Enter Alchemy API Key and pass Test to enable Next.`
 - Step 10 unmet:
+  - `Open Runner Configuration tab to enable Next.`
+- Step 11 unmet:
+  - `Enter Runner Launcher Secret to enable Next.`
+- Step 12 unmet:
+  - `Open Runner Status tab to enable Next.`
+- Step 13 unmet:
   - `Detect a local launcher port to enable Next.`
 
 ## 9. Open Decisions for Review
@@ -241,7 +277,7 @@ These decisions should be finalized before implementation:
 
 1. Should Step 1 require both wallet connection and owner session sign-in, or wallet only?
 2. Should Step 2 highlight a specific community card (for deterministic UX) or allow any card?
-3. Should Step 11 require actual runner start success, or remain explanatory-only?
+3. Should Step 14 require actual runner start success, or remain explanatory-only?
 4. Should secret-related steps be fully read-only in tutorial mode to prevent accidental input?
 
 ## 10. Validation Plan After Implementation
