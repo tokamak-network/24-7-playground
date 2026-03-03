@@ -697,7 +697,7 @@ export function RunMyAgentModalLauncher({
     }, 300);
   }, [modalPhase]);
 
-  const openModal = useCallback(() => {
+  const openModal = useCallback((payload?: Record<string, string>) => {
     if (modalTimerRef.current !== null) {
       window.clearTimeout(modalTimerRef.current);
       modalTimerRef.current = null;
@@ -706,6 +706,7 @@ export function RunMyAgentModalLauncher({
     saveModalRefreshState(REFRESH_MODAL_RUN_AGENT, {
       communityId,
       agentId,
+      ...(payload || {}),
     });
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -755,7 +756,7 @@ export function RunMyAgentModalLauncher({
     ) {
       return;
     }
-    openModal();
+    openModal(persisted);
   }, [agentId, communityId, openModal]);
 
   return (
@@ -765,7 +766,7 @@ export function RunMyAgentModalLauncher({
         className={buttonClassName}
         style={buttonStyle}
         data-tour={buttonDataTour}
-        onClick={openModal}
+        onClick={() => openModal()}
       >
         {buttonLabel}
       </button>
@@ -872,6 +873,8 @@ function RunMyAgentModalContent({
     null
   );
   const [isRunnerGuideOpen, setIsRunnerGuideOpen] = useState(false);
+  const runAgentModalStateRestoredRef = useRef(false);
+  const [runAgentModalStateReady, setRunAgentModalStateReady] = useState(false);
   const runnerGuideRestoreCheckedRef = useRef(false);
 
   const [tested, setTested] = useState({
@@ -2391,6 +2394,49 @@ function RunMyAgentModalContent({
     closeRunnerGuide();
     setScreen("choice");
   }, [clearAllStatuses, closeRunnerGuide]);
+
+  useEffect(() => {
+    if (runAgentModalStateRestoredRef.current) return;
+    runAgentModalStateRestoredRef.current = true;
+    const persisted = readModalRefreshState(REFRESH_MODAL_RUN_AGENT);
+    if (persisted) {
+      const persistedCommunityId = String(persisted.communityId || "").trim();
+      const persistedAgentId = String(persisted.agentId || "").trim();
+      if (persistedCommunityId === communityId && persistedAgentId === agentId) {
+        const persistedScreen = String(persisted.screen || "").trim();
+        const persistedSetupMode = String(persisted.setupMode || "").trim();
+        const persistedTab = String(persisted.tab || "").trim();
+
+        if (persistedScreen === "config") {
+          setScreen("config");
+        } else {
+          setScreen("choice");
+        }
+        if (persistedSetupMode === "import" || persistedSetupMode === "fresh") {
+          setSetupMode(persistedSetupMode as SetupMode);
+        }
+        if (
+          persistedTab === "confidential" ||
+          persistedTab === "runner-config" ||
+          persistedTab === "runner-status"
+        ) {
+          setActiveTab(persistedTab as ConfigTab);
+        }
+      }
+    }
+    setRunAgentModalStateReady(true);
+  }, [agentId, communityId]);
+
+  useEffect(() => {
+    if (!runAgentModalStateReady) return;
+    saveModalRefreshState(REFRESH_MODAL_RUN_AGENT, {
+      communityId,
+      agentId,
+      screen,
+      setupMode,
+      tab: activeTab,
+    });
+  }, [activeTab, agentId, communityId, runAgentModalStateReady, screen, setupMode]);
 
   useEffect(() => {
     void loadPairs();
