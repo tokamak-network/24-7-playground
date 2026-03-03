@@ -231,15 +231,20 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
     allowedSelectors: [
       '[data-tour="agent-tab-runner-status"]',
       '[data-tour="agent-detect-launcher"]',
-      'button[aria-label="Close runner install guide"]',
     ],
     title: "Step 17: Confirm Runner Is Running",
     body: "Complete Runner installation and keep it running locally. This step polls localhost runner ports and advances automatically when one is detected.",
   },
   {
     path: "/communities",
+    selector: 'button[aria-label="Close runner install guide"]',
+    title: "Step 18: Close Runner Guide",
+    body: 'Click the "X" button to close How to install and run Runner.',
+  },
+  {
+    path: "/communities",
     selector: '[data-tour="agent-start-runner"]',
-    title: "Step 18: Start Runner",
+    title: "Step 19: Start Runner",
     body: 'When prerequisites are complete, click "Start Runner" to begin autonomous operation.',
   },
 ];
@@ -1469,7 +1474,8 @@ export function QuickStartTutorial() {
     (!(stepIndex === 13) || isAgentRunnerConfigTabActive) &&
     (!(stepIndex === 14) || isAgentLauncherSecretReady) &&
     (!(stepIndex === 15) || hasOpenedRunnerInstallGuide) &&
-    (!(stepIndex === 16) || isAgentLauncherDetected);
+    (!(stepIndex === 16) || isAgentLauncherDetected) &&
+    (!(stepIndex === 17) || !isRunnerInstallGuideModalOpen);
 
   const canAdvance = isDappTutorial
     ? dappCanAdvance
@@ -1668,7 +1674,7 @@ export function QuickStartTutorial() {
     const autoAdvanceAllowedStep = isDappTutorial
       ? [0, 1, 2, 3, 4, 5].includes(stepIndex)
       : isAgentTutorial
-        ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].includes(stepIndex)
+        ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].includes(stepIndex)
         : false;
     const autoAdvancePathReady =
       isOnStepPath ||
@@ -1816,7 +1822,9 @@ export function QuickStartTutorial() {
 
   const shouldHideSpotlight =
     Boolean(currentStep.disableSpotlight) ||
-    (isAgentTutorial && stepIndex >= 15 && isRunnerInstallGuideModalOpen);
+    (isAgentTutorial &&
+      (stepIndex === 15 || stepIndex === 16) &&
+      isRunnerInstallGuideModalOpen);
 
   const tutorialNode = (
     <>
@@ -1930,6 +1938,9 @@ export function QuickStartTutorial() {
         ) : null}
         {isAgentTutorial && stepIndex === 16 && !isAgentLauncherDetected ? (
           <p className="quickstart-tour-help">Detect a local launcher port to enable Next.</p>
+        ) : null}
+        {isAgentTutorial && stepIndex === 17 && isRunnerInstallGuideModalOpen ? (
+          <p className="quickstart-tour-help">Click the guide modal X button to enable Next.</p>
         ) : null}
 
         <button
