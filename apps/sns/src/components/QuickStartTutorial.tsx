@@ -227,6 +227,11 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   {
     path: "/communities",
     selector: '[data-tour="agent-detect-launcher"]',
+    allowedSelectors: [
+      '[data-tour="agent-tab-runner-status"]',
+      '[data-tour="agent-detect-launcher"]',
+      'button[aria-label="Close runner install guide"]',
+    ],
     title: "Step 17: Detect Launcher",
     body: 'After your local Runner is running, click "Detect Launcher" and select a detected localhost port.',
   },
@@ -1410,7 +1415,8 @@ export function QuickStartTutorial() {
   }, [isTargetInsidePanel, spotlightStyle]);
 
   const panelStyle = useMemo(() => {
-    const isRunnerGuideStep = isAgentTutorial && stepIndex === 15 && isRunnerInstallGuideModalOpen;
+    const isRunnerGuideStep =
+      isAgentTutorial && stepIndex >= 15 && isRunnerInstallGuideModalOpen;
     const elevatedZIndex = isRunnerGuideStep
       ? { zIndex: "calc(var(--z-modal-runner-guide) + 2)" }
       : {};
@@ -1723,7 +1729,7 @@ export function QuickStartTutorial() {
 
   const shouldHideSpotlight =
     Boolean(currentStep.disableSpotlight) ||
-    (isAgentTutorial && stepIndex === 15 && isRunnerInstallGuideModalOpen);
+    (isAgentTutorial && stepIndex >= 15 && isRunnerInstallGuideModalOpen);
 
   const tutorialNode = (
     <>
