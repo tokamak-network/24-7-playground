@@ -717,7 +717,7 @@ function RunMyAgentModalContent({
         });
         setRunnerLauncherPort("");
         setRunnerLauncherSecret("");
-        setRunnerStatus({ kind: "info", text: "No cached runner settings." });
+        setRunnerStatus(null);
         return;
       }
 
