@@ -252,6 +252,30 @@ function buildUrl(path: string, params: URLSearchParams) {
   return `${path}?${query}`;
 }
 
+function isVisibleElement(element: HTMLElement) {
+  const style = window.getComputedStyle(element);
+  if (
+    style.display === "none" ||
+    style.visibility === "hidden" ||
+    style.visibility === "collapse" ||
+    style.opacity === "0"
+  ) {
+    return false;
+  }
+  const rect = element.getBoundingClientRect();
+  return rect.width > 0 && rect.height > 0;
+}
+
+function queryPreferredTarget(selector: string) {
+  const candidates = Array.from(document.querySelectorAll(selector)).filter(
+    (node): node is HTMLElement => node instanceof HTMLElement
+  );
+  if (!candidates.length) {
+    return null;
+  }
+  return candidates.find((candidate) => isVisibleElement(candidate)) || candidates[0];
+}
+
 function isButtonPassed(selector: string) {
   const target = document.querySelector(selector);
   if (!(target instanceof HTMLElement)) {
@@ -549,39 +573,69 @@ export function QuickStartTutorial() {
 
     let canceled = false;
     let timer: number | null = null;
+    let observer: MutationObserver | null = null;
+    let hasScrolledToTarget = false;
 
-    const locate = (attempt = 0) => {
+    const locate = () => {
       if (canceled) {
-        return;
+        return false;
       }
-      const found = document.querySelector(currentStep.selector);
-      if (found instanceof HTMLElement) {
+      const found = queryPreferredTarget(currentStep.selector);
+      if (found) {
         setTargetElement(found);
         setSearchingTarget(false);
-        found.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-          inline: "nearest",
-        });
-        return;
+        if (!hasScrolledToTarget) {
+          hasScrolledToTarget = true;
+          found.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest",
+          });
+        }
+        return true;
       }
-      if (attempt >= 30) {
-        setTargetElement(null);
-        setSearchingTarget(false);
-        return;
-      }
-      timer = window.setTimeout(() => locate(attempt + 1), 120);
+      setTargetElement(null);
+      setSearchingTarget(true);
+      return false;
     };
 
     setSearchingTarget(true);
     setTargetElement(null);
     setTargetRect(null);
-    locate();
+
+    if (!locate()) {
+      timer = window.setInterval(() => {
+        if (locate()) {
+          if (timer !== null) {
+            window.clearInterval(timer);
+            timer = null;
+          }
+        }
+      }, 180);
+
+      observer = new MutationObserver(() => {
+        if (locate()) {
+          observer?.disconnect();
+          observer = null;
+          if (timer !== null) {
+            window.clearInterval(timer);
+            timer = null;
+          }
+        }
+      });
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["class", "style", "data-tour", "data-tour-active"],
+      });
+    }
 
     return () => {
       canceled = true;
+      observer?.disconnect();
       if (timer !== null) {
-        window.clearTimeout(timer);
+        window.clearInterval(timer);
       }
     };
   }, [currentStep.selector, isOnStepPath, isTutorialActive, targetElement]);
