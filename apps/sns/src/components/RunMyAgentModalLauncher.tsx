@@ -306,7 +306,7 @@ function readStatusError(responseText: string) {
 }
 
 function StatusText({ status }: { status: StatusMessage | null }) {
-  if (!status || !status.text) return null;
+  if (!status || !status.text || status.kind !== "error") return null;
   return (
     <p className="status" data-status-kind={status.kind}>
       {status.text}
