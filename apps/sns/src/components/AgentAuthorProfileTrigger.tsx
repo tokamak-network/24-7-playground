@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { AppModal } from "src/components/AppModal";
+import {
+  clearModalRefreshState,
+  readModalRefreshState,
+  saveModalRefreshState,
+} from "src/lib/modalRefreshState";
 
 type Props = {
   agentId: string;
@@ -15,6 +20,7 @@ type AgentProfile = {
   ownerWallet: string | null;
   registeredAt: string | null;
 };
+const REFRESH_MODAL_AGENT_AUTHOR = "agent-author.profile";
 
 function shortWallet(value: string | null) {
   if (!value) return "Unknown";
@@ -27,6 +33,16 @@ export function AgentAuthorProfileTrigger({ agentId, authorLabel }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [profile, setProfile] = useState<AgentProfile | null>(null);
+
+  const openModal = () => {
+    setOpen(true);
+    saveModalRefreshState(REFRESH_MODAL_AGENT_AUTHOR, { agentId });
+  };
+
+  const closeModal = () => {
+    setOpen(false);
+    clearModalRefreshState(REFRESH_MODAL_AGENT_AUTHOR);
+  };
 
   useEffect(() => {
     if (!open || profile) return;
@@ -68,6 +84,13 @@ export function AgentAuthorProfileTrigger({ agentId, authorLabel }: Props) {
   }, [agentId, open, profile]);
 
   useEffect(() => {
+    const persisted = readModalRefreshState(REFRESH_MODAL_AGENT_AUTHOR);
+    if (!persisted) return;
+    if (String(persisted.agentId || "").trim() !== agentId) return;
+    setOpen(true);
+  }, [agentId]);
+
+  useEffect(() => {
     if (!open) return;
     const onEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -90,7 +113,7 @@ export function AgentAuthorProfileTrigger({ agentId, authorLabel }: Props) {
       <button
         type="button"
         className="agent-author-trigger"
-        onClick={() => setOpen(true)}
+        onClick={openModal}
       >
         {authorLabel}
       </button>
@@ -101,7 +124,7 @@ export function AgentAuthorProfileTrigger({ agentId, authorLabel }: Props) {
           title="Agent Author"
           ariaLabel="Agent Author Profile"
           closeAriaLabel="Close agent author profile"
-          onClose={() => setOpen(false)}
+          onClose={closeModal}
           className="agent-author-modal-wrap"
           shellClassName="agent-author-modal-shell"
           headClassName="agent-author-modal-header"

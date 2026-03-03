@@ -16,6 +16,11 @@ import {
   decryptAgentSecrets,
   encryptAgentSecrets,
 } from "src/lib/agentSecretsCrypto";
+import {
+  clearModalRefreshState,
+  readModalRefreshState,
+  saveModalRefreshState,
+} from "src/lib/modalRefreshState";
 
 type ModalPhase = "closed" | "opening" | "open" | "closing";
 type SetupMode = "import" | "fresh";
@@ -140,6 +145,8 @@ const DEFAULT_RUNNER_INTERVAL_SEC = "600";
 const DEFAULT_RUNNER_COMMENT_CONTEXT_LIMIT = "100";
 const CHROME_LOCAL_NETWORK_HELP_URL =
   "https://support.google.com/chrome/answer/114662?hl=en&co=GENIE.Platform%3DDesktop#zippy=%2Callow-or-block-permissions-for-a-specific-site";
+const REFRESH_MODAL_RUN_AGENT = "run-agent.modal";
+const REFRESH_MODAL_RUN_AGENT_GUIDE = "run-agent.install-guide";
 const RUNNER_PORT_SCAN_RANGE = [4318, 4319, 4320, 4321, 4322, 4323, 4324];
 const LEGACY_AGENT_SIGNIN_MESSAGE_PREFIX = "24-7-playground";
 const ENCRYPTED_SECURITY_NESTED_KEYS = [
@@ -700,9 +707,12 @@ export function RunMyAgentModalLauncher({
 }: RunMyAgentModalLauncherProps) {
   const [modalPhase, setModalPhase] = useState<ModalPhase>("closed");
   const modalTimerRef = useRef<number | null>(null);
+  const restoredFromRefreshRef = useRef(false);
   const isModalVisible = modalPhase !== "closed";
 
   const closeModal = useCallback(() => {
+    clearModalRefreshState(REFRESH_MODAL_RUN_AGENT);
+    clearModalRefreshState(REFRESH_MODAL_RUN_AGENT_GUIDE);
     if (modalPhase === "closed" || modalPhase === "closing") return;
     setModalPhase("closing");
     if (modalTimerRef.current !== null) {
@@ -720,12 +730,16 @@ export function RunMyAgentModalLauncher({
       modalTimerRef.current = null;
     }
     setModalPhase("opening");
+    saveModalRefreshState(REFRESH_MODAL_RUN_AGENT, {
+      communityId,
+      agentId,
+    });
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setModalPhase("open");
       });
     });
-  }, []);
+  }, [agentId, communityId]);
 
   useEffect(() => {
     return () => {
@@ -756,6 +770,20 @@ export function RunMyAgentModalLauncher({
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [closeModal, isModalVisible]);
+
+  useEffect(() => {
+    if (restoredFromRefreshRef.current) return;
+    restoredFromRefreshRef.current = true;
+    const persisted = readModalRefreshState(REFRESH_MODAL_RUN_AGENT);
+    if (!persisted) return;
+    if (
+      String(persisted.communityId || "").trim() !== communityId ||
+      String(persisted.agentId || "").trim() !== agentId
+    ) {
+      return;
+    }
+    openModal();
+  }, [agentId, communityId, openModal]);
 
   return (
     <>
@@ -871,6 +899,7 @@ function RunMyAgentModalContent({
     null
   );
   const [isRunnerGuideOpen, setIsRunnerGuideOpen] = useState(false);
+  const runnerGuideRestoreCheckedRef = useRef(false);
 
   const [tested, setTested] = useState({
     llmApiKey: false,
@@ -2363,6 +2392,19 @@ function RunMyAgentModalContent({
     setRunnerStatus(null);
   }, []);
 
+  const openRunnerGuide = useCallback(() => {
+    setIsRunnerGuideOpen(true);
+    saveModalRefreshState(REFRESH_MODAL_RUN_AGENT_GUIDE, {
+      communityId,
+      agentId,
+    });
+  }, [agentId, communityId]);
+
+  const closeRunnerGuide = useCallback(() => {
+    setIsRunnerGuideOpen(false);
+    clearModalRefreshState(REFRESH_MODAL_RUN_AGENT_GUIDE);
+  }, []);
+
   const handleTabChange = useCallback(
     (nextTab: ConfigTab) => {
       clearAllStatuses();
@@ -2373,9 +2415,9 @@ function RunMyAgentModalContent({
 
   const handleBackToChoice = useCallback(() => {
     clearAllStatuses();
-    setIsRunnerGuideOpen(false);
+    closeRunnerGuide();
     setScreen("choice");
-  }, [clearAllStatuses]);
+  }, [clearAllStatuses, closeRunnerGuide]);
 
   useEffect(() => {
     void loadPairs();
@@ -2398,6 +2440,20 @@ function RunMyAgentModalContent({
     }
     void fetchRunnerStatus({ preferredPort: runnerLauncherPort, silent: true });
   }, [fetchRunnerStatus, runnerLauncherPort, runnerLauncherSecret]);
+
+  useEffect(() => {
+    if (runnerGuideRestoreCheckedRef.current) return;
+    runnerGuideRestoreCheckedRef.current = true;
+    const persisted = readModalRefreshState(REFRESH_MODAL_RUN_AGENT_GUIDE);
+    if (!persisted) return;
+    if (
+      String(persisted.communityId || "").trim() !== communityId ||
+      String(persisted.agentId || "").trim() !== agentId
+    ) {
+      return;
+    }
+    setIsRunnerGuideOpen(true);
+  }, [agentId, communityId]);
 
   return (
     <div className="agent-run-modal-content">
@@ -2531,7 +2587,7 @@ function RunMyAgentModalContent({
               type="button"
               className="button button-secondary agent-run-guide-trigger"
               data-tour="agent-runner-install-guide-trigger"
-              onClick={() => setIsRunnerGuideOpen(true)}
+              onClick={openRunnerGuide}
             >
               How to install and run Runner
             </button>
@@ -3028,7 +3084,7 @@ function RunMyAgentModalContent({
           <StatusText status={runnerStatus} />
           <RunnerInstallGuideModal
             open={isRunnerGuideOpen}
-            onClose={() => setIsRunnerGuideOpen(false)}
+            onClose={closeRunnerGuide}
           />
         </>
       )}

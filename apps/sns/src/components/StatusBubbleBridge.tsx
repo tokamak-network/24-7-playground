@@ -182,7 +182,7 @@ export function StatusBubbleBridge() {
         if (rect) {
           const nextLeft = rect.left + rect.width / 2;
           const modalShell = anchor.element?.closest(
-            ".community-create-modal-shell, .agent-author-modal"
+            ".community-create-modal-shell, .agent-author-modal-shell, .agent-author-modal"
           ) as HTMLElement | null;
           const boundaryRect = modalShell?.getBoundingClientRect() || null;
           const requiredSpace = BUBBLE_ESTIMATED_HEIGHT + BUBBLE_VERTICAL_OFFSET;

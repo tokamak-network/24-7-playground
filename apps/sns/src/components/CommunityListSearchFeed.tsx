@@ -20,6 +20,11 @@ import { useOwnerSession } from "src/components/ownerSession";
 import { Card } from "src/components/ui";
 import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 import { validateAgentHandleFormat } from "src/lib/agentHandle";
+import {
+  clearModalRefreshState,
+  readModalRefreshState,
+  saveModalRefreshState,
+} from "src/lib/modalRefreshState";
 
 type CommunityListItem = {
   id: string;
@@ -71,6 +76,8 @@ type CommunityActionModal = {
   community: CommunityListItem;
 };
 const TUTORIAL_COMMUNITY_CREATED_EVENT = "sns-tutorial-community-created";
+const REFRESH_MODAL_CREATE_COMMUNITY = "communities.create";
+const REFRESH_MODAL_COMMUNITY_ACTION = "communities.action";
 
 const COMMUNITY_CARD_HEIGHT_PX = 520;
 const communityTileStyle: CSSProperties = {
@@ -228,6 +235,8 @@ export function CommunityListSearchFeed({
   const createModalTimerRef = useRef<number | null>(null);
   const communityActionModalTimerRef = useRef<number | null>(null);
   const createCardAnimTimerRef = useRef<number | null>(null);
+  const createModalRestoreCheckedRef = useRef(false);
+  const communityActionRestoreCheckedRef = useRef(false);
   const normalizedQuery = communityQuery.trim().toLowerCase();
   const normalizedConnectedWallet = connectedWallet?.toLowerCase() ?? "";
   const tutorialCreatedCommunityId = String(
@@ -437,6 +446,7 @@ export function CommunityListSearchFeed({
 
   const closeCreateModal = useCallback(
     (onClosed?: () => void) => {
+      clearModalRefreshState(REFRESH_MODAL_CREATE_COMMUNITY);
       if (createModalPhase === "closed") {
         onClosed?.();
         return;
@@ -473,6 +483,7 @@ export function CommunityListSearchFeed({
       height: rect?.height ?? fallback.height,
     });
     setCreateModalPhase("opening");
+    saveModalRefreshState(REFRESH_MODAL_CREATE_COMMUNITY);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setCreateModalPhase("open");
@@ -485,6 +496,7 @@ export function CommunityListSearchFeed({
     communityActionModalPhase !== "closed" && Boolean(communityActionModal);
 
   const closeCommunityActionModal = useCallback((onClosed?: () => void) => {
+    clearModalRefreshState(REFRESH_MODAL_COMMUNITY_ACTION);
     if (communityActionModalPhase === "closed") {
       onClosed?.();
       return;
@@ -511,12 +523,48 @@ export function CommunityListSearchFeed({
     }
     setCommunityActionModal(modal);
     setCommunityActionModalPhase("opening");
+    saveModalRefreshState(REFRESH_MODAL_COMMUNITY_ACTION, {
+      communityId: modal.community.id,
+      mode: modal.mode,
+    });
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setCommunityActionModalPhase("open");
       });
     });
   }, []);
+
+  useEffect(() => {
+    if (createModalRestoreCheckedRef.current) return;
+    createModalRestoreCheckedRef.current = true;
+    const persisted = readModalRefreshState(REFRESH_MODAL_CREATE_COMMUNITY);
+    if (!persisted) return;
+    openCreateModal();
+  }, [openCreateModal]);
+
+  useEffect(() => {
+    if (communityActionRestoreCheckedRef.current) return;
+    const persisted = readModalRefreshState(REFRESH_MODAL_COMMUNITY_ACTION);
+    if (!persisted) {
+      communityActionRestoreCheckedRef.current = true;
+      return;
+    }
+    const communityId = String(persisted.communityId || "").trim();
+    const modeRaw = String(persisted.mode || "").trim();
+    if (!communityId || (modeRaw !== "edit" && modeRaw !== "ban" && modeRaw !== "close")) {
+      communityActionRestoreCheckedRef.current = true;
+      clearModalRefreshState(REFRESH_MODAL_COMMUNITY_ACTION);
+      return;
+    }
+    const mode = modeRaw as CommunityActionModal["mode"];
+    const target = communityItems.find((item) => item.id === communityId);
+    if (!target) return;
+    communityActionRestoreCheckedRef.current = true;
+    openCommunityActionModal({
+      community: target,
+      mode,
+    });
+  }, [communityItems, openCommunityActionModal]);
 
   useEffect(() => {
     if (!isCreateModalVisible) return;

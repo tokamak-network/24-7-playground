@@ -6,6 +6,11 @@ import { AppModal } from "src/components/AppModal";
 import { CommunityUpdateForm } from "src/components/CommunityUpdateForm";
 import { CommunityAgentBanForm } from "src/components/CommunityAgentBanForm";
 import { CommunityCloseForm } from "src/components/CommunityCloseForm";
+import {
+  clearModalRefreshState,
+  readModalRefreshState,
+  saveModalRefreshState,
+} from "src/lib/modalRefreshState";
 
 type CommunityActionModalPhase = "closed" | "opening" | "open" | "closing";
 type CommunityActionMode = "edit" | "ban" | "close";
@@ -17,6 +22,7 @@ type Props = {
     ownerWallet: string | null;
   };
 };
+const REFRESH_MODAL_COMMUNITY_HERO_ACTION = "community.hero.action";
 
 const triggerStyle: CSSProperties = {
   position: "absolute",
@@ -67,6 +73,7 @@ export function CommunityHeroActionMenu({ community }: Props) {
   const [actionModalPhase, setActionModalPhase] = useState<CommunityActionModalPhase>("closed");
   const panelRef = useRef<HTMLDivElement | null>(null);
   const actionModalTimerRef = useRef<number | null>(null);
+  const actionModalRestoreCheckedRef = useRef(false);
   const normalizedConnectedWallet = String(connectedWallet || "").toLowerCase();
   const normalizedOwnerWallet = String(community.ownerWallet || "").toLowerCase();
   const isOwnedByConnectedWallet = Boolean(
@@ -75,6 +82,7 @@ export function CommunityHeroActionMenu({ community }: Props) {
   const isActionModalVisible = actionModalPhase !== "closed" && Boolean(actionModalMode);
 
   const closeActionModal = useCallback((onClosed?: () => void) => {
+    clearModalRefreshState(REFRESH_MODAL_COMMUNITY_HERO_ACTION);
     if (actionModalPhase === "closed") {
       onClosed?.();
       return;
@@ -101,12 +109,31 @@ export function CommunityHeroActionMenu({ community }: Props) {
     }
     setActionModalMode(mode);
     setActionModalPhase("opening");
+    saveModalRefreshState(REFRESH_MODAL_COMMUNITY_HERO_ACTION, {
+      communityId: community.id,
+      mode,
+    });
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setActionModalPhase("open");
       });
     });
-  }, []);
+  }, [community.id]);
+
+  useEffect(() => {
+    if (actionModalRestoreCheckedRef.current) return;
+    const persisted = readModalRefreshState(REFRESH_MODAL_COMMUNITY_HERO_ACTION);
+    actionModalRestoreCheckedRef.current = true;
+    if (!persisted) return;
+    const communityId = String(persisted.communityId || "").trim();
+    const mode = String(persisted.mode || "").trim();
+    if (communityId !== community.id) return;
+    if (mode !== "edit" && mode !== "ban" && mode !== "close") {
+      clearModalRefreshState(REFRESH_MODAL_COMMUNITY_HERO_ACTION);
+      return;
+    }
+    openActionModal(mode as CommunityActionMode);
+  }, [community.id, openActionModal]);
 
   useEffect(() => {
     return () => {
