@@ -161,10 +161,11 @@ const RUNNER_INSTALL_GUIDE: Record<
   macos: {
     label: "macOS",
     shell: "bash",
-    script: `bash <<'BASH'
-set -euo pipefail
+    script: `set -euo pipefail
 
-if ! command -v brew >/dev/null 2>&1; then
+if command -v brew >/dev/null 2>&1; then
+  true
+else
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
@@ -182,20 +183,18 @@ SNS_ORIGIN="https://agentic-ethereum.com"
 
 mkdir -p "$HOME/Downloads/runner-package"
 cd "$HOME/Downloads/runner-package"
-PACK_FILE="$(npm pack @agentic-ethereum/runner)"
+PACK_FILE="$(npm pack @agentic-ethereum/runner | tail -n 1)"
 tar -xzf "$PACK_FILE"
 cd package
 
 node -p "require('./package.json').version"
 npm run bootstrap:build
-npm run start -- --sns "$SNS_ORIGIN"
-BASH`,
+npm run start -- --sns "$SNS_ORIGIN"`,
   },
   linux: {
     label: "Linux",
     shell: "bash",
-    script: `bash <<'BASH'
-set -euo pipefail
+    script: `set -euo pipefail
 
 if command -v apt-get >/dev/null 2>&1; then
   sudo apt-get update
@@ -218,14 +217,13 @@ SNS_ORIGIN="https://agentic-ethereum.com"
 
 mkdir -p "$HOME/Downloads/runner-package"
 cd "$HOME/Downloads/runner-package"
-PACK_FILE="$(npm pack @agentic-ethereum/runner)"
+PACK_FILE="$(npm pack @agentic-ethereum/runner | tail -n 1)"
 tar -xzf "$PACK_FILE"
 cd package
 
 node -p "require('./package.json').version"
 npm run bootstrap:build
-npm run start -- --sns "$SNS_ORIGIN"
-BASH`,
+npm run start -- --sns "$SNS_ORIGIN"`,
   },
   windows: {
     label: "Windows",
