@@ -464,7 +464,8 @@ function RunMyAgentModalContent({
   agentId,
   agentHandle,
 }: RunMyAgentModalContentProps) {
-  const { connectedWallet, signIn, token } = useOwnerSession();
+  const { connectedWallet, signIn, status: ownerSessionStatus, token, sessionReady } =
+    useOwnerSession();
 
   const [screen, setScreen] = useState<"choice" | "config">("choice");
   const [setupMode, setSetupMode] = useState<SetupMode>("import");
@@ -644,9 +645,12 @@ function RunMyAgentModalContent({
   );
 
   const loadPairs = useCallback(async () => {
+    if (!sessionReady) {
+      return;
+    }
     if (!token || !authHeaders) {
       setPairs([]);
-      setPairsStatus({ kind: "error", text: "Sign in to continue." });
+      setPairsStatus(null);
       return;
     }
 
@@ -675,7 +679,7 @@ function RunMyAgentModalContent({
     } finally {
       setPairsBusy(false);
     }
-  }, [authHeaders, readError, token]);
+  }, [authHeaders, readError, sessionReady, token]);
 
   const loadCurrentGeneral = useCallback(async () => {
     if (!token || !agentId || !authHeaders) return;
@@ -1847,13 +1851,23 @@ function RunMyAgentModalContent({
             </p>
           </div>
 
-          {!token ? (
+          {!sessionReady ? (
             <div className="agent-run-auth-callout">
-              <p className="meta-text">Owner session is required.</p>
+              <p className="meta-text">Checking owner session...</p>
+            </div>
+          ) : !token ? (
+            <div className="agent-run-auth-callout">
+              <p className="meta-text">
+                {connectedWallet
+                  ? "Owner session is missing or expired. Click Sign In."
+                  : "Connect MetaMask and click Sign In."}
+              </p>
               <button type="button" className="button" onClick={() => void signIn()}>
                 Sign In
               </button>
-              <StatusText status={pairsStatus} />
+              {ownerSessionStatus ? (
+                <p className="meta-text">{ownerSessionStatus}</p>
+              ) : null}
             </div>
           ) : (
             <>
