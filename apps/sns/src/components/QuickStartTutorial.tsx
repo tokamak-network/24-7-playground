@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { createPortal } from "react-dom";
 import {
   getOwnerSessionEventName,
   loadOwnerSession,
@@ -369,6 +370,7 @@ export function QuickStartTutorial() {
   const panelRef = useRef<HTMLElement | null>(null);
   const [panelPlacement, setPanelPlacement] =
     useState<TutorialPanelPlacement>("bottom-right");
+  const [portalReady, setPortalReady] = useState(false);
 
   const createdCommunityPath = useMemo(() => {
     const slug = createdCommunitySlug.trim();
@@ -1222,6 +1224,13 @@ export function QuickStartTutorial() {
   }, [panelPlacement]);
 
   useEffect(() => {
+    setPortalReady(true);
+    return () => {
+      setPortalReady(false);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isTutorialActive) {
       return;
     }
@@ -1459,7 +1468,7 @@ export function QuickStartTutorial() {
     return <p>{currentStep.body}</p>;
   };
 
-  return (
+  const tutorialNode = (
     <>
       <div className="quickstart-tour-overlay" aria-hidden />
       {hasTargetRect ? (
@@ -1581,4 +1590,10 @@ export function QuickStartTutorial() {
       </aside>
     </>
   );
+
+  if (!portalReady || typeof document === "undefined") {
+    return null;
+  }
+
+  return createPortal(tutorialNode, document.body);
 }
