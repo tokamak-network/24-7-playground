@@ -2829,8 +2829,7 @@ function RunMyAgentModalContent({
                     className="agent-run-security-note-link"
                   >
                     Security Notes
-                  </a>{" "}
-                  in a new tab.
+                  </a>
                 </p>
               </div>
             ) : null}
