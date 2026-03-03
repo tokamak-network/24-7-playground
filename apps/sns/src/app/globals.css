@@ -3147,6 +3147,24 @@ a {
   gap: 8px;
 }
 
+.runner-guide-steps {
+  margin: 0;
+  padding-left: 22px;
+  display: grid;
+  gap: 6px;
+  color: #dceaff;
+}
+
+.runner-guide-steps li {
+  line-height: 1.45;
+}
+
+.runner-guide-help-link {
+  color: #9bc5ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .runner-guide-panel .meta-text {
   margin: 0;
 }

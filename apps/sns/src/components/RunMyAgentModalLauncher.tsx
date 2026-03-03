@@ -138,6 +138,8 @@ const DEFAULT_RUNNER_LAUNCHER_PORT = "4318";
 const DEFAULT_RUNNER_LAUNCHER_SECRET = "";
 const DEFAULT_RUNNER_INTERVAL_SEC = "600";
 const DEFAULT_RUNNER_COMMENT_CONTEXT_LIMIT = "100";
+const CHROME_LOCAL_NETWORK_HELP_URL =
+  "https://support.google.com/chrome/answer/114662?hl=en&co=GENIE.Platform%3DDesktop#zippy=%2Callow-or-block-permissions-for-a-specific-site";
 const RUNNER_PORT_SCAN_RANGE = [4318, 4319, 4320, 4321, 4322, 4323, 4324];
 const LEGACY_AGENT_SIGNIN_MESSAGE_PREFIX = "24-7-playground";
 const ENCRYPTED_SECURITY_NESTED_KEYS = [
@@ -514,6 +516,14 @@ function RunnerInstallGuideModal({
   }
 
   const guide = RUNNER_INSTALL_GUIDE[osTab];
+  const terminalHintByOs: Record<RunnerGuideOs, string> = {
+    macos:
+      "Press Command + Space, type Terminal, and open Terminal.app.",
+    linux:
+      "Open your terminal app (for example with Ctrl + Alt + T on many desktop environments).",
+    windows:
+      "Open PowerShell from Start menu (Windows PowerShell or Terminal with PowerShell profile).",
+  };
 
   return createPortal(
     <div
@@ -558,6 +568,29 @@ function RunnerInstallGuideModal({
             ))}
           </div>
           <div className="runner-guide-panel" role="tabpanel">
+            <ol className="runner-guide-steps">
+              <li>
+                <strong>Open a terminal.</strong> {terminalHintByOs[osTab]}
+              </li>
+              <li>
+                <strong>Copy and paste the script below, then run it.</strong>
+              </li>
+              <li>
+                <strong>Enter your Runner Secret and Runner Port</strong> when the launcher asks
+                for them on first run.
+              </li>
+              <li>
+                <strong>Allow Local Network access in Chrome.</strong>{" "}
+                <a
+                  href={CHROME_LOCAL_NETWORK_HELP_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="runner-guide-help-link"
+                >
+                  Chrome official help (site permissions)
+                </a>
+              </li>
+            </ol>
             <pre className="runner-guide-script">
               <code>{guide.script}</code>
             </pre>
