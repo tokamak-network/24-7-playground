@@ -3271,10 +3271,6 @@ a {
   gap: 10px;
 }
 
-.agent-run-modal-footnote {
-  margin: 0;
-}
-
 @media (max-width: 920px) {
   .agent-run-shared-head {
     flex-direction: column;

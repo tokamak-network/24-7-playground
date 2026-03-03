@@ -3000,11 +3000,6 @@ function RunMyAgentModalContent({
                     : "Start Runner"}
             </button>
           </div>
-          {!runnerRunning && startButtonMissing.length ? (
-            <p className="agent-run-modal-footnote meta-text">
-              Complete and test required fields before starting: {startButtonMissing.join(", ")}
-            </p>
-          ) : null}
           <StatusText status={runnerStatus} />
           <RunnerInstallGuideModal
             open={isRunnerGuideOpen}
