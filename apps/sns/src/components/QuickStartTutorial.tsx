@@ -1262,6 +1262,8 @@ export function QuickStartTutorial() {
       if (!(eventTarget instanceof Node)) {
         return false;
       }
+      const eventElement =
+        eventTarget instanceof Element ? eventTarget : eventTarget.parentElement;
 
       const panelElement = panelRef.current;
       if (panelElement?.contains(eventTarget)) {
@@ -1284,9 +1286,9 @@ export function QuickStartTutorial() {
         return false;
       }
 
-      if (currentStep.blockedSelectors?.length && eventTarget instanceof Element) {
+      if (currentStep.blockedSelectors?.length && eventElement) {
         const matchedBlockedSelector = currentStep.blockedSelectors.some((selector) => {
-          return eventTarget.matches(selector) || Boolean(eventTarget.closest(selector));
+          return eventElement.matches(selector) || Boolean(eventElement.closest(selector));
         });
         if (matchedBlockedSelector) {
           return false;
@@ -1295,9 +1297,12 @@ export function QuickStartTutorial() {
 
       if (currentStep.allowedSelectors?.length) {
         const matchedExtraSelector = currentStep.allowedSelectors.some((selector) => {
+          if (!eventElement) {
+            return false;
+          }
           return (
-            eventTarget instanceof Element &&
-            (eventTarget.matches(selector) || Boolean(eventTarget.closest(selector)))
+            eventElement.matches(selector) ||
+            Boolean(eventElement.closest(selector))
           );
         });
         if (matchedExtraSelector) {
