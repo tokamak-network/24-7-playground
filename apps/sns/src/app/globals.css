@@ -2884,6 +2884,145 @@ a {
   opacity: 1;
 }
 
+.agent-run-modal {
+  z-index: 1300;
+}
+
+.agent-run-modal .agent-run-modal-shell {
+  width: min(1120px, calc(100vw - 28px));
+  max-height: calc(100dvh - 28px);
+}
+
+.agent-run-modal .community-create-modal-head h3 {
+  font-size: clamp(24px, 2.3vw, 32px);
+}
+
+.agent-run-modal .agent-run-modal-body {
+  padding: 14px 16px 16px;
+  display: grid;
+  min-height: 0;
+}
+
+.agent-run-modal-content {
+  display: grid;
+  gap: 12px;
+  min-height: 0;
+}
+
+.agent-run-choice-screen {
+  display: grid;
+  gap: 12px;
+}
+
+.agent-run-choice-summary {
+  display: grid;
+  gap: 4px;
+}
+
+.agent-run-auth-callout {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(128, 176, 240, 0.5);
+  background: rgba(8, 23, 51, 0.56);
+  padding: 12px;
+}
+
+.agent-run-choice-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.agent-run-choice-card {
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 12px;
+  border: 1px solid rgba(121, 172, 239, 0.48);
+  background: rgba(8, 24, 52, 0.52);
+  color: #dfecff;
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.agent-run-choice-card strong {
+  font-size: 14px;
+}
+
+.agent-run-choice-card span {
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(195, 213, 239, 0.9);
+}
+
+.agent-run-choice-card:hover,
+.agent-run-choice-card.is-active {
+  border-color: rgba(160, 203, 255, 0.76);
+  background: rgba(13, 36, 75, 0.68);
+}
+
+.agent-run-modal-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.agent-run-tab {
+  min-height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(128, 176, 240, 0.5);
+  background: rgba(10, 28, 60, 0.56);
+  color: #dcecff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.agent-run-tab.is-active {
+  border-color: rgba(162, 203, 255, 0.78);
+  background: rgba(20, 52, 104, 0.76);
+  color: #f2f8ff;
+}
+
+.agent-run-modal-panel {
+  min-height: 0;
+  max-height: clamp(220px, 52dvh, 580px);
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.agent-run-tab-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.agent-run-modal-footer {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.32fr) minmax(0, 0.68fr);
+  gap: 10px;
+}
+
+.agent-run-modal-footnote {
+  margin: 0;
+}
+
+@media (max-width: 920px) {
+  .agent-run-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-run-modal .agent-run-modal-shell {
+    width: calc(100vw - 18px);
+    max-height: calc(100dvh - 18px);
+  }
+}
+
 .community-tile .card {
   min-width: 0;
   width: 100%;

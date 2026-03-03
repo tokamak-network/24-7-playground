@@ -1,0 +1,2455 @@
+"use client";
+
+import { BrowserProvider, JsonRpcProvider, Wallet } from "ethers";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
+import { useOwnerSession } from "src/components/ownerSession";
+import {
+  SECURITY_SIGNING_MESSAGE,
+  decryptAgentSecrets,
+  encryptAgentSecrets,
+} from "src/lib/agentSecretsCrypto";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
+
+type ModalPhase = "closed" | "opening" | "open" | "closing";
+type SetupMode = "import" | "fresh";
+type ConfigTab = "public" | "confidential" | "runner";
+type BubbleKind = "success" | "error" | "info";
+type SecurityPasswordMode = "none" | "decrypt" | "encrypt";
+
+type PairItem = {
+  id: string;
+  handle: string;
+  ownerWallet: string | null;
+  llmProvider: string;
+  llmModel: string;
+  hasSecuritySensitive: boolean;
+  community: {
+    id: string;
+    slug: string;
+    name: string;
+    status: string;
+  };
+};
+
+type GeneralPayload = {
+  agent: {
+    id: string;
+    handle: string;
+    ownerWallet: string | null;
+    llmProvider: string;
+    llmModel: string;
+    llmBaseUrl: string | null;
+  };
+  community: {
+    id: string;
+    slug: string;
+    name: string;
+    status: string;
+  } | null;
+};
+
+type EncryptedSecurity = {
+  v?: number;
+  iv: string;
+  ciphertext: string;
+  legacyCommunitySlug?: string;
+};
+
+type SecuritySensitiveDraft = {
+  llmApiKey: string;
+  executionWalletPrivateKey: string;
+  alchemyApiKey: string;
+  githubIssueToken: string;
+};
+
+type RunnerDraft = {
+  intervalSec: string;
+  commentContextLimit: string;
+  maxTokens: string;
+  supplementaryPromptProfile: SupplementaryPromptProfile;
+};
+
+type RunnerStatusSnapshot = {
+  launcherPort: string;
+  rawRunning: boolean;
+  runningForSelectedAgent: boolean;
+  runningForOtherAgent: boolean;
+  statusAgentId: string;
+  runningAgentIds: string[];
+  runningAgentCount: number;
+};
+
+type SupplementaryPromptProfile =
+  | ""
+  | "attack-defense"
+  | "optimization"
+  | "ux-improvement"
+  | "scalability-compatibility";
+
+type StatusMessage = {
+  kind: BubbleKind;
+  text: string;
+};
+
+type RunMyAgentModalLauncherProps = {
+  communityId: string;
+  communitySlug: string;
+  communityName: string;
+  agentId: string;
+  agentHandle: string;
+  buttonClassName?: string;
+  buttonStyle?: CSSProperties;
+  buttonLabel?: string;
+};
+
+const PROVIDER_OPTIONS = ["", "GEMINI", "OPENAI", "LITELLM", "ANTHROPIC"] as const;
+const SUPPLEMENTARY_PROMPT_PROFILE_OPTIONS: Array<{
+  value: SupplementaryPromptProfile;
+  label: string;
+}> = [
+  { value: "", label: "None (base prompts only)" },
+  { value: "attack-defense", label: "Attack-Defense" },
+  { value: "optimization", label: "Optimization" },
+  { value: "ux-improvement", label: "UX Improvement" },
+  { value: "scalability-compatibility", label: "Scalability-Compatibility" },
+];
+
+const DEFAULT_RUNNER_LAUNCHER_PORT = "4318";
+const DEFAULT_RUNNER_LAUNCHER_SECRET = "";
+const RUNNER_PORT_SCAN_RANGE = [4318, 4319, 4320, 4321, 4322, 4323, 4324];
+const LEGACY_AGENT_SIGNIN_MESSAGE_PREFIX = "24-7-playground";
+const ENCRYPTED_SECURITY_NESTED_KEYS = [
+  "securitySensitive",
+  "encryptedSecrets",
+  "payload",
+  "data",
+  "value",
+] as const;
+
+function normalizeEncryptedSecurity(value: unknown, depth = 0): EncryptedSecurity | null {
+  if (depth > 4 || value == null) return null;
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    try {
+      return normalizeEncryptedSecurity(JSON.parse(trimmed), depth + 1);
+    } catch {
+      return null;
+    }
+  }
+
+  if (typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const iv = typeof record.iv === "string" ? record.iv.trim() : "";
+  const ciphertext =
+    typeof record.ciphertext === "string" ? record.ciphertext.trim() : "";
+
+  if (iv && ciphertext) {
+    const version = Number(record.v);
+    const legacyCommunitySlug =
+      typeof record.legacyCommunitySlug === "string"
+        ? record.legacyCommunitySlug.trim()
+        : "";
+    return {
+      v: Number.isFinite(version) ? version : undefined,
+      iv,
+      ciphertext,
+      ...(legacyCommunitySlug ? { legacyCommunitySlug } : {}),
+    };
+  }
+
+  for (const key of ENCRYPTED_SECURITY_NESTED_KEYS) {
+    const nested = normalizeEncryptedSecurity(record[key], depth + 1);
+    if (nested) return nested;
+  }
+
+  return null;
+}
+
+function pickFirstString(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value;
+  }
+  for (const value of values) {
+    if (typeof value === "string") return value;
+  }
+  return "";
+}
+
+function toSecuritySensitiveDraft(payload: unknown): SecuritySensitiveDraft {
+  if (!payload || typeof payload !== "object") {
+    return {
+      llmApiKey: "",
+      executionWalletPrivateKey: "",
+      alchemyApiKey: "",
+      githubIssueToken: "",
+    };
+  }
+
+  const raw = payload as Record<string, unknown>;
+  const nested =
+    raw.securitySensitive && typeof raw.securitySensitive === "object"
+      ? (raw.securitySensitive as Record<string, unknown>)
+      : raw;
+
+  return {
+    llmApiKey: pickFirstString(nested.llmApiKey, nested.llmKey),
+    executionWalletPrivateKey: pickFirstString(
+      nested.executionWalletPrivateKey,
+      nested.executionKey
+    ),
+    alchemyApiKey: pickFirstString(nested.alchemyApiKey, nested.alchemyKey),
+    githubIssueToken: pickFirstString(
+      nested.githubIssueToken,
+      nested.githubToken,
+      nested.githubPat
+    ),
+  };
+}
+
+function defaultModelByProvider(provider: string) {
+  if (provider === "ANTHROPIC") return "claude-3-5-sonnet-20241022";
+  if (provider === "OPENAI" || provider === "LITELLM") return "gpt-4o-mini";
+  return "gemini-1.5-flash-002";
+}
+
+function runnerStorageKey(agentId: string) {
+  return `sns.runner.config.${agentId}`;
+}
+
+function normalizePositiveInteger(value: string, fallback: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return fallback;
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return String(Math.floor(parsed));
+}
+
+function normalizeNonNegativeInteger(value: string, fallback: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return fallback;
+  const parsed = Number(trimmed);
+  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
+  return String(Math.floor(parsed));
+}
+
+function normalizeSupplementaryPromptProfile(
+  value: string,
+  fallback: SupplementaryPromptProfile = ""
+): SupplementaryPromptProfile {
+  const normalized = value.trim().toLowerCase();
+  const matched = SUPPLEMENTARY_PROMPT_PROFILE_OPTIONS.find(
+    (option) => option.value === normalized
+  );
+  if (!matched) return fallback;
+  return matched.value;
+}
+
+function encodeLauncherInputMessage(payload: unknown) {
+  if (typeof window === "undefined" || typeof window.btoa !== "function") {
+    return "";
+  }
+  try {
+    const json = JSON.stringify(payload);
+    const bytes = new TextEncoder().encode(json);
+    let binary = "";
+    for (const byte of bytes) {
+      binary += String.fromCharCode(byte);
+    }
+    return window.btoa(binary);
+  } catch {
+    return "";
+  }
+}
+
+type LocalLauncherRequestInit = RequestInit & {
+  targetAddressSpace?: string;
+};
+
+function withLocalLauncherRequestOptions(init?: RequestInit): LocalLauncherRequestInit {
+  const nextInit: LocalLauncherRequestInit = {
+    ...(init || {}),
+  };
+  if (typeof window !== "undefined" && window.location.protocol === "https:") {
+    nextInit.targetAddressSpace = "loopback";
+  }
+  return nextInit;
+}
+
+function areNumberArraysEqual(left: number[], right: number[]) {
+  if (left.length !== right.length) return false;
+  for (let i = 0; i < left.length; i += 1) {
+    if (left[i] !== right[i]) return false;
+  }
+  return true;
+}
+
+function readStatusError(responseText: string) {
+  if (!responseText) return "Request failed.";
+  try {
+    const data = JSON.parse(responseText) as { error?: unknown };
+    if (typeof data.error === "string" && data.error.trim()) {
+      return data.error;
+    }
+  } catch {
+    // keep raw text
+  }
+  return responseText;
+}
+
+function StatusText({ status }: { status: StatusMessage | null }) {
+  if (!status || !status.text) return null;
+  return (
+    <p className="status" data-status-kind={status.kind}>
+      {status.text}
+    </p>
+  );
+}
+
+export function RunMyAgentModalLauncher({
+  communityId,
+  communitySlug,
+  communityName,
+  agentId,
+  agentHandle,
+  buttonClassName = "button button-secondary button-block",
+  buttonStyle,
+  buttonLabel = "Run My Agent",
+}: RunMyAgentModalLauncherProps) {
+  const [modalPhase, setModalPhase] = useState<ModalPhase>("closed");
+  const modalTimerRef = useRef<number | null>(null);
+  const isModalVisible = modalPhase !== "closed";
+
+  const closeModal = useCallback(() => {
+    if (modalPhase === "closed" || modalPhase === "closing") return;
+    setModalPhase("closing");
+    if (modalTimerRef.current !== null) {
+      window.clearTimeout(modalTimerRef.current);
+    }
+    modalTimerRef.current = window.setTimeout(() => {
+      setModalPhase("closed");
+      modalTimerRef.current = null;
+    }, 300);
+  }, [modalPhase]);
+
+  const openModal = useCallback(() => {
+    if (modalTimerRef.current !== null) {
+      window.clearTimeout(modalTimerRef.current);
+      modalTimerRef.current = null;
+    }
+    setModalPhase("opening");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setModalPhase("open");
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (modalTimerRef.current !== null) {
+        window.clearTimeout(modalTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isModalVisible) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [isModalVisible]);
+
+  useEffect(() => {
+    if (!isModalVisible) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeModal();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [closeModal, isModalVisible]);
+
+  return (
+    <>
+      <button
+        type="button"
+        className={buttonClassName}
+        style={buttonStyle}
+        onClick={openModal}
+      >
+        {buttonLabel}
+      </button>
+
+      {isModalVisible ? (
+        <div
+          className={`community-create-modal community-action-modal agent-run-modal${
+            modalPhase === "open" ? " is-open" : ""
+          }`}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Run agent for ${communityName}`}
+        >
+          <button
+            type="button"
+            className="community-create-modal-backdrop"
+            aria-label="Close run my agent modal"
+            onClick={closeModal}
+          />
+          <section
+            className="community-create-modal-shell community-action-modal-shell agent-run-modal-shell"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="community-create-modal-head community-action-modal-head">
+              <h3>Run My Agent</h3>
+              <button
+                type="button"
+                className="community-create-modal-close"
+                onClick={closeModal}
+              >
+                Close
+              </button>
+            </header>
+            <div className="community-create-modal-body community-action-modal-body agent-run-modal-body">
+              <RunMyAgentModalContent
+                communityId={communityId}
+                communitySlug={communitySlug}
+                communityName={communityName}
+                agentId={agentId}
+                agentHandle={agentHandle}
+              />
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+type RunMyAgentModalContentProps = {
+  communityId: string;
+  communitySlug: string;
+  communityName: string;
+  agentId: string;
+  agentHandle: string;
+};
+
+function RunMyAgentModalContent({
+  communityId,
+  communitySlug,
+  communityName,
+  agentId,
+  agentHandle,
+}: RunMyAgentModalContentProps) {
+  const { connectedWallet, signIn, token } = useOwnerSession();
+
+  const [screen, setScreen] = useState<"choice" | "config">("choice");
+  const [setupMode, setSetupMode] = useState<SetupMode>("import");
+  const [activeTab, setActiveTab] = useState<ConfigTab>("public");
+
+  const [pairs, setPairs] = useState<PairItem[]>([]);
+  const [pairsBusy, setPairsBusy] = useState(false);
+  const [pairsStatus, setPairsStatus] = useState<StatusMessage | null>(null);
+  const [importSourceAgentId, setImportSourceAgentId] = useState("");
+  const [prepareBusy, setPrepareBusy] = useState(false);
+
+  const [general, setGeneral] = useState<GeneralPayload | null>(null);
+  const [generalBusy, setGeneralBusy] = useState(false);
+  const [generalStatus, setGeneralStatus] = useState<StatusMessage | null>(null);
+  const [llmHandleName, setLlmHandleName] = useState("");
+  const [llmProvider, setLlmProvider] = useState("");
+  const [llmModel, setLlmModel] = useState("");
+  const [liteLlmBaseUrl, setLiteLlmBaseUrl] = useState("");
+  const [availableModels, setAvailableModels] = useState<string[]>([]);
+  const [modelsBusy, setModelsBusy] = useState(false);
+
+  const [securityBusy, setSecurityBusy] = useState(false);
+  const [securityStatus, setSecurityStatus] = useState<StatusMessage | null>(null);
+  const [encryptedSecurity, setEncryptedSecurity] = useState<EncryptedSecurity | null>(null);
+  const [securityPassword, setSecurityPassword] = useState("");
+  const [securityPasswordMode, setSecurityPasswordMode] =
+    useState<SecurityPasswordMode>("none");
+  const [securitySignature, setSecuritySignature] = useState("");
+  const [legacyCommunitySignatures, setLegacyCommunitySignatures] = useState<
+    Record<string, string>
+  >({});
+  const decryptPasswordRowRef = useRef<HTMLDivElement | null>(null);
+  const encryptPasswordRowRef = useRef<HTMLDivElement | null>(null);
+  const [securityDraft, setSecurityDraft] = useState<SecuritySensitiveDraft>({
+    llmApiKey: "",
+    executionWalletPrivateKey: "",
+    alchemyApiKey: "",
+    githubIssueToken: "",
+  });
+  const [showLlmApiKey, setShowLlmApiKey] = useState(false);
+  const [showExecutionKey, setShowExecutionKey] = useState(false);
+  const [showAlchemyKey, setShowAlchemyKey] = useState(false);
+  const [showGithubIssueToken, setShowGithubIssueToken] = useState(false);
+
+  const [runnerDraft, setRunnerDraft] = useState<RunnerDraft>({
+    intervalSec: "",
+    commentContextLimit: "",
+    maxTokens: "",
+    supplementaryPromptProfile: "",
+  });
+  const [runnerLauncherPort, setRunnerLauncherPort] = useState("");
+  const [runnerLauncherSecret, setRunnerLauncherSecret] = useState("");
+  const [detectedRunnerPorts, setDetectedRunnerPorts] = useState<number[]>([]);
+  const [runnerStatus, setRunnerStatus] = useState<StatusMessage | null>(null);
+  const [detectRunnerBusy, setDetectRunnerBusy] = useState(false);
+  const [startRunnerBusy, setStartRunnerBusy] = useState(false);
+  const [stopRunnerBusy, setStopRunnerBusy] = useState(false);
+  const [runnerRunning, setRunnerRunning] = useState(false);
+
+  const [tested, setTested] = useState({
+    llmApiKey: false,
+    executionWalletPrivateKey: false,
+    alchemyApiKey: false,
+    runnerLauncher: false,
+  });
+
+  const authHeaders = useMemo(
+    () =>
+      token
+        ? ({ Authorization: `Bearer ${token}` } as Record<string, string>)
+        : undefined,
+    [token]
+  );
+
+  const currentPair = useMemo(() => {
+    return (
+      pairs.find((pair) => pair.id === agentId) ||
+      pairs.find((pair) => pair.community.id === communityId) ||
+      null
+    );
+  }, [agentId, communityId, pairs]);
+
+  const sourcePairs = useMemo(() => {
+    return pairs.filter((pair) => pair.id !== agentId && pair.community.id !== communityId);
+  }, [agentId, communityId, pairs]);
+
+  const modelOptions = useMemo(() => {
+    const set = new Set<string>();
+    if (llmModel.trim()) set.add(llmModel.trim());
+    for (const model of availableModels) {
+      const value = String(model || "").trim();
+      if (value) set.add(value);
+    }
+    return Array.from(set);
+  }, [availableModels, llmModel]);
+
+  const encryptedSecurityLine = useMemo(() => {
+    if (!encryptedSecurity) return "";
+    return encryptedSecurity.ciphertext || "";
+  }, [encryptedSecurity]);
+
+  const currentCommunityName =
+    general?.community?.name || currentPair?.community?.name || communityName;
+  const currentCommunitySlug =
+    general?.community?.slug || currentPair?.community?.slug || communitySlug;
+  const currentOwnerWallet =
+    general?.agent?.ownerWallet || currentPair?.ownerWallet || connectedWallet || "";
+
+  const readError = useCallback(async (response: Response) => {
+    const text = await response.text().catch(() => "");
+    return readStatusError(text);
+  }, []);
+
+  const fetchLocalLauncher = useCallback(
+    (input: RequestInfo | URL, init?: RequestInit) => {
+      return fetch(input, withLocalLauncherRequestOptions(init) as RequestInit);
+    },
+    []
+  );
+
+  const acquireSecuritySignature = useCallback(
+    async (setStatus: (message: StatusMessage) => void) => {
+      const cachedSignature = securitySignature.trim();
+      if (cachedSignature) return cachedSignature;
+
+      const ethereum = (window as any).ethereum;
+      if (!ethereum) {
+        setStatus({ kind: "error", text: "MetaMask not detected." });
+        return null;
+      }
+
+      try {
+        const provider = new BrowserProvider(ethereum);
+        const signer = await provider.getSigner();
+        const signature = await signer.signMessage(SECURITY_SIGNING_MESSAGE);
+        setSecuritySignature(signature);
+        return signature;
+      } catch {
+        setStatus({ kind: "error", text: "Failed to generate signature." });
+        return null;
+      }
+    },
+    [securitySignature]
+  );
+
+  const acquireLegacyCommunitySignature = useCallback(
+    async (communitySlugInput: string) => {
+      const slug = String(communitySlugInput || "").trim();
+      if (!slug) return null;
+      const cacheKey = slug.toLowerCase();
+      const cachedSignature = String(legacyCommunitySignatures[cacheKey] || "").trim();
+      if (cachedSignature) {
+        return cachedSignature;
+      }
+
+      const ethereum = (window as any).ethereum;
+      if (!ethereum) {
+        return null;
+      }
+
+      try {
+        const provider = new BrowserProvider(ethereum);
+        const signer = await provider.getSigner();
+        const signature = await signer.signMessage(
+          `${LEGACY_AGENT_SIGNIN_MESSAGE_PREFIX}${slug}`
+        );
+        setLegacyCommunitySignatures((prev) => ({
+          ...prev,
+          [cacheKey]: signature,
+        }));
+        return signature;
+      } catch {
+        return null;
+      }
+    },
+    [legacyCommunitySignatures]
+  );
+
+  const loadPairs = useCallback(async () => {
+    if (!token || !authHeaders) {
+      setPairs([]);
+      setPairsStatus({ kind: "error", text: "Sign in to continue." });
+      return;
+    }
+
+    setPairsBusy(true);
+    try {
+      const response = await fetch("/api/agents/mine", {
+        headers: authHeaders,
+      });
+      if (!response.ok) {
+        setPairs([]);
+        setPairsStatus({ kind: "error", text: await readError(response) });
+        return;
+      }
+
+      const data = await response.json();
+      const nextPairs = Array.isArray(data?.pairs) ? (data.pairs as PairItem[]) : [];
+      setPairs(nextPairs);
+      if (!nextPairs.length) {
+        setPairsStatus({ kind: "error", text: "No registered agents found." });
+        return;
+      }
+      setPairsStatus(null);
+    } catch {
+      setPairs([]);
+      setPairsStatus({ kind: "error", text: "Failed to load registered agents." });
+    } finally {
+      setPairsBusy(false);
+    }
+  }, [authHeaders, readError, token]);
+
+  const loadCurrentGeneral = useCallback(async () => {
+    if (!token || !agentId || !authHeaders) return;
+    try {
+      const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}/general`, {
+        headers: authHeaders,
+      });
+      if (!response.ok) return;
+      const data = (await response.json()) as GeneralPayload;
+      setGeneral(data);
+    } catch {
+      // noop
+    }
+  }, [agentId, authHeaders, token]);
+
+  const loadRunnerConfig = useCallback(() => {
+    if (!agentId || typeof window === "undefined") {
+      setRunnerDraft({
+        intervalSec: "",
+        commentContextLimit: "",
+        maxTokens: "",
+        supplementaryPromptProfile: "",
+      });
+      setRunnerLauncherPort("");
+      setRunnerLauncherSecret("");
+      setRunnerStatus(null);
+      return;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(runnerStorageKey(agentId));
+      if (!raw) {
+        setRunnerDraft({
+          intervalSec: "",
+          commentContextLimit: "",
+          maxTokens: "",
+          supplementaryPromptProfile: "",
+        });
+        setRunnerLauncherPort("");
+        setRunnerLauncherSecret("");
+        setRunnerStatus({ kind: "info", text: "No cached runner settings." });
+        return;
+      }
+
+      const parsed = JSON.parse(raw) as Partial<RunnerDraft> & {
+        runnerLauncherPort?: string;
+        runnerLauncherSecret?: string;
+      };
+      setRunnerDraft({
+        intervalSec: String(parsed.intervalSec || ""),
+        commentContextLimit: String(parsed.commentContextLimit || ""),
+        maxTokens: String(parsed.maxTokens || ""),
+        supplementaryPromptProfile: normalizeSupplementaryPromptProfile(
+          String(parsed.supplementaryPromptProfile || ""),
+          ""
+        ),
+      });
+      setRunnerLauncherPort(String(parsed.runnerLauncherPort || ""));
+      setRunnerLauncherSecret(String(parsed.runnerLauncherSecret || ""));
+      setRunnerStatus({ kind: "info", text: "Runner settings loaded from local cache." });
+    } catch {
+      setRunnerDraft({
+        intervalSec: "",
+        commentContextLimit: "",
+        maxTokens: "",
+        supplementaryPromptProfile: "",
+      });
+      setRunnerLauncherPort("");
+      setRunnerLauncherSecret("");
+      setRunnerStatus({ kind: "error", text: "Failed to parse runner cache." });
+    }
+  }, [agentId]);
+
+  const saveRunnerConfig = useCallback(() => {
+    if (!agentId || typeof window === "undefined") return;
+
+    const nextDraft = {
+      intervalSec: normalizePositiveInteger(runnerDraft.intervalSec, "60"),
+      commentContextLimit: normalizeNonNegativeInteger(
+        runnerDraft.commentContextLimit,
+        "50"
+      ),
+      maxTokens: normalizePositiveInteger(runnerDraft.maxTokens, ""),
+      supplementaryPromptProfile: normalizeSupplementaryPromptProfile(
+        runnerDraft.supplementaryPromptProfile,
+        ""
+      ),
+    };
+    const nextPort = normalizePositiveInteger(runnerLauncherPort, DEFAULT_RUNNER_LAUNCHER_PORT);
+
+    try {
+      window.localStorage.setItem(
+        runnerStorageKey(agentId),
+        JSON.stringify({
+          ...nextDraft,
+          runnerLauncherPort: nextPort,
+          runnerLauncherSecret,
+        })
+      );
+    } catch {
+      // noop
+    }
+  }, [agentId, runnerDraft, runnerLauncherPort, runnerLauncherSecret]);
+
+  const fetchModelsByApiKey = useCallback(
+    async (showSuccess = true) => {
+      const llmApiKey = securityDraft.llmApiKey.trim();
+      const provider = llmProvider.trim();
+      const baseUrl = liteLlmBaseUrl.trim();
+      if (!llmApiKey) {
+        setSecurityStatus({ kind: "error", text: "LLM API key is required." });
+        return false;
+      }
+      if (!provider) {
+        setGeneralStatus({ kind: "error", text: "LLM provider is required." });
+        return false;
+      }
+      if (provider === "LITELLM" && !baseUrl) {
+        setGeneralStatus({ kind: "error", text: "Base URL is required for LiteLLM." });
+        return false;
+      }
+
+      setModelsBusy(true);
+      try {
+        let models: string[] = [];
+        if (provider === "GEMINI") {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(llmApiKey)}`
+          );
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            setSecurityStatus({
+              kind: "error",
+              text: String(data?.error?.message || "Gemini request failed."),
+            });
+            return false;
+          }
+          models = Array.isArray(data?.models)
+            ? data.models
+                .filter((item: any) =>
+                  Array.isArray(item?.supportedGenerationMethods)
+                    ? item.supportedGenerationMethods.includes("generateContent")
+                    : false
+                )
+                .map((item: any) => String(item?.name || "").replace("models/", ""))
+                .filter(Boolean)
+            : [];
+        } else if (provider === "OPENAI") {
+          const response = await fetch("https://api.openai.com/v1/models", {
+            headers: { Authorization: `Bearer ${llmApiKey}` },
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            setSecurityStatus({
+              kind: "error",
+              text: String(data?.error?.message || "OpenAI request failed."),
+            });
+            return false;
+          }
+          models = Array.isArray(data?.data)
+            ? data.data.map((item: any) => String(item?.id || "")).filter(Boolean)
+            : [];
+        } else if (provider === "LITELLM") {
+          const normalized = baseUrl.replace(/\/+$/, "");
+          const apiBase = normalized.endsWith("/v1") ? normalized : `${normalized}/v1`;
+          const response = await fetch(`${apiBase}/models`, {
+            headers: { Authorization: `Bearer ${llmApiKey}` },
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            setSecurityStatus({
+              kind: "error",
+              text: String(data?.error?.message || "LiteLLM request failed."),
+            });
+            return false;
+          }
+          models = Array.isArray(data?.data)
+            ? data.data.map((item: any) => String(item?.id || "")).filter(Boolean)
+            : [];
+        } else if (provider === "ANTHROPIC") {
+          const response = await fetch("https://api.anthropic.com/v1/models", {
+            headers: {
+              "x-api-key": llmApiKey,
+              "anthropic-version": "2023-06-01",
+            },
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            setSecurityStatus({
+              kind: "error",
+              text: String(data?.error?.message || data?.error?.type || "Anthropic request failed."),
+            });
+            return false;
+          }
+          models = Array.isArray(data?.data)
+            ? data.data.map((item: any) => String(item?.id || "")).filter(Boolean)
+            : [];
+        }
+
+        if (!models.length) {
+          setSecurityStatus({ kind: "error", text: "No models returned from provider." });
+          return false;
+        }
+
+        setAvailableModels(models);
+        setLlmModel((prev) => {
+          const current = String(prev || "").trim();
+          if (current && models.includes(current)) return current;
+          return models[0];
+        });
+        setTested((prev) => ({ ...prev, llmApiKey: true }));
+        if (showSuccess) {
+          setSecurityStatus({ kind: "success", text: `Loaded ${models.length} models.` });
+        }
+        return true;
+      } catch {
+        setSecurityStatus({ kind: "error", text: "Failed to load model list." });
+        return false;
+      } finally {
+        setModelsBusy(false);
+      }
+    },
+    [llmProvider, liteLlmBaseUrl, securityDraft.llmApiKey]
+  );
+
+  const saveGeneral = useCallback(async () => {
+    if (!token || !agentId || !authHeaders) {
+      setGeneralStatus({ kind: "error", text: "Sign in first." });
+      return;
+    }
+
+    const handle = llmHandleName.trim();
+    const provider = llmProvider.trim().toUpperCase();
+    const model = llmModel.trim();
+    const baseUrl = liteLlmBaseUrl.trim().replace(/\/+$/, "");
+
+    if (!handle || !provider || !model) {
+      setGeneralStatus({ kind: "error", text: "Handle, provider, and model are required." });
+      return;
+    }
+    if (provider === "LITELLM" && !baseUrl) {
+      setGeneralStatus({ kind: "error", text: "Base URL is required for LiteLLM." });
+      return;
+    }
+
+    setGeneralBusy(true);
+    setGeneralStatus({ kind: "info", text: "Saving public configuration..." });
+    try {
+      const response = await fetchMutationWithAutoReload(
+        `/api/agents/${encodeURIComponent(agentId)}/general`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
+          body: JSON.stringify({
+            handle,
+            llmProvider: provider,
+            llmModel: model,
+            llmBaseUrl: provider === "LITELLM" ? baseUrl : null,
+          }),
+        }
+      );
+      if (!response.ok) {
+        setGeneralStatus({ kind: "error", text: await readError(response) });
+        return;
+      }
+      const data = (await response.json()) as GeneralPayload;
+      setGeneral(data);
+      setGeneralStatus({ kind: "success", text: "Public configuration saved." });
+    } catch {
+      setGeneralStatus({ kind: "error", text: "Failed to save public configuration." });
+    } finally {
+      setGeneralBusy(false);
+    }
+  }, [agentId, authHeaders, llmHandleName, llmModel, llmProvider, liteLlmBaseUrl, readError, token]);
+
+  const loadGeneralFromDb = useCallback(async () => {
+    if (!token || !agentId || !authHeaders) {
+      setGeneralStatus({ kind: "error", text: "Sign in first." });
+      return;
+    }
+
+    setGeneralBusy(true);
+    setGeneralStatus({ kind: "info", text: "Loading public configuration..." });
+    try {
+      const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}/general`, {
+        headers: authHeaders,
+      });
+      if (!response.ok) {
+        setGeneralStatus({ kind: "error", text: await readError(response) });
+        return;
+      }
+      const data = (await response.json()) as GeneralPayload;
+      setGeneral(data);
+      setLlmHandleName(data?.agent?.handle || "");
+      setLlmProvider(data?.agent?.llmProvider || "");
+      setLlmModel(data?.agent?.llmModel || "");
+      setLiteLlmBaseUrl(data?.agent?.llmBaseUrl || "");
+      setGeneralStatus({ kind: "success", text: "Public configuration loaded." });
+    } catch {
+      setGeneralStatus({ kind: "error", text: "Failed to load public configuration." });
+    } finally {
+      setGeneralBusy(false);
+    }
+  }, [agentId, authHeaders, readError, token]);
+
+  const loadEncryptedSecurity = useCallback(async () => {
+    if (!token || !agentId || !authHeaders) {
+      setSecurityStatus({ kind: "error", text: "Sign in first." });
+      return;
+    }
+
+    setSecurityBusy(true);
+    setSecurityStatus({ kind: "info", text: "Loading encrypted ciphertext..." });
+    try {
+      const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}/secrets`, {
+        headers: authHeaders,
+      });
+      if (!response.ok) {
+        setSecurityStatus({ kind: "error", text: await readError(response) });
+        setEncryptedSecurity(null);
+        return;
+      }
+      const data = await response.json().catch(() => ({}));
+      const encrypted = normalizeEncryptedSecurity(data?.securitySensitive);
+      setEncryptedSecurity(encrypted);
+      if (!encrypted && data?.securitySensitive != null) {
+        setSecurityStatus({
+          kind: "error",
+          text: "Unsupported ciphertext format. Re-enter values and save again.",
+        });
+        return;
+      }
+      setSecurityStatus({
+        kind: encrypted ? "success" : "error",
+        text: encrypted
+          ? "Encrypted ciphertext loaded."
+          : "No encrypted ciphertext in DB.",
+      });
+    } catch {
+      setEncryptedSecurity(null);
+      setSecurityStatus({ kind: "error", text: "Failed to load encrypted ciphertext." });
+    } finally {
+      setSecurityBusy(false);
+    }
+  }, [agentId, authHeaders, readError, token]);
+
+  const decryptSecurity = useCallback(async () => {
+    if (!encryptedSecurity) {
+      setSecurityStatus({ kind: "error", text: "Load encrypted ciphertext first." });
+      return false;
+    }
+    if (!securityPassword.trim()) {
+      setSecurityStatus({ kind: "error", text: "Password is required to decrypt." });
+      return false;
+    }
+
+    const signature = await acquireSecuritySignature(setSecurityStatus);
+    if (!signature) return false;
+
+    setSecurityBusy(true);
+    try {
+      const decrypted = await decryptAgentSecrets(signature, securityPassword, encryptedSecurity);
+      const normalizedDraft = toSecuritySensitiveDraft(decrypted);
+      setSecurityDraft(normalizedDraft);
+      setTested((prev) => ({
+        ...prev,
+        llmApiKey: false,
+        executionWalletPrivateKey: false,
+        alchemyApiKey: false,
+      }));
+      setSecurityStatus({ kind: "success", text: "Decrypted ciphertext successfully." });
+      return true;
+    } catch {
+      const candidateLegacySlugs: string[] = [];
+      const seenLegacy = new Set<string>();
+      for (const raw of [
+        encryptedSecurity.legacyCommunitySlug,
+        currentCommunitySlug,
+        ...Object.keys(legacyCommunitySignatures),
+      ]) {
+        const slug = String(raw || "").trim();
+        if (!slug) continue;
+        const key = slug.toLowerCase();
+        if (seenLegacy.has(key)) continue;
+        seenLegacy.add(key);
+        candidateLegacySlugs.push(slug);
+      }
+
+      for (const slug of candidateLegacySlugs) {
+        const legacySignature = await acquireLegacyCommunitySignature(slug);
+        if (!legacySignature) continue;
+        try {
+          const decrypted = await decryptAgentSecrets(
+            legacySignature,
+            securityPassword,
+            encryptedSecurity
+          );
+          const normalizedDraft = toSecuritySensitiveDraft(decrypted);
+          setSecurityDraft(normalizedDraft);
+          setTested((prev) => ({
+            ...prev,
+            llmApiKey: false,
+            executionWalletPrivateKey: false,
+            alchemyApiKey: false,
+          }));
+          setSecurityStatus({ kind: "success", text: "Decrypted ciphertext successfully." });
+          return true;
+        } catch {
+          // try next
+        }
+      }
+
+      setSecurityStatus({ kind: "error", text: "Decryption failed." });
+      return false;
+    } finally {
+      setSecurityBusy(false);
+    }
+  }, [
+    acquireLegacyCommunitySignature,
+    acquireSecuritySignature,
+    currentCommunitySlug,
+    encryptedSecurity,
+    legacyCommunitySignatures,
+    securityPassword,
+  ]);
+
+  const encryptAndSaveSecurity = useCallback(async () => {
+    if (!token || !agentId || !authHeaders) {
+      setSecurityStatus({ kind: "error", text: "Sign in first." });
+      return false;
+    }
+    if (!securityPassword.trim()) {
+      setSecurityStatus({ kind: "error", text: "Password is required to encrypt." });
+      return false;
+    }
+
+    const signature = await acquireSecuritySignature(setSecurityStatus);
+    if (!signature) return false;
+
+    setSecurityBusy(true);
+    setSecurityStatus({ kind: "info", text: "Encrypting and saving ciphertext..." });
+    try {
+      const encrypted = await encryptAgentSecrets(signature, securityPassword, securityDraft);
+      const response = await fetchMutationWithAutoReload(
+        `/api/agents/${encodeURIComponent(agentId)}/secrets`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders,
+          },
+          body: JSON.stringify({ securitySensitive: encrypted }),
+        }
+      );
+      if (!response.ok) {
+        setSecurityStatus({ kind: "error", text: await readError(response) });
+        return false;
+      }
+      setEncryptedSecurity(encrypted);
+      setSecurityStatus({ kind: "success", text: "Encrypted ciphertext saved." });
+      return true;
+    } catch {
+      setSecurityStatus({ kind: "error", text: "Failed to encrypt and save ciphertext." });
+      return false;
+    } finally {
+      setSecurityBusy(false);
+    }
+  }, [
+    acquireSecuritySignature,
+    agentId,
+    authHeaders,
+    readError,
+    securityDraft,
+    securityPassword,
+    token,
+  ]);
+
+  const testExecutionWalletKey = useCallback(async () => {
+    const privateKey = securityDraft.executionWalletPrivateKey.trim();
+    if (!privateKey) {
+      setSecurityStatus({
+        kind: "error",
+        text: "Wallet private key for transaction execution is required.",
+      });
+      return;
+    }
+
+    try {
+      const wallet = new Wallet(privateKey);
+      const address = await wallet.getAddress();
+      setTested((prev) => ({ ...prev, executionWalletPrivateKey: true }));
+      setSecurityStatus({ kind: "success", text: `Execution key valid: ${address}` });
+    } catch {
+      setTested((prev) => ({ ...prev, executionWalletPrivateKey: false }));
+      setSecurityStatus({
+        kind: "error",
+        text: "Wallet private key for transaction execution is invalid.",
+      });
+    }
+  }, [securityDraft.executionWalletPrivateKey]);
+
+  const testAlchemyApiKey = useCallback(async () => {
+    const alchemyApiKey = securityDraft.alchemyApiKey.trim();
+    if (!alchemyApiKey) {
+      setSecurityStatus({ kind: "error", text: "Alchemy API key is required." });
+      return;
+    }
+
+    try {
+      const provider = new JsonRpcProvider(
+        `https://eth-sepolia.g.alchemy.com/v2/${alchemyApiKey}`
+      );
+      const network = await provider.getNetwork();
+      setTested((prev) => ({ ...prev, alchemyApiKey: true }));
+      setSecurityStatus({
+        kind: "success",
+        text: `Alchemy key test passed (chainId: ${String(network.chainId)}).`,
+      });
+    } catch {
+      setTested((prev) => ({ ...prev, alchemyApiKey: false }));
+      setSecurityStatus({ kind: "error", text: "Alchemy API key test failed." });
+    }
+  }, [securityDraft.alchemyApiKey]);
+
+  const testGithubIssueToken = useCallback(async () => {
+    const githubIssueToken = securityDraft.githubIssueToken.trim();
+    if (!githubIssueToken) {
+      setSecurityStatus({ kind: "error", text: "GitHub personal access token is missing." });
+      return;
+    }
+
+    try {
+      const response = await fetch("https://api.github.com/user", {
+        method: "GET",
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${githubIssueToken}`,
+          "X-GitHub-Api-Version": "2022-11-28",
+        },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setSecurityStatus({
+          kind: "error",
+          text: String(data?.message || "GitHub token test failed."),
+        });
+        return;
+      }
+      const login = String(data?.login || "").trim();
+      setSecurityStatus({
+        kind: "success",
+        text: login
+          ? `GitHub token test passed (account: ${login}).`
+          : "GitHub token test passed.",
+      });
+    } catch {
+      setSecurityStatus({ kind: "error", text: "GitHub token test failed." });
+    }
+  }, [securityDraft.githubIssueToken]);
+
+  const fetchRunnerStatus = useCallback(
+    async (options?: {
+      preferredPort?: string;
+      silent?: boolean;
+    }): Promise<RunnerStatusSnapshot | null> => {
+      const launcherPort = String(options?.preferredPort || runnerLauncherPort).trim();
+      const launcherSecret = runnerLauncherSecret.trim();
+      if (!launcherPort) {
+        setRunnerRunning(false);
+        if (!options?.silent) {
+          setRunnerStatus({ kind: "error", text: "Runner launcher port is required." });
+        }
+        return null;
+      }
+      if (!launcherSecret) {
+        setRunnerRunning(false);
+        if (!options?.silent) {
+          setRunnerStatus({ kind: "error", text: "Runner launcher secret is required." });
+        }
+        return null;
+      }
+
+      try {
+        const response = await fetchLocalLauncher(
+          `http://127.0.0.1:${launcherPort}/runner/status?agentId=${encodeURIComponent(agentId)}`,
+          {
+            method: "GET",
+            headers: {
+              "x-runner-secret": launcherSecret,
+            },
+          }
+        );
+        if (!response.ok) {
+          const message = await readError(response);
+          setRunnerRunning(false);
+          if (!options?.silent) {
+            setRunnerStatus({ kind: "error", text: message });
+          }
+          return null;
+        }
+
+        const data = await response.json().catch(() => ({}));
+        const status = (data?.status || {}) as Record<string, unknown>;
+
+        const rawRunning = Boolean(status.runningAny || status.running);
+        const runningForSelectedAgent = Boolean(
+          status.selectedAgentRunning ||
+            (status.selectedAgentId && String(status.selectedAgentId) === agentId && status.running)
+        );
+        const runningAgentIds = Array.isArray(status.runningAgentIds)
+          ? status.runningAgentIds.map((entry) => String(entry || "")).filter(Boolean)
+          : [];
+        const runningAgentCount = Number.isFinite(Number(status.agentCount))
+          ? Number(status.agentCount)
+          : runningAgentIds.length;
+
+        setRunnerRunning(runningForSelectedAgent);
+        if (!options?.silent) {
+          if (runningForSelectedAgent) {
+            setRunnerStatus({
+              kind: "info",
+              text: `Runner is running on localhost:${launcherPort}.`,
+            });
+          } else if (rawRunning) {
+            setRunnerStatus({
+              kind: "error",
+              text: `Runner is active on localhost:${launcherPort} for another agent.`,
+            });
+          } else {
+            setRunnerStatus({
+              kind: "info",
+              text: `Runner is stopped on localhost:${launcherPort}.`,
+            });
+          }
+        }
+
+        return {
+          launcherPort,
+          rawRunning,
+          runningForSelectedAgent,
+          runningForOtherAgent: rawRunning && !runningForSelectedAgent,
+          statusAgentId: String(status.selectedAgentId || "").trim(),
+          runningAgentIds,
+          runningAgentCount,
+        };
+      } catch {
+        setRunnerRunning(false);
+        if (!options?.silent) {
+          setRunnerStatus({
+            kind: "error",
+            text: "Could not reach local runner launcher. Start apps/runner first.",
+          });
+        }
+        return null;
+      }
+    },
+    [agentId, fetchLocalLauncher, readError, runnerLauncherPort, runnerLauncherSecret]
+  );
+
+  const detectRunnerLauncherPorts = useCallback(async () => {
+    setDetectRunnerBusy(true);
+    try {
+      const currentPort = Number.parseInt(
+        String(runnerLauncherPort || DEFAULT_RUNNER_LAUNCHER_PORT),
+        10
+      );
+      const ports = Array.from(
+        new Set(
+          [
+            Number.isFinite(currentPort) ? currentPort : null,
+            ...RUNNER_PORT_SCAN_RANGE,
+          ].filter((value): value is number => Number.isFinite(value))
+        )
+      );
+
+      const probe = async (port: number) => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 800);
+        try {
+          const response = await fetchLocalLauncher(`http://127.0.0.1:${port}/health`, {
+            method: "GET",
+            signal: controller.signal,
+          });
+          if (!response.ok) return null;
+          const data = await response.json().catch(() => ({}));
+          if (data?.ok) return port;
+          return null;
+        } catch {
+          return null;
+        } finally {
+          clearTimeout(timeout);
+        }
+      };
+
+      const results = await Promise.all(ports.map((port) => probe(port)));
+      const matched = results
+        .filter((port): port is number => typeof port === "number")
+        .sort((a, b) => a - b);
+
+      setDetectedRunnerPorts((prev) => (areNumberArraysEqual(prev, matched) ? prev : matched));
+
+      if (matched.length) {
+        setRunnerLauncherPort((prev) => {
+          const current = String(prev || "").trim();
+          if (current && matched.includes(Number(current))) return current;
+          return String(matched[0]);
+        });
+        setTested((prev) => ({ ...prev, runnerLauncher: true }));
+        setRunnerStatus({
+          kind: "success",
+          text: `Detected launcher port: ${matched.join(", ")}`,
+        });
+        return;
+      }
+
+      setTested((prev) => ({ ...prev, runnerLauncher: false }));
+      setRunnerRunning(false);
+      setRunnerStatus({ kind: "error", text: "No running runner launcher detected." });
+    } finally {
+      setDetectRunnerBusy(false);
+    }
+  }, [fetchLocalLauncher, runnerLauncherPort]);
+
+  const stopRunnerLauncher = useCallback(async () => {
+    const launcherPort = String(runnerLauncherPort || "").trim();
+    const launcherSecret = runnerLauncherSecret.trim();
+    if (!launcherPort) {
+      setRunnerStatus({ kind: "error", text: "Runner launcher port is required." });
+      return;
+    }
+    if (!launcherSecret) {
+      setRunnerStatus({ kind: "error", text: "Runner launcher secret is required." });
+      return;
+    }
+
+    setStopRunnerBusy(true);
+    try {
+      const response = await fetchLocalLauncher(
+        `http://127.0.0.1:${launcherPort}/runner/stop`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-runner-secret": launcherSecret,
+          },
+          body: JSON.stringify({ agentId }),
+        }
+      );
+      if (!response.ok) {
+        setRunnerStatus({ kind: "error", text: await readError(response) });
+        return;
+      }
+
+      setRunnerRunning(false);
+      setRunnerStatus({
+        kind: "success",
+        text: `Runner stopped on localhost:${launcherPort}.`,
+      });
+    } catch {
+      setRunnerStatus({
+        kind: "error",
+        text: "Could not reach local runner launcher. Start apps/runner first.",
+      });
+    } finally {
+      setStopRunnerBusy(false);
+    }
+  }, [agentId, fetchLocalLauncher, readError, runnerLauncherPort, runnerLauncherSecret]);
+
+  const startRunnerLauncher = useCallback(async () => {
+    if (!token || !authHeaders) {
+      setRunnerStatus({ kind: "error", text: "Sign in first." });
+      return;
+    }
+
+    const launcherPort = String(runnerLauncherPort || "").trim();
+    if (!launcherPort) {
+      setRunnerStatus({ kind: "error", text: "Runner launcher port is required." });
+      return;
+    }
+    if (!runnerLauncherSecret.trim()) {
+      setRunnerStatus({ kind: "error", text: "Runner launcher secret is required." });
+      return;
+    }
+
+    const normalizedInterval = normalizePositiveInteger(runnerDraft.intervalSec, "60");
+    const normalizedLimit = normalizeNonNegativeInteger(
+      runnerDraft.commentContextLimit,
+      "50"
+    );
+    const normalizedMaxTokens = normalizePositiveInteger(runnerDraft.maxTokens, "");
+    const normalizedSupplementaryPromptProfile = normalizeSupplementaryPromptProfile(
+      runnerDraft.supplementaryPromptProfile,
+      ""
+    );
+
+    const encodedInput = encodeLauncherInputMessage({
+      securitySensitive: {
+        llmApiKey: securityDraft.llmApiKey.trim(),
+        executionWalletPrivateKey: securityDraft.executionWalletPrivateKey.trim(),
+        alchemyApiKey: securityDraft.alchemyApiKey.trim(),
+        githubIssueToken: securityDraft.githubIssueToken.trim(),
+      },
+      runner: {
+        intervalSec: Number(normalizedInterval),
+        commentContextLimit: Number(normalizedLimit),
+        runnerLauncherPort: Number(launcherPort),
+        ...(normalizedSupplementaryPromptProfile
+          ? { supplementaryPromptProfile: normalizedSupplementaryPromptProfile }
+          : {}),
+        ...(normalizedMaxTokens ? { maxTokens: Number(normalizedMaxTokens) } : {}),
+      },
+    });
+
+    if (!encodedInput) {
+      setRunnerStatus({ kind: "error", text: "Failed to encode launcher input payload." });
+      return;
+    }
+
+    setStartRunnerBusy(true);
+    try {
+      const preflight = await fetchRunnerStatus({ preferredPort: launcherPort, silent: true });
+      if (!preflight) {
+        setRunnerStatus({
+          kind: "error",
+          text: `Runner status preflight failed on localhost:${launcherPort}.`,
+        });
+        return;
+      }
+      if (preflight.runningForSelectedAgent) {
+        setRunnerStatus({
+          kind: "info",
+          text: `Runner is already running on localhost:${launcherPort}.`,
+        });
+        return;
+      }
+      if (preflight.runningForOtherAgent) {
+        setRunnerStatus({
+          kind: "error",
+          text: `Runner is already active for another agent on localhost:${launcherPort}.`,
+        });
+        return;
+      }
+
+      const credentialResponse = await fetchMutationWithAutoReload(
+        `/api/agents/${encodeURIComponent(agentId)}/runner-credential`,
+        {
+          method: "POST",
+          headers: authHeaders,
+        }
+      );
+      if (!credentialResponse.ok) {
+        setRunnerStatus({ kind: "error", text: await readError(credentialResponse) });
+        return;
+      }
+      const credentialData = await credentialResponse.json().catch(() => ({}));
+      const runnerToken = String(credentialData?.runnerToken || "").trim();
+      if (!runnerToken) {
+        setRunnerStatus({ kind: "error", text: "Runner credential issuance failed." });
+        return;
+      }
+
+      const response = await fetchLocalLauncher(
+        `http://127.0.0.1:${launcherPort}/runner/start`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-runner-secret": runnerLauncherSecret.trim(),
+          },
+          body: JSON.stringify({
+            config: {
+              snsBaseUrl: window.location.origin,
+              runnerToken,
+              agentId,
+              encodedInput,
+              llm: {
+                apiKey: securityDraft.llmApiKey.trim(),
+                baseUrl: llmProvider === "LITELLM" ? liteLlmBaseUrl.trim() : "",
+              },
+            },
+          }),
+        }
+      );
+      if (!response.ok) {
+        setRunnerStatus({ kind: "error", text: await readError(response) });
+        return;
+      }
+
+      setRunnerRunning(true);
+      saveRunnerConfig();
+      setRunnerStatus({
+        kind: "success",
+        text: `Runner started on localhost:${launcherPort}.`,
+      });
+    } catch {
+      setRunnerStatus({
+        kind: "error",
+        text: "Could not reach local runner launcher. Start apps/runner first.",
+      });
+    } finally {
+      setStartRunnerBusy(false);
+    }
+  }, [
+    agentId,
+    authHeaders,
+    fetchLocalLauncher,
+    fetchRunnerStatus,
+    liteLlmBaseUrl,
+    llmProvider,
+    readError,
+    runnerDraft.commentContextLimit,
+    runnerDraft.intervalSec,
+    runnerDraft.maxTokens,
+    runnerDraft.supplementaryPromptProfile,
+    runnerLauncherPort,
+    runnerLauncherSecret,
+    saveRunnerConfig,
+    securityDraft.alchemyApiKey,
+    securityDraft.executionWalletPrivateKey,
+    securityDraft.githubIssueToken,
+    securityDraft.llmApiKey,
+    token,
+  ]);
+
+  const prepareFromSource = useCallback(async () => {
+    if (!token || !authHeaders) {
+      setPairsStatus({ kind: "error", text: "Sign in first." });
+      return false;
+    }
+
+    const sourceId = String(importSourceAgentId || "").trim();
+    if (!sourceId) {
+      setPairsStatus({ kind: "error", text: "Select a source community configuration." });
+      return false;
+    }
+
+    const sourcePair = sourcePairs.find((pair) => pair.id === sourceId);
+    const sourceName = sourcePair
+      ? `${sourcePair.community.name} (${sourcePair.community.slug})`
+      : "selected source";
+
+    setPrepareBusy(true);
+    setPairsStatus({
+      kind: "info",
+      text: `Importing configuration from ${sourceName}...`,
+    });
+
+    try {
+      const [sourceGeneralResponse, sourceSecurityResponse] = await Promise.all([
+        fetch(`/api/agents/${encodeURIComponent(sourceId)}/general`, {
+          headers: authHeaders,
+        }),
+        fetch(`/api/agents/${encodeURIComponent(sourceId)}/secrets`, {
+          headers: authHeaders,
+        }),
+      ]);
+
+      if (!sourceGeneralResponse.ok) {
+        setPairsStatus({ kind: "error", text: await readError(sourceGeneralResponse) });
+        return false;
+      }
+      if (!sourceSecurityResponse.ok) {
+        setPairsStatus({ kind: "error", text: await readError(sourceSecurityResponse) });
+        return false;
+      }
+
+      const sourceGeneral = (await sourceGeneralResponse.json()) as GeneralPayload;
+      const sourceSecurityData = await sourceSecurityResponse.json().catch(() => ({}));
+      const sourceEncrypted = normalizeEncryptedSecurity(sourceSecurityData?.securitySensitive);
+
+      const currentHandle = String(
+        agentHandle || general?.agent?.handle || currentPair?.handle || ""
+      ).trim();
+
+      setLlmHandleName(currentHandle);
+      setLlmProvider(sourceGeneral.agent.llmProvider || "");
+      setLlmModel(sourceGeneral.agent.llmModel || defaultModelByProvider("GEMINI"));
+      setLiteLlmBaseUrl(sourceGeneral.agent.llmBaseUrl || "");
+      setEncryptedSecurity(sourceEncrypted);
+      setSecurityDraft({
+        llmApiKey: "",
+        executionWalletPrivateKey: "",
+        alchemyApiKey: "",
+        githubIssueToken: "",
+      });
+      setSecurityPassword("");
+      setSecurityPasswordMode("none");
+      setTested({
+        llmApiKey: false,
+        executionWalletPrivateKey: false,
+        alchemyApiKey: false,
+        runnerLauncher: false,
+      });
+      setPairsStatus({
+        kind: "success",
+        text: `Configuration imported from ${sourceName}.`,
+      });
+      return true;
+    } catch {
+      setPairsStatus({
+        kind: "error",
+        text: "Failed to import configuration from source community.",
+      });
+      return false;
+    } finally {
+      setPrepareBusy(false);
+    }
+  }, [
+    agentHandle,
+    authHeaders,
+    currentPair?.handle,
+    general?.agent?.handle,
+    importSourceAgentId,
+    readError,
+    sourcePairs,
+    token,
+  ]);
+
+  const prepareFresh = useCallback(() => {
+    setLlmHandleName("");
+    setLlmProvider("");
+    setLlmModel("");
+    setLiteLlmBaseUrl("");
+    setAvailableModels([]);
+    setEncryptedSecurity(null);
+    setSecurityDraft({
+      llmApiKey: "",
+      executionWalletPrivateKey: "",
+      alchemyApiKey: "",
+      githubIssueToken: "",
+    });
+    setSecurityPassword("");
+    setSecurityPasswordMode("none");
+    setSecurityStatus(null);
+    setGeneralStatus(null);
+    setTested({
+      llmApiKey: false,
+      executionWalletPrivateKey: false,
+      alchemyApiKey: false,
+      runnerLauncher: false,
+    });
+    setPairsStatus({ kind: "info", text: "Start with empty configuration." });
+  }, []);
+
+  const handleContinue = useCallback(async () => {
+    if (setupMode === "import") {
+      const ok = await prepareFromSource();
+      if (!ok) return;
+    } else {
+      prepareFresh();
+    }
+    setActiveTab("public");
+    setScreen("config");
+  }, [prepareFresh, prepareFromSource, setupMode]);
+
+  const startButtonMissing = useMemo(() => {
+    const missing: string[] = [];
+    if (!currentCommunityName || !currentCommunitySlug) missing.push("Registered Community");
+    if (!currentOwnerWallet) missing.push("Handle Owner MetaMask Address");
+    if (!llmHandleName.trim()) missing.push("LLM Handle Name");
+    if (!llmProvider.trim()) missing.push("LLM Provider");
+    if (!llmModel.trim()) missing.push("LLM Model");
+    if (!securityDraft.llmApiKey.trim()) missing.push("LLM API Key");
+    if (!securityDraft.executionWalletPrivateKey.trim()) {
+      missing.push("Execution Wallet Private Key");
+    }
+    if (!securityDraft.alchemyApiKey.trim()) missing.push("Alchemy API Key");
+    if (!runnerDraft.intervalSec.trim()) missing.push("Runner Interval");
+    if (!runnerDraft.commentContextLimit.trim()) missing.push("Comment Context Limit");
+    if (!runnerLauncherPort.trim()) missing.push("Runner Launcher Port");
+    if (!runnerLauncherSecret.trim()) missing.push("Runner Launcher Secret");
+    if (!tested.llmApiKey) missing.push("LLM API Key test");
+    if (!tested.executionWalletPrivateKey) missing.push("Execution Key test");
+    if (!tested.alchemyApiKey) missing.push("Alchemy Key test");
+    if (!tested.runnerLauncher) missing.push("Runner Launcher detect");
+    return missing;
+  }, [
+    currentCommunityName,
+    currentCommunitySlug,
+    currentOwnerWallet,
+    llmHandleName,
+    llmModel,
+    llmProvider,
+    runnerDraft.commentContextLimit,
+    runnerDraft.intervalSec,
+    runnerLauncherPort,
+    runnerLauncherSecret,
+    securityDraft.alchemyApiKey,
+    securityDraft.executionWalletPrivateKey,
+    securityDraft.llmApiKey,
+    tested.alchemyApiKey,
+    tested.executionWalletPrivateKey,
+    tested.llmApiKey,
+    tested.runnerLauncher,
+  ]);
+
+  const startButtonDisabled =
+    screen !== "config" ||
+    !token ||
+    startRunnerBusy ||
+    stopRunnerBusy ||
+    startButtonMissing.length > 0;
+
+  useEffect(() => {
+    void loadPairs();
+    void loadCurrentGeneral();
+    loadRunnerConfig();
+  }, [loadCurrentGeneral, loadPairs, loadRunnerConfig]);
+
+  useEffect(() => {
+    const fallback = sourcePairs[0]?.id || "";
+    setImportSourceAgentId((prev) => {
+      if (prev && sourcePairs.some((pair) => pair.id === prev)) return prev;
+      return fallback;
+    });
+  }, [sourcePairs]);
+
+  useEffect(() => {
+    if (!runnerLauncherPort.trim() || !runnerLauncherSecret.trim()) {
+      setRunnerRunning(false);
+      return;
+    }
+    void fetchRunnerStatus({ preferredPort: runnerLauncherPort, silent: true });
+  }, [fetchRunnerStatus, runnerLauncherPort, runnerLauncherSecret]);
+
+  useEffect(() => {
+    if (securityPasswordMode === "none") return;
+
+    const activeRow =
+      securityPasswordMode === "decrypt"
+        ? decryptPasswordRowRef.current
+        : encryptPasswordRowRef.current;
+    if (!activeRow) return;
+
+    const resetInlinePasswordMode = (target: EventTarget | null) => {
+      if (!(target instanceof Node)) return;
+      if (activeRow.contains(target)) return;
+      setSecurityPasswordMode("none");
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      resetInlinePasswordMode(event.target);
+    };
+    const onFocusIn = (event: FocusEvent) => {
+      resetInlinePasswordMode(event.target);
+    };
+
+    document.addEventListener("pointerdown", onPointerDown, true);
+    document.addEventListener("focusin", onFocusIn, true);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown, true);
+      document.removeEventListener("focusin", onFocusIn, true);
+    };
+  }, [securityPasswordMode]);
+
+  return (
+    <div className="agent-run-modal-content">
+      {screen === "choice" ? (
+        <div className="agent-run-choice-screen">
+          <div className="agent-run-choice-summary">
+            <p className="meta-text">
+              Community: <strong>{currentCommunityName}</strong> ({currentCommunitySlug})
+            </p>
+            <p className="meta-text">
+              Agent Handle: <strong>{agentHandle || currentPair?.handle || "-"}</strong>
+            </p>
+          </div>
+
+          {!token ? (
+            <div className="agent-run-auth-callout">
+              <p className="meta-text">Owner session is required.</p>
+              <button type="button" className="button" onClick={() => void signIn()}>
+                Sign In
+              </button>
+              <StatusText status={pairsStatus} />
+            </div>
+          ) : (
+            <>
+              <div className="agent-run-choice-grid">
+                <button
+                  type="button"
+                  className={`agent-run-choice-card${setupMode === "import" ? " is-active" : ""}`}
+                  onClick={() => setSetupMode("import")}
+                >
+                  <strong>Import from another community</strong>
+                  <span>
+                    Load Public Configuration and Encrypted Ciphertext from another registered
+                    community.
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className={`agent-run-choice-card${setupMode === "fresh" ? " is-active" : ""}`}
+                  onClick={() => setSetupMode("fresh")}
+                >
+                  <strong>Create from scratch</strong>
+                  <span>Start with empty Public Configuration and Confidential Keys.</span>
+                </button>
+              </div>
+
+              {setupMode === "import" ? (
+                <div className="field">
+                  <label>Source community configuration</label>
+                  <div className="manager-inline-field">
+                    <select
+                      value={importSourceAgentId}
+                      onChange={(event) => setImportSourceAgentId(event.currentTarget.value)}
+                      disabled={pairsBusy || !sourcePairs.length || prepareBusy}
+                    >
+                      {sourcePairs.length ? (
+                        sourcePairs.map((pair) => (
+                          <option key={pair.id} value={pair.id}>
+                            {pair.community.name} ({pair.community.slug}) · {pair.handle}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">No source communities available</option>
+                      )}
+                    </select>
+                    <button
+                      type="button"
+                      className="button"
+                      onClick={() => void handleContinue()}
+                      disabled={
+                        prepareBusy ||
+                        pairsBusy ||
+                        !sourcePairs.length ||
+                        !importSourceAgentId.trim()
+                      }
+                    >
+                      {prepareBusy ? "Preparing..." : "Continue"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="row wrap">
+                  <button
+                    type="button"
+                    className="button"
+                    onClick={() => void handleContinue()}
+                    disabled={prepareBusy}
+                  >
+                    {prepareBusy ? "Preparing..." : "Continue"}
+                  </button>
+                </div>
+              )}
+              <StatusText status={pairsStatus} />
+            </>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="agent-run-modal-tabs" role="tablist" aria-label="Run my agent tabs">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "public"}
+              className={`agent-run-tab${activeTab === "public" ? " is-active" : ""}`}
+              onClick={() => setActiveTab("public")}
+            >
+              Public Configuration
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "confidential"}
+              className={`agent-run-tab${activeTab === "confidential" ? " is-active" : ""}`}
+              onClick={() => setActiveTab("confidential")}
+            >
+              Confidential Keys
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "runner"}
+              className={`agent-run-tab${activeTab === "runner" ? " is-active" : ""}`}
+              onClick={() => setActiveTab("runner")}
+            >
+              Runner
+            </button>
+          </div>
+
+          <div className="agent-run-modal-panel">
+            {activeTab === "public" ? (
+              <div className="agent-run-tab-panel" role="tabpanel">
+                <div className="field">
+                  <label>Registered Community</label>
+                  <input readOnly value={`${currentCommunityName} (${currentCommunitySlug})`} />
+                </div>
+                <div className="field">
+                  <label>Handle Owner MetaMask Address</label>
+                  <input readOnly value={currentOwnerWallet || ""} />
+                </div>
+                <div className="field">
+                  <label>LLM Handle Name</label>
+                  <input
+                    value={llmHandleName}
+                    onChange={(event) => setLlmHandleName(event.currentTarget.value)}
+                  />
+                </div>
+                {llmProvider === "LITELLM" ? (
+                  <div className="manager-provider-row">
+                    <div className="field">
+                      <label>LLM Provider</label>
+                      <select
+                        value={llmProvider}
+                        onChange={(event) => {
+                          const nextProvider = event.currentTarget.value;
+                          setLlmProvider(nextProvider);
+                          setLlmModel(defaultModelByProvider(nextProvider));
+                          setAvailableModels([]);
+                          setTested((prev) => ({ ...prev, llmApiKey: false }));
+                          if (nextProvider !== "LITELLM") {
+                            setLiteLlmBaseUrl("");
+                          }
+                        }}
+                      >
+                        {PROVIDER_OPTIONS.map((provider) => (
+                          <option key={provider || "none"} value={provider}>
+                            {provider || "Select provider"}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label>Base URL</label>
+                      <input
+                        value={liteLlmBaseUrl}
+                        onChange={(event) => {
+                          setLiteLlmBaseUrl(event.currentTarget.value);
+                          setTested((prev) => ({ ...prev, llmApiKey: false }));
+                        }}
+                        placeholder="https://your-litellm-endpoint/v1"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="field">
+                    <label>LLM Provider</label>
+                    <select
+                      value={llmProvider}
+                      onChange={(event) => {
+                        const nextProvider = event.currentTarget.value;
+                        setLlmProvider(nextProvider);
+                        setLlmModel(defaultModelByProvider(nextProvider));
+                        setAvailableModels([]);
+                        setTested((prev) => ({ ...prev, llmApiKey: false }));
+                      }}
+                    >
+                      {PROVIDER_OPTIONS.map((provider) => (
+                        <option key={provider || "none"} value={provider}>
+                          {provider || "Select provider"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div className="field">
+                  <label>LLM Model</label>
+                  <div className="manager-inline-field">
+                    <select
+                      value={llmModel}
+                      onChange={(event) => setLlmModel(event.currentTarget.value)}
+                      disabled={!modelOptions.length}
+                    >
+                      {modelOptions.length ? (
+                        modelOptions.map((modelName) => (
+                          <option key={modelName} value={modelName}>
+                            {modelName}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">Load model list first</option>
+                      )}
+                    </select>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => void fetchModelsByApiKey(true)}
+                      disabled={modelsBusy}
+                    >
+                      {modelsBusy ? "Loading..." : "Load Model List"}
+                    </button>
+                  </div>
+                </div>
+                <div className="row wrap">
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => void loadGeneralFromDb()}
+                    disabled={generalBusy}
+                  >
+                    {generalBusy ? "Loading..." : "Load from DB"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button"
+                    onClick={() => void saveGeneral()}
+                    disabled={generalBusy}
+                  >
+                    {generalBusy ? "Saving..." : "Save to DB"}
+                  </button>
+                </div>
+                <StatusText status={generalStatus} />
+              </div>
+            ) : null}
+
+            {activeTab === "confidential" ? (
+              <div className="agent-run-tab-panel" role="tabpanel">
+                <div className="field">
+                  <label>ENCRYPTED CIPHERTEXT</label>
+                  <div className="manager-inline-field">
+                    <input readOnly value={encryptedSecurityLine} />
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => void loadEncryptedSecurity()}
+                      disabled={securityBusy}
+                    >
+                      {securityBusy ? "Loading..." : "Load from DB"}
+                    </button>
+                  </div>
+                </div>
+
+                {securityPasswordMode === "decrypt" ? (
+                  <div className="manager-inline-field" ref={decryptPasswordRowRef}>
+                    <input
+                      type="password"
+                      value={securityPassword}
+                      onChange={(event) => setSecurityPassword(event.currentTarget.value)}
+                      placeholder="Password"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      className="button button-secondary button-compact"
+                      onClick={async () => {
+                        const ok = await decryptSecurity();
+                        if (ok) {
+                          setSecurityPasswordMode("none");
+                          setSecurityPassword("");
+                        }
+                      }}
+                      disabled={securityBusy}
+                    >
+                      {securityBusy ? "Decrypting..." : "Decrypt"}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="button button-secondary button-block"
+                    onClick={() => setSecurityPasswordMode("decrypt")}
+                    disabled={securityBusy || securityPasswordMode === "encrypt"}
+                  >
+                    Decrypt
+                  </button>
+                )}
+
+                <div className="field">
+                  <label>LLM API Key</label>
+                  <div className="manager-inline-field">
+                    <input
+                      type={showLlmApiKey ? "text" : "password"}
+                      value={securityDraft.llmApiKey}
+                      onChange={(event) => {
+                        const value = event.currentTarget.value;
+                        setSecurityDraft((prev) => ({ ...prev, llmApiKey: value }));
+                        setTested((prev) => ({ ...prev, llmApiKey: false }));
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => setShowLlmApiKey((prev) => !prev)}
+                    >
+                      {showLlmApiKey ? "Hide" : "Show"}
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => void fetchModelsByApiKey(true)}
+                      disabled={modelsBusy}
+                    >
+                      {modelsBusy ? "Testing..." : "Test"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="field">
+                  <label>Wallet private key for transaction execution</label>
+                  <div className="manager-inline-field">
+                    <input
+                      type={showExecutionKey ? "text" : "password"}
+                      value={securityDraft.executionWalletPrivateKey}
+                      onChange={(event) => {
+                        const value = event.currentTarget.value;
+                        setSecurityDraft((prev) => ({
+                          ...prev,
+                          executionWalletPrivateKey: value,
+                        }));
+                        setTested((prev) => ({
+                          ...prev,
+                          executionWalletPrivateKey: false,
+                        }));
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => setShowExecutionKey((prev) => !prev)}
+                    >
+                      {showExecutionKey ? "Hide" : "Show"}
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => void testExecutionWalletKey()}
+                    >
+                      Test
+                    </button>
+                  </div>
+                </div>
+
+                <div className="field">
+                  <label>Alchemy API Key</label>
+                  <div className="manager-inline-field">
+                    <input
+                      type={showAlchemyKey ? "text" : "password"}
+                      value={securityDraft.alchemyApiKey}
+                      onChange={(event) => {
+                        const value = event.currentTarget.value;
+                        setSecurityDraft((prev) => ({ ...prev, alchemyApiKey: value }));
+                        setTested((prev) => ({ ...prev, alchemyApiKey: false }));
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => setShowAlchemyKey((prev) => !prev)}
+                    >
+                      {showAlchemyKey ? "Hide" : "Show"}
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => void testAlchemyApiKey()}
+                    >
+                      Test
+                    </button>
+                  </div>
+                </div>
+
+                <div className="field">
+                  <label>
+                    GitHub personal access token (classic) for creating issues (Optional)
+                  </label>
+                  <div className="manager-inline-field">
+                    <input
+                      type={showGithubIssueToken ? "text" : "password"}
+                      value={securityDraft.githubIssueToken}
+                      onChange={(event) => {
+                        const value = event.currentTarget.value;
+                        setSecurityDraft((prev) => ({ ...prev, githubIssueToken: value }));
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => setShowGithubIssueToken((prev) => !prev)}
+                    >
+                      {showGithubIssueToken ? "Hide" : "Show"}
+                    </button>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => void testGithubIssueToken()}
+                    >
+                      Test
+                    </button>
+                  </div>
+                </div>
+
+                {securityPasswordMode === "encrypt" ? (
+                  <div className="manager-inline-field" ref={encryptPasswordRowRef}>
+                    <input
+                      type="password"
+                      value={securityPassword}
+                      onChange={(event) => setSecurityPassword(event.currentTarget.value)}
+                      placeholder="Password"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      className="button button-compact"
+                      onClick={async () => {
+                        const ok = await encryptAndSaveSecurity();
+                        if (ok) {
+                          setSecurityPasswordMode("none");
+                          setSecurityPassword("");
+                        }
+                      }}
+                      disabled={securityBusy}
+                    >
+                      {securityBusy ? "Saving..." : "Save to DB"}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="button button-block"
+                    onClick={() => setSecurityPasswordMode("encrypt")}
+                    disabled={securityBusy || securityPasswordMode === "decrypt"}
+                  >
+                    Encrypt & Save to DB
+                  </button>
+                )}
+                <StatusText status={securityStatus} />
+              </div>
+            ) : null}
+
+            {activeTab === "runner" ? (
+              <div className="agent-run-tab-panel" role="tabpanel">
+                <div className="field">
+                  <label>Runner Interval (sec)</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={runnerDraft.intervalSec}
+                    onWheel={(event) => event.currentTarget.blur()}
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
+                      setRunnerDraft((prev) => ({ ...prev, intervalSec: value }));
+                    }}
+                  />
+                </div>
+                <div className="field">
+                  <label>Max number of comments in the context Limit for each LLM call</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={runnerDraft.commentContextLimit}
+                    onWheel={(event) => event.currentTarget.blur()}
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
+                      setRunnerDraft((prev) => ({ ...prev, commentContextLimit: value }));
+                    }}
+                  />
+                </div>
+                <div className="field">
+                  <label>Max Tokens for each LLM call (Optional)</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={runnerDraft.maxTokens}
+                    onWheel={(event) => event.currentTarget.blur()}
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
+                      setRunnerDraft((prev) => ({ ...prev, maxTokens: value }));
+                    }}
+                    placeholder="Leave empty for no limit"
+                  />
+                </div>
+                <div className="field">
+                  <label>Supplementary Prompt Profile (Optional)</label>
+                  <select
+                    value={runnerDraft.supplementaryPromptProfile}
+                    onChange={(event) => {
+                      const value = event.currentTarget.value;
+                      setRunnerDraft((prev) => ({
+                        ...prev,
+                        supplementaryPromptProfile: normalizeSupplementaryPromptProfile(
+                          value,
+                          ""
+                        ),
+                      }));
+                    }}
+                  >
+                    {SUPPLEMENTARY_PROMPT_PROFILE_OPTIONS.map((option) => (
+                      <option key={option.value || "none"} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label>Runner Launcher Port (localhost)</label>
+                  <select
+                    value={runnerLauncherPort}
+                    onChange={(event) => setRunnerLauncherPort(event.currentTarget.value)}
+                    disabled={!detectedRunnerPorts.length && !runnerLauncherPort}
+                  >
+                    {!detectedRunnerPorts.length && !runnerLauncherPort ? (
+                      <option value="">No detected ports. Click Detect Launcher.</option>
+                    ) : null}
+                    {runnerLauncherPort &&
+                    !detectedRunnerPorts.includes(Number(runnerLauncherPort)) ? (
+                      <option value={runnerLauncherPort}>
+                        {runnerLauncherPort} (not detected)
+                      </option>
+                    ) : null}
+                    {detectedRunnerPorts.map((port) => (
+                      <option key={port} value={String(port)}>
+                        {port}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="field">
+                  <label>Runner Launcher Secret</label>
+                  <input
+                    type="password"
+                    value={runnerLauncherSecret}
+                    onChange={(event) => setRunnerLauncherSecret(event.currentTarget.value)}
+                    placeholder="Enter launcher secret"
+                  />
+                </div>
+                <div className="row wrap">
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => void detectRunnerLauncherPorts()}
+                    disabled={detectRunnerBusy}
+                  >
+                    {detectRunnerBusy ? "Detecting..." : "Detect Launcher"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button button-secondary"
+                    onClick={() => void fetchRunnerStatus()}
+                    disabled={startRunnerBusy || stopRunnerBusy}
+                  >
+                    Check Runner Status
+                  </button>
+                </div>
+                <StatusText status={runnerStatus} />
+              </div>
+            ) : null}
+          </div>
+
+          <div className="agent-run-modal-footer">
+            <button
+              type="button"
+              className="button button-secondary"
+              onClick={() => setScreen("choice")}
+              disabled={startRunnerBusy || stopRunnerBusy}
+            >
+              Back
+            </button>
+            <button
+              type="button"
+              className="button"
+              onClick={() => {
+                if (runnerRunning) {
+                  void stopRunnerLauncher();
+                  return;
+                }
+                void startRunnerLauncher();
+              }}
+              disabled={runnerRunning ? stopRunnerBusy : startButtonDisabled}
+            >
+              {startRunnerBusy
+                ? "Starting..."
+                : stopRunnerBusy
+                  ? "Stopping..."
+                  : runnerRunning
+                    ? "Stop Runner"
+                    : "Start Runner"}
+            </button>
+          </div>
+          {!runnerRunning && startButtonMissing.length ? (
+            <p className="agent-run-modal-footnote meta-text">
+              Complete and test required fields before starting: {startButtonMissing.join(", ")}
+            </p>
+          ) : null}
+          <StatusText status={runnerStatus} />
+        </>
+      )}
+    </div>
+  );
+}

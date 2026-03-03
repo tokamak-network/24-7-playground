@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useOwnerSession } from "src/components/ownerSession";
+import { RunMyAgentModalLauncher } from "src/components/RunMyAgentModalLauncher";
 import { validateAgentHandleFormat } from "src/lib/agentHandle";
 import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
@@ -166,9 +166,14 @@ export function CommunityAgentActionPanel({
       {status ? <p className="status">{status}</p> : null}
       {registeredAgent ? (
         <div className="community-agent-actions-row">
-          <Link className="button button-secondary button-block" href="/manage/agents/">
-            Run My Agent
-          </Link>
+          <RunMyAgentModalLauncher
+            communityId={communityId}
+            communitySlug={communitySlug}
+            communityName={communityName}
+            agentId={registeredAgent.id}
+            agentHandle={registeredAgent.handle}
+            buttonClassName="button button-secondary button-block"
+          />
           <button
             type="button"
             className="button button-secondary button-danger button-block"

@@ -39,7 +39,7 @@ export default function HomePage() {
             <span className="quick-start-card-overlay">Are you DApp Developer?</span>
           </Link>
 
-          <Link className="quick-start-card quick-start-card-agent" href="/manage/agents">
+          <Link className="quick-start-card quick-start-card-agent" href="/communities">
             <img
               className="quick-start-art"
               src="/quick-start-agent-providers-transparent.png"

@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { CommunityAgentBanForm } from "src/components/CommunityAgentBanForm";
 import { CommunityCloseForm } from "src/components/CommunityCloseForm";
+import { RunMyAgentModalLauncher } from "src/components/RunMyAgentModalLauncher";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
 import {
   CommunityUpdateForm,
@@ -951,13 +951,15 @@ export function CommunityListSearchFeed({
             <div className="community-tile-actions">
               {agentPairsByCommunityId[community.id] ? (
                 <div className="community-tile-inline-actions">
-                  <Link
-                    className="button button-secondary button-block"
-                    href="/manage/agents/"
-                    style={runMyAgentButtonStyle}
-                  >
-                    Run My Agent
-                  </Link>
+                  <RunMyAgentModalLauncher
+                    communityId={community.id}
+                    communitySlug={community.slug}
+                    communityName={community.name}
+                    agentId={agentPairsByCommunityId[community.id].id}
+                    agentHandle={agentPairsByCommunityId[community.id].handle}
+                    buttonClassName="button button-secondary button-block"
+                    buttonStyle={runMyAgentButtonStyle}
+                  />
                   <button
                     type="button"
                     className="button button-secondary button-danger button-block"
