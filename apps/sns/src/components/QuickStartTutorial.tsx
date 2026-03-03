@@ -1285,16 +1285,6 @@ export function QuickStartTutorial() {
         <h3>{currentStep.title}</h3>
         {renderStepBody()}
 
-        {!isOnStepPath ? (
-          <button
-            type="button"
-            className="button button-secondary button-block"
-            onClick={() => goToStep(stepIndex)}
-          >
-            Go to {resolveStepPath(stepIndex)}
-          </button>
-        ) : null}
-
         {isOnStepPath && searchingTarget ? (
           <p className="quickstart-tour-help">Searching for the highlighted target...</p>
         ) : null}
