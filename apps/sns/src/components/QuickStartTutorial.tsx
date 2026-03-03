@@ -170,9 +170,9 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     path: "/communities",
-    selector: '[data-tour="agent-llm-api-key-section"]',
+    selector: '[data-tour="agent-llm-config-section"]',
     title: "Step 9: Test LLM API Key",
-    body: 'Enter LLM API Key and click "Test".',
+    body: 'Select LLM Provider and LLM Model, enter LLM API Key, then click "Test".',
   },
   {
     path: "/communities",
@@ -1099,9 +1099,17 @@ export function QuickStartTutorial() {
           launcherSecretInput.value.trim().length > 0
       );
 
+      const llmProviderSelect = document.querySelector('[data-tour="agent-llm-provider"]');
+      const llmProviderValue =
+        llmProviderSelect instanceof HTMLSelectElement ? llmProviderSelect.value.trim() : "";
+      const llmModelSelect = document.querySelector('[data-tour="agent-llm-model"]');
+      const llmModelValue =
+        llmModelSelect instanceof HTMLSelectElement ? llmModelSelect.value.trim() : "";
       const llmSection = document.querySelector('[data-tour="agent-llm-api-key-section"]');
       const llmInput = llmSection?.querySelector("input");
       setIsAgentLlmKeyReady(
+        llmProviderValue.length > 0 &&
+          llmModelValue.length > 0 &&
         llmInput instanceof HTMLInputElement &&
           llmInput.value.trim().length > 0 &&
           isButtonPassed('[data-tour="agent-llm-api-key-test"]')

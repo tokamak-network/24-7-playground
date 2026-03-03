@@ -2565,104 +2565,108 @@ function RunMyAgentModalContent({
           <div className="agent-run-modal-panel">
             {activeTab === "confidential" ? (
               <div className="agent-run-tab-panel" role="tabpanel" data-tour="agent-run-config-screen">
-                <div className="manager-provider-row">
-                  <div className="field">
-                    <label>LLM Provider</label>
-                    <select
-                      value={llmProvider}
-                      onChange={(event) => {
-                        const nextProvider = event.currentTarget.value;
-                        setLlmProvider(nextProvider);
-                        setLlmModel(defaultModelByProvider(nextProvider));
-                        setAvailableModels([]);
-                        setTested((prev) => ({ ...prev, llmApiKey: false }));
-                        if (nextProvider !== "LITELLM") {
-                          setLiteLlmBaseUrl("");
-                        }
-                      }}
-                    >
-                      {PROVIDER_OPTIONS.map((provider) => (
-                        <option key={provider || "none"} value={provider}>
-                          {provider || "Select provider"}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="field">
-                    <label>LLM Model</label>
-                    <div className="manager-inline-field">
+                <div data-tour="agent-llm-config-section">
+                  <div className="manager-provider-row">
+                    <div className="field">
+                      <label>LLM Provider</label>
                       <select
-                        value={llmModel}
-                        onChange={(event) => setLlmModel(event.currentTarget.value)}
-                        disabled={!modelOptions.length}
+                        data-tour="agent-llm-provider"
+                        value={llmProvider}
+                        onChange={(event) => {
+                          const nextProvider = event.currentTarget.value;
+                          setLlmProvider(nextProvider);
+                          setLlmModel(defaultModelByProvider(nextProvider));
+                          setAvailableModels([]);
+                          setTested((prev) => ({ ...prev, llmApiKey: false }));
+                          if (nextProvider !== "LITELLM") {
+                            setLiteLlmBaseUrl("");
+                          }
+                        }}
                       >
-                        {modelOptions.length ? (
-                          modelOptions.map((modelName) => (
-                            <option key={modelName} value={modelName}>
-                              {modelName}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="">Load model list first</option>
-                        )}
+                        {PROVIDER_OPTIONS.map((provider) => (
+                          <option key={provider || "none"} value={provider}>
+                            {provider || "Select provider"}
+                          </option>
+                        ))}
                       </select>
+                    </div>
+                    <div className="field">
+                      <label>LLM Model</label>
+                      <div className="manager-inline-field">
+                        <select
+                          data-tour="agent-llm-model"
+                          value={llmModel}
+                          onChange={(event) => setLlmModel(event.currentTarget.value)}
+                          disabled={!modelOptions.length}
+                        >
+                          {modelOptions.length ? (
+                            modelOptions.map((modelName) => (
+                              <option key={modelName} value={modelName}>
+                                {modelName}
+                              </option>
+                            ))
+                          ) : (
+                            <option value="">Load model list first</option>
+                          )}
+                        </select>
+                        <button
+                          type="button"
+                          className="button button-secondary"
+                          onClick={() => void fetchModelsByApiKey(true)}
+                          disabled={modelsBusy}
+                        >
+                          {modelsBusy ? "Loading..." : "Load Model List"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {llmProvider === "LITELLM" ? (
+                    <div className="field">
+                      <label>Base URL</label>
+                      <input
+                        value={liteLlmBaseUrl}
+                        onChange={(event) => {
+                          setLiteLlmBaseUrl(event.currentTarget.value);
+                          setTested((prev) => ({ ...prev, llmApiKey: false }));
+                        }}
+                        placeholder="https://your-litellm-endpoint/v1"
+                      />
+                    </div>
+                  ) : null}
+
+                  <StatusText status={generalStatus} />
+
+                  <div className="field" data-tour="agent-llm-api-key-section">
+                    <label>LLM API Key</label>
+                    <div className="manager-inline-field">
+                      <input
+                        type={showLlmApiKey ? "text" : "password"}
+                        value={securityDraft.llmApiKey}
+                        onChange={(event) => {
+                          const value = event.currentTarget.value;
+                          setSecurityDraft((prev) => ({ ...prev, llmApiKey: value }));
+                          setTested((prev) => ({ ...prev, llmApiKey: false }));
+                        }}
+                      />
                       <button
                         type="button"
                         className="button button-secondary"
+                        onClick={() => setShowLlmApiKey((prev) => !prev)}
+                      >
+                        {showLlmApiKey ? "Hide" : "Show"}
+                      </button>
+                      <button
+                        type="button"
+                        className="button button-secondary"
+                        data-tour="agent-llm-api-key-test"
+                        data-tour-passed={tested.llmApiKey ? "true" : "false"}
                         onClick={() => void fetchModelsByApiKey(true)}
                         disabled={modelsBusy}
                       >
-                        {modelsBusy ? "Loading..." : "Load Model List"}
+                        {modelsBusy ? "Testing..." : "Test"}
                       </button>
                     </div>
-                  </div>
-                </div>
-
-                {llmProvider === "LITELLM" ? (
-                  <div className="field">
-                    <label>Base URL</label>
-                    <input
-                      value={liteLlmBaseUrl}
-                      onChange={(event) => {
-                        setLiteLlmBaseUrl(event.currentTarget.value);
-                        setTested((prev) => ({ ...prev, llmApiKey: false }));
-                      }}
-                      placeholder="https://your-litellm-endpoint/v1"
-                    />
-                  </div>
-                ) : null}
-
-                <StatusText status={generalStatus} />
-
-                <div className="field" data-tour="agent-llm-api-key-section">
-                  <label>LLM API Key</label>
-                  <div className="manager-inline-field">
-                    <input
-                      type={showLlmApiKey ? "text" : "password"}
-                      value={securityDraft.llmApiKey}
-                      onChange={(event) => {
-                        const value = event.currentTarget.value;
-                        setSecurityDraft((prev) => ({ ...prev, llmApiKey: value }));
-                        setTested((prev) => ({ ...prev, llmApiKey: false }));
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="button button-secondary"
-                      onClick={() => setShowLlmApiKey((prev) => !prev)}
-                    >
-                      {showLlmApiKey ? "Hide" : "Show"}
-                    </button>
-                    <button
-                      type="button"
-                      className="button button-secondary"
-                      data-tour="agent-llm-api-key-test"
-                      data-tour-passed={tested.llmApiKey ? "true" : "false"}
-                      onClick={() => void fetchModelsByApiKey(true)}
-                      disabled={modelsBusy}
-                    >
-                      {modelsBusy ? "Testing..." : "Test"}
-                    </button>
                   </div>
                 </div>
 
