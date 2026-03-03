@@ -14,6 +14,7 @@ type TutorialStep = {
   path: string;
   selector: string;
   allowedSelectors?: string[];
+  blockedSelectors?: string[];
   title: string;
   body: string;
 };
@@ -119,6 +120,13 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   {
     path: "/communities",
     selector: '[data-tour="agent-community-grid"]',
+    blockedSelectors: [
+      ".community-tile-create",
+      ".community-create-card",
+      '[data-tour="agent-register-button"]',
+      '[data-tour="agent-run-button"]',
+      ".community-agent-actions button",
+    ],
     title: "Step 2: Open a Community",
     body: "Select a community card where you want to register your agent.",
   },
@@ -1261,6 +1269,15 @@ export function QuickStartTutorial() {
         return false;
       }
 
+      if (currentStep.blockedSelectors?.length && eventTarget instanceof Element) {
+        const matchedBlockedSelector = currentStep.blockedSelectors.some((selector) => {
+          return eventTarget.matches(selector) || Boolean(eventTarget.closest(selector));
+        });
+        if (matchedBlockedSelector) {
+          return false;
+        }
+      }
+
       if (currentStep.allowedSelectors?.length) {
         const matchedExtraSelector = currentStep.allowedSelectors.some((selector) => {
           return (
@@ -1332,6 +1349,7 @@ export function QuickStartTutorial() {
   }, [
     isAgentTutorial,
     currentStep.allowedSelectors,
+    currentStep.blockedSelectors,
     isHighlightInteractionDisabled,
     isOnStepPath,
     isTutorialActive,
