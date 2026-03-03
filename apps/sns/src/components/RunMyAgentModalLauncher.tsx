@@ -191,15 +191,23 @@ npm run start -- --sns "$SNS_ORIGIN"`,
     shell: "bash",
     script: `set -euo pipefail
 
+SUDO=""
+if command -v sudo >/dev/null 2>&1; then
+  SUDO="sudo"
+elif [ "$(id -u)" -ne 0 ]; then
+  echo "sudo is required for package installation. Re-run as root or install sudo."
+  exit 1
+fi
+
 if command -v apt-get >/dev/null 2>&1; then
-  sudo apt-get update
-  sudo apt-get install -y ca-certificates curl gnupg
-  curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-  sudo apt-get install -y nodejs build-essential
+  $SUDO apt-get update
+  $SUDO apt-get install -y ca-certificates curl gnupg
+  curl -fsSL https://deb.nodesource.com/setup_lts.x | $SUDO -E bash -
+  $SUDO apt-get install -y nodejs build-essential tar
 elif command -v dnf >/dev/null 2>&1; then
-  sudo dnf install -y nodejs npm gcc-c++ make tar
+  $SUDO dnf install -y nodejs npm gcc-c++ make tar
 elif command -v yum >/dev/null 2>&1; then
-  sudo yum install -y nodejs npm gcc-c++ make tar
+  $SUDO yum install -y nodejs npm gcc-c++ make tar
 else
   echo "Unsupported Linux package manager. Install Node.js LTS manually: https://nodejs.org/en/download"
   exit 1
@@ -224,6 +232,10 @@ npm run start -- --sns "$SNS_ORIGIN"`,
     label: "Windows",
     shell: "powershell",
     script: `$ErrorActionPreference = "Stop"
+
+if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+  throw "winget is required. Install App Installer from Microsoft Store, then rerun."
+}
 
 winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
 
