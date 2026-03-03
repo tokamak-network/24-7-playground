@@ -2,95 +2,69 @@
 
 type ModalPayload = Record<string, string>;
 
-type ModalStoreEntry = {
-  payload: ModalPayload;
-  updatedAt: number;
-};
+const MODAL_QUERY_PREFIX = "modal.";
+const OPEN_SUFFIX = "open";
 
-type ModalStore = {
-  path: string;
-  entries: Record<string, ModalStoreEntry>;
-};
-
-const STORAGE_KEY = "sns.modal.refresh.v1";
-const MAX_AGE_MS = 1000 * 60 * 60 * 6;
-
-function currentPathname() {
-  if (typeof window === "undefined") return "";
-  return window.location.pathname;
+function getModalKeyPrefix(modalId: string) {
+  return `${MODAL_QUERY_PREFIX}${modalId}.`;
 }
 
-function parseStore(raw: string | null): ModalStore | null {
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw) as ModalStore;
-    if (!parsed || typeof parsed !== "object") return null;
-    const path = typeof parsed.path === "string" ? parsed.path : "";
-    const entries =
-      parsed.entries && typeof parsed.entries === "object"
-        ? (parsed.entries as Record<string, ModalStoreEntry>)
-        : {};
-    return { path, entries };
-  } catch {
-    return null;
-  }
+function getOpenKey(modalId: string) {
+  return `${getModalKeyPrefix(modalId)}${OPEN_SUFFIX}`;
 }
 
-function readStore(): ModalStore | null {
+function readSearchParams() {
   if (typeof window === "undefined") return null;
-  return parseStore(window.sessionStorage.getItem(STORAGE_KEY));
+  return new URLSearchParams(window.location.search);
 }
 
-function writeStore(store: ModalStore) {
+function writeSearchParams(params: URLSearchParams) {
   if (typeof window === "undefined") return;
-  window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  const nextQuery = params.toString();
+  const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ""}${window.location.hash}`;
+  window.history.replaceState(window.history.state, "", nextUrl);
+}
+
+function clearModalKeys(params: URLSearchParams, modalId: string) {
+  const keyPrefix = getModalKeyPrefix(modalId);
+  for (const key of Array.from(params.keys())) {
+    if (key.startsWith(keyPrefix)) {
+      params.delete(key);
+    }
+  }
 }
 
 export function saveModalRefreshState(modalId: string, payload?: ModalPayload) {
-  if (typeof window === "undefined") return;
-  const pathname = currentPathname();
-  const previous = readStore();
-  const next: ModalStore = {
-    path: pathname,
-    entries: pathname === previous?.path ? { ...(previous?.entries || {}) } : {},
-  };
-  next.entries[modalId] = {
-    payload: payload || {},
-    updatedAt: Date.now(),
-  };
-  writeStore(next);
+  const params = readSearchParams();
+  if (!params) return;
+  clearModalKeys(params, modalId);
+  params.set(getOpenKey(modalId), "1");
+  const nextPayload = payload || {};
+  for (const [key, value] of Object.entries(nextPayload)) {
+    if (typeof value !== "string") continue;
+    params.set(`${getModalKeyPrefix(modalId)}${key}`, value);
+  }
+  writeSearchParams(params);
 }
 
 export function readModalRefreshState(modalId: string): ModalPayload | null {
-  const pathname = currentPathname();
-  const store = readStore();
-  if (!store || store.path !== pathname) return null;
-  const entry = store.entries[modalId];
-  if (!entry || typeof entry !== "object") return null;
-  if (!Number.isFinite(entry.updatedAt) || Date.now() - entry.updatedAt > MAX_AGE_MS) {
-    return null;
-  }
-  if (!entry.payload || typeof entry.payload !== "object") return {};
+  const params = readSearchParams();
+  if (!params) return null;
+  if (params.get(getOpenKey(modalId)) !== "1") return null;
+  const keyPrefix = getModalKeyPrefix(modalId);
   const payload: ModalPayload = {};
-  for (const [key, value] of Object.entries(entry.payload)) {
-    if (typeof value === "string") {
-      payload[key] = value;
-    }
+  for (const [key, value] of params.entries()) {
+    if (!key.startsWith(keyPrefix)) continue;
+    const field = key.slice(keyPrefix.length);
+    if (!field || field === OPEN_SUFFIX) continue;
+    payload[field] = value;
   }
   return payload;
 }
 
 export function clearModalRefreshState(modalId: string) {
-  if (typeof window === "undefined") return;
-  const pathname = currentPathname();
-  const store = readStore();
-  if (!store || store.path !== pathname) return;
-  if (!store.entries[modalId]) return;
-  const entries = { ...store.entries };
-  delete entries[modalId];
-  if (!Object.keys(entries).length) {
-    window.sessionStorage.removeItem(STORAGE_KEY);
-    return;
-  }
-  writeStore({ path: pathname, entries });
+  const params = readSearchParams();
+  if (!params) return;
+  clearModalKeys(params, modalId);
+  writeSearchParams(params);
 }
