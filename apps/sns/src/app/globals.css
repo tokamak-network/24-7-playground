@@ -16,6 +16,25 @@
   --danger: #b03a3a;
   --shadow-sm: 0 10px 28px rgba(16, 34, 66, 0.08);
   --shadow-md: 0 22px 48px rgba(16, 34, 66, 0.12);
+  --z-background: 0;
+  --z-content-base: 1;
+  --z-content-overlay: 2;
+  --z-page-shell: 4;
+  --z-dropdown: 20;
+  --z-popover: 25;
+  --z-tooltip: 40;
+  --z-fixed-badge: 70;
+  --z-header: 90;
+  --z-rail: 95;
+  --z-modal-author: 120;
+  --z-modal-create: 220;
+  --z-tour-target: 299;
+  --z-tour-overlay: 300;
+  --z-tour-spotlight: 301;
+  --z-tour-panel: 302;
+  --z-modal-action: 1200;
+  --z-modal-run-agent: 5000;
+  --z-status-bubble: 9000;
 }
 
 * {
@@ -40,13 +59,13 @@ body {
 
 .app-ui-layer {
   position: relative;
-  z-index: 20;
+  z-index: var(--z-dropdown);
 }
 
 .spiral-vault-bg {
   position: fixed;
   inset: -32vmax;
-  z-index: 0;
+  z-index: var(--z-background);
   pointer-events: none;
   overflow: hidden;
   isolation: isolate;
@@ -398,7 +417,7 @@ a {
   display: grid;
   gap: 0;
   position: relative;
-  z-index: 4;
+  z-index: var(--z-page-shell);
 }
 
 .page-shell-split {
@@ -524,7 +543,7 @@ a {
 
 .quick-start-art {
   position: relative;
-  z-index: 1;
+  z-index: var(--z-content-base);
   width: 85%;
   height: 85%;
   display: block;
@@ -556,7 +575,7 @@ a {
 .quick-start-card-overlay {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: var(--z-content-overlay);
   pointer-events: none;
   display: grid;
   place-items: center;
@@ -591,7 +610,7 @@ a {
 .site-header-layer {
   position: sticky;
   top: 14px;
-  z-index: 90;
+  z-index: var(--z-header);
   display: block;
 }
 
@@ -670,7 +689,7 @@ a {
   background: transparent;
   box-shadow: none;
   overflow: visible;
-  z-index: 95;
+  z-index: var(--z-rail);
 }
 
 .site-rail-head {
@@ -1499,7 +1518,7 @@ a {
 
 .floating-status-bubble {
   position: fixed;
-  z-index: 9000;
+  z-index: var(--z-status-bubble);
   max-width: min(420px, calc(100vw - 28px));
   border-radius: 12px;
   border: 1px solid #ccdae8;
@@ -1744,7 +1763,7 @@ a {
   top: calc(100% + 8px);
   left: 0;
   right: 0;
-  z-index: 20;
+  z-index: var(--z-dropdown);
   display: grid;
   gap: 6px;
   border-radius: 14px;
@@ -1936,7 +1955,7 @@ a {
 .agent-author-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 120;
+  z-index: var(--z-modal-author);
   display: grid;
   place-items: center;
   background: rgba(7, 18, 35, 0.34);
@@ -2103,7 +2122,7 @@ a {
   position: absolute;
   bottom: calc(100% + 6px);
   left: 0;
-  z-index: 25;
+  z-index: var(--z-popover);
   display: grid;
   gap: 6px;
   min-width: 164px;
@@ -2686,7 +2705,7 @@ a {
 .community-create-modal {
   position: fixed;
   inset: 0;
-  z-index: 220;
+  z-index: var(--z-modal-create);
   pointer-events: none;
 }
 
@@ -2847,7 +2866,7 @@ a {
 }
 
 .community-action-modal {
-  z-index: 1200;
+  z-index: var(--z-modal-action);
 }
 
 .community-action-modal .community-create-modal-shell {
@@ -2885,7 +2904,7 @@ a {
 }
 
 .agent-run-modal {
-  z-index: 5000;
+  z-index: var(--z-modal-run-agent);
 }
 
 .agent-run-modal .agent-run-modal-shell {
@@ -3413,7 +3432,7 @@ a {
   pointer-events: none;
   transform: translateY(-3px);
   transition: opacity 0.12s ease, transform 0.12s ease;
-  z-index: 20;
+  z-index: var(--z-dropdown);
 }
 
 .wallet-switch-tooltip {
@@ -3456,7 +3475,7 @@ a {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  z-index: 40;
+  z-index: var(--z-tooltip);
   max-width: 350px;
   border-radius: 13px;
   border: 1px solid rgba(255, 209, 209, 0.9);
@@ -3798,7 +3817,7 @@ a {
   position: fixed;
   left: 14px;
   bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  z-index: 70;
+  z-index: var(--z-fixed-badge);
   border-radius: 999px;
   border: 1px solid rgba(206, 119, 36, 0.38);
   background: linear-gradient(145deg, rgba(255, 245, 230, 0.94), rgba(255, 231, 200, 0.96));
@@ -4050,14 +4069,14 @@ a {
 .quickstart-tour-overlay {
   position: fixed;
   inset: 0;
-  z-index: 300;
+  z-index: var(--z-tour-overlay);
   pointer-events: none;
   background: rgba(6, 10, 20, 0.58);
 }
 
 .quickstart-tour-spotlight {
   position: fixed;
-  z-index: 301;
+  z-index: var(--z-tour-spotlight);
   border: 2px solid #9ce9d6;
   border-radius: 12px;
   overflow: hidden;
@@ -4082,7 +4101,7 @@ a {
   right: 18px;
   bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   width: min(360px, calc(100vw - 36px));
-  z-index: 302;
+  z-index: var(--z-tour-panel);
   border-radius: 14px;
   border: 1px solid rgba(156, 233, 214, 0.35);
   background: rgba(16, 23, 38, 0.95);
@@ -4115,7 +4134,7 @@ a {
 
 .quickstart-tour-target {
   position: relative;
-  z-index: 299;
+  z-index: var(--z-tour-target);
 }
 
 @media (max-width: 920px) {
