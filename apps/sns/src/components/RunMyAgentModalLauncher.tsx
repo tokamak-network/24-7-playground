@@ -573,6 +573,11 @@ function RunMyAgentModalContent({
     general?.community?.slug || currentPair?.community?.slug || communitySlug;
   const currentOwnerWallet =
     general?.agent?.ownerWallet || currentPair?.ownerWallet || connectedWallet || "";
+  const currentAgentHandle = useMemo(() => {
+    const fromState = String(llmHandleName || "").trim();
+    if (fromState) return fromState;
+    return String(agentHandle || general?.agent?.handle || currentPair?.handle || "").trim();
+  }, [agentHandle, currentPair?.handle, general?.agent?.handle, llmHandleName]);
 
   const readError = useCallback(async (response: Response) => {
     const text = await response.text().catch(() => "");
@@ -911,7 +916,7 @@ function RunMyAgentModalContent({
       return;
     }
 
-    const handle = llmHandleName.trim();
+    const handle = currentAgentHandle.trim();
     const provider = llmProvider.trim().toUpperCase();
     const model = llmModel.trim();
     const baseUrl = liteLlmBaseUrl.trim().replace(/\/+$/, "");
@@ -956,7 +961,16 @@ function RunMyAgentModalContent({
     } finally {
       setGeneralBusy(false);
     }
-  }, [agentId, authHeaders, llmHandleName, llmModel, llmProvider, liteLlmBaseUrl, readError, token]);
+  }, [
+    agentId,
+    authHeaders,
+    currentAgentHandle,
+    llmModel,
+    llmProvider,
+    liteLlmBaseUrl,
+    readError,
+    token,
+  ]);
 
   const loadGeneralFromDb = useCallback(async () => {
     if (!token || !agentId || !authHeaders) {
@@ -1702,7 +1716,7 @@ function RunMyAgentModalContent({
   ]);
 
   const prepareFresh = useCallback(() => {
-    setLlmHandleName("");
+    setLlmHandleName(currentAgentHandle);
     setLlmProvider("");
     setLlmModel("");
     setLiteLlmBaseUrl("");
@@ -1725,7 +1739,7 @@ function RunMyAgentModalContent({
       runnerLauncher: false,
     });
     setPairsStatus({ kind: "info", text: "Start with empty configuration." });
-  }, []);
+  }, [currentAgentHandle]);
 
   const handleContinue = useCallback(async () => {
     if (setupMode === "import") {
@@ -1742,7 +1756,7 @@ function RunMyAgentModalContent({
     const missing: string[] = [];
     if (!currentCommunityName || !currentCommunitySlug) missing.push("Registered Community");
     if (!currentOwnerWallet) missing.push("Handle Owner MetaMask Address");
-    if (!llmHandleName.trim()) missing.push("LLM Handle Name");
+    if (!currentAgentHandle.trim()) missing.push("LLM Handle Name");
     if (!llmProvider.trim()) missing.push("LLM Provider");
     if (!llmModel.trim()) missing.push("LLM Model");
     if (!securityDraft.llmApiKey.trim()) missing.push("LLM API Key");
@@ -1763,7 +1777,7 @@ function RunMyAgentModalContent({
     currentCommunityName,
     currentCommunitySlug,
     currentOwnerWallet,
-    llmHandleName,
+    currentAgentHandle,
     llmModel,
     llmProvider,
     runnerDraft.commentContextLimit,
@@ -1847,7 +1861,7 @@ function RunMyAgentModalContent({
               Community: <strong>{currentCommunityName}</strong> ({currentCommunitySlug})
             </p>
             <p className="meta-text">
-              Agent Handle: <strong>{agentHandle || currentPair?.handle || "-"}</strong>
+              Agent Handle: <strong>{currentAgentHandle || "-"}</strong>
             </p>
           </div>
 
@@ -1945,6 +1959,14 @@ function RunMyAgentModalContent({
         </div>
       ) : (
         <>
+          <div className="agent-run-config-summary">
+            <p className="meta-text">
+              Community: <strong>{currentCommunityName}</strong> ({currentCommunitySlug})
+            </p>
+            <p className="meta-text">
+              Agent Handle: <strong>{currentAgentHandle || "-"}</strong>
+            </p>
+          </div>
           <div className="agent-run-modal-tabs" role="tablist" aria-label="Run my agent tabs">
             <button
               type="button"
@@ -1979,19 +2001,8 @@ function RunMyAgentModalContent({
             {activeTab === "public" ? (
               <div className="agent-run-tab-panel" role="tabpanel">
                 <div className="field">
-                  <label>Registered Community</label>
-                  <input readOnly value={`${currentCommunityName} (${currentCommunitySlug})`} />
-                </div>
-                <div className="field">
                   <label>Handle Owner MetaMask Address</label>
                   <input readOnly value={currentOwnerWallet || ""} />
-                </div>
-                <div className="field">
-                  <label>LLM Handle Name</label>
-                  <input
-                    value={llmHandleName}
-                    onChange={(event) => setLlmHandleName(event.currentTarget.value)}
-                  />
                 </div>
                 {llmProvider === "LITELLM" ? (
                   <div className="manager-provider-row">

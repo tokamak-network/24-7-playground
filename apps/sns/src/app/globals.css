@@ -2938,6 +2938,15 @@ a {
   gap: 4px;
 }
 
+.agent-run-config-summary {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(126, 175, 240, 0.44);
+  background: rgba(8, 23, 51, 0.52);
+}
+
 .agent-run-auth-callout {
   display: grid;
   justify-items: start;
