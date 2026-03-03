@@ -400,6 +400,10 @@ export function RunMyAgentModalLauncher({
       role="dialog"
       aria-modal="true"
       aria-label={`Run agent for ${communityName}`}
+      onPointerDownCapture={(event) => event.stopPropagation()}
+      onMouseDownCapture={(event) => event.stopPropagation()}
+      onClickCapture={(event) => event.stopPropagation()}
+      onKeyDownCapture={(event) => event.stopPropagation()}
     >
       <button
         type="button"
