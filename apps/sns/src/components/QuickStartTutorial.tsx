@@ -1112,15 +1112,6 @@ export function QuickStartTutorial() {
   ]);
 
   useEffect(() => {
-    if (autoAdvanceStepRef.current !== stepIndex) {
-      autoAdvanceStepRef.current = stepIndex;
-      previousNextDisabledRef.current = nextDisabled;
-      autoAdvancedOnCurrentStepRef.current = false;
-      return;
-    }
-
-    const previousNextDisabled = previousNextDisabledRef.current;
-    const becameEnabled = previousNextDisabled === true && nextDisabled === false;
     const autoAdvanceAllowedStep = isDappTutorial
       ? [0, 1, 2, 3, 4, 5].includes(stepIndex)
       : isAgentTutorial
@@ -1130,6 +1121,30 @@ export function QuickStartTutorial() {
       isOnStepPath ||
       (isDappTutorial && stepIndex === 4) ||
       (isAgentTutorial && stepIndex === 1);
+
+    if (autoAdvanceStepRef.current !== stepIndex) {
+      autoAdvanceStepRef.current = stepIndex;
+      previousNextDisabledRef.current = nextDisabled;
+      autoAdvancedOnCurrentStepRef.current = false;
+
+      const canAutoAdvanceImmediately =
+        isTutorialActive &&
+        autoAdvancePathReady &&
+        !isLastStep &&
+        autoAdvanceAllowedStep &&
+        !nextDisabled &&
+        !autoAdvancedOnCurrentStepRef.current &&
+        isAgentTutorial &&
+        stepIndex === 2;
+      if (canAutoAdvanceImmediately) {
+        autoAdvancedOnCurrentStepRef.current = true;
+        goToStep(stepIndex + 1, stepIndex);
+      }
+      return;
+    }
+
+    const previousNextDisabled = previousNextDisabledRef.current;
+    const becameEnabled = previousNextDisabled === true && nextDisabled === false;
 
     const canAutoAdvanceNow =
       isTutorialActive &&
