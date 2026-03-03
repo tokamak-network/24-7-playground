@@ -862,7 +862,7 @@ function RunMyAgentModalContent({
     useOwnerSession();
 
   const [screen, setScreen] = useState<"choice" | "config">("choice");
-  const [setupMode, setSetupMode] = useState<SetupMode>("fresh");
+  const [setupMode, setSetupMode] = useState<SetupMode>("import");
   const [activeTab, setActiveTab] = useState<ConfigTab>("confidential");
 
   const [pairs, setPairs] = useState<PairItem[]>([]);
@@ -2498,6 +2498,7 @@ function RunMyAgentModalContent({
                   type="button"
                   className={`agent-run-choice-card${setupMode === "fresh" ? " is-active" : ""}`}
                   data-tour="agent-run-choice-fresh"
+                  data-tour-active={setupMode === "fresh" ? "true" : "false"}
                   onClick={() => setSetupMode("fresh")}
                 >
                   <strong>Create from scratch</strong>
