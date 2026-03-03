@@ -65,7 +65,7 @@ Recommended fix direction:
 - Tutorial should still reflect real production path and control points.
 - Step 6 must be decomposed into sequential key-input steps.
 - New Step 7 must present a Security Notes link that opens in a new tab.
-- Step 7 must keep `Next` manual (always enabled, no auto-trigger).
+- Step 7 must keep `Next` manual (no auto-trigger), and can advance only after link click is detected.
 - For each required key, `Next` must stay disabled until:
   - the key input is non-empty, and
   - the corresponding `Test` action succeeds.
@@ -134,6 +134,7 @@ Rationale:
   - community page navigation,
   - agent registration,
   - modal open,
+  - Security Notes link click acknowledgment,
   - tab changes and launcher setup,
   - sequential required-key test pass flow (LLM API key -> execution wallet key -> Alchemy API key),
   - launcher detect.
@@ -154,6 +155,7 @@ Rationale:
 Progression rule:
 
 - Each stage has its own tutorial step.
+- Security Notes stage is unlocked only after a click event on the tutorial link.
 - Next stage is blocked until current stage's test pass condition is true.
 - Stages are ordered and cannot be skipped.
 
@@ -209,6 +211,11 @@ For high-risk explanatory steps:
     - detect launcher button
     - start/stop runner button
   - dispatch optional events at reliable success points.
+  - add explicit marker for Security Notes link:
+    - `data-tour="agent-security-notes-link"`
+  - track click acknowledgment state:
+    - local boolean (example: `hasOpenedSecurityNotes`)
+    - set to `true` on link click handler
 
 ## 6.5 Styling reuse
 
@@ -232,7 +239,7 @@ This table is intentionally written for easy review and editing.
 | 4 | `Step 4: Open Run My Agent` | `Click "Run My Agent" to open agent and runner settings.` | `[data-tour="agent-run-button"]` | run modal visible | Yes (edge-triggered) |
 | 5 | `Step 5: Choose Create from scratch` | `Choose "Create from scratch" then click Continue.` | `[data-tour="agent-run-continue"]` | setup screen changed from choice to tabbed config screen | Yes (edge-triggered) |
 | 6 | `Step 6: Open Confidential Keys` | `Move to "Confidential Keys". Required keys will be validated one by one.` | `[data-tour="agent-tab-confidential"]` | Confidential Keys tab selected | Yes (edge-triggered) |
-| 7 | `Step 7: Read Security Notes` | `Before entering keys, review Security Notes in a new tab: <a href="https://agentic-ethereum.com/docs/security-notes#security-notes" target="_blank" rel="noopener noreferrer">Security Notes</a>. This tutorial states that the raw value of Confidential Keys is not stored on the server.` | `[data-tour="agent-tab-confidential"]` | always enabled (explanation step) | No |
+| 7 | `Step 7: Read Security Notes` | `Before entering keys, review Security Notes in a new tab: <a href="https://agentic-ethereum.com/docs/security-notes#security-notes" target="_blank" rel="noopener noreferrer">Security Notes</a>. This tutorial states that the raw value of Confidential Keys is not stored on the server.` | `[data-tour="agent-security-notes-link"]` | Security Notes link click event detected (`hasOpenedSecurityNotes === true`) | No |
 | 8 | `Step 8: Test LLM API Key` | `Enter LLM API Key and click "Test". Official help example: [OpenAI - Where do I find my OpenAI API Key?](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key)` | `[data-tour="agent-llm-api-key-test"]` | LLM API key input non-empty and LLM API key test passed | Yes (edge-triggered) |
 | 9 | `Step 9: Test Execution Wallet Key` | `Enter wallet private key for execution and click "Test". Official help example: [MetaMask - How to export a private key in MetaMask Extension and Mobile](https://support.metamask.io/configure/accounts/how-to-export-an-accounts-private-key/)` | `[data-tour="agent-execution-key-test"]` | execution key input non-empty and execution key test passed | Yes (edge-triggered) |
 | 10 | `Step 10: Test Alchemy API Key` | `Enter Alchemy API Key and click "Test". Official help example: [Alchemy - Create an Alchemy API Key](https://www.alchemy.com/docs/create-an-api-key)` | `[data-tour="agent-alchemy-key-test"]` | Alchemy API key input non-empty and Alchemy API key test passed | Yes (edge-triggered) |
@@ -260,6 +267,8 @@ This table is intentionally written for easy review and editing.
   - `Choose a setup path and continue to enable Next.`
 - Step 6 unmet:
   - `Open Confidential Keys tab to enable Next.`
+- Step 7 unmet:
+  - `Open Security Notes via the link to enable Next.`
 - Step 8 unmet:
   - `Enter LLM API Key and pass Test to enable Next.`
 - Step 9 unmet:
