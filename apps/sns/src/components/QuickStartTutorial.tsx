@@ -118,8 +118,8 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   {
     path: "/communities",
     selector: '[data-tour="agent-local-network-access-link"]',
-    title: "Step 1: Allow Local Network Access",
-    body: "Allow Local Network access for this site so browser-to-runner localhost calls can work.",
+    title: "Step 1: Allow Device Access Permissions",
+    body: "Allow both Local Network and Apps on device for this site so browser-to-runner localhost calls can work.",
   },
   {
     path: "/communities",
@@ -971,9 +971,12 @@ export function QuickStartTutorial() {
 
     let canceled = false;
     let intervalId: number | null = null;
-    let removePermissionListener: (() => void) | null = null;
+    let removePermissionListeners: Array<() => void> = [];
 
     const syncAccess = async () => {
+      removePermissionListeners.forEach((removeListener) => removeListener());
+      removePermissionListeners = [];
+
       const hostname = window.location.hostname.trim().toLowerCase();
       const isLoopbackHost =
         hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
@@ -997,25 +1000,71 @@ export function QuickStartTutorial() {
       }
 
       try {
-        const status = await permissionsApi.query({
-          name: "local-network-access" as PermissionName,
-        });
+        const queryPermissionStatus = async (permissionNames: string[]) => {
+          for (const permissionName of permissionNames) {
+            try {
+              const status = await permissionsApi.query({
+                name: permissionName as PermissionName,
+              });
+              return {
+                permissionName,
+                status,
+              };
+            } catch {
+              continue;
+            }
+          }
+          return null;
+        };
+
+        const localNetworkPermission = await queryPermissionStatus([
+          "local-network",
+          "local-network-access",
+        ]);
+        const loopbackPermission = await queryPermissionStatus([
+          "loopback-network",
+          "local-network-access",
+        ]);
+
         if (canceled) {
           return;
         }
-        setIsLocalNetworkPermissionApiAvailable(true);
-        setIsAgentLocalNetworkAccessAllowed(status.state === "granted");
-        setLocalNetworkAccessCheckCompleted(true);
 
-        const handleStatusChange = () => {
+        const supportedPermissions = new Map<string, PermissionStatus>();
+        if (localNetworkPermission) {
+          supportedPermissions.set(
+            localNetworkPermission.permissionName,
+            localNetworkPermission.status
+          );
+        }
+        if (loopbackPermission) {
+          supportedPermissions.set(loopbackPermission.permissionName, loopbackPermission.status);
+        }
+
+        const permissionStatuses = Array.from(supportedPermissions.values());
+        if (!permissionStatuses.length) {
+          setIsLocalNetworkPermissionApiAvailable(false);
+          setIsAgentLocalNetworkAccessAllowed(false);
+          setLocalNetworkAccessCheckCompleted(true);
+          return;
+        }
+
+        const syncPermissionState = () => {
           if (canceled) return;
-          setIsAgentLocalNetworkAccessAllowed(status.state === "granted");
+          setIsLocalNetworkPermissionApiAvailable(true);
+          setIsAgentLocalNetworkAccessAllowed(
+            permissionStatuses.every((status) => status.state === "granted")
+          );
           setLocalNetworkAccessCheckCompleted(true);
         };
-        status.addEventListener?.("change", handleStatusChange);
-        removePermissionListener = () => {
-          status.removeEventListener?.("change", handleStatusChange);
-        };
+
+        syncPermissionState();
+        permissionStatuses.forEach((status) => {
+          status.addEventListener?.("change", syncPermissionState);
+          removePermissionListeners.push(() => {
+            status.removeEventListener?.("change", syncPermissionState);
+          });
+        });
       } catch {
         if (!canceled) {
           setIsLocalNetworkPermissionApiAvailable(false);
@@ -1037,7 +1086,7 @@ export function QuickStartTutorial() {
       if (intervalId !== null) {
         window.clearInterval(intervalId);
       }
-      removePermissionListener?.();
+      removePermissionListeners.forEach((removeListener) => removeListener());
     };
   }, [isAgentTutorial]);
 
@@ -1772,9 +1821,9 @@ export function QuickStartTutorial() {
             className="quickstart-tour-link"
             onClick={() => setHasOpenedLocalNetworkAccessHelp(true)}
           >
-            Chrome Local Network access settings
+            Chrome Local Network and Apps on device settings
           </a>
-          {" "}and allow access for this site.
+          {" "}and allow both permissions for this site.
         </p>
       );
     }
@@ -1898,8 +1947,8 @@ export function QuickStartTutorial() {
         !isAgentLocalNetworkAccessReady ? (
           <p className="quickstart-tour-help">
             {isLocalNetworkPermissionApiAvailable
-              ? "Allow Local Network access in browser site settings to enable Next."
-              : "Open the Local Network access help link and allow access to enable Next."}
+              ? "Allow both Local Network and Apps on device in browser site settings to enable Next."
+              : "Open the device access help link and allow both permissions to enable Next."}
           </p>
         ) : null}
         {isAgentTutorial && stepIndex === 1 && walletCheckCompleted && (!isWalletConnected || !isOwnerSessionActive) ? (
