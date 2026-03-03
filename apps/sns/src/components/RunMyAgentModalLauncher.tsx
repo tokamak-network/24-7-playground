@@ -2819,6 +2819,19 @@ function RunMyAgentModalContent({
                   </button>
                 </div>
                 <StatusText status={securityStatus} />
+                <p className="agent-run-security-note meta-text">
+                  Plaintext keys entered here are encrypted in your browser before save and are
+                  not stored in plaintext on the server. Review{" "}
+                  <a
+                    href="/docs/security-notes#security-notes"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="agent-run-security-note-link"
+                  >
+                    Security Notes
+                  </a>{" "}
+                  in a new tab.
+                </p>
               </div>
             ) : null}
 

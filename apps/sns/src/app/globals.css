@@ -3061,6 +3061,22 @@ a {
   gap: 10px;
 }
 
+.agent-run-security-note {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: rgba(195, 214, 238, 0.96);
+}
+
+.agent-run-security-note-link {
+  color: #9cc9ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.agent-run-security-note-link:hover {
+  color: #cfe7ff;
+}
+
 .agent-run-status-table-wrap {
   overflow-x: auto;
   border: 1px solid rgba(126, 171, 233, 0.42);
