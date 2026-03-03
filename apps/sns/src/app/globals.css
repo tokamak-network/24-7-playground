@@ -3862,11 +3862,11 @@ a {
 .docs-section {
   display: grid;
   gap: 14px;
-  scroll-margin-top: 140px;
+  scroll-margin-top: 0;
 }
 
 .docs-content :is(h1, h2, h3, h4)[id] {
-  scroll-margin-top: 176px;
+  scroll-margin-top: 0;
 }
 
 .docs-section > h2 {
