@@ -229,9 +229,9 @@ This table is intentionally written for easy review and editing.
 | 4 | `Step 4: Open Run My Agent` | `Click "Run My Agent" to open agent and runner settings.` | `[data-tour="agent-run-button"]` | run modal visible | Yes (edge-triggered) |
 | 5 | `Step 5: Choose Create from scratch` | `Choose "Create from scratch" then click Continue.` | `[data-tour="agent-run-continue"]` | setup screen changed from choice to tabbed config screen | Yes (edge-triggered) |
 | 6 | `Step 6: Open Confidential Keys` | `Move to "Confidential Keys". Required keys will be validated one by one.` | `[data-tour="agent-tab-confidential"]` | Confidential Keys tab selected | Yes (edge-triggered) |
-| 7 | `Step 7: Test LLM API Key` | `Enter LLM API Key and click "Test".` | `[data-tour="agent-llm-api-key-test"]` | LLM API key input non-empty and LLM API key test passed | No |
-| 8 | `Step 8: Test Execution Wallet Key` | `Enter wallet private key for execution and click "Test".` | `[data-tour="agent-execution-key-test"]` | execution key input non-empty and execution key test passed | No |
-| 9 | `Step 9: Test Alchemy API Key` | `Enter Alchemy API Key and click "Test".` | `[data-tour="agent-alchemy-key-test"]` | Alchemy API key input non-empty and Alchemy API key test passed | No |
+| 7 | `Step 7: Test LLM API Key` | `Enter LLM API Key and click "Test". Official help example: [OpenAI - Where do I find my OpenAI API Key?](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key)` | `[data-tour="agent-llm-api-key-test"]` | LLM API key input non-empty and LLM API key test passed | No |
+| 8 | `Step 8: Test Execution Wallet Key` | `Enter wallet private key for execution and click "Test". Official help example: [MetaMask - How to export a private key in MetaMask Extension and Mobile](https://support.metamask.io/configure/accounts/how-to-export-an-accounts-private-key/)` | `[data-tour="agent-execution-key-test"]` | execution key input non-empty and execution key test passed | No |
+| 9 | `Step 9: Test Alchemy API Key` | `Enter Alchemy API Key and click "Test". Official help example: [Alchemy - Create an Alchemy API Key](https://www.alchemy.com/docs/create-an-api-key)` | `[data-tour="agent-alchemy-key-test"]` | Alchemy API key input non-empty and Alchemy API key test passed | No |
 | 10 | `Step 10: Open Runner Configuration` | `Move to Runner Configuration and review interval/context values.` | `[data-tour="agent-tab-runner-config"]` | Runner Configuration tab selected | Yes (edge-triggered) |
 | 11 | `Step 11: Set Launcher Secret` | `Enter your Runner Launcher Secret used by browser-runner control APIs.` | `[data-tour="agent-runner-secret"]` | launcher secret input is non-empty | Yes (edge-triggered) |
 | 12 | `Step 12: Open Runner Status` | `Switch to Runner Status to connect with your local launcher.` | `[data-tour="agent-tab-runner-status"]` | Runner Status tab selected | Yes (edge-triggered) |
@@ -270,6 +270,15 @@ This table is intentionally written for easy review and editing.
   - `Open Runner Status tab to enable Next.`
 - Step 13 unmet:
   - `Detect a local launcher port to enable Next.`
+
+## 8.1 Official Help Link Examples for Key Steps (Editable)
+
+- Step 7 (LLM API Key):
+  - OpenAI official help: [Where do I find my OpenAI API Key?](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key)
+- Step 8 (Execution Wallet Private Key):
+  - MetaMask official help: [How to export a private key in MetaMask Extension and Mobile](https://support.metamask.io/configure/accounts/how-to-export-an-accounts-private-key/)
+- Step 9 (Alchemy API Key):
+  - Alchemy official docs: [Create an Alchemy API Key](https://www.alchemy.com/docs/create-an-api-key)
 
 ## 9. Open Decisions for Review
 
