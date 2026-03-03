@@ -3153,10 +3153,12 @@ a {
   display: grid;
   gap: 6px;
   color: #dceaff;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .runner-guide-steps li {
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .runner-guide-help-link {
