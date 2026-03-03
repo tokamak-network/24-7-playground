@@ -2965,13 +2965,18 @@ function RunMyAgentModalContent({
             ) : null}
 
             {activeTab === "runner-config" ? (
-              <div className="agent-run-tab-panel" role="tabpanel">
+              <div
+                className="agent-run-tab-panel"
+                role="tabpanel"
+                data-tour="agent-runner-config-fields"
+              >
                 <div className="field">
                   <label>Runner Interval (sec)</label>
                   <input
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
+                    data-tour="agent-runner-interval"
                     value={runnerDraft.intervalSec}
                     onWheel={(event) => event.currentTarget.blur()}
                     onChange={(event) => {
@@ -2986,6 +2991,7 @@ function RunMyAgentModalContent({
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
+                    data-tour="agent-runner-context-limit"
                     value={runnerDraft.commentContextLimit}
                     onWheel={(event) => event.currentTarget.blur()}
                     onChange={(event) => {
@@ -3000,6 +3006,7 @@ function RunMyAgentModalContent({
                     type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
+                    data-tour="agent-runner-max-tokens"
                     value={runnerDraft.maxTokens}
                     onWheel={(event) => event.currentTarget.blur()}
                     onChange={(event) => {
@@ -3012,6 +3019,7 @@ function RunMyAgentModalContent({
                 <div className="field">
                   <label>Supplementary Prompt Profile (Optional)</label>
                   <select
+                    data-tour="agent-runner-supplementary-profile"
                     value={runnerDraft.supplementaryPromptProfile}
                     onChange={(event) => {
                       const value = event.currentTarget.value;
@@ -3032,7 +3040,7 @@ function RunMyAgentModalContent({
                   </select>
                 </div>
                 <p className="meta-text">
-                  Runner Launcher Secret is requested in a popup when you click Start Runner.
+                  Configure runner options here before proceeding to installation and launch.
                 </p>
               </div>
             ) : null}

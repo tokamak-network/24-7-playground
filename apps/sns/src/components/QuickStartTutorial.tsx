@@ -210,9 +210,9 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     path: "/communities",
-    selector: '[data-tour="agent-start-runner"]',
-    title: "Step 15: Start Runner Secret Prompt",
-    body: 'Click "Start Runner". Runner Launcher Secret is entered in the popup prompt.',
+    selector: '[data-tour="agent-runner-config-fields"]',
+    title: "Step 15: Fill Runner Configuration",
+    body: "Fill all fields in Runner Configuration before moving to runner installation.",
   },
   {
     path: "/communities",
@@ -427,7 +427,8 @@ export function QuickStartTutorial() {
   const [isAgentEncryptedSaved, setIsAgentEncryptedSaved] = useState(false);
   const [isAgentRunnerConfigTabActive, setIsAgentRunnerConfigTabActive] =
     useState(false);
-  const [isAgentLauncherSecretReady, setIsAgentLauncherSecretReady] = useState(false);
+  const [isAgentRunnerConfigFieldsReady, setIsAgentRunnerConfigFieldsReady] =
+    useState(false);
   const [hasOpenedRunnerInstallGuide, setHasOpenedRunnerInstallGuide] = useState(false);
   const [isAgentLauncherDetectedByButton, setIsAgentLauncherDetectedByButton] =
     useState(false);
@@ -1235,7 +1236,7 @@ export function QuickStartTutorial() {
       setIsAgentAlchemyKeyReady(false);
       setIsAgentEncryptedSaved(false);
       setIsAgentRunnerConfigTabActive(false);
-      setIsAgentLauncherSecretReady(false);
+      setIsAgentRunnerConfigFieldsReady(false);
       setIsAgentLauncherDetectedByButton(false);
       setIsAgentLauncherDetectedByPolling(false);
       setIsRunnerInstallGuideModalOpen(false);
@@ -1265,8 +1266,30 @@ export function QuickStartTutorial() {
           runnerConfigTab.getAttribute("data-tour-active") === "true"
       );
 
-      setIsAgentLauncherSecretReady(
-        Boolean(document.querySelector('[data-tour="agent-start-runner"]'))
+      const runnerConfigSection = document.querySelector(
+        '[data-tour="agent-runner-config-fields"]'
+      );
+      const runnerIntervalInput = runnerConfigSection?.querySelector(
+        '[data-tour="agent-runner-interval"]'
+      );
+      const runnerContextLimitInput = runnerConfigSection?.querySelector(
+        '[data-tour="agent-runner-context-limit"]'
+      );
+      const runnerMaxTokensInput = runnerConfigSection?.querySelector(
+        '[data-tour="agent-runner-max-tokens"]'
+      );
+      const runnerProfileSelect = runnerConfigSection?.querySelector(
+        '[data-tour="agent-runner-supplementary-profile"]'
+      );
+      setIsAgentRunnerConfigFieldsReady(
+        runnerConfigSection instanceof HTMLElement &&
+          runnerIntervalInput instanceof HTMLInputElement &&
+          runnerIntervalInput.value.trim().length > 0 &&
+          runnerContextLimitInput instanceof HTMLInputElement &&
+          runnerContextLimitInput.value.trim().length > 0 &&
+          runnerMaxTokensInput instanceof HTMLInputElement &&
+          runnerMaxTokensInput.value.trim().length > 0 &&
+          runnerProfileSelect instanceof HTMLSelectElement
       );
 
       const llmProviderSelect = document.querySelector('[data-tour="agent-llm-provider"]');
@@ -1471,7 +1494,7 @@ export function QuickStartTutorial() {
     (!(stepIndex === 11) || isAgentAlchemyKeyReady) &&
     (!(stepIndex === 12) || isAgentEncryptedSaved) &&
     (!(stepIndex === 13) || isAgentRunnerConfigTabActive) &&
-    (!(stepIndex === 14) || isAgentLauncherSecretReady) &&
+    (!(stepIndex === 14) || isAgentRunnerConfigFieldsReady) &&
     (!(stepIndex === 15) || hasOpenedRunnerInstallGuide) &&
     (!(stepIndex === 16) || isAgentLauncherDetected) &&
     (!(stepIndex === 17) || !isRunnerInstallGuideModalOpen);
@@ -1929,8 +1952,10 @@ export function QuickStartTutorial() {
         {isAgentTutorial && stepIndex === 13 && !isAgentRunnerConfigTabActive ? (
           <p className="quickstart-tour-help">Open Runner Configuration tab to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 14 && !isAgentLauncherSecretReady ? (
-          <p className="quickstart-tour-help">Go to Start Runner to open secret prompt.</p>
+        {isAgentTutorial && stepIndex === 14 && !isAgentRunnerConfigFieldsReady ? (
+          <p className="quickstart-tour-help">
+            Fill all Runner Configuration fields to enable Next.
+          </p>
         ) : null}
         {isAgentTutorial && stepIndex === 15 && !hasOpenedRunnerInstallGuide ? (
           <p className="quickstart-tour-help">Open "How to install and run Runner" and start local Runner first.</p>
