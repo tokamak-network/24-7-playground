@@ -188,32 +188,38 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     path: "/communities",
+    selector: '[data-tour="agent-encrypt-save-db"]',
+    title: "Step 12: Encrypt and Save",
+    body: 'Click "Encrypt & Save to DB" and wait until encrypted ciphertext is saved.',
+  },
+  {
+    path: "/communities",
     selector: '[data-tour="agent-tab-runner-config"]',
-    title: "Step 12: Open Runner Configuration",
+    title: "Step 13: Open Runner Configuration",
     body: "Move to Runner Configuration and review interval/context values.",
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-runner-secret"]',
-    title: "Step 13: Set Launcher Secret",
+    title: "Step 14: Set Launcher Secret",
     body: "Enter your Runner Launcher Secret used by browser-runner control APIs.",
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-runner-install-guide-trigger"]',
-    title: "Step 14: Install and Run Runner",
+    title: "Step 15: Install and Run Runner",
     body: 'Click "How to install and run Runner", follow the guide, and start your local Runner process first.',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-detect-launcher"]',
-    title: "Step 15: Detect Launcher",
+    title: "Step 16: Detect Launcher",
     body: 'After your local Runner is running, click "Detect Launcher" and select a detected localhost port.',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-start-runner"]',
-    title: "Step 16: Start Runner",
+    title: "Step 17: Start Runner",
     body: 'When prerequisites are complete, click "Start Runner" to begin autonomous operation.',
   },
 ];
@@ -370,6 +376,7 @@ export function QuickStartTutorial() {
   const [isAgentLlmKeyReady, setIsAgentLlmKeyReady] = useState(false);
   const [isAgentExecutionKeyReady, setIsAgentExecutionKeyReady] = useState(false);
   const [isAgentAlchemyKeyReady, setIsAgentAlchemyKeyReady] = useState(false);
+  const [isAgentEncryptedSaved, setIsAgentEncryptedSaved] = useState(false);
   const [isAgentRunnerConfigTabActive, setIsAgentRunnerConfigTabActive] =
     useState(false);
   const [isAgentLauncherSecretReady, setIsAgentLauncherSecretReady] = useState(false);
@@ -1064,6 +1071,7 @@ export function QuickStartTutorial() {
       setIsAgentLlmKeyReady(false);
       setIsAgentExecutionKeyReady(false);
       setIsAgentAlchemyKeyReady(false);
+      setIsAgentEncryptedSaved(false);
       setIsAgentRunnerConfigTabActive(false);
       setIsAgentLauncherSecretReady(false);
       setIsAgentLauncherDetected(false);
@@ -1131,6 +1139,7 @@ export function QuickStartTutorial() {
           isButtonPassed('[data-tour="agent-alchemy-key-test"]')
       );
 
+      setIsAgentEncryptedSaved(isButtonPassed('[data-tour="agent-encrypt-save-db"]'));
       setIsAgentLauncherDetected(isButtonPassed('[data-tour="agent-detect-launcher"]'));
     };
 
@@ -1218,10 +1227,11 @@ export function QuickStartTutorial() {
     (!(stepIndex === 8) || isAgentLlmKeyReady) &&
     (!(stepIndex === 9) || isAgentExecutionKeyReady) &&
     (!(stepIndex === 10) || isAgentAlchemyKeyReady) &&
-    (!(stepIndex === 11) || isAgentRunnerConfigTabActive) &&
-    (!(stepIndex === 12) || isAgentLauncherSecretReady) &&
-    (!(stepIndex === 13) || hasOpenedRunnerInstallGuide) &&
-    (!(stepIndex === 14) || isAgentLauncherDetected);
+    (!(stepIndex === 11) || isAgentEncryptedSaved) &&
+    (!(stepIndex === 12) || isAgentRunnerConfigTabActive) &&
+    (!(stepIndex === 13) || isAgentLauncherSecretReady) &&
+    (!(stepIndex === 14) || hasOpenedRunnerInstallGuide) &&
+    (!(stepIndex === 15) || isAgentLauncherDetected);
 
   const canAdvance = isDappTutorial
     ? dappCanAdvance
@@ -1388,7 +1398,7 @@ export function QuickStartTutorial() {
     const autoAdvanceAllowedStep = isDappTutorial
       ? [0, 1, 2, 3, 4, 5].includes(stepIndex)
       : isAgentTutorial
-        ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14].includes(stepIndex)
+        ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15].includes(stepIndex)
         : false;
     const autoAdvancePathReady =
       isOnStepPath ||
@@ -1601,16 +1611,21 @@ export function QuickStartTutorial() {
         {isAgentTutorial && stepIndex === 10 && !isAgentAlchemyKeyReady ? (
           <p className="quickstart-tour-help">Enter Alchemy API Key and pass Test to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 11 && !isAgentRunnerConfigTabActive ? (
+        {isAgentTutorial && stepIndex === 11 && !isAgentEncryptedSaved ? (
+          <p className="quickstart-tour-help">
+            Click "Encrypt & Save to DB" and wait for save completion to enable Next.
+          </p>
+        ) : null}
+        {isAgentTutorial && stepIndex === 12 && !isAgentRunnerConfigTabActive ? (
           <p className="quickstart-tour-help">Open Runner Configuration tab to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 12 && !isAgentLauncherSecretReady ? (
+        {isAgentTutorial && stepIndex === 13 && !isAgentLauncherSecretReady ? (
           <p className="quickstart-tour-help">Enter Runner Launcher Secret to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 13 && !hasOpenedRunnerInstallGuide ? (
+        {isAgentTutorial && stepIndex === 14 && !hasOpenedRunnerInstallGuide ? (
           <p className="quickstart-tour-help">Open "How to install and run Runner" and start local Runner first.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 14 && !isAgentLauncherDetected ? (
+        {isAgentTutorial && stepIndex === 15 && !isAgentLauncherDetected ? (
           <p className="quickstart-tour-help">Detect a local launcher port to enable Next.</p>
         ) : null}
 

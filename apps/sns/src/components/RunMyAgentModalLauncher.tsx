@@ -826,6 +826,7 @@ function RunMyAgentModalContent({
 
   const [securityBusy, setSecurityBusy] = useState(false);
   const [securityStatus, setSecurityStatus] = useState<StatusMessage | null>(null);
+  const [hasSavedSecurityToDb, setHasSavedSecurityToDb] = useState(false);
   const [encryptedSecurity, setEncryptedSecurity] = useState<EncryptedSecurity | null>(null);
   const [securityPassword, setSecurityPassword] = useState("");
   const [securitySignature, setSecuritySignature] = useState("");
@@ -1426,6 +1427,7 @@ function RunMyAgentModalContent({
       const applyDraft = (payload: unknown) => {
         const normalizedDraft = toSecuritySensitiveDraft(payload);
         setSecurityDraft(normalizedDraft);
+        setHasSavedSecurityToDb(false);
         setTested((prev) => ({
           ...prev,
           llmApiKey: false,
@@ -1543,6 +1545,7 @@ function RunMyAgentModalContent({
     const signature = await acquireSecuritySignature(setSecurityStatus);
     if (!signature) return false;
 
+    setHasSavedSecurityToDb(false);
     setSecurityBusy(true);
     setSecurityStatus({ kind: "info", text: "Encrypting and saving ciphertext..." });
     try {
@@ -1567,9 +1570,11 @@ function RunMyAgentModalContent({
         return false;
       }
       setEncryptedSecurity(encrypted);
+      setHasSavedSecurityToDb(true);
       setSecurityStatus({ kind: "success", text: "Encrypted ciphertext saved." });
       return true;
     } catch {
+      setHasSavedSecurityToDb(false);
       setSecurityStatus({ kind: "error", text: "Failed to encrypt and save ciphertext." });
       return false;
     } finally {
@@ -2176,6 +2181,7 @@ function RunMyAgentModalContent({
         alchemyApiKey: "",
         githubIssueToken: "",
       });
+      setHasSavedSecurityToDb(false);
       setTested({
         llmApiKey: false,
         executionWalletPrivateKey: false,
@@ -2255,6 +2261,7 @@ function RunMyAgentModalContent({
       alchemyApiKey: "",
       githubIssueToken: "",
     });
+    setHasSavedSecurityToDb(false);
     setSecurityStatus(null);
     setGeneralStatus(null);
     setTested({
@@ -2577,6 +2584,7 @@ function RunMyAgentModalContent({
                           setLlmProvider(nextProvider);
                           setLlmModel(defaultModelByProvider(nextProvider));
                           setAvailableModels([]);
+                          setHasSavedSecurityToDb(false);
                           setTested((prev) => ({ ...prev, llmApiKey: false }));
                           if (nextProvider !== "LITELLM") {
                             setLiteLlmBaseUrl("");
@@ -2596,7 +2604,10 @@ function RunMyAgentModalContent({
                         <select
                           data-tour="agent-llm-model"
                           value={llmModel}
-                          onChange={(event) => setLlmModel(event.currentTarget.value)}
+                          onChange={(event) => {
+                            setLlmModel(event.currentTarget.value);
+                            setHasSavedSecurityToDb(false);
+                          }}
                           disabled={!modelOptions.length}
                         >
                           {modelOptions.length ? (
@@ -2628,6 +2639,7 @@ function RunMyAgentModalContent({
                         value={liteLlmBaseUrl}
                         onChange={(event) => {
                           setLiteLlmBaseUrl(event.currentTarget.value);
+                          setHasSavedSecurityToDb(false);
                           setTested((prev) => ({ ...prev, llmApiKey: false }));
                         }}
                         placeholder="https://your-litellm-endpoint/v1"
@@ -2646,6 +2658,7 @@ function RunMyAgentModalContent({
                         onChange={(event) => {
                           const value = event.currentTarget.value;
                           setSecurityDraft((prev) => ({ ...prev, llmApiKey: value }));
+                          setHasSavedSecurityToDb(false);
                           setTested((prev) => ({ ...prev, llmApiKey: false }));
                         }}
                       />
@@ -2682,6 +2695,7 @@ function RunMyAgentModalContent({
                           ...prev,
                           executionWalletPrivateKey: value,
                         }));
+                        setHasSavedSecurityToDb(false);
                         setTested((prev) => ({
                           ...prev,
                           executionWalletPrivateKey: false,
@@ -2716,6 +2730,7 @@ function RunMyAgentModalContent({
                       onChange={(event) => {
                         const value = event.currentTarget.value;
                         setSecurityDraft((prev) => ({ ...prev, alchemyApiKey: value }));
+                        setHasSavedSecurityToDb(false);
                         setTested((prev) => ({ ...prev, alchemyApiKey: false }));
                       }}
                     />
@@ -2749,6 +2764,7 @@ function RunMyAgentModalContent({
                       onChange={(event) => {
                         const value = event.currentTarget.value;
                         setSecurityDraft((prev) => ({ ...prev, githubIssueToken: value }));
+                        setHasSavedSecurityToDb(false);
                       }}
                     />
                     <button
@@ -2780,6 +2796,8 @@ function RunMyAgentModalContent({
                   <button
                     type="button"
                     className="button"
+                    data-tour="agent-encrypt-save-db"
+                    data-tour-passed={hasSavedSecurityToDb ? "true" : "false"}
                     onClick={() => void handleEncryptAndSaveSecurity()}
                     disabled={securityBusy || generalBusy}
                   >
