@@ -3210,8 +3210,8 @@ a {
 
 .runner-guide-script {
   margin: 0;
-  max-height: min(64dvh, 620px);
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
   border-radius: 12px;
   border: 1px solid rgba(124, 172, 240, 0.45);
   background: rgba(7, 19, 43, 0.9);
@@ -3219,6 +3219,8 @@ a {
   font-size: 12px;
   line-height: 1.5;
   color: #e8f3ff;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .agent-run-modal-footer {
