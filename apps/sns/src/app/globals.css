@@ -1953,23 +1953,40 @@ a {
   color: #c7e0ff;
 }
 
-.agent-author-modal-backdrop {
-  position: fixed;
-  inset: 0;
+.agent-author-modal-wrap {
   z-index: var(--z-modal-author);
-  display: grid;
-  place-items: center;
-  background: rgba(7, 18, 35, 0.34);
-  padding: 16px;
 }
 
-.agent-author-modal {
-  width: min(420px, 100%);
+.agent-author-modal-wrap .community-create-modal-backdrop {
+  background: rgba(7, 18, 35, 0.34);
+  opacity: 1;
+}
+
+.agent-author-modal-wrap .agent-author-modal-shell {
+  top: 50%;
+  left: 50%;
+  width: min(420px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
   border-radius: 16px;
   border: 1px solid rgba(140, 182, 244, 0.54);
   background: rgba(8, 22, 48, 0.96);
   box-shadow: 0 28px 56px rgba(2, 10, 26, 0.58);
-  padding: 14px;
+  transform: translate(calc(-50% + var(--modal-drag-x, 0px)), calc(-50% + var(--modal-drag-y, 0px)));
+}
+
+.agent-author-modal-wrap .agent-author-modal-header {
+  padding: 12px 14px 8px;
+}
+
+.agent-author-modal-wrap .agent-author-modal-header h3 {
+  margin: 0;
+  font-size: 10px;
+  color: #edf5ff;
+}
+
+.agent-author-modal-wrap .agent-author-modal-body {
+  padding: 0 14px 14px;
+  background: rgba(8, 22, 48, 0.96);
   display: grid;
   gap: 10px;
 }
@@ -1979,30 +1996,6 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-}
-
-.agent-author-modal-header h4 {
-  margin: 0;
-  font-size: 16px;
-  color: #edf5ff;
-}
-
-.agent-author-modal-close {
-  border: 1px solid rgba(130, 176, 240, 0.5);
-  border-radius: 999px;
-  background: rgba(12, 37, 77, 0.84);
-  color: #ddecff;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
-.agent-author-modal-close:hover {
-  border-color: rgba(161, 201, 253, 0.74);
-  background: rgba(16, 48, 98, 0.92);
 }
 
 .agent-author-modal-list {
@@ -2724,10 +2717,10 @@ a {
 .community-create-modal-shell {
   pointer-events: auto;
   position: fixed;
-  top: var(--create-origin-top);
-  left: var(--create-origin-left);
-  width: var(--create-origin-width);
-  height: var(--create-origin-height);
+  top: var(--create-origin-top, clamp(14px, 2.2vh, 28px));
+  left: var(--create-origin-left, clamp(14px, 2.2vw, 28px));
+  width: var(--create-origin-width, calc(100vw - (clamp(14px, 2.2vw, 28px) * 2)));
+  height: var(--create-origin-height, auto);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   border-radius: 20px;
@@ -2736,12 +2729,14 @@ a {
   box-shadow: 0 20px 44px rgba(2, 10, 30, 0.56);
   overflow: hidden;
   min-height: 0;
+  transform: translate(var(--modal-drag-x, 0px), var(--modal-drag-y, 0px));
   transition:
     top 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
     left 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
     width 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
     max-height 0.38s cubic-bezier(0.2, 0.82, 0.22, 1),
-    border-radius 0.32s ease;
+    border-radius 0.32s ease,
+    transform 0.16s ease;
 }
 
 .community-create-modal-head {
@@ -2756,24 +2751,38 @@ a {
   transform: translateY(-8px);
   transition: opacity 0.2s ease, transform 0.2s ease;
   flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.community-create-modal-head.is-dragging {
+  cursor: grabbing;
 }
 
 .community-create-modal-head h3 {
   margin: 0;
   color: #edf5ff;
-  font-size: clamp(18px, 2vw, 24px);
+  font-size: clamp(11px, 1.2vw, 14px);
   line-height: 1.15;
 }
 
 .community-create-modal-close {
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
   border: 1px solid rgba(140, 185, 248, 0.56);
   background: rgba(11, 30, 67, 0.7);
   color: #e6f2ff;
-  border-radius: 999px;
-  padding: 7px 13px;
-  min-height: 34px;
-  font-size: 12px;
+  border-radius: 6px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 18px;
   font-weight: 700;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -2877,7 +2886,11 @@ a {
   height: auto;
   max-height: calc(100dvh - 28px);
   border-radius: 24px;
-  transform: translate(-50%, calc(-50% + 16px)) scale(0.985);
+  transform: translate(
+      calc(-50% + var(--modal-drag-x, 0px)),
+      calc(-50% + 16px + var(--modal-drag-y, 0px))
+    )
+    scale(0.985);
   opacity: 0;
   transition:
     transform 0.3s cubic-bezier(0.2, 0.82, 0.22, 1),
@@ -2886,7 +2899,7 @@ a {
 }
 
 .community-action-modal .community-create-modal-head h3 {
-  font-size: clamp(22px, 2.3vw, 30px);
+  font-size: clamp(13px, 1.38vw, 18px);
 }
 
 .community-action-modal .community-create-modal-body {
@@ -2900,7 +2913,8 @@ a {
   height: auto;
   max-height: calc(100dvh - 28px);
   border-radius: 24px;
-  transform: translate(-50%, -50%) scale(1);
+  transform: translate(calc(-50% + var(--modal-drag-x, 0px)), calc(-50% + var(--modal-drag-y, 0px)))
+    scale(1);
   opacity: 1;
 }
 
@@ -2913,11 +2927,12 @@ a {
   left: 50%;
   width: min(1120px, calc(100vw - 28px));
   max-height: calc(100dvh - 28px);
-  transform: translate(-50%, 12px) scale(0.985);
+  transform: translate(calc(-50% + var(--modal-drag-x, 0px)), calc(12px + var(--modal-drag-y, 0px)))
+    scale(0.985);
 }
 
 .agent-run-modal .community-create-modal-head h3 {
-  font-size: clamp(24px, 2.3vw, 32px);
+  font-size: clamp(14px, 1.38vw, 19px);
 }
 
 .agent-run-modal .agent-run-modal-body {
@@ -2935,7 +2950,7 @@ a {
 .agent-run-modal.is-open .agent-run-modal-shell {
   top: clamp(14px, 2.2vh, 28px);
   left: 50%;
-  transform: translate(-50%, 0) scale(1);
+  transform: translate(calc(-50% + var(--modal-drag-x, 0px)), var(--modal-drag-y, 0px)) scale(1);
 }
 
 .agent-run-choice-screen {

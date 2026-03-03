@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import { CommunityAgentBanForm } from "src/components/CommunityAgentBanForm";
 import { CommunityCloseForm } from "src/components/CommunityCloseForm";
 import { RunMyAgentModalLauncher } from "src/components/RunMyAgentModalLauncher";
+import { AppModal } from "src/components/AppModal";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
 import {
   CommunityUpdateForm,
@@ -1114,105 +1115,66 @@ export function CommunityListSearchFeed({
       </div>
 
       {isCreateModalVisible && createModalOrigin ? (
-        <div
-          className={`community-create-modal${createModalPhase === "open" ? " is-open" : ""}`}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Create New Community"
+        <AppModal
+          open
+          phase={createModalPhase}
+          title="Create New Community"
+          ariaLabel="Create New Community"
+          closeAriaLabel="Close create community modal"
+          onClose={() => closeCreateModal()}
+          shellStyle={
+            {
+              "--create-origin-top": `${createModalOrigin.top}px`,
+              "--create-origin-left": `${createModalOrigin.left}px`,
+              "--create-origin-width": `${createModalOrigin.width}px`,
+              "--create-origin-height": `${createModalOrigin.height}px`,
+            } as CSSProperties
+          }
         >
-          <button
-            type="button"
-            className="community-create-modal-backdrop"
-            aria-label="Close create community modal"
-            onClick={() => closeCreateModal()}
-          />
-          <section
-            className="community-create-modal-shell"
-            style={
-              {
-                "--create-origin-top": `${createModalOrigin.top}px`,
-                "--create-origin-left": `${createModalOrigin.left}px`,
-                "--create-origin-width": `${createModalOrigin.width}px`,
-                "--create-origin-height": `${createModalOrigin.height}px`,
-              } as CSSProperties
-            }
-          >
-            <header className="community-create-modal-head">
-              <h3>Create New Community</h3>
-              <button
-                type="button"
-                className="community-create-modal-close"
-                onClick={() => closeCreateModal()}
-              >
-                Close
-              </button>
-            </header>
-            <div className="community-create-modal-body">
-              <ContractRegistrationForm onSuccess={handleCreateCommunitySuccess} />
-            </div>
-          </section>
-        </div>
+          <ContractRegistrationForm onSuccess={handleCreateCommunitySuccess} />
+        </AppModal>
       ) : null}
 
       {isCommunityActionModalVisible && communityActionModal ? (
-        <div
-          className={`community-create-modal community-action-modal${communityActionModalPhase === "open" ? " is-open" : ""}`}
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${communityActionModal.community.name} actions`}
+        <AppModal
+          open
+          phase={communityActionModalPhase}
+          title={
+            communityActionModal.mode === "edit"
+              ? "Edit details"
+              : communityActionModal.mode === "ban"
+                ? "Ban agents"
+                : "Close community"
+          }
+          ariaLabel={`${communityActionModal.community.name} actions`}
+          closeAriaLabel="Close community action modal"
+          onClose={() => closeCommunityActionModal()}
+          className="community-action-modal"
+          shellClassName="community-action-modal-shell"
+          headClassName="community-action-modal-head"
+          bodyClassName="community-action-modal-body"
+          bodyStatusBubble="error-only"
         >
-          <button
-            type="button"
-            className="community-create-modal-backdrop"
-            aria-label="Close community action modal"
-            onClick={() => closeCommunityActionModal()}
-          />
-          <section
-            className="community-create-modal-shell community-action-modal-shell"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <header className="community-create-modal-head community-action-modal-head">
-              <h3>
-                {communityActionModal.mode === "edit"
-                  ? "Edit details"
-                  : communityActionModal.mode === "ban"
-                    ? "Ban agents"
-                    : "Close community"}
-              </h3>
-              <button
-                type="button"
-                className="community-create-modal-close"
-                onClick={() => closeCommunityActionModal()}
-              >
-                Close
-              </button>
-            </header>
-            <div
-              className="community-create-modal-body community-action-modal-body"
-              data-status-bubble="error-only"
-            >
-              {communityActionModal.mode === "edit" ? (
-                <CommunityUpdateForm
-                  initialCommunityId={communityActionModal.community.id}
-                  initialWalletAddress={connectedWallet}
-                  onApplied={handleCommunityUpdateApplied}
-                />
-              ) : communityActionModal.mode === "ban" ? (
-                <CommunityAgentBanForm
-                  initialCommunityId={communityActionModal.community.id}
-                  initialWalletAddress={connectedWallet}
-                  onApplied={handleCommunityBanApplied}
-                />
-              ) : (
-                <CommunityCloseForm
-                  initialCommunityId={communityActionModal.community.id}
-                  initialWalletAddress={connectedWallet}
-                  onClosed={handleCommunityCloseApplied}
-                />
-              )}
-            </div>
-          </section>
-        </div>
+          {communityActionModal.mode === "edit" ? (
+            <CommunityUpdateForm
+              initialCommunityId={communityActionModal.community.id}
+              initialWalletAddress={connectedWallet}
+              onApplied={handleCommunityUpdateApplied}
+            />
+          ) : communityActionModal.mode === "ban" ? (
+            <CommunityAgentBanForm
+              initialCommunityId={communityActionModal.community.id}
+              initialWalletAddress={connectedWallet}
+              onApplied={handleCommunityBanApplied}
+            />
+          ) : (
+            <CommunityCloseForm
+              initialCommunityId={communityActionModal.community.id}
+              initialWalletAddress={connectedWallet}
+              onClosed={handleCommunityCloseApplied}
+            />
+          )}
+        </AppModal>
       ) : null}
     </>
   );

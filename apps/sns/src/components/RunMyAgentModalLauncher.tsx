@@ -9,7 +9,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { createPortal } from "react-dom";
+import { AppModal } from "src/components/AppModal";
 import { useOwnerSession } from "src/components/ownerSession";
 import {
   SECURITY_SIGNING_MESSAGE,
@@ -457,19 +457,11 @@ function RunnerInstallGuideModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const [portalReady, setPortalReady] = useState(false);
   const [phase, setPhase] = useState<ModalPhase>("closed");
   const [osTab, setOsTab] = useState<RunnerGuideOs>("macos");
   const timerRef = useRef<number | null>(null);
   const copyTimerRef = useRef<number | null>(null);
   const [copiedOs, setCopiedOs] = useState<RunnerGuideOs | null>(null);
-
-  useEffect(() => {
-    setPortalReady(true);
-    return () => {
-      setPortalReady(false);
-    };
-  }, []);
 
   useEffect(() => {
     return () => {
@@ -517,7 +509,7 @@ function RunnerInstallGuideModal({
     };
   }, [onClose, phase]);
 
-  if (!portalReady || phase === "closed") {
+  if (phase === "closed") {
     return null;
   }
 
@@ -569,138 +561,120 @@ function RunnerInstallGuideModal({
     }, 1600);
   };
 
-  return createPortal(
-    <div
-      className={`community-create-modal community-action-modal runner-guide-modal${
-        phase === "open" ? " is-open" : ""
-      }`}
-      role="dialog"
-      aria-modal="true"
-      aria-label="How to install and run Runner"
-      onPointerDown={(event) => event.stopPropagation()}
-      onClick={(event) => event.stopPropagation()}
+  return (
+    <AppModal
+      open
+      phase={phase}
+      title="How to install and run Runner"
+      ariaLabel="How to install and run Runner"
+      closeAriaLabel="Close runner install guide"
+      onClose={onClose}
+      className="community-action-modal runner-guide-modal"
+      shellClassName="community-action-modal-shell runner-guide-modal-shell"
+      headClassName="community-action-modal-head"
+      bodyClassName="community-action-modal-body runner-guide-modal-body"
     >
-      <button
-        type="button"
-        className="community-create-modal-backdrop"
-        aria-label="Close runner install guide"
-        onClick={onClose}
-      />
-      <section
-        className="community-create-modal-shell community-action-modal-shell runner-guide-modal-shell"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <header className="community-create-modal-head community-action-modal-head">
-          <h3>How to install and run Runner</h3>
-          <button type="button" className="community-create-modal-close" onClick={onClose}>
-            Close
+      <div className="runner-guide-os-tabs" role="tablist" aria-label="Runner guide OS tabs">
+        {(Object.keys(RUNNER_INSTALL_GUIDE) as RunnerGuideOs[]).map((key) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={osTab === key}
+            className={`runner-guide-os-tab${osTab === key ? " is-active" : ""}`}
+            onClick={() => setOsTab(key)}
+          >
+            {RUNNER_INSTALL_GUIDE[key].label}
           </button>
-        </header>
-        <div className="community-create-modal-body community-action-modal-body runner-guide-modal-body">
-          <div className="runner-guide-os-tabs" role="tablist" aria-label="Runner guide OS tabs">
-            {(Object.keys(RUNNER_INSTALL_GUIDE) as RunnerGuideOs[]).map((key) => (
-              <button
-                key={key}
-                type="button"
-                role="tab"
-                aria-selected={osTab === key}
-                className={`runner-guide-os-tab${osTab === key ? " is-active" : ""}`}
-                onClick={() => setOsTab(key)}
+        ))}
+      </div>
+      <div className="runner-guide-panel" role="tabpanel">
+        <ol className="runner-guide-steps">
+          <li>
+            <strong>Open a terminal.</strong> {terminalHintByOs[osTab]}
+          </li>
+          <li>
+            <strong>Copy and paste the script below, then run it.</strong>
+          </li>
+          <li>
+            <strong>Enter your Runner Secret and Runner Port</strong> when the launcher asks for
+            them on first run.
+          </li>
+          <li>
+            <strong>Allow Local Network access in Chrome.</strong>{" "}
+            <a
+              href={CHROME_LOCAL_NETWORK_HELP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="runner-guide-help-link"
+            >
+              Chrome official help (site permissions)
+            </a>
+          </li>
+        </ol>
+        <div className="runner-guide-script-wrap">
+          <button
+            type="button"
+            className="runner-guide-copy-button"
+            onClick={handleCopyScript}
+            aria-label={
+              copiedOs === osTab
+                ? `${guide.label} script copied to clipboard`
+                : `Copy ${guide.label} script to clipboard`
+            }
+          >
+            {copiedOs === osTab ? (
+              <svg
+                className="runner-guide-copy-icon"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
               >
-                {RUNNER_INSTALL_GUIDE[key].label}
-              </button>
-            ))}
-          </div>
-          <div className="runner-guide-panel" role="tabpanel">
-            <ol className="runner-guide-steps">
-              <li>
-                <strong>Open a terminal.</strong> {terminalHintByOs[osTab]}
-              </li>
-              <li>
-                <strong>Copy and paste the script below, then run it.</strong>
-              </li>
-              <li>
-                <strong>Enter your Runner Secret and Runner Port</strong> when the launcher asks
-                for them on first run.
-              </li>
-              <li>
-                <strong>Allow Local Network access in Chrome.</strong>{" "}
-                <a
-                  href={CHROME_LOCAL_NETWORK_HELP_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="runner-guide-help-link"
-                >
-                  Chrome official help (site permissions)
-                </a>
-              </li>
-            </ol>
-            <div className="runner-guide-script-wrap">
-              <button
-                type="button"
-                className="runner-guide-copy-button"
-                onClick={handleCopyScript}
-                aria-label={
-                  copiedOs === osTab
-                    ? `${guide.label} script copied to clipboard`
-                    : `Copy ${guide.label} script to clipboard`
-                }
+                <path
+                  d="M20 6L9 17L4 12"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="runner-guide-copy-icon"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
               >
-                {copiedOs === osTab ? (
-                  <svg
-                    className="runner-guide-copy-icon"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M20 6L9 17L4 12"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="runner-guide-copy-icon"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                  >
-                    <rect
-                      x="9"
-                      y="9"
-                      width="10"
-                      height="10"
-                      rx="2"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    />
-                    <path
-                      d="M6 15H5C3.9 15 3 14.1 3 13V5C3 3.9 3.9 3 5 3H13C14.1 3 15 3.9 15 5V6"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                )}
-              </button>
-              <pre className="runner-guide-script">
-                <code>{guide.script}</code>
-              </pre>
-            </div>
-          </div>
+                <rect
+                  x="9"
+                  y="9"
+                  width="10"
+                  height="10"
+                  rx="2"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M6 15H5C3.9 15 3 14.1 3 13V5C3 3.9 3.9 3 5 3H13C14.1 3 15 3.9 15 5V6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
+          </button>
+          <pre className="runner-guide-script">
+            <code>{guide.script}</code>
+          </pre>
         </div>
-      </section>
-    </div>,
-    document.body
+      </div>
+    </AppModal>
   );
 }
 
@@ -716,7 +690,6 @@ export function RunMyAgentModalLauncher({
   buttonDataTour,
 }: RunMyAgentModalLauncherProps) {
   const [modalPhase, setModalPhase] = useState<ModalPhase>("closed");
-  const [portalReady, setPortalReady] = useState(false);
   const modalTimerRef = useRef<number | null>(null);
   const isModalVisible = modalPhase !== "closed";
 
@@ -743,13 +716,6 @@ export function RunMyAgentModalLauncher({
         setModalPhase("open");
       });
     });
-  }, []);
-
-  useEffect(() => {
-    setPortalReady(true);
-    return () => {
-      setPortalReady(false);
-    };
   }, []);
 
   useEffect(() => {
@@ -782,51 +748,6 @@ export function RunMyAgentModalLauncher({
     };
   }, [closeModal, isModalVisible]);
 
-  const modalNode = isModalVisible ? (
-    <div
-      className={`community-create-modal community-action-modal agent-run-modal${
-        modalPhase === "open" ? " is-open" : ""
-      }`}
-      data-tour="agent-run-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Run agent for ${communityName}`}
-      onPointerDown={(event) => event.stopPropagation()}
-      onClick={(event) => event.stopPropagation()}
-    >
-      <button
-        type="button"
-        className="community-create-modal-backdrop"
-        aria-label="Close run my agent modal"
-        onClick={closeModal}
-      />
-      <section
-        className="community-create-modal-shell community-action-modal-shell agent-run-modal-shell"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <header className="community-create-modal-head community-action-modal-head">
-          <h3>Run My Agent</h3>
-          <button
-            type="button"
-            className="community-create-modal-close"
-            onClick={closeModal}
-          >
-            Close
-          </button>
-        </header>
-        <div className="community-create-modal-body community-action-modal-body agent-run-modal-body">
-          <RunMyAgentModalContent
-            communityId={communityId}
-            communitySlug={communitySlug}
-            communityName={communityName}
-            agentId={agentId}
-            agentHandle={agentHandle}
-          />
-        </div>
-      </section>
-    </div>
-  ) : null;
-
   return (
     <>
       <button
@@ -838,7 +759,29 @@ export function RunMyAgentModalLauncher({
       >
         {buttonLabel}
       </button>
-      {portalReady && modalNode ? createPortal(modalNode, document.body) : null}
+      {isModalVisible ? (
+        <AppModal
+          open
+          phase={modalPhase}
+          title="Run My Agent"
+          ariaLabel={`Run agent for ${communityName}`}
+          closeAriaLabel="Close run my agent modal"
+          onClose={closeModal}
+          className="community-action-modal agent-run-modal"
+          shellClassName="community-action-modal-shell agent-run-modal-shell"
+          headClassName="community-action-modal-head"
+          bodyClassName="community-action-modal-body agent-run-modal-body"
+          dataTour="agent-run-modal"
+        >
+          <RunMyAgentModalContent
+            communityId={communityId}
+            communitySlug={communitySlug}
+            communityName={communityName}
+            agentId={agentId}
+            agentHandle={agentHandle}
+          />
+        </AppModal>
+      ) : null}
     </>
   );
 }

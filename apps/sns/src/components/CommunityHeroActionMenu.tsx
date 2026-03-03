@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useOwnerSession } from "src/components/ownerSession";
+import { AppModal } from "src/components/AppModal";
 import { CommunityUpdateForm } from "src/components/CommunityUpdateForm";
 import { CommunityAgentBanForm } from "src/components/CommunityAgentBanForm";
 import { CommunityCloseForm } from "src/components/CommunityCloseForm";
@@ -221,64 +222,45 @@ export function CommunityHeroActionMenu({ community }: Props) {
       </div>
 
       {isActionModalVisible && actionModalMode ? (
-        <div
-          className={`community-create-modal community-action-modal${actionModalPhase === "open" ? " is-open" : ""}`}
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${community.name} actions`}
+        <AppModal
+          open
+          phase={actionModalPhase}
+          title={
+            actionModalMode === "edit"
+              ? "Edit details"
+              : actionModalMode === "ban"
+                ? "Ban agents"
+                : "Close community"
+          }
+          ariaLabel={`${community.name} actions`}
+          closeAriaLabel="Close community action modal"
+          onClose={() => closeActionModal()}
+          className="community-action-modal"
+          shellClassName="community-action-modal-shell"
+          headClassName="community-action-modal-head"
+          bodyClassName="community-action-modal-body"
+          bodyStatusBubble="error-only"
         >
-          <button
-            type="button"
-            className="community-create-modal-backdrop"
-            aria-label="Close community action modal"
-            onClick={() => closeActionModal()}
-          />
-          <section
-            className="community-create-modal-shell community-action-modal-shell"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <header className="community-create-modal-head community-action-modal-head">
-              <h3>
-                {actionModalMode === "edit"
-                  ? "Edit details"
-                  : actionModalMode === "ban"
-                    ? "Ban agents"
-                    : "Close community"}
-              </h3>
-              <button
-                type="button"
-                className="community-create-modal-close"
-                onClick={() => closeActionModal()}
-              >
-                Close
-              </button>
-            </header>
-            <div
-              className="community-create-modal-body community-action-modal-body"
-              data-status-bubble="error-only"
-            >
-              {actionModalMode === "edit" ? (
-                <CommunityUpdateForm
-                  initialCommunityId={community.id}
-                  initialWalletAddress={connectedWallet}
-                  onApplied={() => closeActionModal()}
-                />
-              ) : actionModalMode === "ban" ? (
-                <CommunityAgentBanForm
-                  initialCommunityId={community.id}
-                  initialWalletAddress={connectedWallet}
-                  onApplied={() => closeActionModal()}
-                />
-              ) : (
-                <CommunityCloseForm
-                  initialCommunityId={community.id}
-                  initialWalletAddress={connectedWallet}
-                  onClosed={() => closeActionModal()}
-                />
-              )}
-            </div>
-          </section>
-        </div>
+          {actionModalMode === "edit" ? (
+            <CommunityUpdateForm
+              initialCommunityId={community.id}
+              initialWalletAddress={connectedWallet}
+              onApplied={() => closeActionModal()}
+            />
+          ) : actionModalMode === "ban" ? (
+            <CommunityAgentBanForm
+              initialCommunityId={community.id}
+              initialWalletAddress={connectedWallet}
+              onApplied={() => closeActionModal()}
+            />
+          ) : (
+            <CommunityCloseForm
+              initialCommunityId={community.id}
+              initialWalletAddress={connectedWallet}
+              onClosed={() => closeActionModal()}
+            />
+          )}
+        </AppModal>
       ) : null}
     </>
   );
