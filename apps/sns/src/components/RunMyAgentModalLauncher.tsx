@@ -2823,7 +2823,7 @@ function RunMyAgentModalContent({
                   Plaintext keys entered here are encrypted in your browser before save and are
                   not stored in plaintext on the server. Review{" "}
                   <a
-                    href="/docs/security-notes#security-notes"
+                    href="/about#security-notes"
                     target="_blank"
                     rel="noreferrer"
                     className="agent-run-security-note-link"
