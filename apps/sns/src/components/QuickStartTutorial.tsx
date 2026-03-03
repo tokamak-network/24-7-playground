@@ -360,7 +360,8 @@ export function QuickStartTutorial() {
     return [] as TutorialStep[];
   }, [isAgentTutorial, isDappTutorial]);
 
-  const stepIndex = parseStep(searchParams.get("step"), steps.length);
+  const parsedStepIndex = parseStep(searchParams.get("step"), steps.length);
+  const [stepIndex, setStepIndex] = useState(parsedStepIndex);
   const currentStep =
     steps[stepIndex] ||
     ({
@@ -369,6 +370,7 @@ export function QuickStartTutorial() {
       title: "Quick Start",
       body: "",
     } satisfies TutorialStep);
+  const stepSeedKeyRef = useRef("");
 
   const createdCommunityIdFromQuery = String(
     searchParams.get("createdCommunityId") || ""
@@ -492,17 +494,26 @@ export function QuickStartTutorial() {
     [pathname, resolveStepPath, stepIndex]
   );
 
+  useEffect(() => {
+    if (!isTutorialActive) {
+      setStepIndex(0);
+      stepSeedKeyRef.current = "";
+      return;
+    }
+    const seedKey = `${tutorialMode || ""}:${pathname}`;
+    if (seedKey !== stepSeedKeyRef.current) {
+      stepSeedKeyRef.current = seedKey;
+      setStepIndex(parsedStepIndex);
+    }
+  }, [isTutorialActive, parsedStepIndex, pathname, tutorialMode]);
+
   const goToStep = useCallback(
     (nextStepIndex: number, expectedCurrentStep?: number) => {
       if (!tutorialMode) {
         return;
       }
-      if (typeof expectedCurrentStep === "number" && typeof window !== "undefined") {
-        const runtimeParams = new URLSearchParams(window.location.search);
-        const runtimeStep = parseStep(runtimeParams.get("step"), steps.length);
-        if (runtimeStep !== expectedCurrentStep) {
-          return;
-        }
+      if (typeof expectedCurrentStep === "number" && stepIndex !== expectedCurrentStep) {
+        return;
       }
 
       const clamped = Math.min(Math.max(nextStepIndex, 0), steps.length - 1);
@@ -531,9 +542,13 @@ export function QuickStartTutorial() {
 
       const href = buildUrl(destinationPath, next);
       if (normalizePath(pathname) === normalizePath(destinationPath)) {
-        router.replace(href, { scroll: false });
+        setStepIndex(clamped);
+        if (typeof window !== "undefined") {
+          window.history.replaceState(window.history.state, "", href);
+        }
         return;
       }
+      setStepIndex(clamped);
       router.push(href);
     },
     [
@@ -543,8 +558,8 @@ export function QuickStartTutorial() {
       resolveStepPath,
       router,
       searchParams,
-      selectedCommunitySlug,
       selectedCommunitySlugValue,
+      stepIndex,
       steps.length,
       tutorialMode,
     ]
@@ -557,7 +572,13 @@ export function QuickStartTutorial() {
     next.delete("createdCommunityId");
     next.delete("createdCommunitySlug");
     next.delete("selectedCommunitySlug");
-    router.replace(buildUrl(pathname, next), { scroll: false });
+    const href = buildUrl(pathname, next);
+    if (typeof window !== "undefined") {
+      window.history.replaceState(window.history.state, "", href);
+    } else {
+      router.replace(href, { scroll: false });
+    }
+    setStepIndex(0);
   }, [pathname, router, searchParams]);
 
   useEffect(() => {
@@ -957,21 +978,33 @@ export function QuickStartTutorial() {
     const handleFocus = () => {
       void updateWalletConnection();
     };
+    const ownerSessionEventName = getOwnerSessionEventName();
 
     void updateWalletConnection();
     window.addEventListener("focus", handleFocus);
+    window.addEventListener(ownerSessionEventName, handleFocus);
     ethereum?.on?.("accountsChanged", handleAccountsChanged);
     ethereum?.on?.("connect", handleFocus);
     ethereum?.on?.("disconnect", handleFocus);
+    let intervalId: number | null = null;
+    if (isAgentTutorial && stepIndex === 1) {
+      intervalId = window.setInterval(() => {
+        void updateWalletConnection();
+      }, 420);
+    }
 
     return () => {
       canceled = true;
       window.removeEventListener("focus", handleFocus);
+      window.removeEventListener(ownerSessionEventName, handleFocus);
       ethereum?.removeListener?.("accountsChanged", handleAccountsChanged);
       ethereum?.removeListener?.("connect", handleFocus);
       ethereum?.removeListener?.("disconnect", handleFocus);
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+      }
     };
-  }, [isTutorialActive]);
+  }, [isAgentTutorial, isTutorialActive, stepIndex]);
 
   useEffect(() => {
     if (!isAgentTutorial) {
@@ -988,12 +1021,21 @@ export function QuickStartTutorial() {
     const ownerSessionEventName = getOwnerSessionEventName();
     window.addEventListener(ownerSessionEventName, syncOwnerSession);
     window.addEventListener("focus", syncOwnerSession);
+    let intervalId: number | null = null;
+    if (stepIndex === 1) {
+      intervalId = window.setInterval(() => {
+        syncOwnerSession();
+      }, 420);
+    }
 
     return () => {
       window.removeEventListener(ownerSessionEventName, syncOwnerSession);
       window.removeEventListener("focus", syncOwnerSession);
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+      }
     };
-  }, [isAgentTutorial]);
+  }, [isAgentTutorial, stepIndex]);
 
   useEffect(() => {
     if (!isAgentTutorial) {
