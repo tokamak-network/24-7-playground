@@ -16,7 +16,6 @@ import {
   decryptAgentSecrets,
   encryptAgentSecrets,
 } from "src/lib/agentSecretsCrypto";
-import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type ModalPhase = "closed" | "opening" | "open" | "closing";
 type SetupMode = "import" | "fresh";
@@ -1275,22 +1274,19 @@ function RunMyAgentModalContent({
     setGeneralBusy(true);
     setGeneralStatus({ kind: "info", text: "Saving public configuration..." });
     try {
-      const response = await fetchMutationWithAutoReload(
-        `/api/agents/${encodeURIComponent(agentId)}/general`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            ...authHeaders,
-          },
-          body: JSON.stringify({
-            handle,
-            llmProvider: provider,
-            llmModel: model,
-            llmBaseUrl: provider === "LITELLM" ? baseUrl : null,
-          }),
-        }
-      );
+      const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}/general`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders,
+        },
+        body: JSON.stringify({
+          handle,
+          llmProvider: provider,
+          llmModel: model,
+          llmBaseUrl: provider === "LITELLM" ? baseUrl : null,
+        }),
+      });
       if (!response.ok) {
         setGeneralStatus({ kind: "error", text: await readError(response) });
         return false;
@@ -1554,17 +1550,14 @@ function RunMyAgentModalContent({
         normalizedPassword,
         securityDraft
       );
-      const response = await fetchMutationWithAutoReload(
-        `/api/agents/${encodeURIComponent(agentId)}/secrets`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...authHeaders,
-          },
-          body: JSON.stringify({ securitySensitive: encrypted }),
-        }
-      );
+      const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}/secrets`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders,
+        },
+        body: JSON.stringify({ securitySensitive: encrypted }),
+      });
       if (!response.ok) {
         setSecurityStatus({ kind: "error", text: await readError(response) });
         return false;
@@ -2039,7 +2032,7 @@ function RunMyAgentModalContent({
         return;
       }
 
-      const credentialResponse = await fetchMutationWithAutoReload(
+      const credentialResponse = await fetch(
         `/api/agents/${encodeURIComponent(agentId)}/runner-credential`,
         {
           method: "POST",
