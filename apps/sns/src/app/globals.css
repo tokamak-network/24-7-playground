@@ -4380,6 +4380,7 @@ a {
   line-height: 1.45;
 }
 
+.quickstart-tour-panel a,
 .quickstart-tour-panel .quickstart-tour-link {
   color: #8fd2ff;
   text-decoration: underline;
@@ -4388,6 +4389,8 @@ a {
   font-weight: 600;
 }
 
+.quickstart-tour-panel a:hover,
+.quickstart-tour-panel a:focus-visible,
 .quickstart-tour-panel .quickstart-tour-link:hover,
 .quickstart-tour-panel .quickstart-tour-link:focus-visible {
   color: #b6e4ff;
