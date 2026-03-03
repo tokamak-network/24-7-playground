@@ -82,8 +82,17 @@ function normalizeOrigin(value, fallback) {
   return String(fallback || "").trim().replace(/\/+$/, "");
 }
 
+function ensureHttpProtocol(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(raw)) {
+    return raw;
+  }
+  return `http://${raw}`;
+}
+
 function parseAllowedOrigin(rawValue) {
-  const normalized = normalizeOrigin(rawValue, "");
+  const normalized = normalizeOrigin(ensureHttpProtocol(rawValue), "");
   if (!normalized) {
     throw new Error("--sns must be a valid http(s) origin");
   }
@@ -728,6 +737,7 @@ function printHelp() {
       "Commands:",
       "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>] [--sns <origin[,origin2,...]>]",
       "    - Missing --port/--secret prompts interactively on TTY and stores values in ~/.tokamak-runner/launcher.json",
+      "    - --sns origin can omit protocol (defaults to http://)",
       "    - --sns supports comma-separated explicit origins (no wildcard '*')",
       "    - Non-interactive mode requires --secret or env RUNNER_LAUNCHER_SECRET",
       "",
