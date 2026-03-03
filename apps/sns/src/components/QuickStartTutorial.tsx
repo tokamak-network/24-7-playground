@@ -364,6 +364,8 @@ export function QuickStartTutorial() {
   const [isAgentFreshSetupSelected, setIsAgentFreshSetupSelected] = useState(false);
   const [isAgentConfigReady, setIsAgentConfigReady] = useState(false);
   const [isAgentConfidentialTabActive, setIsAgentConfidentialTabActive] = useState(false);
+  const [hasClickedAgentConfidentialTab, setHasClickedAgentConfidentialTab] =
+    useState(false);
   const [hasOpenedSecurityNotes, setHasOpenedSecurityNotes] = useState(false);
   const [isAgentLlmKeyReady, setIsAgentLlmKeyReady] = useState(false);
   const [isAgentExecutionKeyReady, setIsAgentExecutionKeyReady] = useState(false);
@@ -1058,6 +1060,7 @@ export function QuickStartTutorial() {
       setIsAgentFreshSetupSelected(false);
       setIsAgentConfigReady(false);
       setIsAgentConfidentialTabActive(false);
+      setHasClickedAgentConfidentialTab(false);
       setIsAgentLlmKeyReady(false);
       setIsAgentExecutionKeyReady(false);
       setIsAgentAlchemyKeyReady(false);
@@ -1132,6 +1135,9 @@ export function QuickStartTutorial() {
     const handleClick = (event: MouseEvent) => {
       const target = event.target;
       if (target instanceof Element) {
+        if (target.closest('[data-tour="agent-tab-confidential"]')) {
+          setHasClickedAgentConfidentialTab(true);
+        }
         if (target.closest('[data-tour="agent-security-notes-link"]')) {
           setHasOpenedSecurityNotes(true);
         }
@@ -1164,13 +1170,19 @@ export function QuickStartTutorial() {
 
   useEffect(() => {
     if (!isAgentTutorial) {
+      setHasClickedAgentConfidentialTab(false);
       setHasOpenedSecurityNotes(false);
       setHasOpenedRunnerInstallGuide(false);
       return;
     }
     if (stepIndex === 0) {
+      setHasClickedAgentConfidentialTab(false);
       setHasOpenedSecurityNotes(false);
       setHasOpenedRunnerInstallGuide(false);
+      return;
+    }
+    if (stepIndex === 6) {
+      setHasClickedAgentConfidentialTab(false);
     }
   }, [isAgentTutorial, stepIndex]);
 
@@ -1192,7 +1204,8 @@ export function QuickStartTutorial() {
     (!(stepIndex === 3) || isAgentRunModalOpen) &&
     (!(stepIndex === 4) || isAgentFreshSetupSelected) &&
     (!(stepIndex === 5) || isAgentConfigReady) &&
-    (!(stepIndex === 6) || isAgentConfidentialTabActive) &&
+    (!(stepIndex === 6) ||
+      (isAgentConfidentialTabActive && hasClickedAgentConfidentialTab)) &&
     (!(stepIndex === 7) || hasOpenedSecurityNotes) &&
     (!(stepIndex === 8) || isAgentLlmKeyReady) &&
     (!(stepIndex === 9) || isAgentExecutionKeyReady) &&
@@ -1382,7 +1395,7 @@ export function QuickStartTutorial() {
         !nextDisabled &&
         !autoAdvancedOnCurrentStepRef.current &&
         isAgentTutorial &&
-        (stepIndex === 2 || stepIndex === 6);
+        stepIndex === 2;
       if (canAutoAdvanceImmediately) {
         autoAdvancedOnCurrentStepRef.current = true;
         goToStep(stepIndex + 1, stepIndex);
@@ -1556,8 +1569,12 @@ export function QuickStartTutorial() {
         {isAgentTutorial && stepIndex === 5 && !isAgentConfigReady ? (
           <p className="quickstart-tour-help">Click Continue to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 6 && !isAgentConfidentialTabActive ? (
-          <p className="quickstart-tour-help">Open Confidential Keys tab to enable Next.</p>
+        {isAgentTutorial &&
+        stepIndex === 6 &&
+        (!isAgentConfidentialTabActive || !hasClickedAgentConfidentialTab) ? (
+          <p className="quickstart-tour-help">
+            Click Confidential Keys tab to enable Next.
+          </p>
         ) : null}
         {isAgentTutorial && stepIndex === 7 && !hasOpenedSecurityNotes ? (
           <p className="quickstart-tour-help">Open Security Notes via the link to enable Next.</p>
