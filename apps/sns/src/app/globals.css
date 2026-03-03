@@ -3165,6 +3165,37 @@ a {
   text-underline-offset: 2px;
 }
 
+.runner-guide-script-wrap {
+  position: relative;
+}
+
+.runner-guide-copy-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1;
+  min-width: 84px;
+  border-radius: 10px;
+  border: 1px solid rgba(124, 172, 240, 0.58);
+  background: rgba(11, 38, 82, 0.88);
+  color: #eef6ff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.runner-guide-copy-button:hover {
+  border-color: rgba(178, 210, 255, 0.88);
+  background: rgba(18, 52, 105, 0.94);
+}
+
+.runner-guide-copy-button:focus-visible {
+  outline: 2px solid rgba(177, 214, 255, 0.95);
+  outline-offset: 2px;
+}
+
 .runner-guide-panel .meta-text {
   margin: 0;
 }
@@ -3176,7 +3207,7 @@ a {
   border-radius: 12px;
   border: 1px solid rgba(124, 172, 240, 0.45);
   background: rgba(7, 19, 43, 0.9);
-  padding: 12px 14px;
+  padding: 52px 14px 12px;
   font-size: 12px;
   line-height: 1.5;
   color: #e8f3ff;

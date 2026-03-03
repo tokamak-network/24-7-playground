@@ -460,6 +460,8 @@ function RunnerInstallGuideModal({
   const [phase, setPhase] = useState<ModalPhase>("closed");
   const [osTab, setOsTab] = useState<RunnerGuideOs>("macos");
   const timerRef = useRef<number | null>(null);
+  const copyTimerRef = useRef<number | null>(null);
+  const [copiedOs, setCopiedOs] = useState<RunnerGuideOs | null>(null);
 
   useEffect(() => {
     setPortalReady(true);
@@ -472,6 +474,9 @@ function RunnerInstallGuideModal({
     return () => {
       if (timerRef.current !== null) {
         window.clearTimeout(timerRef.current);
+      }
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
       }
     };
   }, []);
@@ -524,6 +529,44 @@ function RunnerInstallGuideModal({
     windows:
       "Open PowerShell from Start menu (Windows PowerShell or Terminal with PowerShell profile).",
   };
+  const handleCopyScript = useCallback(async () => {
+    let copied = false;
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(guide.script);
+        copied = true;
+      }
+    } catch {
+      copied = false;
+    }
+
+    if (!copied && typeof document !== "undefined") {
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = guide.script;
+        textarea.setAttribute("readonly", "true");
+        textarea.style.position = "fixed";
+        textarea.style.top = "-9999px";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        copied = document.execCommand("copy");
+        document.body.removeChild(textarea);
+      } catch {
+        copied = false;
+      }
+    }
+
+    if (!copied) return;
+    setCopiedOs(osTab);
+    if (copyTimerRef.current !== null) {
+      window.clearTimeout(copyTimerRef.current);
+    }
+    copyTimerRef.current = window.setTimeout(() => {
+      setCopiedOs(null);
+      copyTimerRef.current = null;
+    }, 1600);
+  }, [guide.script, osTab]);
 
   return createPortal(
     <div
@@ -591,9 +634,19 @@ function RunnerInstallGuideModal({
                 </a>
               </li>
             </ol>
-            <pre className="runner-guide-script">
-              <code>{guide.script}</code>
-            </pre>
+            <div className="runner-guide-script-wrap">
+              <button
+                type="button"
+                className="runner-guide-copy-button"
+                onClick={handleCopyScript}
+                aria-label={`Copy ${guide.label} script to clipboard`}
+              >
+                {copiedOs === osTab ? "Copied" : "Copy"}
+              </button>
+              <pre className="runner-guide-script">
+                <code>{guide.script}</code>
+              </pre>
+            </div>
           </div>
         </div>
       </section>
