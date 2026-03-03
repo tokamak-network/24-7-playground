@@ -70,12 +70,19 @@ body {
   pointer-events: none;
   overflow: hidden;
   isolation: isolate;
+  contain: strict;
+  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   will-change: transform;
-  transform: translateZ(0) scale(1.02);
+  transform: translate3d(0, 0, 0) scale(1.02);
   transform-origin: 50% 50%;
   background: #050a1d;
   animation: sv-field-drift 74s linear infinite;
+}
+
+.spiral-vault-bg--lite {
+  inset: -20vmax;
+  animation: none;
 }
 
 .spiral-vault-bg__veil {
@@ -93,6 +100,19 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.spiral-vault-bg--lite .spiral-vault-nebula-drift {
+  display: none;
+}
+
+.spiral-vault-bg--lite .spiral-vault-dust,
+.spiral-vault-bg--lite .spiral-vault-star,
+.spiral-vault-bg--lite .spiral-vault-bright {
+  animation-duration: calc(var(--duration) * 1.4);
 }
 
 .spiral-vault-nebula-drift {
@@ -486,6 +506,9 @@ a {
   object-position: center;
   user-select: none;
   -webkit-user-drag: none;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
 }
 
 .home-quick-start {
@@ -554,7 +577,9 @@ a {
   border: 0;
   outline: none;
   box-shadow: none;
-  transform: translate(var(--quick-start-art-x, 0%), var(--quick-start-art-y, 0%));
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(var(--quick-start-art-x, 0%), var(--quick-start-art-y, 0%), 0);
   filter: var(--quick-start-art-filter, brightness(1) saturate(1.06));
   transition: transform 0.2s ease, filter 0.2s ease;
 }
@@ -594,8 +619,14 @@ a {
 
 .quick-start-card:hover .quick-start-art,
 .quick-start-card:focus-visible .quick-start-art {
-  transform: translate(var(--quick-start-art-x, 0%), var(--quick-start-art-y, 0%)) scale(1.015);
+  transform: translate3d(var(--quick-start-art-x, 0%), var(--quick-start-art-y, 0%), 0) scale(1.015);
   filter: var(--quick-start-art-filter-hover, brightness(0.82) saturate(1.03));
+}
+
+@media (min-resolution: 1.5dppx) {
+  .quick-start-art {
+    clip-path: none;
+  }
 }
 
 .quick-start-card:hover .quick-start-card-overlay,
@@ -860,6 +891,9 @@ a {
   height: 48px;
   display: block;
   object-fit: contain;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
 }
 
 .site-menu-rail .site-nav-link {
@@ -2423,6 +2457,9 @@ a {
   display: block;
   border-radius: 10px;
   border: 1px solid #d3e0f2;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
 }
 
 .rich-text-table-wrap {
@@ -4011,6 +4048,9 @@ a {
   display: block;
   border-radius: 10px;
   border: 1px solid #d3e0f2;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
 }
 
 .md-figure figcaption {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 type SpiralParticle = {
   angle0: number;
@@ -193,14 +193,62 @@ const DUST = createSpiralParticles(CONFIG.seed * 29 + 31, CONFIG.dustCount, "dus
 const STARS = createSpiralParticles(CONFIG.seed, CONFIG.starCount, "star");
 const BRIGHT = createSpiralParticles(CONFIG.seed * 17 + 19, CONFIG.brightCount, "bright");
 const NEBULA = createNebulaParticles(CONFIG.seed, CONFIG.nebulaCount);
+const DUST_LITE = DUST.filter((_, idx) => idx % 2 === 0);
+const STARS_LITE = STARS.filter((_, idx) => idx % 2 === 0);
+const BRIGHT_LITE = BRIGHT.filter((_, idx) => idx % 2 === 0);
+const NEBULA_LITE = NEBULA.slice(0, Math.max(2, Math.ceil(NEBULA.length / 3)));
+const LITE_PIXEL_BUDGET = 6_500_000;
+
+function shouldUseLiteBackground() {
+  if (typeof window === "undefined") return false;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return true;
+  }
+
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  const viewportPixels = window.innerWidth * window.innerHeight * dpr * dpr;
+  return dpr >= 1.5 || viewportPixels >= LITE_PIXEL_BUDGET;
+}
 
 export function SpiralVaultBackground() {
+  const [liteMode, setLiteMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMode = () => {
+      setLiteMode(shouldUseLiteBackground());
+    };
+
+    updateMode();
+    window.addEventListener("resize", updateMode);
+    if ("addEventListener" in media) {
+      media.addEventListener("change", updateMode);
+    } else {
+      (media as any).addListener?.(updateMode);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateMode);
+      if ("removeEventListener" in media) {
+        media.removeEventListener("change", updateMode);
+      } else {
+        (media as any).removeListener?.(updateMode);
+      }
+    };
+  }, []);
+
+  const dustParticles = liteMode ? DUST_LITE : DUST;
+  const starParticles = liteMode ? STARS_LITE : STARS;
+  const brightParticles = liteMode ? BRIGHT_LITE : BRIGHT;
+  const nebulaParticles = liteMode ? NEBULA_LITE : NEBULA;
+
   return (
-    <div className="spiral-vault-bg" aria-hidden="true">
+    <div className={`spiral-vault-bg${liteMode ? " spiral-vault-bg--lite" : ""}`} aria-hidden="true">
       <div className="spiral-vault-bg__veil" />
       <div className="spiral-vault-bg__grain" />
 
-      {NEBULA.map((cloud, idx) => (
+      {nebulaParticles.map((cloud, idx) => (
         <span
           key={`sv-nebula-${idx}`}
           className="spiral-vault-nebula-drift"
@@ -222,7 +270,7 @@ export function SpiralVaultBackground() {
         />
       ))}
 
-      {DUST.map((point, idx) => (
+      {dustParticles.map((point, idx) => (
         <span
           key={`sv-dust-${idx}`}
           className="spiral-vault-dust"
@@ -242,7 +290,7 @@ export function SpiralVaultBackground() {
         />
       ))}
 
-      {STARS.map((point, idx) => (
+      {starParticles.map((point, idx) => (
         <span
           key={`sv-star-${idx}`}
           className={`spiral-vault-star${point.hasCross ? " spiral-vault-crossed" : ""}`}
@@ -264,7 +312,7 @@ export function SpiralVaultBackground() {
         />
       ))}
 
-      {BRIGHT.map((point, idx) => (
+      {brightParticles.map((point, idx) => (
         <span
           key={`sv-bright-${idx}`}
           className={`spiral-vault-bright${point.hasCross ? " spiral-vault-crossed" : ""}`}

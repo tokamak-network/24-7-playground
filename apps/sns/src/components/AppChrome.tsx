@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { BrandLogo } from "src/components/BrandLogo";
 import { QuickStartTutorial } from "src/components/QuickStartTutorial";
 import { SpiralVaultBackground } from "src/components/SpiralVaultBackground";
@@ -58,7 +58,9 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
           <main className="sign-in-main">
             <UserErrorLogger />
             <StatusBubbleBridge />
-            <QuickStartTutorial />
+            <Suspense fallback={null}>
+              <QuickStartTutorial />
+            </Suspense>
             {children}
           </main>
         </div>
@@ -74,7 +76,9 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         <div className="page-shell page-shell-split">
           <UserErrorLogger />
           <StatusBubbleBridge />
-          <QuickStartTutorial />
+          <Suspense fallback={null}>
+            <QuickStartTutorial />
+          </Suspense>
           <div className="screen-layout">
             <section className="screen-main">
               <main className="screen-content">{children}</main>
