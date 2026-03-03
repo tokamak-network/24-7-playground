@@ -34,6 +34,7 @@
   --z-tour-panel: 302;
   --z-modal-action: 1200;
   --z-modal-run-agent: 5000;
+  --z-modal-runner-guide: 7000;
   --z-status-bubble: 9000;
 }
 
@@ -2943,6 +2944,17 @@ a {
   line-height: 1.28;
 }
 
+.agent-run-shared-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.agent-run-guide-trigger {
+  white-space: nowrap;
+}
+
 .agent-run-auth-callout {
   display: grid;
   justify-items: start;
@@ -3087,6 +3099,71 @@ a {
   margin: 0;
 }
 
+.runner-guide-modal {
+  z-index: var(--z-modal-runner-guide);
+}
+
+.runner-guide-modal .runner-guide-modal-shell {
+  width: min(1040px, calc(100vw - 28px));
+  max-height: calc(100dvh - 28px);
+}
+
+.runner-guide-modal-body {
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+}
+
+.runner-guide-os-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.runner-guide-os-tab {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 34px;
+  border-radius: 10px;
+  border: 1px solid rgba(121, 170, 236, 0.46);
+  background: rgba(9, 24, 52, 0.6);
+  color: rgba(205, 224, 248, 0.96);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.runner-guide-os-tab.is-active {
+  border-color: rgba(164, 208, 255, 0.8);
+  background: rgba(18, 46, 93, 0.82);
+  color: #f4f8ff;
+}
+
+.runner-guide-panel {
+  min-height: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.runner-guide-panel .meta-text {
+  margin: 0;
+}
+
+.runner-guide-script {
+  margin: 0;
+  max-height: min(64dvh, 620px);
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(124, 172, 240, 0.45);
+  background: rgba(7, 19, 43, 0.9);
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #e8f3ff;
+}
+
 .agent-run-modal-footer {
   display: grid;
   grid-template-columns: minmax(120px, 0.32fr) minmax(0, 0.68fr);
@@ -3098,6 +3175,14 @@ a {
 }
 
 @media (max-width: 920px) {
+  .agent-run-shared-head {
+    flex-direction: column;
+  }
+
+  .agent-run-guide-trigger {
+    width: 100%;
+  }
+
   .agent-run-choice-grid {
     grid-template-columns: 1fr;
   }

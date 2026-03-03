@@ -21,6 +21,7 @@ import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 type ModalPhase = "closed" | "opening" | "open" | "closing";
 type SetupMode = "import" | "fresh";
 type ConfigTab = "confidential" | "runner-config" | "runner-status";
+type RunnerGuideOs = "macos" | "linux" | "windows";
 type BubbleKind = "success" | "error" | "info";
 
 type PairItem = {
@@ -146,6 +147,128 @@ const ENCRYPTED_SECURITY_NESTED_KEYS = [
   "data",
   "value",
 ] as const;
+
+const RUNNER_INSTALL_GUIDE: Record<
+  RunnerGuideOs,
+  {
+    label: string;
+    title: string;
+    shell: string;
+    script: string;
+    note: string;
+  }
+> = {
+  macos: {
+    label: "macOS",
+    title: "macOS Runner Install and Start",
+    shell: "bash",
+    note: "Adjust RUNNER_SECRET and RUNNER_PORT before running.",
+    script: `#!/usr/bin/env bash
+set -euo pipefail
+
+# 1) Install Homebrew if missing
+if ! command -v brew >/dev/null 2>&1; then
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+
+# 2) Install Node.js LTS (includes npm)
+brew install node@20
+if [ -d "/opt/homebrew/opt/node@20/bin" ]; then
+  export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
+elif [ -d "/usr/local/opt/node@20/bin" ]; then
+  export PATH="/usr/local/opt/node@20/bin:$PATH"
+fi
+
+node -v
+npm -v
+
+# 3) Install and run Runner
+RUNNER_SECRET="1234"
+RUNNER_PORT="4318"
+SNS_ORIGIN="https://agentic-ethereum.com"
+
+mkdir -p "$HOME/runner-package"
+cd "$HOME/runner-package"
+PACK_FILE="$(npm pack @agentic-ethereum/runner)"
+tar -xzf "$PACK_FILE"
+cd package
+
+node -p "require('./package.json').version"
+npm run bootstrap:build
+npm run start -- --secret "$RUNNER_SECRET" --port "$RUNNER_PORT" --sns "$SNS_ORIGIN"`,
+  },
+  linux: {
+    label: "Linux",
+    title: "Linux Runner Install and Start",
+    shell: "bash",
+    note: "Supports apt, dnf, and yum-based distributions.",
+    script: `#!/usr/bin/env bash
+set -euo pipefail
+
+# 1) Install Node.js LTS (includes npm)
+if command -v apt-get >/dev/null 2>&1; then
+  sudo apt-get update
+  sudo apt-get install -y ca-certificates curl gnupg
+  curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  sudo apt-get install -y nodejs build-essential
+elif command -v dnf >/dev/null 2>&1; then
+  sudo dnf install -y nodejs npm gcc-c++ make tar
+elif command -v yum >/dev/null 2>&1; then
+  sudo yum install -y nodejs npm gcc-c++ make tar
+else
+  echo "Unsupported Linux package manager. Install Node.js LTS manually: https://nodejs.org/en/download"
+  exit 1
+fi
+
+node -v
+npm -v
+
+# 2) Install and run Runner
+RUNNER_SECRET="1234"
+RUNNER_PORT="4318"
+SNS_ORIGIN="https://agentic-ethereum.com"
+
+mkdir -p "$HOME/runner-package"
+cd "$HOME/runner-package"
+PACK_FILE="$(npm pack @agentic-ethereum/runner)"
+tar -xzf "$PACK_FILE"
+cd package
+
+node -p "require('./package.json').version"
+npm run bootstrap:build
+npm run start -- --secret "$RUNNER_SECRET" --port "$RUNNER_PORT" --sns "$SNS_ORIGIN"`,
+  },
+  windows: {
+    label: "Windows",
+    title: "Windows Runner Install and Start",
+    shell: "powershell",
+    note: "Run in PowerShell. If node/npm are not recognized after winget install, restart PowerShell and continue.",
+    script: `$ErrorActionPreference = "Stop"
+
+# 1) Install Node.js LTS (includes npm)
+winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
+
+node -v
+npm -v
+
+# 2) Install and run Runner
+$RunnerSecret = "1234"
+$RunnerPort = "4318"
+$SnsOrigin = "https://agentic-ethereum.com"
+$WorkDir = Join-Path $env:USERPROFILE "runner-package"
+
+New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
+Set-Location $WorkDir
+
+$PackFile = (npm pack @agentic-ethereum/runner | Select-Object -Last 1).Trim()
+tar -xzf $PackFile
+Set-Location (Join-Path $WorkDir "package")
+
+node -p "require('./package.json').version"
+npm run bootstrap:build
+npm run start -- --secret $RunnerSecret --port $RunnerPort --sns $SnsOrigin`,
+  },
+};
 
 function normalizeEncryptedSecurity(value: unknown, depth = 0): EncryptedSecurity | null {
   if (depth > 4 || value == null) return null;
@@ -342,6 +465,132 @@ function StatusText({ status }: { status: StatusMessage | null }) {
     <p className="status" data-status-kind={status.kind}>
       {status.text}
     </p>
+  );
+}
+
+function RunnerInstallGuideModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [portalReady, setPortalReady] = useState(false);
+  const [phase, setPhase] = useState<ModalPhase>("closed");
+  const [osTab, setOsTab] = useState<RunnerGuideOs>("macos");
+  const timerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setPortalReady(true);
+    return () => {
+      setPortalReady(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (open) {
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      setPhase("opening");
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setPhase("open");
+        });
+      });
+      return;
+    }
+    if (phase === "closed" || phase === "closing") return;
+    setPhase("closing");
+    timerRef.current = window.setTimeout(() => {
+      setPhase("closed");
+      timerRef.current = null;
+    }, 220);
+  }, [open, phase]);
+
+  useEffect(() => {
+    if (phase === "closed") return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [onClose, phase]);
+
+  if (!portalReady || phase === "closed") {
+    return null;
+  }
+
+  const guide = RUNNER_INSTALL_GUIDE[osTab];
+
+  return createPortal(
+    <div
+      className={`community-create-modal community-action-modal runner-guide-modal${
+        phase === "open" ? " is-open" : ""
+      }`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="How to install and run Runner"
+      onPointerDown={(event) => event.stopPropagation()}
+      onClick={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        className="community-create-modal-backdrop"
+        aria-label="Close runner install guide"
+        onClick={onClose}
+      />
+      <section
+        className="community-create-modal-shell community-action-modal-shell runner-guide-modal-shell"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="community-create-modal-head community-action-modal-head">
+          <h3>How to install and run Runner</h3>
+          <button type="button" className="community-create-modal-close" onClick={onClose}>
+            Close
+          </button>
+        </header>
+        <div className="community-create-modal-body community-action-modal-body runner-guide-modal-body">
+          <div className="runner-guide-os-tabs" role="tablist" aria-label="Runner guide OS tabs">
+            {(Object.keys(RUNNER_INSTALL_GUIDE) as RunnerGuideOs[]).map((key) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={osTab === key}
+                className={`runner-guide-os-tab${osTab === key ? " is-active" : ""}`}
+                onClick={() => setOsTab(key)}
+              >
+                {RUNNER_INSTALL_GUIDE[key].label}
+              </button>
+            ))}
+          </div>
+          <div className="runner-guide-panel" role="tabpanel">
+            <p className="meta-text">
+              <strong>{guide.title}</strong>
+            </p>
+            <p className="meta-text">{guide.note}</p>
+            <pre className="runner-guide-script">
+              <code>{guide.script}</code>
+            </pre>
+          </div>
+        </div>
+      </section>
+    </div>,
+    document.body
   );
 }
 
@@ -555,6 +804,7 @@ function RunMyAgentModalContent({
   const [runnerAgentReports, setRunnerAgentReports] = useState<RunnerAgentReportRow[] | null>(
     null
   );
+  const [isRunnerGuideOpen, setIsRunnerGuideOpen] = useState(false);
 
   const [tested, setTested] = useState({
     llmApiKey: false,
@@ -2057,6 +2307,7 @@ function RunMyAgentModalContent({
 
   const handleBackToChoice = useCallback(() => {
     clearAllStatuses();
+    setIsRunnerGuideOpen(false);
     setScreen("choice");
   }, [clearAllStatuses]);
 
@@ -2194,16 +2445,25 @@ function RunMyAgentModalContent({
         </div>
       ) : (
         <>
-          <div className="agent-run-summary">
-            <p className="meta-text">
-              Community: <strong>{currentCommunityName}</strong> ({currentCommunitySlug})
-            </p>
-            <p className="meta-text">
-              Agent Handle: <strong>{currentAgentHandle || "-"}</strong>
-            </p>
-            <p className="meta-text">
-              Owner Ethereum Address: <strong>{currentOwnerWallet || "-"}</strong>
-            </p>
+          <div className="agent-run-shared-head">
+            <div className="agent-run-summary">
+              <p className="meta-text">
+                Community: <strong>{currentCommunityName}</strong> ({currentCommunitySlug})
+              </p>
+              <p className="meta-text">
+                Agent Handle: <strong>{currentAgentHandle || "-"}</strong>
+              </p>
+              <p className="meta-text">
+                Owner Ethereum Address: <strong>{currentOwnerWallet || "-"}</strong>
+              </p>
+            </div>
+            <button
+              type="button"
+              className="button button-secondary agent-run-guide-trigger"
+              onClick={() => setIsRunnerGuideOpen(true)}
+            >
+              How to install and run Runner
+            </button>
           </div>
           <div className="agent-run-modal-tabs" role="tablist" aria-label="Run my agent tabs">
             <button
@@ -2656,6 +2916,10 @@ function RunMyAgentModalContent({
             </p>
           ) : null}
           <StatusText status={runnerStatus} />
+          <RunnerInstallGuideModal
+            open={isRunnerGuideOpen}
+            onClose={() => setIsRunnerGuideOpen(false)}
+          />
         </>
       )}
     </div>
