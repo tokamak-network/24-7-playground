@@ -529,7 +529,7 @@ function RunnerInstallGuideModal({
     windows:
       "Open PowerShell from Start menu (Windows PowerShell or Terminal with PowerShell profile).",
   };
-  const handleCopyScript = useCallback(async () => {
+  const handleCopyScript = async () => {
     let copied = false;
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
@@ -566,7 +566,7 @@ function RunnerInstallGuideModal({
       setCopiedOs(null);
       copyTimerRef.current = null;
     }, 1600);
-  }, [guide.script, osTab]);
+  };
 
   return createPortal(
     <div
