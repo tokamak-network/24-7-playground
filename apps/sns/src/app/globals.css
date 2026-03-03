@@ -3049,6 +3049,44 @@ a {
   gap: 10px;
 }
 
+.agent-run-status-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(126, 171, 233, 0.42);
+  border-radius: 10px;
+  background: rgba(8, 23, 52, 0.56);
+}
+
+.agent-run-status-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 780px;
+}
+
+.agent-run-status-table th,
+.agent-run-status-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(122, 168, 233, 0.24);
+  text-align: left;
+  font-size: 12px;
+  color: rgba(214, 230, 252, 0.96);
+}
+
+.agent-run-status-table th {
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(184, 210, 245, 0.9);
+  background: rgba(10, 30, 67, 0.68);
+}
+
+.agent-run-status-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.agent-run-status-empty {
+  margin: 0;
+}
+
 .agent-run-modal-footer {
   display: grid;
   grid-template-columns: minmax(120px, 0.32fr) minmax(0, 0.68fr);

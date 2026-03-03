@@ -570,11 +570,17 @@ class RunnerEngine {
       lastActionCount: 0,
       lastLlmOutput: null,
       llmUsageCumulative: createEmptyLlmUsageCumulative(),
+      agentHandle: "",
+      activeCommunityName: "",
+      activeCommunitySlug: "",
+      cumulativeThreadCreateCount: 0,
+      cumulativeWrittenCommunityCount: 0,
     };
     this.logAgentId = "";
     this.logAgentHandle = "";
     this.runnerInbox = [];
     this.contractSourceCache = new Map();
+    this.writtenCommunitySlugs = new Set();
   }
 
   #clearRuntimeCaches() {
@@ -626,8 +632,16 @@ class RunnerEngine {
   }
 
   getStatus() {
+    const startedAtMs = this.state.startedAt
+      ? Date.parse(this.state.startedAt)
+      : NaN;
+    const elapsedRunningMs =
+      this.state.running && Number.isFinite(startedAtMs)
+        ? Math.max(0, Date.now() - startedAtMs)
+        : 0;
     return {
       ...this.state,
+      elapsedRunningMs,
       config: redactConfig(this.config),
     };
   }
@@ -647,6 +661,12 @@ class RunnerEngine {
     this.state.startedAt = new Date().toISOString();
     this.state.lastError = null;
     this.state.llmUsageCumulative = createEmptyLlmUsageCumulative();
+    this.state.agentHandle = "";
+    this.state.activeCommunityName = "";
+    this.state.activeCommunitySlug = "";
+    this.state.cumulativeThreadCreateCount = 0;
+    this.state.cumulativeWrittenCommunityCount = 0;
+    this.writtenCommunitySlugs.clear();
     logSummary(
       this.logger,
       `runner started (${formatAgentSummaryTag(this.config.agentId, this.logAgentHandle)}, intervalSec=${this.config.runtime.intervalSec}, commentLimit=${this.config.runtime.commentLimit}, maxTokens=${this.config.runtime.maxTokens || "unlimited"})`
@@ -708,12 +728,19 @@ class RunnerEngine {
           ? generalData.agent
           : null;
       this.logAgentHandle = generalAgent ? String(generalAgent.handle || "").trim() : "";
+      this.state.agentHandle = this.logAgentHandle;
       const generalCommunity =
         generalData &&
         generalData.community &&
         typeof generalData.community === "object"
           ? generalData.community
           : null;
+      this.state.activeCommunityName = generalCommunity
+        ? String(generalCommunity.name || "").trim()
+        : "";
+      this.state.activeCommunitySlug = generalCommunity
+        ? String(generalCommunity.slug || "").trim()
+        : "";
       trace(this.logger, "cycle:general-data", {
         generalData,
         generalAgent,
@@ -1009,6 +1036,12 @@ class RunnerEngine {
               `action create_thread failed (community=${community.slug}, reason=${createThreadError})`
             );
           } else {
+            const communitySlug = String(community && community.slug).trim();
+            if (communitySlug) {
+              this.writtenCommunitySlugs.add(communitySlug);
+              this.state.cumulativeWrittenCommunityCount = this.writtenCommunitySlugs.size;
+            }
+            this.state.cumulativeThreadCreateCount += 1;
             const createdThreadId =
               threadResponse &&
               threadResponse.thread &&
@@ -1093,6 +1126,11 @@ class RunnerEngine {
             this.logger,
             `action comment completed (community=${community.slug}, threadId=${threadId})`
           );
+          const commentCommunitySlug = String(community && community.slug).trim();
+          if (commentCommunitySlug) {
+            this.writtenCommunitySlugs.add(commentCommunitySlug);
+            this.state.cumulativeWrittenCommunityCount = this.writtenCommunitySlugs.size;
+          }
           executionResults.push({
             action: "comment",
             community: community.slug,

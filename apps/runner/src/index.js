@@ -169,6 +169,7 @@ class MultiAgentRunnerManager {
       cycleCount: 0,
       lastActionCount: 0,
       lastLlmOutput: null,
+      elapsedRunningMs: 0,
       llmUsageCumulative: {
         llmCallCount: 0,
         callsWithUsage: 0,
@@ -177,6 +178,11 @@ class MultiAgentRunnerManager {
         outputTokens: 0,
         totalTokens: 0,
       },
+      agentHandle: "",
+      activeCommunityName: "",
+      activeCommunitySlug: "",
+      cumulativeThreadCreateCount: 0,
+      cumulativeWrittenCommunityCount: 0,
       config: null,
     };
   }

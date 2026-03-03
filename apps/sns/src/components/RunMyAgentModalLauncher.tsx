@@ -84,6 +84,17 @@ type RunnerStatusSnapshot = {
   statusAgentId: string;
   runningAgentIds: string[];
   runningAgentCount: number;
+  agentReports: RunnerAgentReportRow[];
+};
+
+type RunnerAgentReportRow = {
+  agentId: string;
+  agentName: string;
+  communityName: string;
+  cumulativeWorkMs: number;
+  cumulativeTokens: number;
+  cumulativeThreadCount: number;
+  cumulativeCommunityCount: number;
 };
 
 type SupplementaryPromptProfile =
@@ -123,6 +134,8 @@ const SUPPLEMENTARY_PROMPT_PROFILE_OPTIONS: Array<{
 
 const DEFAULT_RUNNER_LAUNCHER_PORT = "4318";
 const DEFAULT_RUNNER_LAUNCHER_SECRET = "";
+const DEFAULT_RUNNER_INTERVAL_SEC = "600";
+const DEFAULT_RUNNER_COMMENT_CONTEXT_LIMIT = "100";
 const RUNNER_PORT_SCAN_RANGE = [4318, 4319, 4320, 4321, 4322, 4323, 4324];
 const LEGACY_AGENT_SIGNIN_MESSAGE_PREFIX = "24-7-playground";
 const ENCRYPTED_SECURITY_NESTED_KEYS = [
@@ -303,6 +316,23 @@ function readStatusError(responseText: string) {
     // keep raw text
   }
   return responseText;
+}
+
+function toNonNegativeInteger(value: unknown, fallback = 0) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return fallback;
+  return Math.floor(parsed);
+}
+
+function formatDurationMs(value: number) {
+  const totalSec = Math.max(0, Math.floor(Number(value) / 1000));
+  const hours = Math.floor(totalSec / 3600);
+  const minutes = Math.floor((totalSec % 3600) / 60);
+  const seconds = totalSec % 60;
+  if (hours > 0) {
+    return `${hours}h ${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
+  }
+  return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 }
 
 function StatusText({ status }: { status: StatusMessage | null }) {
@@ -508,8 +538,8 @@ function RunMyAgentModalContent({
   const [showGithubIssueToken, setShowGithubIssueToken] = useState(false);
 
   const [runnerDraft, setRunnerDraft] = useState<RunnerDraft>({
-    intervalSec: "",
-    commentContextLimit: "",
+    intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
+    commentContextLimit: DEFAULT_RUNNER_COMMENT_CONTEXT_LIMIT,
     maxTokens: "",
     supplementaryPromptProfile: "",
   });
@@ -521,6 +551,9 @@ function RunMyAgentModalContent({
   const [startRunnerBusy, setStartRunnerBusy] = useState(false);
   const [stopRunnerBusy, setStopRunnerBusy] = useState(false);
   const [runnerRunning, setRunnerRunning] = useState(false);
+  const [runnerAgentReports, setRunnerAgentReports] = useState<RunnerAgentReportRow[] | null>(
+    null
+  );
 
   const [tested, setTested] = useState({
     llmApiKey: false,
@@ -695,8 +728,8 @@ function RunMyAgentModalContent({
   const loadRunnerConfig = useCallback(() => {
     if (!agentId || typeof window === "undefined") {
       setRunnerDraft({
-        intervalSec: "",
-        commentContextLimit: "",
+        intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
+        commentContextLimit: DEFAULT_RUNNER_COMMENT_CONTEXT_LIMIT,
         maxTokens: "",
         supplementaryPromptProfile: "",
       });
@@ -710,8 +743,8 @@ function RunMyAgentModalContent({
       const raw = window.localStorage.getItem(runnerStorageKey(agentId));
       if (!raw) {
         setRunnerDraft({
-          intervalSec: "",
-          commentContextLimit: "",
+          intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
+          commentContextLimit: DEFAULT_RUNNER_COMMENT_CONTEXT_LIMIT,
           maxTokens: "",
           supplementaryPromptProfile: "",
         });
@@ -726,8 +759,14 @@ function RunMyAgentModalContent({
         runnerLauncherSecret?: string;
       };
       setRunnerDraft({
-        intervalSec: String(parsed.intervalSec || ""),
-        commentContextLimit: String(parsed.commentContextLimit || ""),
+        intervalSec: normalizePositiveInteger(
+          String(parsed.intervalSec || ""),
+          DEFAULT_RUNNER_INTERVAL_SEC
+        ),
+        commentContextLimit: normalizeNonNegativeInteger(
+          String(parsed.commentContextLimit || ""),
+          DEFAULT_RUNNER_COMMENT_CONTEXT_LIMIT
+        ),
         maxTokens: String(parsed.maxTokens || ""),
         supplementaryPromptProfile: normalizeSupplementaryPromptProfile(
           String(parsed.supplementaryPromptProfile || ""),
@@ -739,8 +778,8 @@ function RunMyAgentModalContent({
       setRunnerStatus({ kind: "info", text: "Runner settings loaded from local cache." });
     } catch {
       setRunnerDraft({
-        intervalSec: "",
-        commentContextLimit: "",
+        intervalSec: DEFAULT_RUNNER_INTERVAL_SEC,
+        commentContextLimit: DEFAULT_RUNNER_COMMENT_CONTEXT_LIMIT,
         maxTokens: "",
         supplementaryPromptProfile: "",
       });
@@ -754,10 +793,13 @@ function RunMyAgentModalContent({
     if (!agentId || typeof window === "undefined") return;
 
     const nextDraft = {
-      intervalSec: normalizePositiveInteger(runnerDraft.intervalSec, "60"),
+      intervalSec: normalizePositiveInteger(
+        runnerDraft.intervalSec,
+        DEFAULT_RUNNER_INTERVAL_SEC
+      ),
       commentContextLimit: normalizeNonNegativeInteger(
         runnerDraft.commentContextLimit,
-        "50"
+        DEFAULT_RUNNER_COMMENT_CONTEXT_LIMIT
       ),
       maxTokens: normalizePositiveInteger(runnerDraft.maxTokens, ""),
       supplementaryPromptProfile: normalizeSupplementaryPromptProfile(
@@ -1335,6 +1377,7 @@ function RunMyAgentModalContent({
     async (options?: {
       preferredPort?: string;
       silent?: boolean;
+      includeAgentReport?: boolean;
     }): Promise<RunnerStatusSnapshot | null> => {
       const launcherPort = String(options?.preferredPort || runnerLauncherPort).trim();
       const launcherSecret = runnerLauncherSecret.trim();
@@ -1386,8 +1429,54 @@ function RunMyAgentModalContent({
         const runningAgentCount = Number.isFinite(Number(status.agentCount))
           ? Number(status.agentCount)
           : runningAgentIds.length;
+        const agentReports = Array.isArray(status.agents)
+          ? status.agents
+              .map((rawAgent) => {
+                const entry =
+                  rawAgent && typeof rawAgent === "object"
+                    ? (rawAgent as Record<string, unknown>)
+                    : null;
+                if (!entry) return null;
+                const rowAgentId = String(entry.agentId || "").trim();
+                if (!rowAgentId) return null;
+                const usage =
+                  entry.llmUsageCumulative && typeof entry.llmUsageCumulative === "object"
+                    ? (entry.llmUsageCumulative as Record<string, unknown>)
+                    : null;
+                const startedAtMs = Date.parse(String(entry.startedAt || ""));
+                const inferredElapsedMs = Number.isFinite(startedAtMs)
+                  ? Math.max(0, Date.now() - startedAtMs)
+                  : 0;
+                const elapsedRunningMs = toNonNegativeInteger(
+                  entry.elapsedRunningMs,
+                  inferredElapsedMs
+                );
+                return {
+                  agentId: rowAgentId,
+                  agentName: String(entry.agentHandle || "").trim() || rowAgentId,
+                  communityName:
+                    String(entry.activeCommunityName || "").trim() ||
+                    String(entry.activeCommunitySlug || "").trim() ||
+                    "-",
+                  cumulativeWorkMs: elapsedRunningMs,
+                  cumulativeTokens: toNonNegativeInteger(usage?.totalTokens, 0),
+                  cumulativeThreadCount: toNonNegativeInteger(
+                    entry.cumulativeThreadCreateCount,
+                    0
+                  ),
+                  cumulativeCommunityCount: toNonNegativeInteger(
+                    entry.cumulativeWrittenCommunityCount,
+                    0
+                  ),
+                } satisfies RunnerAgentReportRow;
+              })
+              .filter((entry): entry is RunnerAgentReportRow => Boolean(entry))
+          : [];
 
         setRunnerRunning(runningForSelectedAgent);
+        if (options?.includeAgentReport) {
+          setRunnerAgentReports(agentReports);
+        }
         if (!options?.silent) {
           if (runningForSelectedAgent) {
             setRunnerStatus({
@@ -1415,9 +1504,13 @@ function RunMyAgentModalContent({
           statusAgentId: String(status.selectedAgentId || "").trim(),
           runningAgentIds,
           runningAgentCount,
+          agentReports,
         };
       } catch {
         setRunnerRunning(false);
+        if (options?.includeAgentReport) {
+          setRunnerAgentReports(null);
+        }
         if (!options?.silent) {
           setRunnerStatus({
             kind: "error",
@@ -1539,6 +1632,10 @@ function RunMyAgentModalContent({
     }
   }, [agentId, fetchLocalLauncher, readError, runnerLauncherPort, runnerLauncherSecret]);
 
+  const handleCheckRunnerStatus = useCallback(async () => {
+    await fetchRunnerStatus({ includeAgentReport: true });
+  }, [fetchRunnerStatus]);
+
   const startRunnerLauncher = useCallback(async () => {
     if (!token || !authHeaders) {
       setRunnerStatus({ kind: "error", text: "Sign in first." });
@@ -1555,10 +1652,13 @@ function RunMyAgentModalContent({
       return;
     }
 
-    const normalizedInterval = normalizePositiveInteger(runnerDraft.intervalSec, "60");
+    const normalizedInterval = normalizePositiveInteger(
+      runnerDraft.intervalSec,
+      DEFAULT_RUNNER_INTERVAL_SEC
+    );
     const normalizedLimit = normalizeNonNegativeInteger(
       runnerDraft.commentContextLimit,
-      "50"
+      DEFAULT_RUNNER_COMMENT_CONTEXT_LIMIT
     );
     const normalizedMaxTokens = normalizePositiveInteger(runnerDraft.maxTokens, "");
     const normalizedSupplementaryPromptProfile = normalizeSupplementaryPromptProfile(
@@ -2457,12 +2557,44 @@ function RunMyAgentModalContent({
                   <button
                     type="button"
                     className="button button-secondary"
-                    onClick={() => void fetchRunnerStatus()}
+                    onClick={() => void handleCheckRunnerStatus()}
                     disabled={startRunnerBusy || stopRunnerBusy}
                   >
                     Check Runner Status
                   </button>
                 </div>
+                {runnerAgentReports ? (
+                  runnerAgentReports.length ? (
+                    <div className="agent-run-status-table-wrap">
+                      <table className="agent-run-status-table">
+                        <thead>
+                          <tr>
+                            <th>Agent</th>
+                            <th>Community</th>
+                            <th>Cumulative Work Time</th>
+                            <th>Cumulative Token Usage</th>
+                            <th>Cumulative Created Threads</th>
+                            <th>Cumulative Written Communities</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {runnerAgentReports.map((entry) => (
+                            <tr key={entry.agentId}>
+                              <td>{entry.agentName}</td>
+                              <td>{entry.communityName}</td>
+                              <td>{formatDurationMs(entry.cumulativeWorkMs)}</td>
+                              <td>{entry.cumulativeTokens.toLocaleString()}</td>
+                              <td>{entry.cumulativeThreadCount.toLocaleString()}</td>
+                              <td>{entry.cumulativeCommunityCount.toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="meta-text agent-run-status-empty">No agent is working</p>
+                  )
+                ) : null}
                 <StatusText status={runnerStatus} />
               </div>
             ) : null}
