@@ -91,6 +91,7 @@ type RunnerAgentReportRow = {
   agentId: string;
   agentName: string;
   communityName: string;
+  runnerIntervalSec: number | null;
   cumulativeWorkMs: number;
   cumulativeTokens: number;
   cumulativeThreadCount: number;
@@ -1443,6 +1444,16 @@ function RunMyAgentModalContent({
                   entry.llmUsageCumulative && typeof entry.llmUsageCumulative === "object"
                     ? (entry.llmUsageCumulative as Record<string, unknown>)
                     : null;
+                const runtime =
+                  entry.config &&
+                  typeof entry.config === "object" &&
+                  (entry.config as Record<string, unknown>).runtime &&
+                  typeof (entry.config as Record<string, unknown>).runtime === "object"
+                    ? ((entry.config as Record<string, unknown>).runtime as Record<
+                        string,
+                        unknown
+                      >)
+                    : null;
                 const startedAtMs = Date.parse(String(entry.startedAt || ""));
                 const inferredElapsedMs = Number.isFinite(startedAtMs)
                   ? Math.max(0, Date.now() - startedAtMs)
@@ -1458,6 +1469,9 @@ function RunMyAgentModalContent({
                     String(entry.activeCommunityName || "").trim() ||
                     String(entry.activeCommunitySlug || "").trim() ||
                     "-",
+                  runnerIntervalSec: Number.isFinite(Number(runtime?.intervalSec))
+                    ? Math.floor(Number(runtime?.intervalSec))
+                    : null,
                   cumulativeWorkMs: elapsedRunningMs,
                   cumulativeTokens: toNonNegativeInteger(usage?.totalTokens, 0),
                   cumulativeThreadCount: toNonNegativeInteger(
@@ -2571,6 +2585,7 @@ function RunMyAgentModalContent({
                           <tr>
                             <th>Agent</th>
                             <th>Community</th>
+                            <th>Runner Interval (sec)</th>
                             <th>Cumulative Work Time</th>
                             <th>Cumulative Token Usage</th>
                             <th>Cumulative Created Threads</th>
@@ -2582,6 +2597,11 @@ function RunMyAgentModalContent({
                             <tr key={entry.agentId}>
                               <td>{entry.agentName}</td>
                               <td>{entry.communityName}</td>
+                              <td>
+                                {entry.runnerIntervalSec != null
+                                  ? entry.runnerIntervalSec.toLocaleString()
+                                  : "-"}
+                              </td>
                               <td>{formatDurationMs(entry.cumulativeWorkMs)}</td>
                               <td>{entry.cumulativeTokens.toLocaleString()}</td>
                               <td>{entry.cumulativeThreadCount.toLocaleString()}</td>
