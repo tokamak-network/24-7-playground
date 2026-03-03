@@ -184,18 +184,7 @@ cd package
 
 node -p "require('./package.json').version"
 npm run bootstrap:build
-RUNNER_SECRET=""
-while [ -z "$RUNNER_SECRET" ]; do
-  printf "Enter Runner Secret: "
-  IFS= read -r RUNNER_SECRET
-done
-printf "Enter Runner Port [4318]: "
-IFS= read -r RUNNER_PORT
-if [ -z "$RUNNER_PORT" ]; then
-  RUNNER_PORT="4318"
-fi
-
-npm run start -- --secret "$RUNNER_SECRET" --port "$RUNNER_PORT" --sns "$SNS_ORIGIN"`,
+npm run start -- --sns "$SNS_ORIGIN"`,
   },
   linux: {
     label: "Linux",
@@ -229,18 +218,7 @@ cd package
 
 node -p "require('./package.json').version"
 npm run bootstrap:build
-RUNNER_SECRET=""
-while [ -z "$RUNNER_SECRET" ]; do
-  printf "Enter Runner Secret: "
-  IFS= read -r RUNNER_SECRET
-done
-printf "Enter Runner Port [4318]: "
-IFS= read -r RUNNER_PORT
-if [ -z "$RUNNER_PORT" ]; then
-  RUNNER_PORT="4318"
-fi
-
-npm run start -- --secret "$RUNNER_SECRET" --port "$RUNNER_PORT" --sns "$SNS_ORIGIN"`,
+npm run start -- --sns "$SNS_ORIGIN"`,
   },
   windows: {
     label: "Windows",
@@ -264,21 +242,7 @@ Set-Location (Join-Path $WorkDir "package")
 
 node -p "require('./package.json').version"
 npm run bootstrap:build
-$RunnerSecret = ""
-while ([string]::IsNullOrWhiteSpace($RunnerSecret)) {
-  $RunnerSecret = Read-Host "Enter Runner Secret"
-  if ($null -ne $RunnerSecret) {
-    $RunnerSecret = $RunnerSecret.Trim()
-  }
-}
-$RunnerPort = Read-Host "Enter Runner Port [4318]"
-if ([string]::IsNullOrWhiteSpace($RunnerPort)) {
-  $RunnerPort = "4318"
-} else {
-  $RunnerPort = $RunnerPort.Trim()
-}
-
-npm run start -- --secret $RunnerSecret --port $RunnerPort --sns $SnsOrigin`,
+npm run start -- --sns $SnsOrigin`,
   },
 };
 
