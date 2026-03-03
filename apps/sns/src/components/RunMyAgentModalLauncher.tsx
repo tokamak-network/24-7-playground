@@ -905,7 +905,7 @@ function RunMyAgentModalContent({
   const saveGeneral = useCallback(async () => {
     if (!token || !agentId || !authHeaders) {
       setGeneralStatus({ kind: "error", text: "Sign in first." });
-      return;
+      return false;
     }
 
     const handle = currentAgentHandle.trim();
@@ -915,11 +915,11 @@ function RunMyAgentModalContent({
 
     if (!handle || !provider || !model) {
       setGeneralStatus({ kind: "error", text: "Handle, provider, and model are required." });
-      return;
+      return false;
     }
     if (provider === "LITELLM" && !baseUrl) {
       setGeneralStatus({ kind: "error", text: "Base URL is required for LiteLLM." });
-      return;
+      return false;
     }
 
     setGeneralBusy(true);
@@ -943,13 +943,15 @@ function RunMyAgentModalContent({
       );
       if (!response.ok) {
         setGeneralStatus({ kind: "error", text: await readError(response) });
-        return;
+        return false;
       }
       const data = (await response.json()) as GeneralPayload;
       setGeneral(data);
       setGeneralStatus({ kind: "success", text: "Public configuration saved." });
+      return true;
     } catch {
       setGeneralStatus({ kind: "error", text: "Failed to save public configuration." });
+      return false;
     } finally {
       setGeneralBusy(false);
     }
@@ -967,7 +969,7 @@ function RunMyAgentModalContent({
   const loadGeneralFromDb = useCallback(async () => {
     if (!token || !agentId || !authHeaders) {
       setGeneralStatus({ kind: "error", text: "Sign in first." });
-      return;
+      return false;
     }
 
     setGeneralBusy(true);
@@ -978,7 +980,7 @@ function RunMyAgentModalContent({
       });
       if (!response.ok) {
         setGeneralStatus({ kind: "error", text: await readError(response) });
-        return;
+        return false;
       }
       const data = (await response.json()) as GeneralPayload;
       setGeneral(data);
@@ -987,8 +989,10 @@ function RunMyAgentModalContent({
       setLlmModel(data?.agent?.llmModel || "");
       setLiteLlmBaseUrl(data?.agent?.llmBaseUrl || "");
       setGeneralStatus({ kind: "success", text: "Public configuration loaded." });
+      return true;
     } catch {
       setGeneralStatus({ kind: "error", text: "Failed to load public configuration." });
+      return false;
     } finally {
       setGeneralBusy(false);
     }
@@ -1143,6 +1147,8 @@ function RunMyAgentModalContent({
       setSecurityStatus({ kind: "error", text: "Sign in first." });
       return false;
     }
+    const generalLoaded = await loadGeneralFromDb();
+    if (!generalLoaded) return false;
 
     setSecurityBusy(true);
     try {
@@ -1167,6 +1173,7 @@ function RunMyAgentModalContent({
     agentId,
     authHeaders,
     decryptEncryptedSecurity,
+    loadGeneralFromDb,
     loadEncryptedSecurity,
     token,
   ]);
@@ -1176,6 +1183,8 @@ function RunMyAgentModalContent({
       setSecurityStatus({ kind: "error", text: "Sign in first." });
       return false;
     }
+    const generalSaved = await saveGeneral();
+    if (!generalSaved) return false;
     const normalizedPassword = password.trim();
     if (!normalizedPassword) {
       setSecurityStatus({ kind: "error", text: "Password is required to encrypt." });
@@ -1222,6 +1231,7 @@ function RunMyAgentModalContent({
     agentId,
     authHeaders,
     readError,
+    saveGeneral,
     securityDraft,
     token,
   ]);
@@ -2160,24 +2170,6 @@ function RunMyAgentModalContent({
                   </div>
                 ) : null}
 
-                <div className="row wrap">
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    onClick={() => void loadGeneralFromDb()}
-                    disabled={generalBusy}
-                  >
-                    {generalBusy ? "Loading..." : "Load from DB"}
-                  </button>
-                  <button
-                    type="button"
-                    className="button"
-                    onClick={() => void saveGeneral()}
-                    disabled={generalBusy}
-                  >
-                    {generalBusy ? "Saving..." : "Save to DB"}
-                  </button>
-                </div>
                 <StatusText status={generalStatus} />
 
                 <div className="field">
@@ -2309,7 +2301,7 @@ function RunMyAgentModalContent({
                     type="button"
                     className="button button-secondary"
                     onClick={() => void handleLoadAndDecryptSecurityFromDb()}
-                    disabled={securityBusy}
+                    disabled={securityBusy || generalBusy}
                   >
                     Load from DB & Decrypt
                   </button>
@@ -2317,7 +2309,7 @@ function RunMyAgentModalContent({
                     type="button"
                     className="button"
                     onClick={() => void handleEncryptAndSaveSecurity()}
-                    disabled={securityBusy}
+                    disabled={securityBusy || generalBusy}
                   >
                     Encrypt & Save to DB
                   </button>
