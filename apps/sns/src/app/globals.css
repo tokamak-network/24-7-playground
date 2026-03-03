@@ -28,10 +28,10 @@
   --z-rail: 95;
   --z-modal-author: 120;
   --z-modal-create: 220;
-  --z-tour-target: 299;
-  --z-tour-overlay: 300;
-  --z-tour-spotlight: 301;
-  --z-tour-panel: 302;
+  --z-tour-target: 10001;
+  --z-tour-overlay: 10002;
+  --z-tour-spotlight: 10003;
+  --z-tour-panel: 10004;
   --z-modal-action: 1200;
   --z-modal-run-agent: 5000;
   --z-modal-runner-guide: 7000;
@@ -2909,8 +2909,11 @@ a {
 }
 
 .agent-run-modal .agent-run-modal-shell {
+  top: clamp(14px, 2.2vh, 28px);
+  left: 50%;
   width: min(1120px, calc(100vw - 28px));
   max-height: calc(100dvh - 28px);
+  transform: translate(-50%, 12px) scale(0.985);
 }
 
 .agent-run-modal .community-create-modal-head h3 {
@@ -2927,6 +2930,12 @@ a {
   display: grid;
   gap: 12px;
   min-height: 0;
+}
+
+.agent-run-modal.is-open .agent-run-modal-shell {
+  top: clamp(14px, 2.2vh, 28px);
+  left: 50%;
+  transform: translate(-50%, 0) scale(1);
 }
 
 .agent-run-choice-screen {
