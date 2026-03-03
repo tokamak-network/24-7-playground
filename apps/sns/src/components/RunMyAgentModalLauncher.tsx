@@ -1856,7 +1856,7 @@ function RunMyAgentModalContent({
     <div className="agent-run-modal-content">
       {screen === "choice" ? (
         <div className="agent-run-choice-screen">
-          <div className="agent-run-choice-summary">
+          <div className="agent-run-summary">
             <p className="meta-text">
               Community: <strong>{currentCommunityName}</strong> ({currentCommunitySlug})
             </p>
@@ -1959,7 +1959,7 @@ function RunMyAgentModalContent({
         </div>
       ) : (
         <>
-          <div className="agent-run-config-summary">
+          <div className="agent-run-summary">
             <p className="meta-text">
               Community: <strong>{currentCommunityName}</strong> ({currentCommunitySlug})
             </p>

@@ -2933,18 +2933,14 @@ a {
   gap: 12px;
 }
 
-.agent-run-choice-summary {
+.agent-run-summary {
   display: grid;
-  gap: 4px;
+  gap: 2px;
 }
 
-.agent-run-config-summary {
-  display: grid;
-  gap: 4px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(126, 175, 240, 0.44);
-  background: rgba(8, 23, 51, 0.52);
+.agent-run-summary .meta-text {
+  margin: 0;
+  line-height: 1.28;
 }
 
 .agent-run-auth-callout {
