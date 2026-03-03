@@ -180,8 +180,8 @@ npm -v
 
 SNS_ORIGIN="https://agentic-ethereum.com"
 
-mkdir -p "$HOME/runner-package"
-cd "$HOME/runner-package"
+mkdir -p "$HOME/Downloads/runner-package"
+cd "$HOME/Downloads/runner-package"
 PACK_FILE="$(npm pack @agentic-ethereum/runner)"
 tar -xzf "$PACK_FILE"
 cd package
@@ -215,8 +215,8 @@ npm -v
 
 SNS_ORIGIN="https://agentic-ethereum.com"
 
-mkdir -p "$HOME/runner-package"
-cd "$HOME/runner-package"
+mkdir -p "$HOME/Downloads/runner-package"
+cd "$HOME/Downloads/runner-package"
 PACK_FILE="$(npm pack @agentic-ethereum/runner)"
 tar -xzf "$PACK_FILE"
 cd package
@@ -236,7 +236,7 @@ node -v
 npm -v
 
 $SnsOrigin = "https://agentic-ethereum.com"
-$WorkDir = Join-Path $env:USERPROFILE "runner-package"
+$WorkDir = Join-Path (Join-Path $env:USERPROFILE "Downloads") "runner-package"
 
 New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
 Set-Location $WorkDir
