@@ -35,6 +35,7 @@ const AGENT_LLM_HELP_URL =
 const AGENT_EXECUTION_KEY_HELP_URL =
   "https://support.metamask.io/configure/accounts/how-to-export-an-accounts-private-key/";
 const AGENT_ALCHEMY_HELP_URL = "https://www.alchemy.com/docs/create-an-api-key";
+const AGENT_RUNNER_PORT_SCAN_RANGE = [4318, 4319, 4320, 4321, 4322, 4323, 4324];
 
 function extractWalletAddress(value: unknown): string {
   if (typeof value === "string") {
@@ -232,8 +233,8 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
       '[data-tour="agent-detect-launcher"]',
       'button[aria-label="Close runner install guide"]',
     ],
-    title: "Step 17: Detect Launcher",
-    body: 'After your local Runner is running, click "Detect Launcher" and select a detected localhost port.',
+    title: "Step 17: Confirm Runner Is Running",
+    body: "Complete Runner installation and keep it running locally. This step polls localhost runner ports and advances automatically when one is detected.",
   },
   {
     path: "/communities",
@@ -318,6 +319,20 @@ function isButtonPassed(selector: string) {
     return false;
   }
   return target.getAttribute("data-tour-passed") === "true";
+}
+
+type LocalLauncherRequestInit = RequestInit & {
+  targetAddressSpace?: string;
+};
+
+function withLocalLauncherRequestOptions(init?: RequestInit): LocalLauncherRequestInit {
+  const nextInit: LocalLauncherRequestInit = {
+    ...(init || {}),
+  };
+  if (typeof window !== "undefined" && window.location.protocol === "https:") {
+    nextInit.targetAddressSpace = "loopback";
+  }
+  return nextInit;
 }
 
 export function QuickStartTutorial() {
@@ -408,7 +423,10 @@ export function QuickStartTutorial() {
     useState(false);
   const [isAgentLauncherSecretReady, setIsAgentLauncherSecretReady] = useState(false);
   const [hasOpenedRunnerInstallGuide, setHasOpenedRunnerInstallGuide] = useState(false);
-  const [isAgentLauncherDetected, setIsAgentLauncherDetected] = useState(false);
+  const [isAgentLauncherDetectedByButton, setIsAgentLauncherDetectedByButton] =
+    useState(false);
+  const [isAgentLauncherDetectedByPolling, setIsAgentLauncherDetectedByPolling] =
+    useState(false);
   const [isRunnerInstallGuideModalOpen, setIsRunnerInstallGuideModalOpen] = useState(false);
 
   const autoAdvanceStepRef = useRef<number | null>(null);
@@ -1212,7 +1230,8 @@ export function QuickStartTutorial() {
       setIsAgentEncryptedSaved(false);
       setIsAgentRunnerConfigTabActive(false);
       setIsAgentLauncherSecretReady(false);
-      setIsAgentLauncherDetected(false);
+      setIsAgentLauncherDetectedByButton(false);
+      setIsAgentLauncherDetectedByPolling(false);
       setIsRunnerInstallGuideModalOpen(false);
       return;
     }
@@ -1279,7 +1298,9 @@ export function QuickStartTutorial() {
       );
 
       setIsAgentEncryptedSaved(isButtonPassed('[data-tour="agent-encrypt-save-db"]'));
-      setIsAgentLauncherDetected(isButtonPassed('[data-tour="agent-detect-launcher"]'));
+      setIsAgentLauncherDetectedByButton(
+        isButtonPassed('[data-tour="agent-detect-launcher"]')
+      );
       setIsRunnerInstallGuideModalOpen(
         Boolean(document.querySelector('[data-tour="agent-runner-install-guide-modal"]'))
       );
@@ -1350,11 +1371,77 @@ export function QuickStartTutorial() {
     }
   }, [isAgentTutorial, stepIndex]);
 
+  useEffect(() => {
+    if (!isAgentTutorial) {
+      setIsAgentLauncherDetectedByPolling(false);
+      return;
+    }
+    if (stepIndex !== 16) {
+      setIsAgentLauncherDetectedByPolling(false);
+      return;
+    }
+
+    let canceled = false;
+    let timerId: number | null = null;
+
+    const probePort = async (port: number) => {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 900);
+      try {
+        const response = await fetch(
+          `http://127.0.0.1:${port}/health`,
+          withLocalLauncherRequestOptions({
+            method: "GET",
+            signal: controller.signal,
+          }) as RequestInit
+        );
+        if (!response.ok) {
+          return false;
+        }
+        const data = await response.json().catch(() => ({}));
+        return Boolean(data?.ok);
+      } catch {
+        return false;
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
+    };
+
+    const scanRunnerPorts = async () => {
+      const probeResults = await Promise.all(
+        AGENT_RUNNER_PORT_SCAN_RANGE.map((port) => probePort(port))
+      );
+      if (canceled) {
+        return;
+      }
+      setIsAgentLauncherDetectedByPolling(probeResults.some(Boolean));
+    };
+
+    void scanRunnerPorts();
+    const handleFocus = () => {
+      void scanRunnerPorts();
+    };
+    window.addEventListener("focus", handleFocus);
+    timerId = window.setInterval(() => {
+      void scanRunnerPorts();
+    }, 1400);
+
+    return () => {
+      canceled = true;
+      window.removeEventListener("focus", handleFocus);
+      if (timerId !== null) {
+        window.clearInterval(timerId);
+      }
+    };
+  }, [isAgentTutorial, stepIndex]);
+
   const isLastStep = stepIndex >= steps.length - 1;
   const isHighlightInteractionDisabled = isDappTutorial && stepIndex >= 6;
   const isAgentLocalNetworkAccessReady =
     isAgentLocalNetworkAccessAllowed ||
     (!isLocalNetworkPermissionApiAvailable && hasOpenedLocalNetworkAccessHelp);
+  const isAgentLauncherDetected =
+    isAgentLauncherDetectedByButton || isAgentLauncherDetectedByPolling;
 
   const dappCanAdvance =
     (! (stepIndex === 0) || isWalletConnected) &&
