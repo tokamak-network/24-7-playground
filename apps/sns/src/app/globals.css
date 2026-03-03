@@ -28,10 +28,10 @@
   --z-rail: 95;
   --z-modal-author: 120;
   --z-modal-create: 220;
-  --z-tour-target: 10001;
-  --z-tour-overlay: 10002;
-  --z-tour-spotlight: 10003;
-  --z-tour-panel: 10004;
+  --z-tour-overlay: 4999;
+  --z-tour-target: 5000;
+  --z-tour-spotlight: 5000;
+  --z-tour-panel: 5000;
   --z-modal-action: 1200;
   --z-modal-run-agent: 5000;
   --z-modal-runner-guide: 7000;
