@@ -572,6 +572,7 @@ function RunnerInstallGuideModal({
       shellClassName="community-action-modal-shell runner-guide-modal-shell"
       headClassName="community-action-modal-head"
       bodyClassName="community-action-modal-body runner-guide-modal-body"
+      dataTour="agent-runner-install-guide-modal"
     >
       <div className="runner-guide-os-tabs" role="tablist" aria-label="Runner guide OS tabs">
         {(Object.keys(RUNNER_INSTALL_GUIDE) as RunnerGuideOs[]).map((key) => (
@@ -580,6 +581,7 @@ function RunnerInstallGuideModal({
             type="button"
             role="tab"
             aria-selected={osTab === key}
+            data-tour="agent-runner-guide-os-tab"
             className={`runner-guide-os-tab${osTab === key ? " is-active" : ""}`}
             onClick={() => setOsTab(key)}
           >
@@ -615,6 +617,7 @@ function RunnerInstallGuideModal({
           <button
             type="button"
             className="runner-guide-copy-button"
+            data-tour="agent-runner-guide-copy"
             onClick={handleCopyScript}
             aria-label={
               copiedOs === osTab

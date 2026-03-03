@@ -15,6 +15,7 @@ type TutorialStep = {
   selector: string;
   allowedSelectors?: string[];
   blockedSelectors?: string[];
+  disableSpotlight?: boolean;
   title: string;
   body: string;
 };
@@ -207,6 +208,12 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   {
     path: "/communities",
     selector: '[data-tour="agent-runner-install-guide-trigger"]',
+    allowedSelectors: [
+      '[data-tour="agent-runner-install-guide-trigger"]',
+      '[data-tour="agent-runner-guide-os-tab"]',
+      '[data-tour="agent-runner-guide-copy"]',
+    ],
+    disableSpotlight: true,
     title: "Step 15: Install and Run Runner",
     body: 'Click "How to install and run Runner", follow the guide, and start your local Runner process first.',
   },
@@ -382,6 +389,7 @@ export function QuickStartTutorial() {
   const [isAgentLauncherSecretReady, setIsAgentLauncherSecretReady] = useState(false);
   const [hasOpenedRunnerInstallGuide, setHasOpenedRunnerInstallGuide] = useState(false);
   const [isAgentLauncherDetected, setIsAgentLauncherDetected] = useState(false);
+  const [isRunnerInstallGuideModalOpen, setIsRunnerInstallGuideModalOpen] = useState(false);
 
   const autoAdvanceStepRef = useRef<number | null>(null);
   const previousNextDisabledRef = useRef<boolean | null>(null);
@@ -1075,6 +1083,7 @@ export function QuickStartTutorial() {
       setIsAgentRunnerConfigTabActive(false);
       setIsAgentLauncherSecretReady(false);
       setIsAgentLauncherDetected(false);
+      setIsRunnerInstallGuideModalOpen(false);
       return;
     }
 
@@ -1141,6 +1150,9 @@ export function QuickStartTutorial() {
 
       setIsAgentEncryptedSaved(isButtonPassed('[data-tour="agent-encrypt-save-db"]'));
       setIsAgentLauncherDetected(isButtonPassed('[data-tour="agent-detect-launcher"]'));
+      setIsRunnerInstallGuideModalOpen(
+        Boolean(document.querySelector('[data-tour="agent-runner-install-guide-modal"]'))
+      );
     };
 
     detectAgentState();
@@ -1252,17 +1264,27 @@ export function QuickStartTutorial() {
         };
 
   const panelStyle = useMemo(() => {
+    const isRunnerGuideStep = isAgentTutorial && stepIndex === 14 && isRunnerInstallGuideModalOpen;
+    const elevatedZIndex = isRunnerGuideStep
+      ? { zIndex: "calc(var(--z-modal-runner-guide) + 2)" }
+      : {};
     switch (panelPlacement) {
       case "top-right":
-        return { top: "18px", bottom: "auto" } as const;
+        return { top: "18px", bottom: "auto", ...elevatedZIndex } as const;
       case "bottom-left":
-        return { left: "18px", right: "auto" } as const;
+        return { left: "18px", right: "auto", ...elevatedZIndex } as const;
       case "top-left":
-        return { top: "18px", bottom: "auto", left: "18px", right: "auto" } as const;
+        return {
+          top: "18px",
+          bottom: "auto",
+          left: "18px",
+          right: "auto",
+          ...elevatedZIndex,
+        } as const;
       default:
-        return undefined;
+        return Object.keys(elevatedZIndex).length ? elevatedZIndex : undefined;
     }
-  }, [panelPlacement]);
+  }, [isAgentTutorial, isRunnerInstallGuideModalOpen, panelPlacement, stepIndex]);
 
   useEffect(() => {
     setPortalReady(true);
@@ -1528,7 +1550,7 @@ export function QuickStartTutorial() {
   const tutorialNode = (
     <>
       <div className="quickstart-tour-overlay" aria-hidden />
-      {hasTargetRect ? (
+      {hasTargetRect && !currentStep.disableSpotlight ? (
         <div className="quickstart-tour-spotlight" style={spotlightStyle} aria-hidden />
       ) : null}
       <aside
