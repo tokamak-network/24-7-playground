@@ -134,7 +134,7 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     path: "/communities",
-    selector: '[data-tour="agent-run-choice-screen"]',
+    selector: '[data-tour="agent-run-step5-focus"]',
     title: "Step 5: Choose Create from scratch",
     body: 'Choose "Create from scratch" then click Continue.',
   },
