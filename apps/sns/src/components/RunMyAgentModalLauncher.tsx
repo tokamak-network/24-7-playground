@@ -22,7 +22,6 @@ type ModalPhase = "closed" | "opening" | "open" | "closing";
 type SetupMode = "import" | "fresh";
 type ConfigTab = "public" | "confidential" | "runner";
 type BubbleKind = "success" | "error" | "info";
-type SecurityPasswordMode = "none" | "decrypt" | "encrypt";
 
 type PairItem = {
   id: string;
@@ -493,14 +492,10 @@ function RunMyAgentModalContent({
   const [securityStatus, setSecurityStatus] = useState<StatusMessage | null>(null);
   const [encryptedSecurity, setEncryptedSecurity] = useState<EncryptedSecurity | null>(null);
   const [securityPassword, setSecurityPassword] = useState("");
-  const [securityPasswordMode, setSecurityPasswordMode] =
-    useState<SecurityPasswordMode>("none");
   const [securitySignature, setSecuritySignature] = useState("");
   const [legacyCommunitySignatures, setLegacyCommunitySignatures] = useState<
     Record<string, string>
   >({});
-  const decryptPasswordRowRef = useRef<HTMLDivElement | null>(null);
-  const encryptPasswordRowRef = useRef<HTMLDivElement | null>(null);
   const [securityDraft, setSecurityDraft] = useState<SecuritySensitiveDraft>({
     llmApiKey: "",
     executionWalletPrivateKey: "",
@@ -563,11 +558,6 @@ function RunMyAgentModalContent({
     }
     return Array.from(set);
   }, [availableModels, llmModel]);
-
-  const encryptedSecurityLine = useMemo(() => {
-    if (!encryptedSecurity) return "";
-    return encryptedSecurity.ciphertext || "";
-  }, [encryptedSecurity]);
 
   const currentCommunityName =
     general?.community?.name || currentPair?.community?.name || communityName;
@@ -1007,11 +997,9 @@ function RunMyAgentModalContent({
   const loadEncryptedSecurity = useCallback(async () => {
     if (!token || !agentId || !authHeaders) {
       setSecurityStatus({ kind: "error", text: "Sign in first." });
-      return;
+      return null;
     }
 
-    setSecurityBusy(true);
-    setSecurityStatus({ kind: "info", text: "Loading encrypted ciphertext..." });
     try {
       const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}/secrets`, {
         headers: authHeaders,
@@ -1019,7 +1007,7 @@ function RunMyAgentModalContent({
       if (!response.ok) {
         setSecurityStatus({ kind: "error", text: await readError(response) });
         setEncryptedSecurity(null);
-        return;
+        return null;
       }
       const data = await response.json().catch(() => ({}));
       const encrypted = normalizeEncryptedSecurity(data?.securitySensitive);
@@ -1029,100 +1017,134 @@ function RunMyAgentModalContent({
           kind: "error",
           text: "Unsupported ciphertext format. Re-enter values and save again.",
         });
-        return;
+        return null;
       }
-      setSecurityStatus({
-        kind: encrypted ? "success" : "error",
-        text: encrypted
-          ? "Encrypted ciphertext loaded."
-          : "No encrypted ciphertext in DB.",
-      });
+      return encrypted;
     } catch {
       setEncryptedSecurity(null);
       setSecurityStatus({ kind: "error", text: "Failed to load encrypted ciphertext." });
-    } finally {
-      setSecurityBusy(false);
+      return null;
     }
   }, [agentId, authHeaders, readError, token]);
 
-  const decryptSecurity = useCallback(async () => {
-    if (!encryptedSecurity) {
-      setSecurityStatus({ kind: "error", text: "Load encrypted ciphertext first." });
+  const decryptEncryptedSecurity = useCallback(
+    async (
+      encrypted: EncryptedSecurity,
+      options?: {
+        fallbackLegacySlug?: string;
+        successMessage?: string;
+      }
+    ) => {
+      if (!securityPassword.trim()) {
+        setSecurityStatus({ kind: "error", text: "Password is required to decrypt." });
+        return false;
+      }
+
+      const signature = await acquireSecuritySignature(setSecurityStatus);
+      if (!signature) return false;
+
+      const applyDraft = (payload: unknown) => {
+        const normalizedDraft = toSecuritySensitiveDraft(payload);
+        setSecurityDraft(normalizedDraft);
+        setTested((prev) => ({
+          ...prev,
+          llmApiKey: false,
+          executionWalletPrivateKey: false,
+          alchemyApiKey: false,
+        }));
+      };
+
+      try {
+        const decrypted = await decryptAgentSecrets(signature, securityPassword, encrypted);
+        applyDraft(decrypted);
+        setSecurityStatus({
+          kind: "success",
+          text: options?.successMessage || "Decrypted ciphertext successfully.",
+        });
+        return true;
+      } catch {
+        const candidateLegacySlugs: string[] = [];
+        const seenLegacy = new Set<string>();
+        for (const raw of [
+          encrypted.legacyCommunitySlug,
+          options?.fallbackLegacySlug,
+          currentCommunitySlug,
+          ...Object.keys(legacyCommunitySignatures),
+        ]) {
+          const slug = String(raw || "").trim();
+          if (!slug) continue;
+          const key = slug.toLowerCase();
+          if (seenLegacy.has(key)) continue;
+          seenLegacy.add(key);
+          candidateLegacySlugs.push(slug);
+        }
+
+        for (const slug of candidateLegacySlugs) {
+          const legacySignature = await acquireLegacyCommunitySignature(slug);
+          if (!legacySignature) continue;
+          try {
+            const decrypted = await decryptAgentSecrets(
+              legacySignature,
+              securityPassword,
+              encrypted
+            );
+            applyDraft(decrypted);
+            setSecurityStatus({
+              kind: "success",
+              text: options?.successMessage || "Decrypted ciphertext successfully.",
+            });
+            return true;
+          } catch {
+            // try next
+          }
+        }
+
+        setSecurityStatus({ kind: "error", text: "Decryption failed." });
+        return false;
+      }
+    },
+    [
+      acquireLegacyCommunitySignature,
+      acquireSecuritySignature,
+      currentCommunitySlug,
+      legacyCommunitySignatures,
+      securityPassword,
+    ]
+  );
+
+  const loadAndDecryptSecurityFromDb = useCallback(async () => {
+    if (!token || !agentId || !authHeaders) {
+      setSecurityStatus({ kind: "error", text: "Sign in first." });
       return false;
     }
+
     if (!securityPassword.trim()) {
       setSecurityStatus({ kind: "error", text: "Password is required to decrypt." });
       return false;
     }
 
-    const signature = await acquireSecuritySignature(setSecurityStatus);
-    if (!signature) return false;
-
     setSecurityBusy(true);
     try {
-      const decrypted = await decryptAgentSecrets(signature, securityPassword, encryptedSecurity);
-      const normalizedDraft = toSecuritySensitiveDraft(decrypted);
-      setSecurityDraft(normalizedDraft);
-      setTested((prev) => ({
-        ...prev,
-        llmApiKey: false,
-        executionWalletPrivateKey: false,
-        alchemyApiKey: false,
-      }));
-      setSecurityStatus({ kind: "success", text: "Decrypted ciphertext successfully." });
-      return true;
-    } catch {
-      const candidateLegacySlugs: string[] = [];
-      const seenLegacy = new Set<string>();
-      for (const raw of [
-        encryptedSecurity.legacyCommunitySlug,
-        currentCommunitySlug,
-        ...Object.keys(legacyCommunitySignatures),
-      ]) {
-        const slug = String(raw || "").trim();
-        if (!slug) continue;
-        const key = slug.toLowerCase();
-        if (seenLegacy.has(key)) continue;
-        seenLegacy.add(key);
-        candidateLegacySlugs.push(slug);
+      setSecurityStatus({ kind: "info", text: "Loading encrypted ciphertext..." });
+      const encrypted = await loadEncryptedSecurity();
+      if (!encrypted) {
+        return false;
       }
 
-      for (const slug of candidateLegacySlugs) {
-        const legacySignature = await acquireLegacyCommunitySignature(slug);
-        if (!legacySignature) continue;
-        try {
-          const decrypted = await decryptAgentSecrets(
-            legacySignature,
-            securityPassword,
-            encryptedSecurity
-          );
-          const normalizedDraft = toSecuritySensitiveDraft(decrypted);
-          setSecurityDraft(normalizedDraft);
-          setTested((prev) => ({
-            ...prev,
-            llmApiKey: false,
-            executionWalletPrivateKey: false,
-            alchemyApiKey: false,
-          }));
-          setSecurityStatus({ kind: "success", text: "Decrypted ciphertext successfully." });
-          return true;
-        } catch {
-          // try next
-        }
-      }
-
-      setSecurityStatus({ kind: "error", text: "Decryption failed." });
-      return false;
+      setSecurityStatus({ kind: "info", text: "Decrypting ciphertext..." });
+      return await decryptEncryptedSecurity(encrypted, {
+        successMessage: "Loaded from DB and decrypted successfully.",
+      });
     } finally {
       setSecurityBusy(false);
     }
   }, [
-    acquireLegacyCommunitySignature,
-    acquireSecuritySignature,
-    currentCommunitySlug,
-    encryptedSecurity,
-    legacyCommunitySignatures,
+    agentId,
+    authHeaders,
+    decryptEncryptedSecurity,
+    loadEncryptedSecurity,
     securityPassword,
+    token,
   ]);
 
   const encryptAndSaveSecurity = useCallback(async () => {
@@ -1684,17 +1706,44 @@ function RunMyAgentModalContent({
         alchemyApiKey: "",
         githubIssueToken: "",
       });
-      setSecurityPassword("");
-      setSecurityPasswordMode("none");
       setTested({
         llmApiKey: false,
         executionWalletPrivateKey: false,
         alchemyApiKey: false,
         runnerLauncher: false,
       });
+      if (!sourceEncrypted) {
+        setPairsStatus({
+          kind: "error",
+          text: `No encrypted confidential keys were found in ${sourceName}.`,
+        });
+        return false;
+      }
+      if (!securityPassword.trim()) {
+        setPairsStatus({
+          kind: "error",
+          text: "Security password is required for import and decrypt.",
+        });
+        setSecurityStatus({
+          kind: "error",
+          text: "Security password is required to decrypt.",
+        });
+        return false;
+      }
+      const decrypted = await decryptEncryptedSecurity(sourceEncrypted, {
+        fallbackLegacySlug: sourcePair?.community?.slug || "",
+        successMessage: `Imported and decrypted confidential keys from ${sourceName}.`,
+      });
+      if (!decrypted) {
+        setPairsStatus({
+          kind: "error",
+          text: `Failed to decrypt confidential keys from ${sourceName}.`,
+        });
+        return false;
+      }
       setPairsStatus({
         kind: "success",
-        text: `Configuration imported from ${sourceName}.`,
+        text: `Configuration imported from ${sourceName}, including confidential key decryption.`,
       });
       return true;
     } catch {
@@ -1730,8 +1779,6 @@ function RunMyAgentModalContent({
       alchemyApiKey: "",
       githubIssueToken: "",
     });
-    setSecurityPassword("");
-    setSecurityPasswordMode("none");
     setSecurityStatus(null);
     setGeneralStatus(null);
     setTested({
@@ -1824,36 +1871,6 @@ function RunMyAgentModalContent({
     void fetchRunnerStatus({ preferredPort: runnerLauncherPort, silent: true });
   }, [fetchRunnerStatus, runnerLauncherPort, runnerLauncherSecret]);
 
-  useEffect(() => {
-    if (securityPasswordMode === "none") return;
-
-    const activeRow =
-      securityPasswordMode === "decrypt"
-        ? decryptPasswordRowRef.current
-        : encryptPasswordRowRef.current;
-    if (!activeRow) return;
-
-    const resetInlinePasswordMode = (target: EventTarget | null) => {
-      if (!(target instanceof Node)) return;
-      if (activeRow.contains(target)) return;
-      setSecurityPasswordMode("none");
-    };
-
-    const onPointerDown = (event: PointerEvent) => {
-      resetInlinePasswordMode(event.target);
-    };
-    const onFocusIn = (event: FocusEvent) => {
-      resetInlinePasswordMode(event.target);
-    };
-
-    document.addEventListener("pointerdown", onPointerDown, true);
-    document.addEventListener("focusin", onFocusIn, true);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown, true);
-      document.removeEventListener("focusin", onFocusIn, true);
-    };
-  }, [securityPasswordMode]);
-
   return (
     <div className="agent-run-modal-content">
       {screen === "choice" ? (
@@ -1913,39 +1930,51 @@ function RunMyAgentModalContent({
               </div>
 
               {setupMode === "import" ? (
-                <div className="field">
-                  <label>Source community configuration</label>
-                  <div className="manager-inline-field">
-                    <select
-                      value={importSourceAgentId}
-                      onChange={(event) => setImportSourceAgentId(event.currentTarget.value)}
-                      disabled={pairsBusy || !sourcePairs.length || prepareBusy}
-                    >
-                      {sourcePairs.length ? (
-                        sourcePairs.map((pair) => (
-                          <option key={pair.id} value={pair.id}>
-                            {pair.community.name} ({pair.community.slug}) · {pair.handle}
-                          </option>
-                        ))
-                      ) : (
-                        <option value="">No source communities available</option>
-                      )}
-                    </select>
-                    <button
-                      type="button"
-                      className="button"
-                      onClick={() => void handleContinue()}
-                      disabled={
-                        prepareBusy ||
-                        pairsBusy ||
-                        !sourcePairs.length ||
-                        !importSourceAgentId.trim()
-                      }
-                    >
-                      {prepareBusy ? "Preparing..." : "Continue"}
-                    </button>
+                <>
+                  <div className="field">
+                    <label>Source community configuration</label>
+                    <div className="manager-inline-field">
+                      <select
+                        value={importSourceAgentId}
+                        onChange={(event) => setImportSourceAgentId(event.currentTarget.value)}
+                        disabled={pairsBusy || !sourcePairs.length || prepareBusy}
+                      >
+                        {sourcePairs.length ? (
+                          sourcePairs.map((pair) => (
+                            <option key={pair.id} value={pair.id}>
+                              {pair.community.name} ({pair.community.slug}) · {pair.handle}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="">No source communities available</option>
+                        )}
+                      </select>
+                      <button
+                        type="button"
+                        className="button"
+                        onClick={() => void handleContinue()}
+                        disabled={
+                          prepareBusy ||
+                          pairsBusy ||
+                          !sourcePairs.length ||
+                          !importSourceAgentId.trim() ||
+                          !securityPassword.trim()
+                        }
+                      >
+                        {prepareBusy ? "Preparing..." : "Continue"}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                  <div className="field">
+                    <label>Security Password (required for import decrypt)</label>
+                    <input
+                      type="password"
+                      value={securityPassword}
+                      onChange={(event) => setSecurityPassword(event.currentTarget.value)}
+                      placeholder="Password"
+                    />
+                  </div>
+                </>
               ) : (
                 <div className="row wrap">
                   <button
@@ -2118,54 +2147,14 @@ function RunMyAgentModalContent({
             {activeTab === "confidential" ? (
               <div className="agent-run-tab-panel" role="tabpanel">
                 <div className="field">
-                  <label>ENCRYPTED CIPHERTEXT</label>
-                  <div className="manager-inline-field">
-                    <input readOnly value={encryptedSecurityLine} />
-                    <button
-                      type="button"
-                      className="button button-secondary"
-                      onClick={() => void loadEncryptedSecurity()}
-                      disabled={securityBusy}
-                    >
-                      {securityBusy ? "Loading..." : "Load from DB"}
-                    </button>
-                  </div>
+                  <label>Security Password</label>
+                  <input
+                    type="password"
+                    value={securityPassword}
+                    onChange={(event) => setSecurityPassword(event.currentTarget.value)}
+                    placeholder="Password"
+                  />
                 </div>
-
-                {securityPasswordMode === "decrypt" ? (
-                  <div className="manager-inline-field" ref={decryptPasswordRowRef}>
-                    <input
-                      type="password"
-                      value={securityPassword}
-                      onChange={(event) => setSecurityPassword(event.currentTarget.value)}
-                      placeholder="Password"
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      className="button button-secondary button-compact"
-                      onClick={async () => {
-                        const ok = await decryptSecurity();
-                        if (ok) {
-                          setSecurityPasswordMode("none");
-                          setSecurityPassword("");
-                        }
-                      }}
-                      disabled={securityBusy}
-                    >
-                      {securityBusy ? "Decrypting..." : "Decrypt"}
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    className="button button-secondary button-block"
-                    onClick={() => setSecurityPasswordMode("decrypt")}
-                    disabled={securityBusy || securityPasswordMode === "encrypt"}
-                  >
-                    Decrypt
-                  </button>
-                )}
 
                 <div className="field">
                   <label>LLM API Key</label>
@@ -2291,40 +2280,24 @@ function RunMyAgentModalContent({
                   </div>
                 </div>
 
-                {securityPasswordMode === "encrypt" ? (
-                  <div className="manager-inline-field" ref={encryptPasswordRowRef}>
-                    <input
-                      type="password"
-                      value={securityPassword}
-                      onChange={(event) => setSecurityPassword(event.currentTarget.value)}
-                      placeholder="Password"
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      className="button button-compact"
-                      onClick={async () => {
-                        const ok = await encryptAndSaveSecurity();
-                        if (ok) {
-                          setSecurityPasswordMode("none");
-                          setSecurityPassword("");
-                        }
-                      }}
-                      disabled={securityBusy}
-                    >
-                      {securityBusy ? "Saving..." : "Save to DB"}
-                    </button>
-                  </div>
-                ) : (
+                <div className="manager-inline-field">
                   <button
                     type="button"
-                    className="button button-block"
-                    onClick={() => setSecurityPasswordMode("encrypt")}
-                    disabled={securityBusy || securityPasswordMode === "decrypt"}
+                    className="button button-secondary"
+                    onClick={() => void loadAndDecryptSecurityFromDb()}
+                    disabled={securityBusy}
+                  >
+                    Load from DB & Decrypt
+                  </button>
+                  <button
+                    type="button"
+                    className="button"
+                    onClick={() => void encryptAndSaveSecurity()}
+                    disabled={securityBusy}
                   >
                     Encrypt & Save to DB
                   </button>
-                )}
+                </div>
                 <StatusText status={securityStatus} />
               </div>
             ) : null}
