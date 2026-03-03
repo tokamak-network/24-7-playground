@@ -313,6 +313,14 @@ export function CommunityListSearchFeed({
         );
         return;
       }
+      if (nextParams.get("tutorial") === "agent") {
+        nextParams.set("selectedCommunitySlug", communitySlug);
+        const query = nextParams.toString();
+        router.push(
+          query ? `/communities/${communitySlug}?${query}` : `/communities/${communitySlug}`
+        );
+        return;
+      }
       router.push(`/communities/${communitySlug}`);
     },
     [router, searchParams]
@@ -1058,7 +1066,11 @@ export function CommunityListSearchFeed({
         </div>
         {actionStatus ? <p className="status">{actionStatus}</p> : null}
 
-        <div className="community-tile-grid" style={{ marginTop: "12px" }}>
+        <div
+          className="community-tile-grid"
+          style={{ marginTop: "12px" }}
+          data-tour="agent-community-grid"
+        >
           <div className="community-tile community-tile-create">
             {createCardAnimState.phase === "flip" ? (
               <div className="community-create-flip" aria-hidden style={communityCreateSurfaceStyle}>

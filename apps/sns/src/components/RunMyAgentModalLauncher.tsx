@@ -120,6 +120,7 @@ type RunMyAgentModalLauncherProps = {
   buttonClassName?: string;
   buttonStyle?: CSSProperties;
   buttonLabel?: string;
+  buttonDataTour?: string;
 };
 
 const PROVIDER_OPTIONS = ["", "GEMINI", "OPENAI", "LITELLM", "ANTHROPIC"] as const;
@@ -712,6 +713,7 @@ export function RunMyAgentModalLauncher({
   buttonClassName = "button button-secondary button-block",
   buttonStyle,
   buttonLabel = "Run My Agent",
+  buttonDataTour,
 }: RunMyAgentModalLauncherProps) {
   const [modalPhase, setModalPhase] = useState<ModalPhase>("closed");
   const [portalReady, setPortalReady] = useState(false);
@@ -785,6 +787,7 @@ export function RunMyAgentModalLauncher({
       className={`community-create-modal community-action-modal agent-run-modal${
         modalPhase === "open" ? " is-open" : ""
       }`}
+      data-tour="agent-run-modal"
       role="dialog"
       aria-modal="true"
       aria-label={`Run agent for ${communityName}`}
@@ -830,6 +833,7 @@ export function RunMyAgentModalLauncher({
         type="button"
         className={buttonClassName}
         style={buttonStyle}
+        data-tour={buttonDataTour}
         onClick={openModal}
       >
         {buttonLabel}
@@ -2493,6 +2497,7 @@ function RunMyAgentModalContent({
                 <button
                   type="button"
                   className={`agent-run-choice-card${setupMode === "fresh" ? " is-active" : ""}`}
+                  data-tour="agent-run-choice-fresh"
                   onClick={() => setSetupMode("fresh")}
                 >
                   <strong>Create from scratch</strong>
@@ -2523,6 +2528,7 @@ function RunMyAgentModalContent({
                       <button
                         type="button"
                         className="button"
+                        data-tour="agent-run-continue"
                         onClick={() => void handleContinue()}
                         disabled={
                           prepareBusy ||
@@ -2541,6 +2547,7 @@ function RunMyAgentModalContent({
                   <button
                     type="button"
                     className="button"
+                    data-tour="agent-run-continue"
                     onClick={() => void handleContinue()}
                     disabled={prepareBusy}
                   >
@@ -2569,6 +2576,7 @@ function RunMyAgentModalContent({
             <button
               type="button"
               className="button button-secondary agent-run-guide-trigger"
+              data-tour="agent-runner-install-guide-trigger"
               onClick={() => setIsRunnerGuideOpen(true)}
             >
               How to install and run Runner
@@ -2579,6 +2587,8 @@ function RunMyAgentModalContent({
               type="button"
               role="tab"
               aria-selected={activeTab === "confidential"}
+              data-tour="agent-tab-confidential"
+              data-tour-active={activeTab === "confidential" ? "true" : "false"}
               className={`agent-run-tab${activeTab === "confidential" ? " is-active" : ""}`}
               onClick={() => handleTabChange("confidential")}
             >
@@ -2588,6 +2598,8 @@ function RunMyAgentModalContent({
               type="button"
               role="tab"
               aria-selected={activeTab === "runner-config"}
+              data-tour="agent-tab-runner-config"
+              data-tour-active={activeTab === "runner-config" ? "true" : "false"}
               className={`agent-run-tab${activeTab === "runner-config" ? " is-active" : ""}`}
               onClick={() => handleTabChange("runner-config")}
             >
@@ -2597,6 +2609,8 @@ function RunMyAgentModalContent({
               type="button"
               role="tab"
               aria-selected={activeTab === "runner-status"}
+              data-tour="agent-tab-runner-status"
+              data-tour-active={activeTab === "runner-status" ? "true" : "false"}
               className={`agent-run-tab${activeTab === "runner-status" ? " is-active" : ""}`}
               onClick={() => handleTabChange("runner-status")}
             >
@@ -2606,7 +2620,7 @@ function RunMyAgentModalContent({
 
           <div className="agent-run-modal-panel">
             {activeTab === "confidential" ? (
-              <div className="agent-run-tab-panel" role="tabpanel">
+              <div className="agent-run-tab-panel" role="tabpanel" data-tour="agent-run-config-screen">
                 <div className="manager-provider-row">
                   <div className="field">
                     <label>LLM Provider</label>
@@ -2676,7 +2690,7 @@ function RunMyAgentModalContent({
 
                 <StatusText status={generalStatus} />
 
-                <div className="field">
+                <div className="field" data-tour="agent-llm-api-key-section">
                   <label>LLM API Key</label>
                   <div className="manager-inline-field">
                     <input
@@ -2698,6 +2712,8 @@ function RunMyAgentModalContent({
                     <button
                       type="button"
                       className="button button-secondary"
+                      data-tour="agent-llm-api-key-test"
+                      data-tour-passed={tested.llmApiKey ? "true" : "false"}
                       onClick={() => void fetchModelsByApiKey(true)}
                       disabled={modelsBusy}
                     >
@@ -2706,7 +2722,7 @@ function RunMyAgentModalContent({
                   </div>
                 </div>
 
-                <div className="field">
+                <div className="field" data-tour="agent-execution-key-section">
                   <label>Wallet private key for transaction execution</label>
                   <div className="manager-inline-field">
                     <input
@@ -2734,6 +2750,8 @@ function RunMyAgentModalContent({
                     <button
                       type="button"
                       className="button button-secondary"
+                      data-tour="agent-execution-key-test"
+                      data-tour-passed={tested.executionWalletPrivateKey ? "true" : "false"}
                       onClick={() => void testExecutionWalletKey()}
                     >
                       Test
@@ -2741,7 +2759,7 @@ function RunMyAgentModalContent({
                   </div>
                 </div>
 
-                <div className="field">
+                <div className="field" data-tour="agent-alchemy-key-section">
                   <label>Alchemy API Key</label>
                   <div className="manager-inline-field">
                     <input
@@ -2763,6 +2781,8 @@ function RunMyAgentModalContent({
                     <button
                       type="button"
                       className="button button-secondary"
+                      data-tour="agent-alchemy-key-test"
+                      data-tour-passed={tested.alchemyApiKey ? "true" : "false"}
                       onClick={() => void testAlchemyApiKey()}
                     >
                       Test
@@ -2826,6 +2846,7 @@ function RunMyAgentModalContent({
                     href="/about#security-notes"
                     target="_blank"
                     rel="noreferrer"
+                    data-tour="agent-security-notes-anchor"
                     className="agent-run-security-note-link"
                   >
                     Security Notes
@@ -2906,6 +2927,7 @@ function RunMyAgentModalContent({
                   <input
                     type="password"
                     value={runnerLauncherSecret}
+                    data-tour="agent-runner-secret"
                     onChange={(event) => setRunnerLauncherSecret(event.currentTarget.value)}
                     placeholder="Enter launcher secret"
                   />
@@ -2941,6 +2963,8 @@ function RunMyAgentModalContent({
                     <button
                       type="button"
                       className="button button-secondary"
+                      data-tour="agent-detect-launcher"
+                      data-tour-passed={tested.runnerLauncher ? "true" : "false"}
                       onClick={() => void detectRunnerLauncherPorts()}
                       disabled={detectRunnerBusy}
                     >
@@ -3013,6 +3037,7 @@ function RunMyAgentModalContent({
             <button
               type="button"
               className="button"
+              data-tour="agent-start-runner"
               onClick={() => {
                 if (runnerRunning) {
                   void stopRunnerLauncher();

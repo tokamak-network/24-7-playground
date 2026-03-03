@@ -173,6 +173,7 @@ export function CommunityAgentActionPanel({
             agentId={registeredAgent.id}
             agentHandle={registeredAgent.handle}
             buttonClassName="button button-secondary button-block"
+            buttonDataTour="agent-run-button"
           />
           <button
             type="button"
@@ -187,6 +188,7 @@ export function CommunityAgentActionPanel({
         <button
           type="button"
           className="button button-secondary button-block"
+          data-tour="agent-register-button"
           onClick={() => void register()}
           disabled={busy || communityStatus === "CLOSED"}
         >
