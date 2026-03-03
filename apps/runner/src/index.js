@@ -2,9 +2,6 @@
 
 const http = require("node:http");
 const crypto = require("node:crypto");
-const fs = require("node:fs");
-const os = require("node:os");
-const path = require("node:path");
 const net = require("node:net");
 const readline = require("node:readline/promises");
 const { RunnerEngine } = require("./engine");
@@ -19,8 +16,6 @@ const { communicationLogPath } = require("./communicationLog");
 
 const HARDCODED_ALLOWED_ORIGIN = "https://agentic-ethereum.com";
 const DEFAULT_LAUNCHER_PORT = 4318;
-const LAUNCHER_STATE_DIR = path.join(os.homedir(), ".tokamak-runner");
-const LAUNCHER_STATE_FILE = path.join(LAUNCHER_STATE_DIR, "launcher.json");
 
 function parseArgs(argv) {
   const [, , command = "serve", ...rest] = argv;
@@ -194,89 +189,50 @@ async function findAvailablePort(host, startPort, maxAttempts = 40) {
   return null;
 }
 
-async function readLauncherState() {
-  try {
-    const raw = await fs.promises.readFile(LAUNCHER_STATE_FILE, "utf8");
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object") return {};
-    return {
-      launcherSecret:
-        typeof parsed.launcherSecret === "string"
-          ? parsed.launcherSecret.trim()
-          : "",
-      port: parsePositivePort(parsed.port),
-    };
-  } catch {
-    return {};
-  }
-}
-
-async function writeLauncherState(nextState) {
-  const payload = {
-    launcherSecret: String(nextState.launcherSecret || "").trim(),
-    port: parsePositivePort(nextState.port),
-  };
-  await fs.promises.mkdir(LAUNCHER_STATE_DIR, { recursive: true });
-  const body = `${JSON.stringify(payload, null, 2)}\n`;
-  await fs.promises.writeFile(LAUNCHER_STATE_FILE, body, { mode: 0o600 });
-}
-
 async function promptInteractiveLauncherState(params) {
-  const { host, initialPort, initialSecret } = params;
+  const { host } = params;
   if (!canPromptInteractively()) {
-    return {
-      port: initialPort,
-      launcherSecret: initialSecret,
-      prompted: false,
-    };
+    throw new Error(
+      "Interactive TTY is required. Runner launcher always prompts for port and secret."
+    );
   }
 
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
-  let prompted = false;
 
   try {
-    let port = parsePositivePort(initialPort);
-    if (!port) {
-      prompted = true;
-      const suggestedPort = (await findAvailablePort(host, DEFAULT_LAUNCHER_PORT)) || DEFAULT_LAUNCHER_PORT;
-      while (true) {
-        const input = await rl.question(
-          `Runner launcher port [${suggestedPort}]: `
-        );
-        const nextPort = parsePositivePort(input.trim() || String(suggestedPort));
-        if (!nextPort) {
-          console.log("[runner-launcher] Enter a valid port number (1-65535).");
-          continue;
-        }
-        const available = await isPortAvailable(host, nextPort);
-        if (!available) {
-          console.log(
-            `[runner-launcher] Port ${nextPort} is already in use. Enter another port.`
-          );
-          continue;
-        }
-        port = nextPort;
-        break;
+    const suggestedPort =
+      (await findAvailablePort(host, DEFAULT_LAUNCHER_PORT)) || DEFAULT_LAUNCHER_PORT;
+    let port = null;
+    while (true) {
+      const input = await rl.question(`Runner launcher port [${suggestedPort}]: `);
+      const nextPort = parsePositivePort(input.trim() || String(suggestedPort));
+      if (!nextPort) {
+        console.log("[runner-launcher] Enter a valid port number (1-65535).");
+        continue;
       }
+      const available = await isPortAvailable(host, nextPort);
+      if (!available) {
+        console.log(
+          `[runner-launcher] Port ${nextPort} is already in use. Enter another port.`
+        );
+        continue;
+      }
+      port = nextPort;
+      break;
     }
 
-    let launcherSecret = String(initialSecret || "").trim();
-    if (!launcherSecret) {
-      prompted = true;
-      while (true) {
-        const input = await rl.question(
-          "Runner launcher secret (x-runner-secret): "
-        );
-        launcherSecret = String(input || "").trim();
-        if (launcherSecret) break;
-        console.log("[runner-launcher] Secret is required.");
-      }
+    let launcherSecret = "";
+    while (true) {
+      const input = await rl.question("Runner launcher secret (x-runner-secret): ");
+      launcherSecret = String(input || "").trim();
+      if (launcherSecret) break;
+      console.log("[runner-launcher] Secret is required.");
     }
 
-    return { port, launcherSecret, prompted };
+    return { port, launcherSecret };
   } finally {
     rl.close();
   }
@@ -291,75 +247,21 @@ async function resolveLauncherRuntimeConfig(options) {
     throw new Error("--sns must be a valid http(s) origin");
   }
   const allowedOrigin = resolveAllowedOrigin(options);
-
-  const rawCliPort = String(hasOwn("port") ? options.port : "").trim();
-  const rawCliSecret = String(hasOwn("secret") ? options.secret : "").trim();
-  if (hasOwn("port") && !rawCliPort) {
-    throw new Error("--port requires a positive integer value");
-  }
-  if (hasOwn("secret") && !rawCliSecret) {
-    throw new Error("--secret requires a non-empty value");
+  if (!canPromptInteractively()) {
+    throw new Error(
+      "Interactive TTY is required. Runner launcher always prompts for port and secret."
+    );
   }
 
-  const saved = await readLauncherState();
-  const envPort = String(process.env.RUNNER_PORT || "").trim();
-  const envSecret = String(process.env.RUNNER_LAUNCHER_SECRET || "").trim();
-
-  let port = parsePositivePort(rawCliPort) ??
-    parsePositivePort(envPort) ??
-    parsePositivePort(saved.port);
-  let launcherSecret = String(rawCliSecret || envSecret || saved.launcherSecret || "").trim();
-
-  if (!port || !launcherSecret) {
-    if (!canPromptInteractively()) {
-      if (!port) {
-        port = DEFAULT_LAUNCHER_PORT;
-      }
-      if (!launcherSecret) {
-        throw new Error(
-          "RUNNER_LAUNCHER_SECRET is required. Set --secret or env RUNNER_LAUNCHER_SECRET."
-        );
-      }
-    } else {
-      const prompted = await promptInteractiveLauncherState({
-        host,
-        initialPort: port,
-        initialSecret: launcherSecret,
-      });
-      port = prompted.port;
-      launcherSecret = prompted.launcherSecret;
-      if (prompted.prompted) {
-        await writeLauncherState({ port, launcherSecret });
-      }
-    }
-  }
-
-  const portAvailable = await isPortAvailable(host, port);
-  if (!portAvailable) {
-    if (!rawCliPort && canPromptInteractively()) {
-      console.log(
-        `[runner-launcher] Port ${port} is already in use. Choose another port.`
-      );
-      const prompted = await promptInteractiveLauncherState({
-        host,
-        initialPort: null,
-        initialSecret: launcherSecret,
-      });
-      port = prompted.port;
-      launcherSecret = prompted.launcherSecret;
-      if (prompted.prompted) {
-        await writeLauncherState({ port, launcherSecret });
-      }
-    } else {
-      throw new Error(`Port ${port} is already in use`);
-    }
-  }
+  const prompted = await promptInteractiveLauncherState({ host });
+  const port = prompted.port;
+  const launcherSecret = prompted.launcherSecret;
 
   if (!port) {
     throw new Error("Invalid --port value");
   }
   if (!launcherSecret) {
-    throw new Error("RUNNER_LAUNCHER_SECRET (or --secret) is required");
+    throw new Error("Runner launcher secret is required");
   }
 
   return {
@@ -687,9 +589,10 @@ function printHelp() {
       "Local Runner Launcher CLI",
       "",
       "Commands:",
-      "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>] [--sns <origin>]",
-      "    - Missing --port/--secret prompts interactively on TTY and stores values in ~/.tokamak-runner/launcher.json",
-      "    - Non-interactive mode requires --secret or env RUNNER_LAUNCHER_SECRET",
+      "  serve [--host 127.0.0.1] [--sns <origin>]",
+      "    - Always prompts for launcher port and launcher secret on each start",
+      "    - Does not save or reuse launcher port/secret from env, file, or CLI flags",
+      "    - Interactive TTY is required",
       "",
       "Launcher API routes (serve):",
       "  GET  /health",
