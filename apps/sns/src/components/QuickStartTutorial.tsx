@@ -232,6 +232,7 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
       '[data-tour="agent-tab-runner-status"]',
       '[data-tour="agent-detect-launcher"]',
     ],
+    disableSpotlight: true,
     title: "Step 17: Confirm Runner Is Running",
     body: "Complete Runner installation and keep it running locally. This step polls localhost runner ports and advances automatically when one is detected.",
   },
@@ -1845,10 +1846,10 @@ export function QuickStartTutorial() {
         <h3>{currentStep.title}</h3>
         {renderStepBody()}
 
-        {isOnStepPath && searchingTarget ? (
+        {isOnStepPath && !currentStep.disableSpotlight && searchingTarget ? (
           <p className="quickstart-tour-help">Searching for the highlighted target...</p>
         ) : null}
-        {isOnStepPath && !searchingTarget && !hasTargetRect ? (
+        {isOnStepPath && !currentStep.disableSpotlight && !searchingTarget && !hasTargetRect ? (
           <p className="quickstart-tour-help">Could not find the target element on this page.</p>
         ) : null}
 
