@@ -99,12 +99,50 @@ function parseAllowedOrigin(rawValue) {
   return parsed.origin;
 }
 
-function resolveAllowedOrigin(options) {
+function parseAllowedOrigins(rawValue) {
+  const normalized = String(rawValue || "").trim();
+  if (!normalized) {
+    throw new Error("--sns must contain at least one valid http(s) origin");
+  }
+  const tokens = normalized
+    .split(/[,\s]+/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+  if (!tokens.length) {
+    throw new Error("--sns must contain at least one valid http(s) origin");
+  }
+  if (tokens.some((token) => token === "*" || token.toLowerCase() === "all")) {
+    throw new Error(
+      "--sns does not support wildcard origins. Use explicit origins separated by commas, for example: --sns http://localhost:3000,https://agentic-ethereum.com"
+    );
+  }
+  const parsed = [];
+  for (const token of tokens) {
+    try {
+      parsed.push(parseAllowedOrigin(token));
+    } catch {
+      throw new Error(
+        `Invalid --sns origin "${token}". Use explicit http(s) origins separated by commas.`
+      );
+    }
+  }
+  return Array.from(new Set(parsed));
+}
+
+function resolveAllowedOrigins(options) {
   const configuredOrigin = options.sns;
   if (String(configuredOrigin || "").trim()) {
-    return parseAllowedOrigin(configuredOrigin);
+    return parseAllowedOrigins(configuredOrigin);
   }
-  return parseAllowedOrigin(HARDCODED_ALLOWED_ORIGIN);
+  return [parseAllowedOrigin(HARDCODED_ALLOWED_ORIGIN)];
+}
+
+function selectCorsResponseOrigin(requestOrigin, allowedOrigins) {
+  const normalizedRequestOrigin = normalizeOrigin(requestOrigin, "");
+  if (normalizedRequestOrigin && allowedOrigins.includes(normalizedRequestOrigin)) {
+    return normalizedRequestOrigin;
+  }
+  return allowedOrigins[0] || "";
 }
 
 function secureCompare(left, right) {
@@ -290,7 +328,7 @@ async function resolveLauncherRuntimeConfig(options) {
   if (hasOwn("sns") && !rawSnsValue) {
     throw new Error("--sns must be a valid http(s) origin");
   }
-  const allowedOrigin = resolveAllowedOrigin(options);
+  const allowedOrigins = resolveAllowedOrigins(options);
 
   const rawCliPort = String(hasOwn("port") ? options.port : "").trim();
   const rawCliSecret = String(hasOwn("secret") ? options.secret : "").trim();
@@ -365,7 +403,7 @@ async function resolveLauncherRuntimeConfig(options) {
   return {
     host,
     port,
-    allowedOrigin,
+    allowedOrigins,
     launcherSecret,
   };
 }
@@ -498,7 +536,7 @@ async function startServer(options) {
   const {
     host,
     port,
-    allowedOrigin,
+    allowedOrigins,
     launcherSecret,
   } = await resolveLauncherRuntimeConfig(options);
   process.env.RUNNER_PORT = String(port);
@@ -506,19 +544,20 @@ async function startServer(options) {
   const manager = new MultiAgentRunnerManager(console);
   const server = http.createServer(async (request, response) => {
     const requestOrigin = normalizeOrigin(request.headers.origin, "");
-    const originAllowed = !requestOrigin || requestOrigin === allowedOrigin;
+    const originAllowed = !requestOrigin || allowedOrigins.includes(requestOrigin);
+    const responseOrigin = selectCorsResponseOrigin(requestOrigin, allowedOrigins);
 
     if (request.method === "OPTIONS") {
       if (!originAllowed) {
         response.writeHead(403, {
           "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": allowedOrigin,
+          "Access-Control-Allow-Origin": responseOrigin,
         });
         response.end(JSON.stringify({ error: "Origin not allowed" }));
         return;
       }
       response.writeHead(204, {
-        "Access-Control-Allow-Origin": allowedOrigin,
+        "Access-Control-Allow-Origin": responseOrigin,
         "Access-Control-Allow-Headers": "content-type,authorization,x-runner-secret",
         "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
         "Access-Control-Allow-Private-Network": "true",
@@ -533,7 +572,7 @@ async function startServer(options) {
       url: request.url,
       route,
       headers: request.headers,
-      allowedOrigin,
+      allowedOrigins,
     });
     try {
       if (!originAllowed) {
@@ -541,7 +580,7 @@ async function startServer(options) {
           response,
           403,
           { error: "Origin not allowed" },
-          { route, method: request.method, allowedOrigin }
+          { route, method: request.method, allowedOrigin: responseOrigin }
         );
         return;
       }
@@ -562,7 +601,7 @@ async function startServer(options) {
             response,
             401,
             { error: "Unauthorized" },
-            { route, method: request.method, allowedOrigin }
+            { route, method: request.method, allowedOrigin: responseOrigin }
           );
           return;
         }
@@ -573,7 +612,7 @@ async function startServer(options) {
           response,
           200,
           { ok: true, service: "runner-launcher" },
-          { route, method: request.method, allowedOrigin }
+          { route, method: request.method, allowedOrigin: responseOrigin }
         );
         return;
       }
@@ -584,7 +623,7 @@ async function startServer(options) {
           response,
           200,
           { ok: true, status: manager.getStatus({ agentId: requestedAgentId }) },
-          { route, method: request.method, allowedOrigin }
+          { route, method: request.method, allowedOrigin: responseOrigin }
         );
         return;
       }
@@ -605,7 +644,7 @@ async function startServer(options) {
             message: "Runner started",
             status,
           },
-          { route, method: request.method, body, allowedOrigin }
+          { route, method: request.method, body, allowedOrigin: responseOrigin }
         );
         return;
       }
@@ -632,7 +671,7 @@ async function startServer(options) {
             message: requestedAgentId ? "Runner stopped" : "All runners stopped",
             status,
           },
-          { route, method: request.method, allowedOrigin }
+          { route, method: request.method, allowedOrigin: responseOrigin }
         );
         return;
       }
@@ -641,7 +680,7 @@ async function startServer(options) {
         response,
         404,
         { error: "Not found" },
-        { route, method: request.method, allowedOrigin }
+        { route, method: request.method, allowedOrigin: responseOrigin }
       );
     } catch (error) {
       trace("error", {
@@ -658,7 +697,7 @@ async function startServer(options) {
         {
           error: toErrorMessage(error, "Request failed"),
         },
-        { route, method: request.method, allowedOrigin }
+        { route, method: request.method, allowedOrigin: responseOrigin }
       );
     }
   });
@@ -668,7 +707,7 @@ async function startServer(options) {
     server.listen(port, host, resolve);
   });
   console.log(`[runner-launcher] listening on http://${host}:${port}`);
-  console.log(`[runner-launcher] allowed origin: ${allowedOrigin}`);
+  console.log(`[runner-launcher] allowed origins: ${allowedOrigins.join(", ")}`);
   console.log(
     `[runner-launcher] launcher secret: ${describeSecretForLog(launcherSecret)}`
   );
@@ -687,8 +726,9 @@ function printHelp() {
       "Local Runner Launcher CLI",
       "",
       "Commands:",
-      "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>] [--sns <origin>]",
+      "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>] [--sns <origin[,origin2,...]>]",
       "    - Missing --port/--secret prompts interactively on TTY and stores values in ~/.tokamak-runner/launcher.json",
+      "    - --sns supports comma-separated explicit origins (no wildcard '*')",
       "    - Non-interactive mode requires --secret or env RUNNER_LAUNCHER_SECRET",
       "",
       "Launcher API routes (serve):",
