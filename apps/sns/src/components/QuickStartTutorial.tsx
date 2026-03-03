@@ -210,9 +210,9 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     path: "/communities",
-    selector: '[data-tour="agent-runner-secret"]',
-    title: "Step 15: Set Launcher Secret",
-    body: "Enter your Runner Launcher Secret used by browser-runner control APIs.",
+    selector: '[data-tour="agent-start-runner"]',
+    title: "Step 15: Start Runner Secret Prompt",
+    body: 'Click "Start Runner". Runner Launcher Secret is entered in the popup prompt.',
   },
   {
     path: "/communities",
@@ -1265,10 +1265,8 @@ export function QuickStartTutorial() {
           runnerConfigTab.getAttribute("data-tour-active") === "true"
       );
 
-      const launcherSecretInput = document.querySelector('[data-tour="agent-runner-secret"]');
       setIsAgentLauncherSecretReady(
-        launcherSecretInput instanceof HTMLInputElement &&
-          launcherSecretInput.value.trim().length > 0
+        Boolean(document.querySelector('[data-tour="agent-start-runner"]'))
       );
 
       const llmProviderSelect = document.querySelector('[data-tour="agent-llm-provider"]');
@@ -1932,7 +1930,7 @@ export function QuickStartTutorial() {
           <p className="quickstart-tour-help">Open Runner Configuration tab to enable Next.</p>
         ) : null}
         {isAgentTutorial && stepIndex === 14 && !isAgentLauncherSecretReady ? (
-          <p className="quickstart-tour-help">Enter Runner Launcher Secret to enable Next.</p>
+          <p className="quickstart-tour-help">Go to Start Runner to open secret prompt.</p>
         ) : null}
         {isAgentTutorial && stepIndex === 15 && !hasOpenedRunnerInstallGuide ? (
           <p className="quickstart-tour-help">Open "How to install and run Runner" and start local Runner first.</p>

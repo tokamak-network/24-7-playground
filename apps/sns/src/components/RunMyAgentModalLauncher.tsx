@@ -1111,7 +1111,7 @@ function RunMyAgentModalContent({
     }
   }, [agentId]);
 
-  const saveRunnerConfig = useCallback(() => {
+  const saveRunnerConfig = useCallback((secretOverride?: string) => {
     if (!agentId || typeof window === "undefined") return;
 
     const nextDraft = {
@@ -1137,7 +1137,8 @@ function RunMyAgentModalContent({
         JSON.stringify({
           ...nextDraft,
           runnerLauncherPort: nextPort,
-          runnerLauncherSecret,
+          runnerLauncherSecret:
+            typeof secretOverride === "string" ? secretOverride : runnerLauncherSecret,
         })
       );
     } catch {
@@ -1698,9 +1699,12 @@ function RunMyAgentModalContent({
       preferredPort?: string;
       silent?: boolean;
       includeAgentReport?: boolean;
+      secretOverride?: string;
     }): Promise<RunnerStatusSnapshot | null> => {
       const launcherPort = String(options?.preferredPort || runnerLauncherPort).trim();
-      const launcherSecret = runnerLauncherSecret.trim();
+      const launcherSecret = String(
+        options?.secretOverride ?? runnerLauncherSecret
+      ).trim();
       if (!launcherPort) {
         setRunnerRunning(false);
         if (!options?.silent) {
@@ -2009,7 +2013,24 @@ function RunMyAgentModalContent({
     await fetchRunnerStatus({ includeAgentReport: true });
   }, [fetchRunnerStatus]);
 
-  const startRunnerLauncher = useCallback(async () => {
+  const promptRunnerLauncherSecret = useCallback(() => {
+    const prompted = window.prompt(
+      "Enter Runner Launcher Secret.",
+      runnerLauncherSecret
+    );
+    if (prompted == null) {
+      setRunnerStatus({ kind: "error", text: "Runner start cancelled." });
+      return null;
+    }
+    const normalized = prompted.trim();
+    if (!normalized) {
+      setRunnerStatus({ kind: "error", text: "Runner launcher secret is required." });
+      return null;
+    }
+    return normalized;
+  }, [runnerLauncherSecret]);
+
+  const startRunnerLauncher = useCallback(async (secretInput?: string) => {
     if (!token || !authHeaders) {
       setRunnerStatus({ kind: "error", text: "Sign in first." });
       return;
@@ -2020,7 +2041,8 @@ function RunMyAgentModalContent({
       setRunnerStatus({ kind: "error", text: "Runner launcher port is required." });
       return;
     }
-    if (!runnerLauncherSecret.trim()) {
+    const launcherSecret = String(secretInput ?? runnerLauncherSecret).trim();
+    if (!launcherSecret) {
       setRunnerStatus({ kind: "error", text: "Runner launcher secret is required." });
       return;
     }
@@ -2064,7 +2086,12 @@ function RunMyAgentModalContent({
 
     setStartRunnerBusy(true);
     try {
-      const preflight = await fetchRunnerStatus({ preferredPort: launcherPort, silent: true });
+      setRunnerLauncherSecret(launcherSecret);
+      const preflight = await fetchRunnerStatus({
+        preferredPort: launcherPort,
+        silent: true,
+        secretOverride: launcherSecret,
+      });
       if (!preflight) {
         setRunnerStatus({
           kind: "error",
@@ -2111,7 +2138,7 @@ function RunMyAgentModalContent({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-runner-secret": runnerLauncherSecret.trim(),
+            "x-runner-secret": launcherSecret,
           },
           body: JSON.stringify({
             config: {
@@ -2133,7 +2160,7 @@ function RunMyAgentModalContent({
       }
 
       setRunnerRunning(true);
-      saveRunnerConfig();
+      saveRunnerConfig(launcherSecret);
       setRunnerStatus({
         kind: "success",
         text: `Runner started on localhost:${launcherPort}.`,
@@ -2368,7 +2395,6 @@ function RunMyAgentModalContent({
     if (!runnerDraft.intervalSec.trim()) missing.push("Runner Interval");
     if (!runnerDraft.commentContextLimit.trim()) missing.push("Comment Context Limit");
     if (!runnerLauncherPort.trim()) missing.push("Runner Launcher Port");
-    if (!runnerLauncherSecret.trim()) missing.push("Runner Launcher Secret");
     if (!tested.llmApiKey) missing.push("LLM API Key test");
     if (!tested.executionWalletPrivateKey) missing.push("Execution Key test");
     if (!tested.alchemyApiKey) missing.push("Alchemy Key test");
@@ -2384,7 +2410,6 @@ function RunMyAgentModalContent({
     runnerDraft.commentContextLimit,
     runnerDraft.intervalSec,
     runnerLauncherPort,
-    runnerLauncherSecret,
     securityDraft.alchemyApiKey,
     securityDraft.executionWalletPrivateKey,
     securityDraft.llmApiKey,
@@ -3006,16 +3031,9 @@ function RunMyAgentModalContent({
                     ))}
                   </select>
                 </div>
-                <div className="field">
-                  <label>Runner Launcher Secret</label>
-                  <input
-                    type="password"
-                    value={runnerLauncherSecret}
-                    data-tour="agent-runner-secret"
-                    onChange={(event) => setRunnerLauncherSecret(event.currentTarget.value)}
-                    placeholder="Enter launcher secret"
-                  />
-                </div>
+                <p className="meta-text">
+                  Runner Launcher Secret is requested in a popup when you click Start Runner.
+                </p>
               </div>
             ) : null}
 
@@ -3127,7 +3145,11 @@ function RunMyAgentModalContent({
                   void stopRunnerLauncher();
                   return;
                 }
-                void startRunnerLauncher();
+                const runnerSecret = promptRunnerLauncherSecret();
+                if (!runnerSecret) {
+                  return;
+                }
+                void startRunnerLauncher(runnerSecret);
               }}
               disabled={runnerRunning ? stopRunnerBusy : startButtonDisabled}
             >
