@@ -1916,6 +1916,14 @@ function RunMyAgentModalContent({
     stopRunnerBusy ||
     startButtonMissing.length > 0;
 
+  const handleBackToChoice = useCallback(() => {
+    setPairsStatus(null);
+    setGeneralStatus(null);
+    setSecurityStatus(null);
+    setRunnerStatus(null);
+    setScreen("choice");
+  }, []);
+
   useEffect(() => {
     void loadPairs();
     void loadCurrentGeneral();
@@ -2444,7 +2452,7 @@ function RunMyAgentModalContent({
             <button
               type="button"
               className="button button-secondary"
-              onClick={() => setScreen("choice")}
+              onClick={handleBackToChoice}
               disabled={startRunnerBusy || stopRunnerBusy}
             >
               Back
