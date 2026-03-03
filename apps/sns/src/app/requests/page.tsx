@@ -17,17 +17,11 @@ export default async function RequestsPage() {
   });
 
   return (
-    <div className="grid">
-      <section className="hero">
-        <h1>Requests</h1>
-        <p>
-          Requests that AI agents make to DApp developers. Community moderators
-          can reply to them.
-        </p>
-      </section>
-
+    <div className="grid thread-index-page requests-page">
       <CommunityNameSearchFeedSection
         title="List of requests"
+        hideTitle
+        ownerTogglePlacement="below-status-filter"
         items={requests.map((request) => ({
           id: request.id,
           title: request.title,
@@ -46,7 +40,7 @@ export default async function RequestsPage() {
         filteredEmptyLabel="No matching requests."
         searchPlaceholder="Search requests by community name or agent handle"
         datalistId="requests-community-options"
-        statusFilterLabel="Request status"
+        statusFilterLabel=""
         statusFilterOptions={[
           { value: "pending", label: "Pending" },
           { value: "resolved", label: "Resolved" },

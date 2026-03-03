@@ -570,11 +570,17 @@ class RunnerEngine {
       lastActionCount: 0,
       lastLlmOutput: null,
       llmUsageCumulative: createEmptyLlmUsageCumulative(),
+      agentHandle: "",
+      activeCommunityName: "",
+      activeCommunitySlug: "",
+      cumulativeThreadCreateCount: 0,
+      cumulativeWrittenCommunityCount: 0,
     };
     this.logAgentId = "";
     this.logAgentHandle = "";
     this.runnerInbox = [];
     this.contractSourceCache = new Map();
+    this.writtenCommunitySlugs = new Set();
   }
 
   #clearRuntimeCaches() {
@@ -626,8 +632,16 @@ class RunnerEngine {
   }
 
   getStatus() {
+    const startedAtMs = this.state.startedAt
+      ? Date.parse(this.state.startedAt)
+      : NaN;
+    const elapsedRunningMs =
+      this.state.running && Number.isFinite(startedAtMs)
+        ? Math.max(0, Date.now() - startedAtMs)
+        : 0;
     return {
       ...this.state,
+      elapsedRunningMs,
       config: redactConfig(this.config),
     };
   }
@@ -647,6 +661,12 @@ class RunnerEngine {
     this.state.startedAt = new Date().toISOString();
     this.state.lastError = null;
     this.state.llmUsageCumulative = createEmptyLlmUsageCumulative();
+    this.state.agentHandle = "";
+    this.state.activeCommunityName = "";
+    this.state.activeCommunitySlug = "";
+    this.state.cumulativeThreadCreateCount = 0;
+    this.state.cumulativeWrittenCommunityCount = 0;
+    this.writtenCommunitySlugs.clear();
     logSummary(
       this.logger,
       `runner started (${formatAgentSummaryTag(this.config.agentId, this.logAgentHandle)}, intervalSec=${this.config.runtime.intervalSec}, commentLimit=${this.config.runtime.commentLimit}, maxTokens=${this.config.runtime.maxTokens || "unlimited"})`
@@ -672,49 +692,6 @@ class RunnerEngine {
     this.state.running = false;
     this.#clearRuntimeCaches();
     logSummary(this.logger, "runner stopped");
-  }
-
-  updateConfig(patchInput) {
-    if (!this.config) {
-      throw new Error("Runner config is not initialized");
-    }
-    trace(this.logger, "update-config:patch-input", { patchInput });
-    const merged = {
-      ...this.config,
-      ...patchInput,
-      llm: { ...this.config.llm, ...(patchInput.llm || {}) },
-      runtime: { ...this.config.runtime, ...(patchInput.runtime || {}) },
-      execution: { ...this.config.execution, ...(patchInput.execution || {}) },
-      prompts: { ...this.config.prompts, ...(patchInput.prompts || {}) },
-    };
-    this.config = normalizeConfig(merged);
-    this.#clearRuntimeCaches();
-    this.logAgentId = this.config.agentId;
-    this.logAgentHandle = "";
-    this.logger = withLoggerAgentId(this.logger, this.logAgentId);
-    trace(this.logger, "update-config:normalized-config", { config: this.config });
-    if (this.state.running) {
-      if (this.timer) {
-        clearInterval(this.timer);
-      }
-      const intervalMs = Math.max(1, this.config.runtime.intervalSec) * 1000;
-      this.timer = setInterval(() => {
-        this.runOnce().catch((error) => {
-          this.logger.error(
-            "[runner] periodic cycle failed:",
-            toErrorMessage(error, "Unknown error")
-          );
-        });
-      }, intervalMs);
-    }
-    return this.getStatus();
-  }
-
-  async runOnceWithConfig(configInput) {
-    trace(this.logger, "run-once-with-config:input", { configInput });
-    const normalized = normalizeConfig(configInput);
-    trace(this.logger, "run-once-with-config:normalized", { normalized });
-    return this.#runCycle(normalized);
   }
 
   async runOnce(options = {}) {
@@ -751,12 +728,19 @@ class RunnerEngine {
           ? generalData.agent
           : null;
       this.logAgentHandle = generalAgent ? String(generalAgent.handle || "").trim() : "";
+      this.state.agentHandle = this.logAgentHandle;
       const generalCommunity =
         generalData &&
         generalData.community &&
         typeof generalData.community === "object"
           ? generalData.community
           : null;
+      this.state.activeCommunityName = generalCommunity
+        ? String(generalCommunity.name || "").trim()
+        : "";
+      this.state.activeCommunitySlug = generalCommunity
+        ? String(generalCommunity.slug || "").trim()
+        : "";
       trace(this.logger, "cycle:general-data", {
         generalData,
         generalAgent,
@@ -1052,6 +1036,12 @@ class RunnerEngine {
               `action create_thread failed (community=${community.slug}, reason=${createThreadError})`
             );
           } else {
+            const communitySlug = String(community && community.slug).trim();
+            if (communitySlug) {
+              this.writtenCommunitySlugs.add(communitySlug);
+              this.state.cumulativeWrittenCommunityCount = this.writtenCommunitySlugs.size;
+            }
+            this.state.cumulativeThreadCreateCount += 1;
             const createdThreadId =
               threadResponse &&
               threadResponse.thread &&
@@ -1136,6 +1126,11 @@ class RunnerEngine {
             this.logger,
             `action comment completed (community=${community.slug}, threadId=${threadId})`
           );
+          const commentCommunitySlug = String(community && community.slug).trim();
+          if (commentCommunitySlug) {
+            this.writtenCommunitySlugs.add(commentCommunitySlug);
+            this.state.cumulativeWrittenCommunityCount = this.writtenCommunitySlugs.size;
+          }
           executionResults.push({
             action: "comment",
             community: community.slug,
@@ -1669,7 +1664,7 @@ class RunnerEngine {
 
     const threadId = String(thread.id || "").trim();
     const threadSlug = String(params.community.slug || "").trim();
-    const threadUrl = `${params.config.snsBaseUrl}/sns/${threadSlug}/threads/${threadId}`;
+    const threadUrl = `${params.config.snsBaseUrl}/communities/${threadSlug}/threads/${threadId}`;
     const rawCreatedAt = String(thread.createdAt || "").trim();
     const parsedCreatedAt = new Date(rawCreatedAt);
     const createdAtIso = Number.isFinite(parsedCreatedAt.getTime())
@@ -1758,7 +1753,7 @@ class RunnerEngine {
     const threadId = String(params.threadId || "").trim();
     const commentId = String(comment.id || "").trim();
     const threadSlug = String(params.community.slug || "").trim();
-    const threadUrl = `${params.config.snsBaseUrl}/sns/${threadSlug}/threads/${threadId}`;
+    const threadUrl = `${params.config.snsBaseUrl}/communities/${threadSlug}/threads/${threadId}`;
     const commentUrl = `${threadUrl}#comment-${commentId}`;
     const rawCreatedAt = String(comment.createdAt || "").trim();
     const parsedCreatedAt = new Date(rawCreatedAt);

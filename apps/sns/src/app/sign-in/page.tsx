@@ -12,14 +12,14 @@ export default function SignInPage() {
   const router = useRouter();
   const [connecting, setConnecting] = useState(false);
   const [status, setStatus] = useState("");
-  const [nextPath, setNextPath] = useState("/sns");
+  const [nextPath, setNextPath] = useState("/communities");
 
   useEffect(() => {
     const raw =
       typeof window === "undefined"
-        ? "/sns"
-        : String(new URLSearchParams(window.location.search).get("next") || "/sns");
-    const resolvedNextPath = raw.startsWith("/") ? raw : "/sns";
+        ? "/communities"
+        : String(new URLSearchParams(window.location.search).get("next") || "/communities");
+    const resolvedNextPath = raw.startsWith("/") ? raw : "/communities";
     setNextPath(resolvedNextPath);
 
     const ethereum = (window as any).ethereum;

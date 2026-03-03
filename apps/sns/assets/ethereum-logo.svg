@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 1280" role="img" aria-label="Ethereum logo wireframe" style="background-color:transparent">
+  <g fill="none" stroke="#6a6a6a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M648 110 L331 635"/>
+    <path d="M648 110 L965 635"/>
+    <path d="M648 110 L648 492"/>
+
+    <path d="M331 635 L648 492"/>
+    <path d="M965 635 L648 492"/>
+
+    <path d="M331 635 L648 834"/>
+    <path d="M965 635 L648 834"/>
+    <path d="M648 492 L648 834"/>
+
+    <path d="M331 705 L648 898"/>
+    <path d="M965 705 L648 898"/>
+
+    <path d="M331 705 L648 1179"/>
+    <path d="M965 705 L648 1179"/>
+    <path d="M648 898 L648 1179"/>
+  </g>
+</svg>

@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { reportUserError } from "src/lib/userErrorReporter";
 
 type BubbleKind = "success" | "error" | "info";
-type BubblePlacement = "above";
+type BubblePlacement = "above" | "below";
 
 type BubbleMessage = {
   kind: BubbleKind;
@@ -17,6 +18,10 @@ type BubbleMessage = {
 const STATUS_SELECTOR = ".status";
 const CLICK_CONTEXT_WINDOW_MS = 120000;
 const BUBBLE_DISMISS_DELAY_MS = 3200;
+const BUBBLE_HORIZONTAL_MARGIN = 80;
+const BUBBLE_ESTIMATED_HEIGHT = 72;
+const BUBBLE_VERTICAL_OFFSET = 10;
+const BUBBLE_BOUNDARY_PADDING = 16;
 
 type AnchorSnapshot = {
   element: HTMLElement | null;
@@ -28,8 +33,62 @@ type AnchorSnapshot = {
   } | null;
 };
 
-function inferBubbleKind(text: string): BubbleKind {
+function normalizeExplicitKind(raw: string | undefined): BubbleKind | null {
+  const value = String(raw || "").trim().toLowerCase();
+  if (value === "error" || value === "success" || value === "info") {
+    return value;
+  }
+  return null;
+}
+
+function inferBubbleKind(text: string, node: Element, errorOnlyMode: boolean): BubbleKind {
+  const explicitKind =
+    normalizeExplicitKind((node as HTMLElement).dataset.statusKind) ||
+    normalizeExplicitKind(
+      (node.closest("[data-status-kind]") as HTMLElement | null)?.dataset.statusKind
+    );
+  if (explicitKind) {
+    return explicitKind;
+  }
+
   const value = text.toLowerCase();
+  const infoPatterns = [
+    "loading",
+    "checking",
+    "saving",
+    "registering",
+    "updating",
+    "deleting",
+    "decrypting",
+    "preparing",
+    "fetching",
+    "submitting",
+    "connecting",
+    "status options are open",
+  ];
+  if (infoPatterns.some((pattern) => value.includes(pattern))) {
+    return "info";
+  }
+
+  const successPatterns = [
+    "successful",
+    "updated.",
+    "opened.",
+    "loaded.",
+    "saved.",
+    "deleted.",
+    "unregistered.",
+    "registered.",
+    "agent banned.",
+    "ban removed.",
+    "community closed.",
+    "deletion scheduled.",
+    "signature generated.",
+  ];
+  if (successPatterns.some((pattern) => value.includes(pattern))) {
+    return "success";
+  }
+
   if (
     value.includes("error") ||
     value.includes("failed") ||
@@ -38,22 +97,32 @@ function inferBubbleKind(text: string): BubbleKind {
     value.includes("not found") ||
     value.includes("invalid") ||
     value.includes("expired") ||
-    value.includes("cancel")
+    value.includes("cancel") ||
+    value.includes("metamask not detected") ||
+    value.includes("connect wallet first") ||
+    value.includes("select a ") ||
+    value.includes("no wallet selected") ||
+    value.includes("no active communities") ||
+    value.includes("could not be loaded") ||
+    value.includes("community is closed") ||
+    value.includes("only the community owner") ||
+    value.includes("already belong to different communities") ||
+    value.includes("already registered") ||
+    value.includes("can create at most") ||
+    value.includes("requires at least") ||
+    value.includes("permission is required") ||
+    value.includes("did not match") ||
+    value.includes("check update first") ||
+    value.includes("no applicable update")
   ) {
     return "error";
   }
-  if (
-    value.includes("loading") ||
-    value.includes("checking") ||
-    value.includes("saving") ||
-    value.includes("registering") ||
-    value.includes("updating") ||
-    value.includes("deleting") ||
-    value.includes("decrypting")
-  ) {
-    return "info";
+
+  if (errorOnlyMode) {
+    return "error";
   }
-  return "success";
+
+  return "info";
 }
 
 function normalizeStatusText(node: Element) {
@@ -61,6 +130,7 @@ function normalizeStatusText(node: Element) {
 }
 
 export function StatusBubbleBridge() {
+  const [portalReady, setPortalReady] = useState(false);
   const [bubbleMessage, setBubbleMessage] = useState<BubbleMessage | null>(null);
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bubbleAnchorElementRef = useRef<HTMLElement | null>(null);
@@ -70,6 +140,13 @@ export function StatusBubbleBridge() {
     anchor: null,
     at: 0,
   });
+
+  useEffect(() => {
+    setPortalReady(true);
+    return () => {
+      setPortalReady(false);
+    };
+  }, []);
 
   const scheduleBubbleDismiss = useCallback(() => {
     if (bubbleTimerRef.current) {
@@ -92,7 +169,7 @@ export function StatusBubbleBridge() {
 
       let left = defaultLeft;
       let top = defaultTop;
-      const placement: BubblePlacement = "above";
+      let placement: BubblePlacement = "above";
 
       bubbleAnchorElementRef.current = null;
       if (anchor && typeof window !== "undefined") {
@@ -104,8 +181,63 @@ export function StatusBubbleBridge() {
             : anchor.rect;
         if (rect) {
           const nextLeft = rect.left + rect.width / 2;
-          left = Math.min(Math.max(nextLeft, 80), viewportWidth - 80);
-          top = rect.top;
+          const modalShell = anchor.element?.closest(
+            ".community-create-modal-shell, .agent-author-modal"
+          ) as HTMLElement | null;
+          const boundaryRect = modalShell?.getBoundingClientRect() || null;
+          const requiredSpace = BUBBLE_ESTIMATED_HEIGHT + BUBBLE_VERTICAL_OFFSET;
+
+          if (boundaryRect) {
+            const boundaryMinLeft = Math.max(
+              boundaryRect.left + BUBBLE_BOUNDARY_PADDING,
+              BUBBLE_HORIZONTAL_MARGIN
+            );
+            const boundaryMaxLeft = Math.min(
+              boundaryRect.right - BUBBLE_BOUNDARY_PADDING,
+              viewportWidth - BUBBLE_HORIZONTAL_MARGIN
+            );
+            if (boundaryMinLeft <= boundaryMaxLeft) {
+              left = Math.min(Math.max(nextLeft, boundaryMinLeft), boundaryMaxLeft);
+            } else {
+              left = Math.min(
+                Math.max((boundaryRect.left + boundaryRect.right) / 2, BUBBLE_HORIZONTAL_MARGIN),
+                viewportWidth - BUBBLE_HORIZONTAL_MARGIN
+              );
+            }
+
+            const spaceAbove = rect.top - boundaryRect.top;
+            const spaceBelow = boundaryRect.bottom - rect.bottom;
+            if (spaceAbove < requiredSpace && spaceBelow > spaceAbove) {
+              placement = "below";
+              top = rect.bottom;
+            } else {
+              placement = "above";
+              top = rect.top;
+            }
+
+            if (placement === "above" && spaceAbove < requiredSpace) {
+              top = boundaryRect.top + requiredSpace;
+            }
+            if (placement === "below" && spaceBelow < requiredSpace) {
+              top = boundaryRect.bottom - requiredSpace;
+            }
+          } else {
+            left = Math.min(
+              Math.max(nextLeft, BUBBLE_HORIZONTAL_MARGIN),
+              viewportWidth - BUBBLE_HORIZONTAL_MARGIN
+            );
+            const viewportHeight =
+              typeof window !== "undefined" ? window.innerHeight : 900;
+            const spaceAbove = rect.top;
+            const spaceBelow = viewportHeight - rect.bottom;
+            if (spaceAbove < requiredSpace && spaceBelow > spaceAbove) {
+              placement = "below";
+              top = rect.bottom;
+            } else {
+              placement = "above";
+              top = rect.top;
+            }
+          }
         }
       }
 
@@ -134,7 +266,13 @@ export function StatusBubbleBridge() {
       if (ageMs > CLICK_CONTEXT_WINDOW_MS || !lastActionRef.current.anchor) {
         continue;
       }
-      const bubbleKind = inferBubbleKind(nextText);
+      const errorOnlyMode = Boolean(
+        node.closest("[data-status-bubble='error-only']")
+      );
+      const bubbleKind = inferBubbleKind(nextText, node, errorOnlyMode);
+      if (errorOnlyMode && bubbleKind !== "error") {
+        continue;
+      }
       if (bubbleKind === "error") {
         reportUserError({
           source: "status-bubble",
@@ -238,9 +376,9 @@ export function StatusBubbleBridge() {
     };
   }, []);
 
-  if (!bubbleMessage) return null;
+  if (!portalReady || !bubbleMessage) return null;
 
-  return (
+  const bubbleNode = (
     <div
       className={`floating-status-bubble floating-status-bubble-${bubbleMessage.kind} floating-status-bubble-${bubbleMessage.placement}`}
       style={{
@@ -254,4 +392,6 @@ export function StatusBubbleBridge() {
       {bubbleMessage.text}
     </div>
   );
+
+  return createPortal(bubbleNode, document.body);
 }

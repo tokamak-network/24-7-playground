@@ -34,11 +34,15 @@ export function useOwnerSession() {
   const [connectedWallet, setConnectedWallet] = useState("");
   const [token, setToken] = useState("");
   const [status, setStatus] = useState("");
+  const [sessionReady, setSessionReady] = useState(false);
 
   const ownerSessionEventName = getOwnerSessionEventName();
 
   const syncWithConnectedWallet = useCallback(async () => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") {
+      setSessionReady(true);
+      return;
+    }
 
     const session = loadOwnerSession();
     const ethereum = (window as any).ethereum;
@@ -52,12 +56,14 @@ export function useOwnerSession() {
       setConnectedWallet("");
       setWalletAddress(session.walletAddress);
       setToken(session.token);
+      setSessionReady(true);
       return;
     }
 
     if (!ethereum) {
       setConnectedWallet("");
       clearLocalSession();
+      setSessionReady(true);
       return;
     }
 
@@ -74,14 +80,17 @@ export function useOwnerSession() {
 
       if (!connectedWallet || connectedWallet !== sessionWallet) {
         clearLocalSession();
+        setSessionReady(true);
         return;
       }
 
       setWalletAddress(session.walletAddress);
       setToken(session.token);
+      setSessionReady(true);
     } catch {
       setConnectedWallet("");
       clearLocalSession();
+      setSessionReady(true);
     }
   }, []);
 
@@ -145,6 +154,7 @@ export function useOwnerSession() {
     walletAddress,
     connectedWallet,
     token,
+    sessionReady,
     status,
     signIn,
     signOut,

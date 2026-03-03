@@ -3,6 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAddress } from "ethers";
 import { Button } from "src/components/ui";
+import {
+  invalidateOwnedCommunitiesCache,
+  readOwnedCommunitiesCache,
+  writeOwnedCommunitiesCache,
+} from "src/lib/ownedCommunitiesCache";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type OwnedCommunity = {
   id: string;
@@ -24,6 +30,25 @@ type UpdatePurpose =
   | "REMOVE_CONTRACT"
   | "ADD_CONTRACT";
 
+export type CommunityUpdateAppliedPayload = {
+  communityId: string;
+  purpose: UpdatePurpose;
+  description?: string;
+  contract?: {
+    id: string;
+    name: string;
+    chain: string;
+    address: string;
+  };
+  removedContractId?: string;
+  addedContract?: {
+    id: string;
+    name: string;
+    chain: string;
+    address: string;
+  };
+};
+
 const PURPOSE_OPTIONS: Array<{ value: UpdatePurpose; label: string }> = [
   { value: "UPDATE_DESCRIPTION", label: "Service Description" },
   { value: "UPDATE_CONTRACT", label: "Update Existing Contract" },
@@ -33,6 +58,18 @@ const PURPOSE_OPTIONS: Array<{ value: UpdatePurpose; label: string }> = [
 
 const FIXED_MESSAGE = "24-7-playground";
 
+function resolveTargetCommunityId(
+  items: OwnedCommunity[],
+  preferredCommunityId?: string
+) {
+  if (preferredCommunityId) {
+    return items.some((community) => community.id === preferredCommunityId)
+      ? preferredCommunityId
+      : "";
+  }
+  return items[0]?.id || "";
+}
+
 function shortenAddress(value: string) {
   if (value.length <= 14) {
     return value;
@@ -40,11 +77,20 @@ function shortenAddress(value: string) {
   return `${value.slice(0, 10)}...`;
 }
 
-export function CommunityUpdateForm() {
+type Props = {
+  initialCommunityId?: string;
+  initialWalletAddress?: string;
+  onApplied?: (payload: CommunityUpdateAppliedPayload) => void;
+};
+
+export function CommunityUpdateForm({
+  initialCommunityId,
+  initialWalletAddress,
+  onApplied,
+}: Props = {}) {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [communities, setCommunities] = useState<OwnedCommunity[]>([]);
-  const [selectedId, setSelectedId] = useState("");
   const [purpose, setPurpose] = useState<UpdatePurpose>("UPDATE_DESCRIPTION");
   const [selectedContractId, setSelectedContractId] = useState("");
   const [descriptionDraft, setDescriptionDraft] = useState("");
@@ -53,9 +99,14 @@ export function CommunityUpdateForm() {
   const [addName, setAddName] = useState("");
   const [addAddress, setAddAddress] = useState("");
   const [busy, setBusy] = useState(false);
+  const [isLoadingOwned, setIsLoadingOwned] = useState(false);
   const [checkBusy, setCheckBusy] = useState(false);
   const [updateCheckCompleted, setUpdateCheckCompleted] = useState(false);
   const [updateReady, setUpdateReady] = useState(false);
+  const targetCommunityId = useMemo(
+    () => resolveTargetCommunityId(communities, initialCommunityId),
+    [communities, initialCommunityId]
+  );
 
   const normalizeAddress = (value: string) => {
     try {
@@ -66,8 +117,8 @@ export function CommunityUpdateForm() {
   };
 
   const selectedCommunity = useMemo(
-    () => communities.find((community) => community.id === selectedId) || null,
-    [communities, selectedId]
+    () => communities.find((community) => community.id === targetCommunityId) || null,
+    [communities, targetCommunityId]
   );
 
   const selectedContract = useMemo(
@@ -100,7 +151,24 @@ export function CommunityUpdateForm() {
 
   const fetchOwned = async (walletAddress: string) => {
     if (!walletAddress) return;
-    setBusy(true);
+    const normalizedWallet = walletAddress.toLowerCase();
+    const cached = readOwnedCommunitiesCache<OwnedCommunity[]>("owned", normalizedWallet);
+    if (cached) {
+      setCommunities(cached);
+      if (cached.length === 0) {
+        setStatus("No active communities owned by this wallet.");
+      } else {
+        const targetCommunityId = resolveTargetCommunityId(cached, initialCommunityId);
+        setStatus(
+          targetCommunityId
+            ? ""
+            : "The selected community could not be loaded for this wallet."
+        );
+      }
+      return;
+    }
+
+    setIsLoadingOwned(true);
     setStatus("Loading owned communities...");
     try {
       const res = await fetch(
@@ -112,25 +180,34 @@ export function CommunityUpdateForm() {
       if (!res.ok) {
         throw new Error(data.error || "Failed to load communities");
       }
-      const active = (data.communities || []).filter(
+      const active: OwnedCommunity[] = (data.communities || []).filter(
         (c: OwnedCommunity) => c.status !== "CLOSED"
       );
+      writeOwnedCommunitiesCache("owned", normalizedWallet, active);
       setCommunities(active);
       if (active.length === 0) {
-        setSelectedId("");
         setStatus("No active communities owned by this wallet.");
       } else {
-        setSelectedId(active[0]?.id || "");
-        setStatus("");
+        const targetCommunityId = resolveTargetCommunityId(active, initialCommunityId);
+        setStatus(
+          targetCommunityId
+            ? ""
+            : "The selected community could not be loaded for this wallet."
+        );
       }
     } catch (error) {
       setCommunities([]);
-      setSelectedId("");
       setStatus(error instanceof Error ? error.message : "Unexpected error");
     } finally {
-      setBusy(false);
+      setIsLoadingOwned(false);
     }
   };
+
+  useEffect(() => {
+    if (!wallet && initialWalletAddress) {
+      setWallet(normalizeAddress(initialWalletAddress));
+    }
+  }, [initialWalletAddress, wallet]);
 
   useEffect(() => {
     const ethereum = (window as any).ethereum;
@@ -193,7 +270,7 @@ export function CommunityUpdateForm() {
   useEffect(() => {
     setUpdateCheckCompleted(false);
     setUpdateReady(false);
-  }, [purpose, selectedId, selectedContractId, updateName, updateAddress]);
+  }, [purpose, selectedCommunity?.id, selectedContractId, updateName, updateAddress]);
 
   const buildUpdateContractPayload = () => {
     const payload: Record<string, unknown> = {
@@ -212,7 +289,7 @@ export function CommunityUpdateForm() {
       return;
     }
     if (!selectedCommunity) {
-      setStatus("Select a community.");
+      setStatus("The selected community could not be loaded.");
       return;
     }
     if (!selectedContractId) {
@@ -299,7 +376,7 @@ export function CommunityUpdateForm() {
       return;
     }
     if (!selectedCommunity) {
-      setStatus("Select a community.");
+      setStatus("The selected community could not be loaded.");
       return;
     }
 
@@ -377,7 +454,7 @@ export function CommunityUpdateForm() {
         params: [FIXED_MESSAGE, walletAddress],
       })) as string;
 
-      const res = await fetch("/api/contracts/update", {
+      const res = await fetchMutationWithAutoReload("/api/contracts/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...payload, signature }),
@@ -401,6 +478,52 @@ export function CommunityUpdateForm() {
       setStatus(
         `${actionLabel || "Update"} applied. SYSTEM thread was updated in-place and a SYSTEM comment was added${changedCount > 0 ? ` (${changedCount} contract change)` : ""}.`
       );
+      invalidateOwnedCommunitiesCache(walletAddress);
+
+      let appliedPayload: CommunityUpdateAppliedPayload | null = null;
+      if (purpose === "UPDATE_DESCRIPTION") {
+        appliedPayload = {
+          communityId: selectedCommunity.id,
+          purpose,
+          description: descriptionDraft,
+        };
+      } else if (purpose === "UPDATE_CONTRACT" && selectedContract) {
+        appliedPayload = {
+          communityId: selectedCommunity.id,
+          purpose,
+          contract: {
+            id: selectedContract.id,
+            name: updateName.trim() || selectedContract.name,
+            chain: selectedContract.chain,
+            address: updateAddress.trim() || selectedContract.address,
+          },
+        };
+      } else if (purpose === "REMOVE_CONTRACT") {
+        appliedPayload = {
+          communityId: selectedCommunity.id,
+          purpose,
+          removedContractId: selectedContractId,
+        };
+      } else if (purpose === "ADD_CONTRACT") {
+        const nextAddress = addAddress.trim();
+        if (nextAddress) {
+          appliedPayload = {
+            communityId: selectedCommunity.id,
+            purpose,
+            addedContract: {
+              id: `temp-${Date.now()}`,
+              name: addName.trim() || "Contract",
+              chain: "Sepolia",
+              address: nextAddress,
+            },
+          };
+        }
+      }
+
+      if (onApplied && appliedPayload) {
+        onApplied(appliedPayload);
+        return;
+      }
 
       await fetchOwned(normalizeAddress(walletAddress));
 
@@ -422,55 +545,62 @@ export function CommunityUpdateForm() {
   const canCheckUpdate =
     purpose === "UPDATE_CONTRACT" &&
     Boolean(wallet && selectedCommunity && selectedContractId && updateAddress.trim()) &&
+    !isLoadingOwned &&
     !busy &&
     !checkBusy;
+  const canSubmitRemoveContract = Boolean(selectedContractId);
+  const canSubmitAddContract = Boolean(addAddress.trim());
+  const canSubmitNonUpdate =
+    purpose === "REMOVE_CONTRACT"
+      ? canSubmitRemoveContract
+      : purpose === "ADD_CONTRACT"
+        ? canSubmitAddContract
+        : true;
 
   const primaryLabel =
-    purpose === "UPDATE_CONTRACT"
-      ? checkBusy
-        ? "Checking..."
+    isLoadingOwned
+      ? "Loading..."
+      : purpose === "UPDATE_CONTRACT"
+        ? checkBusy
+          ? "Checking..."
+          : busy
+            ? "Working..."
+            : updateCheckCompleted
+              ? updateReady
+                ? "Apply Update"
+                : "Nothing to update"
+              : "Check Update"
         : busy
           ? "Working..."
-          : updateCheckCompleted
-            ? "Apply Update"
-            : "Check Update"
-      : busy
-        ? "Working..."
-        : purpose === "REMOVE_CONTRACT"
-          ? "Remove Contract"
-          : purpose === "ADD_CONTRACT"
-            ? "Add Contract"
-            : "Apply Update";
+          : purpose === "REMOVE_CONTRACT"
+            ? "Remove Contract"
+            : purpose === "ADD_CONTRACT"
+              ? "Add Contract"
+              : "Apply Update";
 
   const primaryDisabled =
     purpose === "UPDATE_CONTRACT"
-      ? checkBusy ||
+      ? isLoadingOwned ||
+        checkBusy ||
         busy ||
         (!updateCheckCompleted ? !canCheckUpdate : !updateReady)
-      : busy || checkBusy;
+      : isLoadingOwned || busy || checkBusy || !canSubmitNonUpdate;
 
   return (
     <div className="form">
       <div className="field">
-        <label>Owned Communities</label>
+        <label>Target Community</label>
         {wallet ? (
-          communities.length > 0 ? (
-            <select
-              value={selectedId}
-              onChange={(event) => setSelectedId(event.currentTarget.value)}
-            >
-              {communities.map((community) => (
-                <option key={community.id} value={community.id}>
-                  {community.slug} · {community.contracts.length} contract
-                  {community.contracts.length === 1 ? "" : "s"}
-                </option>
-              ))}
-            </select>
+          selectedCommunity ? (
+            <input
+              readOnly
+              value={`${selectedCommunity.name} (${selectedCommunity.slug})`}
+            />
           ) : (
-            <div className="status">No active communities found.</div>
+            <div>The selected community could not be loaded for this wallet.</div>
           )
         ) : (
-          <div className="status">Connect MetaMask to load communities.</div>
+          <div>Connect MetaMask to load community data.</div>
         )}
       </div>
 

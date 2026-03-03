@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "src/db";
 
 const COMMUNITY_CLEANUP_MIN_INTERVAL_MS = 60_000;
+const COMMUNITY_CLEANUP_BATCH_SIZE = 50;
 
 type CleanupState = {
   inFlight: Promise<void> | null;
@@ -22,19 +23,7 @@ if (process.env.NODE_ENV !== "production") {
   globalForCleanup.__communityCleanupState = cleanupState;
 }
 
-async function cleanupExpiredCommunitiesOnce(now: Date) {
-  const expired = await prisma.community.findMany({
-    where: {
-      status: "CLOSED",
-      deleteAt: { lt: now },
-    },
-    select: { id: true },
-  });
-  if (!expired.length) {
-    return;
-  }
-
-  const expiredCommunityIds = expired.map((community) => community.id);
+async function cleanupExpiredCommunityBatch(expiredCommunityIds: string[]) {
   await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const threads = await tx.thread.findMany({
       where: { communityId: { in: expiredCommunityIds } },
@@ -66,24 +55,41 @@ async function cleanupExpiredCommunitiesOnce(now: Date) {
   });
 }
 
-export async function cleanupExpiredCommunities() {
-  const nowMs = Date.now();
-  if (
-    nowMs - cleanupState.lastCompletedAtMs <
-    COMMUNITY_CLEANUP_MIN_INTERVAL_MS
-  ) {
-    return;
+async function cleanupExpiredCommunitiesOnce(now: Date) {
+  while (true) {
+    const expired = await prisma.community.findMany({
+      where: {
+        status: "CLOSED",
+        deleteAt: { lt: now },
+      },
+      select: { id: true },
+      orderBy: [{ deleteAt: "asc" }, { id: "asc" }],
+      take: COMMUNITY_CLEANUP_BATCH_SIZE,
+    });
+    if (expired.length === 0) {
+      return;
+    }
+
+    await cleanupExpiredCommunityBatch(expired.map((community) => community.id));
+
+    if (expired.length < COMMUNITY_CLEANUP_BATCH_SIZE) {
+      return;
+    }
   }
+}
+
+function shouldThrottleCleanup(nowMs: number) {
+  return nowMs - cleanupState.lastCompletedAtMs < COMMUNITY_CLEANUP_MIN_INTERVAL_MS;
+}
+
+function ensureCleanupTask() {
   if (cleanupState.inFlight) {
     return cleanupState.inFlight;
   }
 
   cleanupState.inFlight = (async () => {
     const startedAtMs = Date.now();
-    if (
-      startedAtMs - cleanupState.lastCompletedAtMs <
-      COMMUNITY_CLEANUP_MIN_INTERVAL_MS
-    ) {
+    if (shouldThrottleCleanup(startedAtMs)) {
       return;
     }
 
@@ -94,12 +100,27 @@ export async function cleanupExpiredCommunities() {
       console.error("[community] cleanupExpiredCommunities failed", error);
     } finally {
       cleanupState.lastCompletedAtMs = Date.now();
+      cleanupState.inFlight = null;
     }
   })();
 
-  try {
-    await cleanupState.inFlight;
-  } finally {
-    cleanupState.inFlight = null;
+  return cleanupState.inFlight;
+}
+
+type CleanupOptions = {
+  blocking?: boolean;
+};
+
+export async function cleanupExpiredCommunities(options: CleanupOptions = {}) {
+  const nowMs = Date.now();
+  if (shouldThrottleCleanup(nowMs)) {
+    return;
   }
+
+  const blocking = options.blocking !== false;
+  const task = ensureCleanupTask();
+  if (!blocking) {
+    return;
+  }
+  await task;
 }

@@ -5,7 +5,7 @@ import { cleanupExpiredCommunities } from "src/lib/community";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  await cleanupExpiredCommunities();
+  void cleanupExpiredCommunities({ blocking: false });
   const { searchParams } = new URL(request.url);
   const walletAddress = String(searchParams.get("walletAddress") || "")
     .trim()
@@ -20,9 +20,9 @@ export async function GET(request: Request) {
 
   const communities = await prisma.community.findMany({
     where: {
+      status: "ACTIVE",
       ownerWallet: {
         equals: walletAddress,
-        mode: "insensitive",
       },
     },
     include: {

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 import { AgentAuthorProfileTrigger } from "src/components/AgentAuthorProfileTrigger";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { LocalDateText } from "src/components/LocalDateText";
@@ -23,6 +24,7 @@ type Props = {
   bodyMaxChars?: number;
   compactBody?: boolean;
   titleAsText?: boolean;
+  navigateOnCardClick?: boolean;
   metaPrefix?: ReactNode;
 };
 
@@ -43,8 +45,10 @@ export function ThreadFeedCard({
   bodyMaxChars = 280,
   compactBody = true,
   titleAsText = false,
+  navigateOnCardClick = false,
   metaPrefix,
 }: Props) {
+  const router = useRouter();
   const normalizedAuthor = author.trim();
   const isSystemAuthor = normalizedAuthor.toLowerCase() === "system";
   const canOpenAuthorProfile = Boolean(authorAgentId && !isSystemAuthor);
@@ -57,11 +61,48 @@ export function ThreadFeedCard({
         ? "ISSUED"
         : "NOT ISSUED"
       : undefined);
-  const articleClassName = `feed-item${className ? ` ${className}` : ""}`;
-  const shouldLinkTitle = Boolean(href) && !titleAsText;
+  const canNavigateByCard = Boolean(href) && navigateOnCardClick;
+  const articleClassName = `feed-item${canNavigateByCard ? " feed-item-clickable" : ""}${className ? ` ${className}` : ""}`;
+  const shouldLinkTitle = Boolean(href) && !titleAsText && !canNavigateByCard;
+
+  const isInteractiveTarget = (target: EventTarget | null, currentTarget: HTMLElement) => {
+    if (!(target instanceof HTMLElement)) return false;
+    const interactiveAncestor = target.closest(
+      "a, button, input, textarea, select, label, summary, details, [role='button'], [role='link']"
+    );
+    if (!interactiveAncestor) return false;
+    return interactiveAncestor !== currentTarget;
+  };
+
+  const navigateToThread = () => {
+    if (!href) return;
+    router.push(href);
+  };
+
+  const handleCardClick = (event: MouseEvent<HTMLElement>) => {
+    if (!canNavigateByCard) return;
+    if (isInteractiveTarget(event.target, event.currentTarget)) return;
+    navigateToThread();
+  };
+
+  const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (!canNavigateByCard) return;
+    if (isInteractiveTarget(event.target, event.currentTarget)) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      navigateToThread();
+    }
+  };
 
   return (
-    <article className={articleClassName}>
+    <article
+      className={articleClassName}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      role={canNavigateByCard ? "link" : undefined}
+      tabIndex={canNavigateByCard ? 0 : undefined}
+      aria-label={canNavigateByCard ? `Open thread ${title}` : undefined}
+    >
       <div className="thread-title-block">
         <span className="badge">thread</span>
         <div className="badge">{badgeLabel}</div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOwnerSession } from "./ownerSession";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type Props = {
   threadId: string;
@@ -76,7 +77,7 @@ export function OwnerRequestStatusForm({
     setIsSubmitting(true);
     setStatus("Updating request status...");
     try {
-      const res = await fetch(`/api/threads/${threadId}/request-status`, {
+      const res = await fetchMutationWithAutoReload(`/api/threads/${threadId}/request-status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 
-const fs = require("node:fs");
 const http = require("node:http");
-const path = require("node:path");
 const crypto = require("node:crypto");
+const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
+const net = require("node:net");
+const readline = require("node:readline/promises");
 const { RunnerEngine } = require("./engine");
 const {
   toErrorMessage,
@@ -15,6 +18,9 @@ const {
 const { communicationLogPath } = require("./communicationLog");
 
 const HARDCODED_ALLOWED_ORIGIN = "https://agentic-ethereum.com";
+const DEFAULT_LAUNCHER_PORT = 4318;
+const LAUNCHER_STATE_DIR = path.join(os.homedir(), ".tokamak-runner");
+const LAUNCHER_STATE_FILE = path.join(LAUNCHER_STATE_DIR, "launcher.json");
 
 function parseArgs(argv) {
   const [, , command = "serve", ...rest] = argv;
@@ -155,6 +161,215 @@ function normalizeAgentId(value) {
   return String(value || "").trim();
 }
 
+function parsePositivePort(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) return null;
+  const parsed = Number(normalized);
+  if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 65535) return null;
+  return Math.floor(parsed);
+}
+
+function canPromptInteractively() {
+  return Boolean(process.stdin.isTTY && process.stdout.isTTY);
+}
+
+async function isPortAvailable(host, port) {
+  return new Promise((resolve) => {
+    const server = net.createServer();
+    server.once("error", () => resolve(false));
+    server.once("listening", () => {
+      server.close(() => resolve(true));
+    });
+    server.listen(port, host);
+  });
+}
+
+async function findAvailablePort(host, startPort, maxAttempts = 40) {
+  for (let offset = 0; offset < maxAttempts; offset += 1) {
+    const candidate = startPort + offset;
+    if (candidate > 65535) break;
+    const available = await isPortAvailable(host, candidate);
+    if (available) return candidate;
+  }
+  return null;
+}
+
+async function readLauncherState() {
+  try {
+    const raw = await fs.promises.readFile(LAUNCHER_STATE_FILE, "utf8");
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    return {
+      launcherSecret:
+        typeof parsed.launcherSecret === "string"
+          ? parsed.launcherSecret.trim()
+          : "",
+      port: parsePositivePort(parsed.port),
+    };
+  } catch {
+    return {};
+  }
+}
+
+async function writeLauncherState(nextState) {
+  const payload = {
+    launcherSecret: String(nextState.launcherSecret || "").trim(),
+    port: parsePositivePort(nextState.port),
+  };
+  await fs.promises.mkdir(LAUNCHER_STATE_DIR, { recursive: true });
+  const body = `${JSON.stringify(payload, null, 2)}\n`;
+  await fs.promises.writeFile(LAUNCHER_STATE_FILE, body, { mode: 0o600 });
+}
+
+async function promptInteractiveLauncherState(params) {
+  const { host, initialPort, initialSecret } = params;
+  if (!canPromptInteractively()) {
+    return {
+      port: initialPort,
+      launcherSecret: initialSecret,
+      prompted: false,
+    };
+  }
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+  let prompted = false;
+
+  try {
+    let port = parsePositivePort(initialPort);
+    if (!port) {
+      prompted = true;
+      const suggestedPort = (await findAvailablePort(host, DEFAULT_LAUNCHER_PORT)) || DEFAULT_LAUNCHER_PORT;
+      while (true) {
+        const input = await rl.question(
+          `Runner launcher port [${suggestedPort}]: `
+        );
+        const nextPort = parsePositivePort(input.trim() || String(suggestedPort));
+        if (!nextPort) {
+          console.log("[runner-launcher] Enter a valid port number (1-65535).");
+          continue;
+        }
+        const available = await isPortAvailable(host, nextPort);
+        if (!available) {
+          console.log(
+            `[runner-launcher] Port ${nextPort} is already in use. Enter another port.`
+          );
+          continue;
+        }
+        port = nextPort;
+        break;
+      }
+    }
+
+    let launcherSecret = String(initialSecret || "").trim();
+    if (!launcherSecret) {
+      prompted = true;
+      while (true) {
+        const input = await rl.question(
+          "Runner launcher secret (x-runner-secret): "
+        );
+        launcherSecret = String(input || "").trim();
+        if (launcherSecret) break;
+        console.log("[runner-launcher] Secret is required.");
+      }
+    }
+
+    return { port, launcherSecret, prompted };
+  } finally {
+    rl.close();
+  }
+}
+
+async function resolveLauncherRuntimeConfig(options) {
+  const hasOwn = (key) =>
+    Object.prototype.hasOwnProperty.call(options || {}, key);
+  const host = String(options.host || "127.0.0.1");
+  const rawSnsValue = String(hasOwn("sns") ? options.sns : "").trim();
+  if (hasOwn("sns") && !rawSnsValue) {
+    throw new Error("--sns must be a valid http(s) origin");
+  }
+  const allowedOrigin = resolveAllowedOrigin(options);
+
+  const rawCliPort = String(hasOwn("port") ? options.port : "").trim();
+  const rawCliSecret = String(hasOwn("secret") ? options.secret : "").trim();
+  if (hasOwn("port") && !rawCliPort) {
+    throw new Error("--port requires a positive integer value");
+  }
+  if (hasOwn("secret") && !rawCliSecret) {
+    throw new Error("--secret requires a non-empty value");
+  }
+
+  const saved = await readLauncherState();
+  const envPort = String(process.env.RUNNER_PORT || "").trim();
+  const envSecret = String(process.env.RUNNER_LAUNCHER_SECRET || "").trim();
+
+  let port = parsePositivePort(rawCliPort) ??
+    parsePositivePort(envPort) ??
+    parsePositivePort(saved.port);
+  let launcherSecret = String(rawCliSecret || envSecret || saved.launcherSecret || "").trim();
+
+  if (!port || !launcherSecret) {
+    if (!canPromptInteractively()) {
+      if (!port) {
+        port = DEFAULT_LAUNCHER_PORT;
+      }
+      if (!launcherSecret) {
+        throw new Error(
+          "RUNNER_LAUNCHER_SECRET is required. Set --secret or env RUNNER_LAUNCHER_SECRET."
+        );
+      }
+    } else {
+      const prompted = await promptInteractiveLauncherState({
+        host,
+        initialPort: port,
+        initialSecret: launcherSecret,
+      });
+      port = prompted.port;
+      launcherSecret = prompted.launcherSecret;
+      if (prompted.prompted) {
+        await writeLauncherState({ port, launcherSecret });
+      }
+    }
+  }
+
+  const portAvailable = await isPortAvailable(host, port);
+  if (!portAvailable) {
+    if (!rawCliPort && canPromptInteractively()) {
+      console.log(
+        `[runner-launcher] Port ${port} is already in use. Choose another port.`
+      );
+      const prompted = await promptInteractiveLauncherState({
+        host,
+        initialPort: null,
+        initialSecret: launcherSecret,
+      });
+      port = prompted.port;
+      launcherSecret = prompted.launcherSecret;
+      if (prompted.prompted) {
+        await writeLauncherState({ port, launcherSecret });
+      }
+    } else {
+      throw new Error(`Port ${port} is already in use`);
+    }
+  }
+
+  if (!port) {
+    throw new Error("Invalid --port value");
+  }
+  if (!launcherSecret) {
+    throw new Error("RUNNER_LAUNCHER_SECRET (or --secret) is required");
+  }
+
+  return {
+    host,
+    port,
+    allowedOrigin,
+    launcherSecret,
+  };
+}
+
 class MultiAgentRunnerManager {
   constructor(logger = console) {
     this.logger = logger;
@@ -171,6 +386,7 @@ class MultiAgentRunnerManager {
       cycleCount: 0,
       lastActionCount: 0,
       lastLlmOutput: null,
+      elapsedRunningMs: 0,
       llmUsageCumulative: {
         llmCallCount: 0,
         callsWithUsage: 0,
@@ -179,6 +395,11 @@ class MultiAgentRunnerManager {
         outputTokens: 0,
         totalTokens: 0,
       },
+      agentHandle: "",
+      activeCommunityName: "",
+      activeCommunitySlug: "",
+      cumulativeThreadCreateCount: 0,
+      cumulativeWrittenCommunityCount: 0,
       config: null,
     };
   }
@@ -271,108 +492,15 @@ class MultiAgentRunnerManager {
     }
     return this.getStatus();
   }
-
-  updateConfig(configPatch) {
-    const requestedAgentId = normalizeAgentId(configPatch && configPatch.agentId);
-    const active = this.#activeStatuses();
-    const agentId =
-      requestedAgentId || (active.length === 1 ? active[0].agentId : "");
-    if (!agentId) {
-      throw new Error("agentId is required for /runner/config when multiple agents are running");
-    }
-    const engine = this.engines.get(agentId);
-    if (!engine || !engine.getStatus().running) {
-      throw new Error(`Runner is not running for agent ${agentId}`);
-    }
-    engine.updateConfig(configPatch);
-    return this.getStatus({ agentId });
-  }
-
-  async runOnceWithConfig(configInput) {
-    const engine = new RunnerEngine(this.logger);
-    return engine.runOnceWithConfig(configInput);
-  }
-
-  async runOnce(options = {}) {
-    const agentId = normalizeAgentId(options.agentId);
-    if (agentId) {
-      const engine = this.engines.get(agentId);
-      if (!engine || !engine.getStatus().running) {
-        throw new Error(`Runner is not running for agent ${agentId}`);
-      }
-      return engine.runOnce();
-    }
-
-    const active = this.#activeStatuses();
-    if (!active.length) {
-      return {
-        ok: true,
-        skipped: true,
-        reason: "No running agents",
-        results: [],
-      };
-    }
-
-    const results = await Promise.all(
-      active.map(async (entry) => {
-        try {
-          const engine = this.engines.get(entry.agentId);
-          if (!engine) {
-            return {
-              agentId: entry.agentId,
-              ok: false,
-              error: "Runner engine not available",
-            };
-          }
-          const result = await engine.runOnce();
-          return {
-            agentId: entry.agentId,
-            ok: Boolean(result && result.ok),
-            result,
-          };
-        } catch (error) {
-          return {
-            agentId: entry.agentId,
-            ok: false,
-            error: toErrorMessage(error, "run-once failed"),
-          };
-        }
-      })
-    );
-    return {
-      ok: results.every((item) => item.ok),
-      results,
-    };
-  }
 }
 
 async function startServer(options) {
-  const hasOwn = (key) =>
-    Object.prototype.hasOwnProperty.call(options || {}, key);
-  const host = String(options.host || "127.0.0.1");
-  const rawPortValue = String(hasOwn("port") ? options.port : 4318).trim();
-  const rawSnsValue = String(hasOwn("sns") ? options.sns : "").trim();
-  const rawSecretValue = String(hasOwn("secret") ? options.secret : "").trim();
-  if (hasOwn("port") && !rawPortValue) {
-    throw new Error("--port requires a positive integer value");
-  }
-  if (hasOwn("sns") && !rawSnsValue) {
-    throw new Error("--sns must be a valid http(s) origin");
-  }
-  if (hasOwn("secret") && !rawSecretValue) {
-    throw new Error("--secret requires a non-empty value");
-  }
-  const port = Number(rawPortValue);
-  const allowedOrigin = resolveAllowedOrigin(options);
-  const launcherSecret = String(
-    hasOwn("secret") ? rawSecretValue : process.env.RUNNER_LAUNCHER_SECRET || ""
-  ).trim();
-  if (!Number.isFinite(port) || port <= 0) {
-    throw new Error("Invalid --port value");
-  }
-  if (!launcherSecret) {
-    throw new Error("RUNNER_LAUNCHER_SECRET (or --secret) is required");
-  }
+  const {
+    host,
+    port,
+    allowedOrigin,
+    launcherSecret,
+  } = await resolveLauncherRuntimeConfig(options);
   process.env.RUNNER_PORT = String(port);
 
   const manager = new MultiAgentRunnerManager(console);
@@ -509,52 +637,6 @@ async function startServer(options) {
         return;
       }
 
-      if (request.method === "POST" && route === "/runner/config") {
-        const body = await readJsonBody(request);
-        const nextStatus = manager.updateConfig(body.config || body);
-        logSummary(
-          console,
-          `launcher config updated (route=${route}, method=${request.method})`
-        );
-        jsonResponse(
-          response,
-          200,
-          {
-            ok: true,
-            message: "Runner config updated",
-            status: nextStatus,
-          },
-          { route, method: request.method, body, allowedOrigin }
-        );
-        return;
-      }
-
-      if (request.method === "POST" && route === "/runner/run-once") {
-        const body = await readJsonBody(request);
-        const requestedAgentId =
-          normalizeAgentId((body && body.agentId) || searchParams.get("agentId"));
-        const result = body && (body.config || body.snsBaseUrl)
-          ? await manager.runOnceWithConfig(body.config || body)
-          : await manager.runOnce(
-              requestedAgentId ? { agentId: requestedAgentId } : {}
-            );
-        logSummary(
-          console,
-          `launcher run-once completed (route=${route}, method=${request.method}, ok=${Boolean(result && result.ok)})`
-        );
-        jsonResponse(
-          response,
-          200,
-          {
-            ok: true,
-            result,
-            status: manager.getStatus({ agentId: requestedAgentId }),
-          },
-          { route, method: request.method, body, allowedOrigin }
-        );
-        return;
-      }
-
       jsonResponse(
         response,
         404,
@@ -599,19 +681,6 @@ async function startServer(options) {
   );
 }
 
-async function runOnceWithConfig(options) {
-  const configPath = String(options.config || "").trim();
-  if (!configPath) {
-    throw new Error("run-once requires --config <path>");
-  }
-  const absolutePath = path.resolve(process.cwd(), configPath);
-  const raw = fs.readFileSync(absolutePath, "utf8");
-  const config = JSON.parse(raw);
-  const engine = new RunnerEngine(console);
-  const result = await engine.runOnceWithConfig(config);
-  console.log(JSON.stringify(result, null, 2));
-}
-
 function printHelp() {
   console.log(
     [
@@ -619,15 +688,14 @@ function printHelp() {
       "",
       "Commands:",
       "  serve [--host 127.0.0.1] [--port 4318] [--secret <value>] [--sns <origin>]",
-      "  run-once --config ./runner.config.example.json",
+      "    - Missing --port/--secret prompts interactively on TTY and stores values in ~/.tokamak-runner/launcher.json",
+      "    - Non-interactive mode requires --secret or env RUNNER_LAUNCHER_SECRET",
       "",
       "Launcher API routes (serve):",
       "  GET  /health",
       "  GET  /runner/status?agentId=<id>",
       "  POST /runner/start      { config: RunnerConfig }",
       "  POST /runner/stop       { agentId?: string }",
-      "  POST /runner/config     { config: Partial<RunnerConfig> & { agentId } }",
-      "  POST /runner/run-once   { config?: RunnerConfig, agentId?: string }",
     ].join("\n")
   );
 }
@@ -638,9 +706,8 @@ async function main() {
     printHelp();
     return;
   }
-  if (command === "run-once") {
-    await runOnceWithConfig(options);
-    return;
+  if (command !== "serve") {
+    throw new Error(`Unsupported command: ${command}`);
   }
   await startServer(options);
 }

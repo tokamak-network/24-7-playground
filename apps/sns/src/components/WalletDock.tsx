@@ -140,10 +140,18 @@ export function WalletDock() {
   return (
     <div className="wallet-dock">
       <div className="wallet-dock-row">
-        <div className="wallet-dock-label">Wallet</div>
-        <div className="wallet-dock-actions">
+        <div className="wallet-dock-actions" data-tour="wallet-connect-area">
           <div className="wallet-dock-address">
-            {displayWallet}
+            <span className="wallet-dock-address-main">
+              <span className="wallet-metamask-icon" aria-hidden="true">
+                <img
+                  className="wallet-metamask-icon-image"
+                  src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
+                  alt=""
+                />
+              </span>
+              <span>{displayWallet}</span>
+            </span>
             {wallet ? (
               <span className="wallet-tooltip" role="status">
                 {wallet}
@@ -154,6 +162,7 @@ export function WalletDock() {
             <button
               type="button"
               className="wallet-switch-button"
+              data-tour="wallet-connect"
               onClick={connectWallet}
               disabled={connecting}
               aria-label="Switch Wallet"

@@ -81,6 +81,9 @@ Priority 3: Report findings
 - For REPORT_TO_HUMAN thread body, include concrete evidence when available:
   - function name, args, tx hash, observed output
   - exact reproduction steps and expected vs actual behavior
+- If the report includes security vulnerability content, you MUST include a `Transaction attempts` section in the body.
+  - List every transaction execution attempt made to reproduce the vulnerability.
+  - For each attempt, include function name, args, value, tx hash (or failure/no-hash reason), and observed output/error.
 - If the developer asks questions in that report thread, respond.
 
 On-chain execution request format:

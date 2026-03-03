@@ -1,8 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getAddress } from "ethers";
 import { Button } from "src/components/ui";
+import {
+  invalidateOwnedCommunitiesCache,
+  readOwnedCommunitiesCache,
+  writeOwnedCommunitiesCache,
+} from "src/lib/ownedCommunitiesCache";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type OwnedCommunity = {
   id: string;
@@ -22,12 +28,42 @@ type OwnedCommunity = {
 
 const FIXED_MESSAGE = "24-7-playground";
 
-export function CommunityCloseForm() {
+function resolveTargetCommunityId(
+  items: OwnedCommunity[],
+  preferredCommunityId?: string
+) {
+  if (preferredCommunityId) {
+    return items.some((community) => community.id === preferredCommunityId)
+      ? preferredCommunityId
+      : "";
+  }
+  return items[0]?.id || "";
+}
+
+type Props = {
+  initialCommunityId?: string;
+  initialWalletAddress?: string;
+  onClosed?: (payload: { communityId: string; deleteAt: string | null }) => void;
+};
+
+export function CommunityCloseForm({
+  initialCommunityId,
+  initialWalletAddress,
+  onClosed,
+}: Props = {}) {
   const [wallet, setWallet] = useState("");
   const [status, setStatus] = useState("");
   const [communities, setCommunities] = useState<OwnedCommunity[]>([]);
-  const [selectedId, setSelectedId] = useState("");
   const [busy, setBusy] = useState(false);
+  const [isLoadingOwned, setIsLoadingOwned] = useState(false);
+  const targetCommunityId = useMemo(
+    () => resolveTargetCommunityId(communities, initialCommunityId),
+    [communities, initialCommunityId]
+  );
+  const targetCommunity = useMemo(
+    () => communities.find((community) => community.id === targetCommunityId) || null,
+    [communities, targetCommunityId]
+  );
 
   const normalizeAddress = (value: string) => {
     try {
@@ -63,7 +99,24 @@ export function CommunityCloseForm() {
 
   const fetchOwned = async (walletAddress: string) => {
     if (!walletAddress) return;
-    setBusy(true);
+    const normalizedWallet = walletAddress.toLowerCase();
+    const cached = readOwnedCommunitiesCache<OwnedCommunity[]>("owned", normalizedWallet);
+    if (cached) {
+      setCommunities(cached);
+      if (cached.length === 0) {
+        setStatus("No active communities owned by this wallet.");
+      } else {
+        const targetCommunityId = resolveTargetCommunityId(cached, initialCommunityId);
+        setStatus(
+          targetCommunityId
+            ? ""
+            : "The selected community could not be loaded for this wallet."
+        );
+      }
+      return;
+    }
+
+    setIsLoadingOwned(true);
     setStatus("Loading owned communities...");
     try {
       const res = await fetch(
@@ -75,25 +128,34 @@ export function CommunityCloseForm() {
       if (!res.ok) {
         throw new Error(data.error || "Failed to load communities");
       }
-      const active = (data.communities || []).filter(
+      const active: OwnedCommunity[] = (data.communities || []).filter(
         (c: OwnedCommunity) => c.status !== "CLOSED"
       );
+      writeOwnedCommunitiesCache("owned", normalizedWallet, active);
       setCommunities(active);
       if (active.length === 0) {
-        setSelectedId("");
         setStatus("No active communities owned by this wallet.");
       } else {
-        setSelectedId(active[0]?.id || "");
-        setStatus("");
+        const targetCommunityId = resolveTargetCommunityId(active, initialCommunityId);
+        setStatus(
+          targetCommunityId
+            ? ""
+            : "The selected community could not be loaded for this wallet."
+        );
       }
     } catch (error) {
       setCommunities([]);
-      setSelectedId("");
       setStatus(error instanceof Error ? error.message : "Unexpected error");
     } finally {
-      setBusy(false);
+      setIsLoadingOwned(false);
     }
   };
+
+  useEffect(() => {
+    if (!wallet && initialWalletAddress) {
+      setWallet(normalizeAddress(initialWalletAddress));
+    }
+  }, [initialWalletAddress, wallet]);
 
   useEffect(() => {
     const ethereum = (window as any).ethereum;
@@ -127,19 +189,20 @@ export function CommunityCloseForm() {
       setStatus("Connect wallet first.");
       return;
     }
-    const target = communities.find((c) => c.id === selectedId);
-    if (!target) {
-      setStatus("Select a community.");
+    if (!targetCommunity) {
+      setStatus("The selected community could not be loaded.");
       return;
     }
     const confirm = window.prompt(
-      `Closing this community will revoke all API keys immediately and delete the community after 14 days.\n\nType the community name to confirm:\n${target.name}`
+      `Closing this community will revoke all API keys immediately and delete the community after 14 days.\n\nType the community name to confirm:\n${targetCommunity.name}`
     );
-    if (!confirm) {
-      setStatus("Close cancelled.");
+    if (confirm === null || !confirm.trim()) {
+      setStatus("Community name confirmation is required.");
       return;
     }
-    if (normalizeConfirmName(confirm) !== normalizeConfirmName(target.name)) {
+    if (
+      normalizeConfirmName(confirm) !== normalizeConfirmName(targetCommunity.name)
+    ) {
       setStatus("Community name did not match.");
       return;
     }
@@ -156,11 +219,11 @@ export function CommunityCloseForm() {
         method: "personal_sign",
         params: [FIXED_MESSAGE, wallet],
       })) as string;
-      const res = await fetch("/api/communities/close", {
+      const res = await fetchMutationWithAutoReload("/api/communities/close", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          communityId: selectedId,
+          communityId: targetCommunityId,
           signature,
           confirmName: confirm.trim(),
         }),
@@ -170,9 +233,15 @@ export function CommunityCloseForm() {
         throw new Error(data.error || "Close failed");
       }
       setStatus("Community closed. Deletion scheduled.");
-      const remaining = communities.filter((c) => c.id !== selectedId);
-      setCommunities(remaining);
-      setSelectedId(remaining[0]?.id || "");
+      invalidateOwnedCommunitiesCache(wallet);
+      if (onClosed) {
+        onClosed({
+          communityId: targetCommunityId,
+          deleteAt: typeof data?.deleteAt === "string" ? data.deleteAt : null,
+        });
+        return;
+      }
+      setCommunities((prev) => prev.filter((community) => community.id !== targetCommunityId));
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Unexpected error");
     } finally {
@@ -183,27 +252,18 @@ export function CommunityCloseForm() {
   return (
     <div className="form">
       <div className="field">
-        <label>Owned Communities</label>
+        <label>Target Community</label>
         {wallet ? (
-          communities.length > 0 ? (
-            <select
-              value={selectedId}
-              onChange={(event) => setSelectedId(event.currentTarget.value)}
-            >
-              {communities.map((community) => (
-                <option key={community.id} value={community.id}>
-                  {community.name} ({community.slug}) ·{" "}
-                  {community.contracts.length === 1
-                    ? `${community.contracts[0].chain} · ${community.contracts[0].address.slice(0, 10)}…`
-                    : `${community.contracts.length} contracts`}
-                </option>
-              ))}
-            </select>
+          targetCommunity ? (
+            <input
+              readOnly
+              value={`${targetCommunity.name} (${targetCommunity.slug})`}
+            />
           ) : (
-            <div className="status">No active communities found.</div>
+            <div>The selected community could not be loaded for this wallet.</div>
           )
         ) : (
-          <div className="status">Connect MetaMask to load communities.</div>
+          <div>Connect MetaMask to load community data.</div>
         )}
       </div>
       <div className="status">
@@ -212,10 +272,10 @@ export function CommunityCloseForm() {
       </div>
       <div className="row wrap">
         <Button
-          label={busy ? "Closing..." : "Close Community"}
+          label={isLoadingOwned ? "Loading..." : busy ? "Closing..." : "Close Community"}
           type="button"
           onClick={() => void closeCommunity()}
-          disabled={busy || !wallet || !selectedId}
+          disabled={isLoadingOwned || busy || !wallet || !targetCommunity}
         />
       </div>
       {status ? <div className="status">{status}</div> : null}

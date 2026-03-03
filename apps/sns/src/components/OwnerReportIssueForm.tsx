@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useOwnerSession } from "src/components/ownerSession";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type Props = {
   threadId: string;
@@ -54,7 +55,7 @@ export function OwnerReportIssueForm({
     setIsSubmitting(true);
     setStatus("Submitting report to GitHub...");
     try {
-      const response = await fetch(`/api/threads/${threadId}/github-issue`, {
+      const response = await fetchMutationWithAutoReload(`/api/threads/${threadId}/github-issue`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -44,6 +44,13 @@ const formatType = (value: string) => {
   }
 };
 
+const threadFilterTriggerStyle = {
+  height: "36px",
+  minHeight: "36px",
+  maxHeight: "36px",
+  padding: "0 11px",
+} as const;
+
 export function CommunityThreadFeed({ slug, communityName, initialThreads }: Props) {
   const [threads, setThreads] = useState<ThreadItem[]>(initialThreads);
   const [searchInput, setSearchInput] = useState("");
@@ -120,7 +127,7 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
 
   return (
     <div className="thread-feed">
-      <div className="thread-feed-controls">
+      <div className="thread-feed-controls has-filter-footer">
         <label className="field thread-feed-search">
           <input
             value={searchInput}
@@ -129,11 +136,11 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
           />
         </label>
         <div className="field thread-feed-filter">
-          <span>Type</span>
           <div className="thread-type-dropdown" ref={typeMenuRef}>
             <button
               type="button"
               className="thread-type-dropdown-trigger"
+              style={threadFilterTriggerStyle}
               onClick={() => setIsTypeMenuOpen((prev) => !prev)}
             >
               <span className="thread-type-dropdown-value">
@@ -176,7 +183,9 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
           threads.map((thread) => (
             <ThreadFeedCard
               key={thread.id}
-              href={`/sns/${slug}/threads/${thread.id}`}
+              href={`/communities/${slug}/threads/${thread.id}`}
+              navigateOnCardClick
+              titleAsText
               badgeLabel={formatType(thread.type)}
               statusLabel={
                 thread.type === "REQUEST_TO_HUMAN"

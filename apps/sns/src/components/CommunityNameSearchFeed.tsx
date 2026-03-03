@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
 import { ThreadFeedCard } from "src/components/ThreadFeedCard";
@@ -33,6 +34,14 @@ type Props = {
   statusFilterLabel?: string;
   statusFilterOptions?: StatusFilterOption[];
   filteredEmptyLabel?: string;
+  statusFilterFooter?: ReactNode;
+};
+
+const threadFilterTriggerStyle: CSSProperties = {
+  height: "36px",
+  minHeight: "36px",
+  maxHeight: "36px",
+  padding: "0 11px",
 };
 
 export function CommunityNameSearchFeed({
@@ -45,6 +54,7 @@ export function CommunityNameSearchFeed({
   statusFilterLabel,
   statusFilterOptions,
   filteredEmptyLabel,
+  statusFilterFooter,
 }: Props) {
   const [communityQuery, setCommunityQuery] = useState("");
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
@@ -85,6 +95,12 @@ export function CommunityNameSearchFeed({
   }, [normalizedStatusOptions, statusFilters]);
 
   const hasStatusFilter = normalizedStatusOptions.length > 0;
+  const resolvedStatusFilterLabel =
+    typeof statusFilterLabel === "string" ? statusFilterLabel.trim() : "Status";
+  const controlsClassName =
+    hasStatusFilter && statusFilterFooter
+      ? "thread-feed-controls has-filter-footer"
+      : "thread-feed-controls";
 
   useEffect(() => {
     if (!isStatusMenuOpen) return;
@@ -123,7 +139,7 @@ export function CommunityNameSearchFeed({
   return (
     <div className="thread-feed">
       {hasStatusFilter ? (
-        <div className="thread-feed-controls">
+        <div className={controlsClassName}>
           <CommunityNameSearchField
             className="thread-community-search-field"
             label={searchLabel}
@@ -134,11 +150,12 @@ export function CommunityNameSearchFeed({
             options={communityOptions}
           />
           <div className="field thread-feed-filter">
-            <span>{statusFilterLabel || "Status"}</span>
+            {resolvedStatusFilterLabel ? <span>{resolvedStatusFilterLabel}</span> : null}
             <div className="thread-type-dropdown" ref={statusMenuRef}>
               <button
                 type="button"
                 className="thread-type-dropdown-trigger"
+                style={threadFilterTriggerStyle}
                 onClick={() => setIsStatusMenuOpen((prev) => !prev)}
               >
                 <span className="thread-type-dropdown-value">
@@ -175,6 +192,9 @@ export function CommunityNameSearchFeed({
                 </div>
               ) : null}
             </div>
+            {statusFilterFooter ? (
+              <div className="thread-feed-filter-extra">{statusFilterFooter}</div>
+            ) : null}
           </div>
         </div>
       ) : (
@@ -193,13 +213,15 @@ export function CommunityNameSearchFeed({
         {filteredItems.length ? (
           filteredItems.map((item) => {
             const threadHref = item.communitySlug
-              ? `/sns/${item.communitySlug}/threads/${item.id}`
-              : "/sns";
+              ? `/communities/${item.communitySlug}/threads/${item.id}`
+              : "/communities";
 
             return (
               <ThreadFeedCard
                 key={item.id}
                 href={threadHref}
+                navigateOnCardClick
+                titleAsText
                 badgeLabel={badgeLabel}
                 statusLabel={item.statusLabel}
                 title={item.title}

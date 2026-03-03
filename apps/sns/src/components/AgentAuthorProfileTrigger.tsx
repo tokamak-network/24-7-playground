@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AppModal } from "src/components/AppModal";
 
 type Props = {
   agentId: string;
@@ -28,7 +29,7 @@ export function AgentAuthorProfileTrigger({ agentId, authorLabel }: Props) {
   const [profile, setProfile] = useState<AgentProfile | null>(null);
 
   useEffect(() => {
-    if (!open || loading || profile) return;
+    if (!open || profile) return;
     const controller = new AbortController();
     const load = async () => {
       setLoading(true);
@@ -64,7 +65,7 @@ export function AgentAuthorProfileTrigger({ agentId, authorLabel }: Props) {
 
     void load();
     return () => controller.abort();
-  }, [agentId, loading, open, profile]);
+  }, [agentId, open, profile]);
 
   useEffect(() => {
     if (!open) return;
@@ -94,56 +95,43 @@ export function AgentAuthorProfileTrigger({ agentId, authorLabel }: Props) {
         {authorLabel}
       </button>
       {open ? (
-        <div
-          className="agent-author-modal-backdrop"
-          role="presentation"
-          onClick={() => setOpen(false)}
+        <AppModal
+          open
+          phase="open"
+          title="Agent Author"
+          ariaLabel="Agent Author Profile"
+          closeAriaLabel="Close agent author profile"
+          onClose={() => setOpen(false)}
+          className="agent-author-modal-wrap"
+          shellClassName="agent-author-modal-shell"
+          headClassName="agent-author-modal-header"
+          bodyClassName="agent-author-modal-body"
         >
-          <section
-            className="agent-author-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Agent Author Profile"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="agent-author-modal-header">
-              <h4>Agent Author</h4>
-              <button
-                type="button"
-                className="agent-author-modal-close"
-                onClick={() => setOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-            {loading ? (
-              <p className="status">Loading agent profile...</p>
-            ) : error ? (
-              <p className="status">{error}</p>
-            ) : profile ? (
-              <dl className="agent-author-modal-list">
-                <div>
-                  <dt>Handle</dt>
-                  <dd>{profile.handle}</dd>
-                </div>
-                <div>
-                  <dt>LLM Model</dt>
-                  <dd>{profile.llmModel || "Unknown"}</dd>
-                </div>
-                <div>
-                  <dt>Owner Wallet</dt>
-                  <dd title={profile.ownerWallet || undefined}>
-                    {shortWallet(profile.ownerWallet)}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Handle Registered At</dt>
-                  <dd>{registeredAtText}</dd>
-                </div>
-              </dl>
-            ) : null}
-          </section>
-        </div>
+          {loading ? (
+            <p className="status">Loading agent profile...</p>
+          ) : error ? (
+            <p className="status">{error}</p>
+          ) : profile ? (
+            <dl className="agent-author-modal-list">
+              <div>
+                <dt>Handle</dt>
+                <dd>{profile.handle}</dd>
+              </div>
+              <div>
+                <dt>LLM Model</dt>
+                <dd>{profile.llmModel || "Unknown"}</dd>
+              </div>
+              <div>
+                <dt>Owner Wallet</dt>
+                <dd title={profile.ownerWallet || undefined}>{shortWallet(profile.ownerWallet)}</dd>
+              </div>
+              <div>
+                <dt>Handle Registered At</dt>
+                <dd>{registeredAtText}</dd>
+              </div>
+            </dl>
+          ) : null}
+        </AppModal>
       ) : null}
     </>
   );

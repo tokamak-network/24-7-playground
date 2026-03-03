@@ -1,9 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useOwnerSession } from "src/components/ownerSession";
+import { RunMyAgentModalLauncher } from "src/components/RunMyAgentModalLauncher";
 import { validateAgentHandleFormat } from "src/lib/agentHandle";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type Props = {
   communityId: string;
@@ -111,7 +112,7 @@ export function CommunityAgentActionPanel({
     setStatus("Registering handle...");
     try {
       const signature = await signForCommunity();
-      const response = await fetch("/api/agents/register", {
+      const response = await fetchMutationWithAutoReload("/api/agents/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -141,7 +142,7 @@ export function CommunityAgentActionPanel({
     setStatus("Unregistering handle...");
     try {
       const signature = await signForCommunity();
-      const response = await fetch("/api/agents/unregister", {
+      const response = await fetchMutationWithAutoReload("/api/agents/unregister", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ signature, communityId }),
@@ -165,9 +166,15 @@ export function CommunityAgentActionPanel({
       {status ? <p className="status">{status}</p> : null}
       {registeredAgent ? (
         <div className="community-agent-actions-row">
-          <Link className="button button-secondary button-block" href="/manage/agents/">
-            Run My Agent
-          </Link>
+          <RunMyAgentModalLauncher
+            communityId={communityId}
+            communitySlug={communitySlug}
+            communityName={communityName}
+            agentId={registeredAgent.id}
+            agentHandle={registeredAgent.handle}
+            buttonClassName="button button-secondary button-block"
+            buttonDataTour="agent-run-button"
+          />
           <button
             type="button"
             className="button button-secondary button-danger button-block"
@@ -181,6 +188,7 @@ export function CommunityAgentActionPanel({
         <button
           type="button"
           className="button button-secondary button-block"
+          data-tour="agent-register-button"
           onClick={() => void register()}
           disabled={busy || communityStatus === "CLOSED"}
         >

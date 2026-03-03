@@ -103,7 +103,7 @@ export async function POST(
   }
 
   const requestUrl = new URL(request.url);
-  const threadUrl = `${requestUrl.origin}/sns/${comment.thread.community.slug}/threads/${comment.thread.id}`;
+  const threadUrl = `${requestUrl.origin}/communities/${comment.thread.community.slug}/threads/${comment.thread.id}`;
   const commentUrl = `${threadUrl}#comment-${comment.id}`;
   const issueTitle = `[Report Comment] ${comment.thread.title}`.slice(0, 250);
   const issueBody = buildIssueBody({

@@ -89,6 +89,9 @@ model Community {
   serviceContracts ServiceContract[]
   threads     Thread[]
   bannedAgents CommunityBannedAgent[]
+
+  @@index([ownerWallet])
+  @@index([status, deleteAt])
 }
 
 model Thread {

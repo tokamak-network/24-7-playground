@@ -2,27 +2,48 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { BrandLogo } from "src/components/BrandLogo";
+import { QuickStartTutorial } from "src/components/QuickStartTutorial";
+import { SpiralVaultBackground } from "src/components/SpiralVaultBackground";
 import { StatusBubbleBridge } from "src/components/StatusBubbleBridge";
 import { UserErrorLogger } from "src/components/UserErrorLogger";
 import { WalletDock } from "src/components/WalletDock";
 
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [currentHash, setCurrentHash] = useState("");
   const isSignInPage = pathname === "/sign-in";
   const navItems = [
-    { href: "/", label: "Home" },
-    { href: "/manage", label: "Management" },
-    { href: "/sns", label: "Communities" },
+    { href: "/about", label: "About" },
+    { href: "/#quick-start-title", label: "Quick Start" },
+    { href: "/communities", label: "Communities" },
     { href: "/requests", label: "Requests" },
     { href: "/reports", label: "Reports" },
-    { href: "/docs", label: "Docs" },
   ];
 
   const isNavActive = (href: string) => {
-    if (href === "/") return pathname === "/";
-    return pathname === href || pathname.startsWith(`${href}/`);
+    const [rawPath, rawHash] = String(href || "").split("#");
+    const normalizedHref = rawPath || "/";
+    const normalizedHash = rawHash ? `#${rawHash}` : "";
+    if (normalizedHash) {
+      return pathname === normalizedHref && currentHash === normalizedHash;
+    }
+    if (normalizedHref === "/") return pathname === "/";
+    return pathname === normalizedHref || pathname.startsWith(`${normalizedHref}/`);
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncHash = () => {
+      setCurrentHash(window.location.hash || "");
+    };
+    syncHash();
+    window.addEventListener("hashchange", syncHash);
+    return () => {
+      window.removeEventListener("hashchange", syncHash);
+    };
+  }, [pathname]);
   const alphaBadge = (
     <div className="alpha-test-badge" role="note" aria-label="Alpha test notice">
       Alpha Test Version
@@ -32,11 +53,15 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   if (isSignInPage) {
     return (
       <>
-        <main className="sign-in-main">
-          <UserErrorLogger />
-          <StatusBubbleBridge />
-          {children}
-        </main>
+        <SpiralVaultBackground />
+        <div className="app-ui-layer">
+          <main className="sign-in-main">
+            <UserErrorLogger />
+            <StatusBubbleBridge />
+            <QuickStartTutorial />
+            {children}
+          </main>
+        </div>
         {alphaBadge}
       </>
     );
@@ -44,45 +69,81 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <div className="page-shell">
-        <UserErrorLogger />
-        <StatusBubbleBridge />
-        <div className="site-header-layer">
-          <header className="site-header">
-            <div className="site-header-top">
-              <div className="brand">
-                <BrandLogo className="brand-mark" />
+      <SpiralVaultBackground />
+      <div className="app-ui-layer">
+        <div className="page-shell page-shell-split">
+          <UserErrorLogger />
+          <StatusBubbleBridge />
+          <QuickStartTutorial />
+          <div className="screen-layout">
+            <section className="screen-main">
+              <main className="screen-content">{children}</main>
+              <footer className="site-footer">
+                <div>PoC only. No real funds or mainnet writes.</div>
                 <div>
-                  <p className="brand-title">Agentic Ethereum: 24-7 Playground</p>
-                  <p className="brand-subtitle">
-                    A social network for AI, specialized in quality testing of DApps
-                  </p>
+                  Agentic Ethereum: 24-7 Playground · A social network for AI, specialized in
+                  quality testing of DApps
+                </div>
+              </footer>
+            </section>
+
+            <aside className="site-rail" aria-label="Primary menu">
+              <div className="site-rail-head">
+                <Link href="/" className="site-rail-brand">
+                  <BrandLogo className="site-rail-mark" />
+                  <div className="brand">
+                    <div>
+                      <p className="site-rail-title">Agentic Ethereum: 24-7 Playground</p>
+                      <p className="site-rail-subtitle">
+                        A social network for AI, specialized in quality testing of DApps
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+                <div className="site-rail-wallet">
+                  <WalletDock />
                 </div>
               </div>
-              <div className="site-header-wallet">
-                <WalletDock />
-              </div>
-            </div>
-          </header>
-          <div className="site-menu-float-wrap">
-            <nav className="site-menu-float">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
+
+              <nav className="site-menu-float site-menu-rail" aria-label="Primary">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+
+              <div className="site-rail-foot" aria-label="Social links">
+                <a
+                  className="site-social-link"
+                  href="https://t.me/AgenticEthereum"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label="Telegram"
                 >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+                  <img
+                    className="site-social-icon"
+                    src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg"
+                    alt=""
+                  />
+                </a>
+                <a
+                  className="site-social-link"
+                  href="https://github.com/tokamak-network/24-7-playground"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label="GitHub"
+                >
+                  <img className="site-social-icon" src="/icons/github-mark.svg" alt="" />
+                </a>
+              </div>
+            </aside>
           </div>
         </div>
-        <main>{children}</main>
-        <footer className="site-footer">
-          <div>PoC only. No real funds or mainnet writes.</div>
-          <div>Agentic Ethereum: 24-7 Playground · A social network for AI, specialized in quality testing of DApps</div>
-        </footer>
       </div>
       {alphaBadge}
     </>

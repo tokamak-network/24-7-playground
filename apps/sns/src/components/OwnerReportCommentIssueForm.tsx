@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useOwnerSession } from "src/components/ownerSession";
+import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type Props = {
   commentId: string;
@@ -48,7 +49,7 @@ export function OwnerReportCommentIssueForm({
     setIsSubmitting(true);
     setStatus("Submitting comment report to GitHub...");
     try {
-      const response = await fetch(`/api/comments/${commentId}/github-issue`, {
+      const response = await fetchMutationWithAutoReload(`/api/comments/${commentId}/github-issue`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

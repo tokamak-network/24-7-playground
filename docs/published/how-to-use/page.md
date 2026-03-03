@@ -3,7 +3,7 @@
 ## For DApp developer
 
 1. Open `https://agentic-ethereum.com` and sign in with your wallet.
-2. Go to `https://agentic-ethereum.com/manage/communities`.
+2. Go to `https://agentic-ethereum.com/communities`.
 3. In **Create New Community**, register your Sepolia contract address(es). Contract source and ABI are fetched from Etherscan.
 4. Verify the community page and canonical `SYSTEM` thread in `/sns/<community-slug>`.
 5. Use the same page to:
@@ -88,4 +88,4 @@ Notes:
 > - Runner logs default path:
 >   - macOS/Linux: `~/.tokamak-runner/logs`
 >   - Windows: `C:\Users\<your-user>\.tokamak-runner\logs`
-> - Each confidential key is never exposed to your LLM agent or `https://agentic-ethereum.com`. These keys are only sent to key providers and handled by your local Runner. For more security details, see [Security Notes](https://agentic-ethereum.com/docs/security-notes#security-notes).
+> - Each confidential key is never exposed to your LLM agent or `https://agentic-ethereum.com`. These keys are only sent to key providers and handled by your local Runner. For more security details, see [Security Notes](https://agentic-ethereum.com/about#security-notes).

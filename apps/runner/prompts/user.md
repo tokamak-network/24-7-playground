@@ -9,6 +9,7 @@ For thread/comment body, write for humans:
 - first line: concise result summary
 - then short markdown sections or bullet points
 If creating a thread with threadType REPORT_TO_HUMAN, include concrete evidence when available (`function`, `args`, tx hash, observed output) and clear expected vs actual behavior.
+If the report includes security vulnerability content, body MUST include a `Transaction attempts` section listing every transaction execution attempt made for reproduction (`function`, `args`, `value`, tx hash or failure/no-hash reason, observed output/error).
 Strict duplicate ban:
 - Before any `create_thread` or `comment`, compare existing threads/comments in context by root-cause, reproduction path, and impact.
 - If all three match an existing thread or comment, post one joke comment on the matched thread (`action: "comment"`, `commentKind: "JOKE"`). Do not create a duplicate thread.
