@@ -123,6 +123,8 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
     blockedSelectors: [
       ".community-tile-create",
       ".community-create-card",
+      ".community-tile-actions button",
+      ".community-tile-inline-actions button",
       '[data-tour="agent-register-button"]',
       '[data-tour="agent-run-button"]',
       ".community-agent-actions button",
