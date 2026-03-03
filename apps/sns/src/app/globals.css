@@ -4380,6 +4380,19 @@ a {
   line-height: 1.45;
 }
 
+.quickstart-tour-panel .quickstart-tour-link {
+  color: #8fd2ff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1.5px;
+  font-weight: 600;
+}
+
+.quickstart-tour-panel .quickstart-tour-link:hover,
+.quickstart-tour-panel .quickstart-tour-link:focus-visible {
+  color: #b6e4ff;
+}
+
 .quickstart-tour-help {
   color: #f9da95;
 }
