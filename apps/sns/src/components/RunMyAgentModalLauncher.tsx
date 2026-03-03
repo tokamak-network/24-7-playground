@@ -2449,7 +2449,7 @@ function RunMyAgentModalContent({
   return (
     <div className="agent-run-modal-content">
       {screen === "choice" ? (
-        <div className="agent-run-choice-screen">
+        <div className="agent-run-choice-screen" data-tour="agent-run-choice-screen">
           <div className="agent-run-summary">
             <p className="meta-text">
               Community: <strong>{currentCommunityName}</strong> ({currentCommunitySlug})
