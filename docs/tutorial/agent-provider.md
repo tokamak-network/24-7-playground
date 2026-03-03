@@ -137,6 +137,7 @@ Rationale:
   - Security Notes link click acknowledgment,
   - tab changes and launcher setup,
   - sequential required-key test pass flow (LLM API key -> execution wallet key -> Alchemy API key),
+  - runner install guide open acknowledgment,
   - launcher detect.
 - Explanatory (always enabled):
   - optional import guidance,
@@ -210,12 +211,16 @@ For high-risk explanatory steps:
     - runner launcher secret input
     - detect launcher button
     - start/stop runner button
+    - install guide trigger button (`How to install and run Runner`)
   - dispatch optional events at reliable success points.
   - add explicit marker for Security Notes link:
     - `data-tour="agent-security-notes-link"`
   - track click acknowledgment state:
     - local boolean (example: `hasOpenedSecurityNotes`)
     - set to `true` on link click handler
+  - track runner guide acknowledgment state:
+    - local boolean (example: `hasOpenedRunnerInstallGuide`)
+    - set to `true` when `How to install and run Runner` is clicked
 
 ## 6.5 Styling reuse
 
@@ -245,8 +250,8 @@ This table is intentionally written for easy review and editing.
 | 10 | `Step 10: Test Alchemy API Key` | `Enter Alchemy API Key and click "Test". Official help example: [Alchemy - Create an Alchemy API Key](https://www.alchemy.com/docs/create-an-api-key)` | `[data-tour="agent-alchemy-key-test"]` | Alchemy API key input non-empty and Alchemy API key test passed | Yes (edge-triggered) |
 | 11 | `Step 11: Open Runner Configuration` | `Move to Runner Configuration and review interval/context values.` | `[data-tour="agent-tab-runner-config"]` | Runner Configuration tab selected | Yes (edge-triggered) |
 | 12 | `Step 12: Set Launcher Secret` | `Enter your Runner Launcher Secret used by browser-runner control APIs.` | `[data-tour="agent-runner-secret"]` | launcher secret input is non-empty | Yes (edge-triggered) |
-| 13 | `Step 13: Open Runner Status` | `Switch to Runner Status to connect with your local launcher.` | `[data-tour="agent-tab-runner-status"]` | Runner Status tab selected | Yes (edge-triggered) |
-| 14 | `Step 14: Detect Launcher` | `Click "Detect Launcher" and select a detected localhost port.` | `[data-tour="agent-detect-launcher"]` | launcher detection success (`runnerLauncher` tested true or detected port selected) | Yes (edge-triggered) |
+| 13 | `Step 13: Install and Run Runner` | `Click "How to install and run Runner", follow the guide, and start your local Runner process first.` | `[data-tour="agent-runner-install-guide-trigger"]` | install guide opened at least once (`hasOpenedRunnerInstallGuide === true`) | No |
+| 14 | `Step 14: Detect Launcher` | `After your local Runner is running, click "Detect Launcher" and select a detected localhost port.` | `[data-tour="agent-detect-launcher"]` | launcher detection success (`runnerLauncher` tested true or detected port selected) | Yes (edge-triggered) |
 | 15 | `Step 15: Start Runner` | `When prerequisites are complete, click "Start Runner" to begin autonomous operation.` | `[data-tour="agent-start-runner"]` | always enabled (final explanation step) | No (`Finish`) |
 
 ## 8. Draft Helper Copy (Editable)
@@ -280,7 +285,7 @@ This table is intentionally written for easy review and editing.
 - Step 12 unmet:
   - `Enter Runner Launcher Secret to enable Next.`
 - Step 13 unmet:
-  - `Open Runner Status tab to enable Next.`
+  - `Open "How to install and run Runner" and start local Runner first.`
 - Step 14 unmet:
   - `Detect a local launcher port to enable Next.`
 
