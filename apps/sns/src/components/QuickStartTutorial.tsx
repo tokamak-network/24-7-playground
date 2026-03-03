@@ -27,6 +27,8 @@ type TutorialPanelPlacement =
   | "top-left";
 
 const TUTORIAL_COMMUNITY_CREATED_EVENT = "sns-tutorial-community-created";
+const AGENT_LOCAL_NETWORK_HELP_URL =
+  "https://support.google.com/chrome/answer/114662?hl=en&co=GENIE.Platform%3DDesktop#zippy=%2Callow-or-block-permissions-for-a-specific-site";
 const AGENT_SECURITY_NOTES_URL = "/about#security-notes";
 const AGENT_LLM_HELP_URL =
   "https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key";
@@ -114,8 +116,14 @@ const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
 const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   {
     path: "/communities",
+    selector: '[data-tour="agent-local-network-access-link"]',
+    title: "Step 1: Allow Local Network Access",
+    body: "Allow Local Network access for this site so browser-to-runner localhost calls can work.",
+  },
+  {
+    path: "/communities",
     selector: '[data-tour="wallet-connect-area"]',
-    title: "Step 1: Connect Wallet",
+    title: "Step 2: Connect Wallet",
     body: "Connect MetaMask and complete owner sign-in to continue.",
   },
   {
@@ -130,79 +138,79 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
       '[data-tour="agent-run-button"]',
       ".community-agent-actions button",
     ],
-    title: "Step 2: Open a Community",
+    title: "Step 3: Open a Community",
     body: "Select a community card where you want to register your agent.",
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-register-button"]',
-    title: "Step 3: Register My Agent",
+    title: "Step 4: Register My Agent",
     body: 'Click "Register My Agent", enter a handle, and sign the message.',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-run-button"]',
-    title: "Step 4: Open Run My Agent",
+    title: "Step 5: Open Run My Agent",
     body: 'Click "Run My Agent" to open agent and runner settings.',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-run-choice-fresh"]',
-    title: "Step 5: Choose Create from scratch",
+    title: "Step 6: Choose Create from scratch",
     body: 'Click "Create from scratch" to set up a fresh agent configuration.',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-run-continue"]',
-    title: "Step 6: Continue Setup",
+    title: "Step 7: Continue Setup",
     body: 'Click "Continue" to open full agent configuration.',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-tab-confidential"]',
-    title: "Step 7: Open Confidential Keys",
+    title: "Step 8: Open Confidential Keys",
     body: 'Move to "Confidential Keys". Required keys will be validated one by one.',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-security-notes-link"]',
-    title: "Step 8: Read Security Notes",
+    title: "Step 9: Read Security Notes",
     body: "Before entering keys, review Security Notes in a new tab.",
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-llm-config-section"]',
-    title: "Step 9: Test LLM API Key",
+    title: "Step 10: Test LLM API Key",
     body: 'Select LLM Provider and LLM Model, enter LLM API Key, then click "Test".',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-execution-key-section"]',
-    title: "Step 10: Test Execution Wallet Key",
+    title: "Step 11: Test Execution Wallet Key",
     body: 'Enter wallet private key for execution and click "Test".',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-alchemy-key-section"]',
-    title: "Step 11: Test Alchemy API Key",
+    title: "Step 12: Test Alchemy API Key",
     body: 'Enter Alchemy API Key and click "Test".',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-encrypt-save-db"]',
-    title: "Step 12: Encrypt and Save",
+    title: "Step 13: Encrypt and Save",
     body: 'Click "Encrypt & Save to DB" and wait until encrypted ciphertext is saved.',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-tab-runner-config"]',
-    title: "Step 13: Open Runner Configuration",
+    title: "Step 14: Open Runner Configuration",
     body: "Move to Runner Configuration and review interval/context values.",
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-runner-secret"]',
-    title: "Step 14: Set Launcher Secret",
+    title: "Step 15: Set Launcher Secret",
     body: "Enter your Runner Launcher Secret used by browser-runner control APIs.",
   },
   {
@@ -213,19 +221,19 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
       '[data-tour="agent-runner-guide-os-tab"]',
       '[data-tour="agent-runner-guide-copy"]',
     ],
-    title: "Step 15: Install and Run Runner",
+    title: "Step 16: Install and Run Runner",
     body: 'Click "How to install and run Runner", follow the guide, and start your local Runner process first.',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-detect-launcher"]',
-    title: "Step 16: Detect Launcher",
+    title: "Step 17: Detect Launcher",
     body: 'After your local Runner is running, click "Detect Launcher" and select a detected localhost port.',
   },
   {
     path: "/communities",
     selector: '[data-tour="agent-start-runner"]',
-    title: "Step 17: Start Runner",
+    title: "Step 18: Start Runner",
     body: 'When prerequisites are complete, click "Start Runner" to begin autonomous operation.',
   },
 ];
@@ -353,6 +361,14 @@ export function QuickStartTutorial() {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
   const [searchingTarget, setSearchingTarget] = useState(false);
+  const [isAgentLocalNetworkAccessAllowed, setIsAgentLocalNetworkAccessAllowed] =
+    useState(false);
+  const [localNetworkAccessCheckCompleted, setLocalNetworkAccessCheckCompleted] =
+    useState(false);
+  const [isLocalNetworkPermissionApiAvailable, setIsLocalNetworkPermissionApiAvailable] =
+    useState(false);
+  const [hasOpenedLocalNetworkAccessHelp, setHasOpenedLocalNetworkAccessHelp] =
+    useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [walletCheckCompleted, setWalletCheckCompleted] = useState(false);
   const [isOwnerSessionActive, setIsOwnerSessionActive] = useState(false);
@@ -431,7 +447,7 @@ export function QuickStartTutorial() {
       if (isDappTutorial && index >= 5 && createdCommunityPath) {
         return createdCommunityPath;
       }
-      if (isAgentTutorial && index >= 2 && selectedCommunityPath) {
+      if (isAgentTutorial && index >= 3 && selectedCommunityPath) {
         return selectedCommunityPath;
       }
       const step = steps[index];
@@ -915,6 +931,79 @@ export function QuickStartTutorial() {
   }, [isAgentTutorial]);
 
   useEffect(() => {
+    if (!isAgentTutorial) {
+      setIsAgentLocalNetworkAccessAllowed(false);
+      setLocalNetworkAccessCheckCompleted(false);
+      setIsLocalNetworkPermissionApiAvailable(false);
+      return;
+    }
+
+    let canceled = false;
+    let removePermissionListener: (() => void) | null = null;
+
+    const syncAccess = async () => {
+      const hostname = window.location.hostname.trim().toLowerCase();
+      const isLoopbackHost =
+        hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+      if (isLoopbackHost) {
+        if (!canceled) {
+          setIsLocalNetworkPermissionApiAvailable(true);
+          setIsAgentLocalNetworkAccessAllowed(true);
+          setLocalNetworkAccessCheckCompleted(true);
+        }
+        return;
+      }
+
+      const permissionsApi = navigator.permissions;
+      if (!permissionsApi?.query) {
+        if (!canceled) {
+          setIsLocalNetworkPermissionApiAvailable(false);
+          setIsAgentLocalNetworkAccessAllowed(false);
+          setLocalNetworkAccessCheckCompleted(true);
+        }
+        return;
+      }
+
+      try {
+        const status = await permissionsApi.query({
+          name: "local-network-access" as PermissionName,
+        });
+        if (canceled) {
+          return;
+        }
+        setIsLocalNetworkPermissionApiAvailable(true);
+        setIsAgentLocalNetworkAccessAllowed(status.state === "granted");
+        setLocalNetworkAccessCheckCompleted(true);
+
+        const handleStatusChange = () => {
+          if (canceled) return;
+          setIsAgentLocalNetworkAccessAllowed(status.state === "granted");
+          setLocalNetworkAccessCheckCompleted(true);
+        };
+        status.addEventListener?.("change", handleStatusChange);
+        removePermissionListener = () => {
+          status.removeEventListener?.("change", handleStatusChange);
+        };
+      } catch {
+        if (!canceled) {
+          setIsLocalNetworkPermissionApiAvailable(false);
+          setIsAgentLocalNetworkAccessAllowed(false);
+          setLocalNetworkAccessCheckCompleted(true);
+        }
+      }
+    };
+
+    void syncAccess();
+    window.addEventListener("focus", syncAccess);
+
+    return () => {
+      canceled = true;
+      window.removeEventListener("focus", syncAccess);
+      removePermissionListener?.();
+    };
+  }, [isAgentTutorial]);
+
+  useEffect(() => {
     if (!isDappTutorial) {
       setIsCreateCommunityModalOpen(false);
       setCreateModalCheckCompleted(false);
@@ -1192,6 +1281,9 @@ export function QuickStartTutorial() {
     const handleClick = (event: MouseEvent) => {
       const target = event.target;
       if (target instanceof Element) {
+        if (target.closest('[data-tour="agent-local-network-access-link"]')) {
+          setHasOpenedLocalNetworkAccessHelp(true);
+        }
         if (target.closest('[data-tour="agent-tab-confidential"]')) {
           setHasClickedAgentConfidentialTab(true);
         }
@@ -1227,24 +1319,29 @@ export function QuickStartTutorial() {
 
   useEffect(() => {
     if (!isAgentTutorial) {
+      setHasOpenedLocalNetworkAccessHelp(false);
       setHasClickedAgentConfidentialTab(false);
       setHasOpenedSecurityNotes(false);
       setHasOpenedRunnerInstallGuide(false);
       return;
     }
     if (stepIndex === 0) {
+      setHasOpenedLocalNetworkAccessHelp(false);
       setHasClickedAgentConfidentialTab(false);
       setHasOpenedSecurityNotes(false);
       setHasOpenedRunnerInstallGuide(false);
       return;
     }
-    if (stepIndex === 6) {
+    if (stepIndex === 7) {
       setHasClickedAgentConfidentialTab(false);
     }
   }, [isAgentTutorial, stepIndex]);
 
   const isLastStep = stepIndex >= steps.length - 1;
   const isHighlightInteractionDisabled = isDappTutorial && stepIndex >= 6;
+  const isAgentLocalNetworkAccessReady =
+    isAgentLocalNetworkAccessAllowed ||
+    (!isLocalNetworkPermissionApiAvailable && hasOpenedLocalNetworkAccessHelp);
 
   const dappCanAdvance =
     (! (stepIndex === 0) || isWalletConnected) &&
@@ -1255,23 +1352,24 @@ export function QuickStartTutorial() {
     (!(stepIndex === 5) || isSettingsMenuOpen);
 
   const agentCanAdvance =
-    (!(stepIndex === 0) || (isWalletConnected && isOwnerSessionActive)) &&
-    (!(stepIndex === 1) || isOnSelectedCommunityPage) &&
-    (!(stepIndex === 2) || hasAgentRunButton) &&
-    (!(stepIndex === 3) || isAgentRunModalOpen) &&
-    (!(stepIndex === 4) || isAgentFreshSetupSelected) &&
-    (!(stepIndex === 5) || isAgentConfigReady) &&
-    (!(stepIndex === 6) ||
+    (!(stepIndex === 0) || isAgentLocalNetworkAccessReady) &&
+    (!(stepIndex === 1) || (isWalletConnected && isOwnerSessionActive)) &&
+    (!(stepIndex === 2) || isOnSelectedCommunityPage) &&
+    (!(stepIndex === 3) || hasAgentRunButton) &&
+    (!(stepIndex === 4) || isAgentRunModalOpen) &&
+    (!(stepIndex === 5) || isAgentFreshSetupSelected) &&
+    (!(stepIndex === 6) || isAgentConfigReady) &&
+    (!(stepIndex === 7) ||
       (isAgentConfidentialTabActive && hasClickedAgentConfidentialTab)) &&
-    (!(stepIndex === 7) || hasOpenedSecurityNotes) &&
-    (!(stepIndex === 8) || isAgentLlmKeyReady) &&
-    (!(stepIndex === 9) || isAgentExecutionKeyReady) &&
-    (!(stepIndex === 10) || isAgentAlchemyKeyReady) &&
-    (!(stepIndex === 11) || isAgentEncryptedSaved) &&
-    (!(stepIndex === 12) || isAgentRunnerConfigTabActive) &&
-    (!(stepIndex === 13) || isAgentLauncherSecretReady) &&
-    (!(stepIndex === 14) || hasOpenedRunnerInstallGuide) &&
-    (!(stepIndex === 15) || isAgentLauncherDetected);
+    (!(stepIndex === 8) || hasOpenedSecurityNotes) &&
+    (!(stepIndex === 9) || isAgentLlmKeyReady) &&
+    (!(stepIndex === 10) || isAgentExecutionKeyReady) &&
+    (!(stepIndex === 11) || isAgentAlchemyKeyReady) &&
+    (!(stepIndex === 12) || isAgentEncryptedSaved) &&
+    (!(stepIndex === 13) || isAgentRunnerConfigTabActive) &&
+    (!(stepIndex === 14) || isAgentLauncherSecretReady) &&
+    (!(stepIndex === 15) || hasOpenedRunnerInstallGuide) &&
+    (!(stepIndex === 16) || isAgentLauncherDetected);
 
   const canAdvance = isDappTutorial
     ? dappCanAdvance
@@ -1292,7 +1390,7 @@ export function QuickStartTutorial() {
         };
 
   const panelStyle = useMemo(() => {
-    const isRunnerGuideStep = isAgentTutorial && stepIndex === 14 && isRunnerInstallGuideModalOpen;
+    const isRunnerGuideStep = isAgentTutorial && stepIndex === 15 && isRunnerInstallGuideModalOpen;
     const elevatedZIndex = isRunnerGuideStep
       ? { zIndex: "calc(var(--z-modal-runner-guide) + 2)" }
       : {};
@@ -1448,12 +1546,12 @@ export function QuickStartTutorial() {
     const autoAdvanceAllowedStep = isDappTutorial
       ? [0, 1, 2, 3, 4, 5].includes(stepIndex)
       : isAgentTutorial
-        ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15].includes(stepIndex)
+        ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16].includes(stepIndex)
         : false;
     const autoAdvancePathReady =
       isOnStepPath ||
       (isDappTutorial && stepIndex === 4) ||
-      (isAgentTutorial && stepIndex === 1);
+      (isAgentTutorial && stepIndex === 2);
 
     if (autoAdvanceStepRef.current !== stepIndex) {
       autoAdvanceStepRef.current = stepIndex;
@@ -1468,7 +1566,7 @@ export function QuickStartTutorial() {
         !nextDisabled &&
         !autoAdvancedOnCurrentStepRef.current &&
         isAgentTutorial &&
-        stepIndex === 2;
+        stepIndex === 3;
       if (canAutoAdvanceImmediately) {
         autoAdvancedOnCurrentStepRef.current = true;
         goToStep(stepIndex + 1, stepIndex);
@@ -1513,7 +1611,26 @@ export function QuickStartTutorial() {
       return <p>{currentStep.body}</p>;
     }
 
-    if (stepIndex === 7) {
+    if (stepIndex === 0) {
+      return (
+        <p>
+          Open{" "}
+          <a
+            href={AGENT_LOCAL_NETWORK_HELP_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            data-tour="agent-local-network-access-link"
+            className="quickstart-tour-link"
+            onClick={() => setHasOpenedLocalNetworkAccessHelp(true)}
+          >
+            Chrome Local Network access settings
+          </a>
+          {" "}and allow access for this site.
+        </p>
+      );
+    }
+
+    if (stepIndex === 8) {
       return (
         <p>
           Before entering keys, review{" "}
@@ -1532,7 +1649,7 @@ export function QuickStartTutorial() {
       );
     }
 
-    if (stepIndex === 8) {
+    if (stepIndex === 9) {
       return (
         <p>
           Enter LLM API Key and click Test. Official help example:{" "}
@@ -1544,7 +1661,7 @@ export function QuickStartTutorial() {
       );
     }
 
-    if (stepIndex === 9) {
+    if (stepIndex === 10) {
       return (
         <p>
           Enter wallet private key for execution and click Test. Official help example:{" "}
@@ -1560,7 +1677,7 @@ export function QuickStartTutorial() {
       );
     }
 
-    if (stepIndex === 10) {
+    if (stepIndex === 11) {
       return (
         <p>
           Enter Alchemy API Key and click Test. Official help example:{" "}
@@ -1577,7 +1694,7 @@ export function QuickStartTutorial() {
 
   const shouldHideSpotlight =
     Boolean(currentStep.disableSpotlight) ||
-    (isAgentTutorial && stepIndex === 14 && isRunnerInstallGuideModalOpen);
+    (isAgentTutorial && stepIndex === 15 && isRunnerInstallGuideModalOpen);
 
   const tutorialNode = (
     <>
@@ -1624,62 +1741,72 @@ export function QuickStartTutorial() {
           <p className="quickstart-tour-help">Open the community settings menu to step forward.</p>
         ) : null}
 
-        {isAgentTutorial && stepIndex === 0 && walletCheckCompleted && (!isWalletConnected || !isOwnerSessionActive) ? (
+        {isAgentTutorial &&
+        stepIndex === 0 &&
+        localNetworkAccessCheckCompleted &&
+        !isAgentLocalNetworkAccessReady ? (
+          <p className="quickstart-tour-help">
+            {isLocalNetworkPermissionApiAvailable
+              ? "Allow Local Network access in browser site settings to enable Next."
+              : "Open the Local Network access help link and allow access to enable Next."}
+          </p>
+        ) : null}
+        {isAgentTutorial && stepIndex === 1 && walletCheckCompleted && (!isWalletConnected || !isOwnerSessionActive) ? (
           <p className="quickstart-tour-help">
             {!isWalletConnected
               ? "Connect wallet and complete owner sign-in to enable Next."
               : "Complete owner sign-in to enable Next."}
           </p>
         ) : null}
-        {isAgentTutorial && stepIndex === 1 && !isOnSelectedCommunityPage ? (
+        {isAgentTutorial && stepIndex === 2 && !isOnSelectedCommunityPage ? (
           <p className="quickstart-tour-help">Open any community detail page to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 2 && !hasAgentRunButton ? (
+        {isAgentTutorial && stepIndex === 3 && !hasAgentRunButton ? (
           <p className="quickstart-tour-help">Register your agent handle in this community to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 3 && !isAgentRunModalOpen ? (
+        {isAgentTutorial && stepIndex === 4 && !isAgentRunModalOpen ? (
           <p className="quickstart-tour-help">Open the Run My Agent modal to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 4 && !isAgentFreshSetupSelected ? (
+        {isAgentTutorial && stepIndex === 5 && !isAgentFreshSetupSelected ? (
           <p className="quickstart-tour-help">Click "Create from scratch" to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 5 && !isAgentConfigReady ? (
+        {isAgentTutorial && stepIndex === 6 && !isAgentConfigReady ? (
           <p className="quickstart-tour-help">Click Continue to enable Next.</p>
         ) : null}
         {isAgentTutorial &&
-        stepIndex === 6 &&
+        stepIndex === 7 &&
         (!isAgentConfidentialTabActive || !hasClickedAgentConfidentialTab) ? (
           <p className="quickstart-tour-help">
             Click Confidential Keys tab to enable Next.
           </p>
         ) : null}
-        {isAgentTutorial && stepIndex === 7 && !hasOpenedSecurityNotes ? (
+        {isAgentTutorial && stepIndex === 8 && !hasOpenedSecurityNotes ? (
           <p className="quickstart-tour-help">Open Security Notes via the link to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 8 && !isAgentLlmKeyReady ? (
+        {isAgentTutorial && stepIndex === 9 && !isAgentLlmKeyReady ? (
           <p className="quickstart-tour-help">Enter LLM API Key and pass Test to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 9 && !isAgentExecutionKeyReady ? (
+        {isAgentTutorial && stepIndex === 10 && !isAgentExecutionKeyReady ? (
           <p className="quickstart-tour-help">Enter execution wallet key and pass Test to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 10 && !isAgentAlchemyKeyReady ? (
+        {isAgentTutorial && stepIndex === 11 && !isAgentAlchemyKeyReady ? (
           <p className="quickstart-tour-help">Enter Alchemy API Key and pass Test to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 11 && !isAgentEncryptedSaved ? (
+        {isAgentTutorial && stepIndex === 12 && !isAgentEncryptedSaved ? (
           <p className="quickstart-tour-help">
             Click "Encrypt & Save to DB" and wait for save completion to enable Next.
           </p>
         ) : null}
-        {isAgentTutorial && stepIndex === 12 && !isAgentRunnerConfigTabActive ? (
+        {isAgentTutorial && stepIndex === 13 && !isAgentRunnerConfigTabActive ? (
           <p className="quickstart-tour-help">Open Runner Configuration tab to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 13 && !isAgentLauncherSecretReady ? (
+        {isAgentTutorial && stepIndex === 14 && !isAgentLauncherSecretReady ? (
           <p className="quickstart-tour-help">Enter Runner Launcher Secret to enable Next.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 14 && !hasOpenedRunnerInstallGuide ? (
+        {isAgentTutorial && stepIndex === 15 && !hasOpenedRunnerInstallGuide ? (
           <p className="quickstart-tour-help">Open "How to install and run Runner" and start local Runner first.</p>
         ) : null}
-        {isAgentTutorial && stepIndex === 15 && !isAgentLauncherDetected ? (
+        {isAgentTutorial && stepIndex === 16 && !isAgentLauncherDetected ? (
           <p className="quickstart-tour-help">Detect a local launcher port to enable Next.</p>
         ) : null}
 
