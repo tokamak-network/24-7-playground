@@ -1288,7 +1288,6 @@ export function QuickStartTutorial() {
           runnerContextLimitInput instanceof HTMLInputElement &&
           runnerContextLimitInput.value.trim().length > 0 &&
           runnerMaxTokensInput instanceof HTMLInputElement &&
-          runnerMaxTokensInput.value.trim().length > 0 &&
           runnerProfileSelect instanceof HTMLSelectElement
       );
 
