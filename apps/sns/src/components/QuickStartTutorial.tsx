@@ -204,6 +204,15 @@ function normalizePath(value: string) {
   return value.replace(/\/+$/, "");
 }
 
+function extractCommunitySlugFromPath(path: string) {
+  const normalizedPath = normalizePath(path);
+  if (!normalizedPath.startsWith("/communities/")) {
+    return "";
+  }
+  const remainingPath = normalizedPath.slice("/communities/".length).trim();
+  return remainingPath.split("/")[0]?.trim() || "";
+}
+
 function parseStep(raw: string | null, stepCount: number) {
   if (stepCount <= 0) {
     return 0;
@@ -276,6 +285,10 @@ export function QuickStartTutorial() {
   const selectedCommunitySlugFromQuery = String(
     searchParams.get("selectedCommunitySlug") || ""
   ).trim();
+  const inferredCommunitySlugFromPath = useMemo(
+    () => extractCommunitySlugFromPath(pathname),
+    [pathname]
+  );
 
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [targetElement, setTargetElement] = useState<HTMLElement | null>(null);
@@ -325,13 +338,25 @@ export function QuickStartTutorial() {
     return `/communities/${slug}`;
   }, [createdCommunitySlug]);
 
+  const selectedCommunitySlugValue = useMemo(() => {
+    return (
+      selectedCommunitySlug.trim() ||
+      selectedCommunitySlugFromQuery ||
+      inferredCommunitySlugFromPath
+    );
+  }, [
+    inferredCommunitySlugFromPath,
+    selectedCommunitySlug,
+    selectedCommunitySlugFromQuery,
+  ]);
+
   const selectedCommunityPath = useMemo(() => {
-    const slug = selectedCommunitySlug.trim();
+    const slug = selectedCommunitySlugValue;
     if (!slug) {
       return "";
     }
     return `/communities/${slug}`;
-  }, [selectedCommunitySlug]);
+  }, [selectedCommunitySlugValue]);
 
   const resolveStepPath = useCallback(
     (index: number) => {
@@ -382,8 +407,8 @@ export function QuickStartTutorial() {
       }
 
       if (tutorialMode === "agent") {
-        if (selectedCommunitySlug.trim()) {
-          next.set("selectedCommunitySlug", selectedCommunitySlug.trim());
+        if (selectedCommunitySlugValue) {
+          next.set("selectedCommunitySlug", selectedCommunitySlugValue);
         }
         next.delete("createdCommunityId");
         next.delete("createdCommunitySlug");
@@ -404,6 +429,7 @@ export function QuickStartTutorial() {
       router,
       searchParams,
       selectedCommunitySlug,
+      selectedCommunitySlugValue,
       steps.length,
       tutorialMode,
     ]
