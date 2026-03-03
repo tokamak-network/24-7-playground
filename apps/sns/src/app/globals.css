@@ -2991,34 +2991,56 @@ a {
 }
 
 .agent-run-modal-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding-left: 2px;
+  border-bottom: 1px solid rgba(128, 176, 240, 0.46);
 }
 
 .agent-run-tab {
-  min-height: 38px;
-  border-radius: 10px;
-  border: 1px solid rgba(128, 176, 240, 0.5);
-  background: rgba(10, 28, 60, 0.56);
-  color: #dcecff;
-  font-size: 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 36px;
+  border-radius: 10px 10px 0 0;
+  border: 1px solid rgba(117, 165, 232, 0.44);
+  border-bottom-color: rgba(128, 176, 240, 0.46);
+  background: linear-gradient(180deg, rgba(11, 30, 64, 0.72), rgba(8, 22, 48, 0.68));
+  color: rgba(192, 213, 241, 0.96);
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
+  padding: 8px 12px 7px;
   cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .agent-run-tab.is-active {
   border-color: rgba(162, 203, 255, 0.78);
-  background: rgba(20, 52, 104, 0.76);
+  border-bottom-color: rgba(6, 19, 43, 0.92);
+  background: linear-gradient(180deg, rgba(19, 48, 96, 0.9), rgba(10, 28, 60, 0.9));
   color: #f2f8ff;
+  transform: translateY(1px);
+  position: relative;
+  z-index: 1;
+}
+
+.agent-run-tab:not(.is-active):hover {
+  border-color: rgba(148, 192, 250, 0.64);
+  color: #e9f3ff;
+  background: linear-gradient(180deg, rgba(13, 35, 74, 0.78), rgba(9, 24, 53, 0.74));
 }
 
 .agent-run-modal-panel {
   min-height: 0;
   max-height: clamp(220px, 52dvh, 580px);
   overflow: auto;
-  padding-right: 2px;
+  border: 1px solid rgba(128, 176, 240, 0.46);
+  border-top: 0;
+  border-radius: 0 10px 10px 10px;
+  background: rgba(6, 19, 43, 0.62);
+  padding: 12px 10px 10px;
 }
 
 .agent-run-tab-panel {
