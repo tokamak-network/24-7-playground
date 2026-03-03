@@ -649,6 +649,7 @@ export function QuickStartTutorial() {
     let canceled = false;
     let timer: number | null = null;
     let observer: MutationObserver | null = null;
+    let locateRafId: number | null = null;
     let hasScrolledToTarget = false;
 
     const locate = () => {
@@ -692,17 +693,30 @@ export function QuickStartTutorial() {
         }
       }, 180);
 
-      observer = new MutationObserver(() => {
-        if (locate()) {
-          observer?.disconnect();
-          observer = null;
-          if (timer !== null) {
-            window.clearInterval(timer);
-            timer = null;
-          }
+      const scheduleLocate = () => {
+        if (locateRafId !== null) {
+          return;
         }
+        locateRafId = window.requestAnimationFrame(() => {
+          locateRafId = null;
+          if (locate()) {
+            observer?.disconnect();
+            observer = null;
+            if (timer !== null) {
+              window.clearInterval(timer);
+              timer = null;
+            }
+          }
+        });
+      };
+
+      observer = new MutationObserver(() => {
+        scheduleLocate();
       });
-      observer.observe(document.body, {
+      const modalObservationRoot = document.querySelector('[data-tour="agent-run-modal"]');
+      const observationRoot =
+        modalObservationRoot instanceof HTMLElement ? modalObservationRoot : document.body;
+      observer.observe(observationRoot, {
         childList: true,
         subtree: true,
         attributes: true,
@@ -716,6 +730,9 @@ export function QuickStartTutorial() {
       if (timer !== null) {
         window.clearInterval(timer);
       }
+      if (locateRafId !== null) {
+        window.cancelAnimationFrame(locateRafId);
+      }
     };
   }, [currentStep.selector, isOnStepPath, isTutorialActive, targetElement]);
 
@@ -726,6 +743,7 @@ export function QuickStartTutorial() {
     }
 
     targetElement.classList.add("quickstart-tour-target");
+    let refreshRafId: number | null = null;
 
     const refresh = () => {
       if (!targetElement.isConnected) {
@@ -736,30 +754,46 @@ export function QuickStartTutorial() {
       setTargetRect(targetElement.getBoundingClientRect());
     };
 
+    const scheduleRefresh = () => {
+      if (refreshRafId !== null) {
+        return;
+      }
+      refreshRafId = window.requestAnimationFrame(() => {
+        refreshRafId = null;
+        refresh();
+      });
+    };
+
     refresh();
-    window.addEventListener("resize", refresh);
-    window.addEventListener("scroll", refresh, true);
+    window.addEventListener("resize", scheduleRefresh);
+    window.addEventListener("scroll", scheduleRefresh, true);
 
     let resizeObserver: ResizeObserver | null = null;
     if (typeof ResizeObserver !== "undefined") {
-      resizeObserver = new ResizeObserver(() => refresh());
+      resizeObserver = new ResizeObserver(() => scheduleRefresh());
       resizeObserver.observe(targetElement);
     }
 
     const domObserver = new MutationObserver(() => {
-      refresh();
+      scheduleRefresh();
     });
-    domObserver.observe(document.body, {
+    const modalObservationRoot = targetElement.closest('[data-tour="agent-run-modal"]');
+    const observationRoot =
+      modalObservationRoot instanceof HTMLElement ? modalObservationRoot : document.body;
+    domObserver.observe(observationRoot, {
       childList: true,
       subtree: true,
     });
 
     return () => {
       targetElement.classList.remove("quickstart-tour-target");
-      window.removeEventListener("resize", refresh);
-      window.removeEventListener("scroll", refresh, true);
+      window.removeEventListener("resize", scheduleRefresh);
+      window.removeEventListener("scroll", scheduleRefresh, true);
       resizeObserver?.disconnect();
       domObserver.disconnect();
+      if (refreshRafId !== null) {
+        window.cancelAnimationFrame(refreshRafId);
+      }
     };
   }, [targetElement]);
 
@@ -968,10 +1002,29 @@ export function QuickStartTutorial() {
       setIsLocalNetworkPermissionApiAvailable(false);
       return;
     }
+    if (stepIndex !== 0) {
+      return;
+    }
 
     let canceled = false;
     let intervalId: number | null = null;
     let removePermissionListeners: Array<() => void> = [];
+
+    const stopPolling = () => {
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+
+    const startPolling = () => {
+      if (intervalId !== null) {
+        return;
+      }
+      intervalId = window.setInterval(() => {
+        void syncAccess();
+      }, 420);
+    };
 
     const syncAccess = async () => {
       removePermissionListeners.forEach((removeListener) => removeListener());
@@ -986,6 +1039,7 @@ export function QuickStartTutorial() {
           setIsAgentLocalNetworkAccessAllowed(true);
           setLocalNetworkAccessCheckCompleted(true);
         }
+        stopPolling();
         return;
       }
 
@@ -996,6 +1050,7 @@ export function QuickStartTutorial() {
           setIsAgentLocalNetworkAccessAllowed(false);
           setLocalNetworkAccessCheckCompleted(true);
         }
+        stopPolling();
         return;
       }
 
@@ -1051,11 +1106,15 @@ export function QuickStartTutorial() {
 
         const syncPermissionState = () => {
           if (canceled) return;
+          const allGranted = permissionStatuses.every((status) => status.state === "granted");
           setIsLocalNetworkPermissionApiAvailable(true);
-          setIsAgentLocalNetworkAccessAllowed(
-            permissionStatuses.every((status) => status.state === "granted")
-          );
+          setIsAgentLocalNetworkAccessAllowed(allGranted);
           setLocalNetworkAccessCheckCompleted(true);
+          if (allGranted) {
+            stopPolling();
+          } else {
+            startPolling();
+          }
         };
 
         syncPermissionState();
@@ -1071,24 +1130,29 @@ export function QuickStartTutorial() {
           setIsAgentLocalNetworkAccessAllowed(false);
           setLocalNetworkAccessCheckCompleted(true);
         }
+        startPolling();
       }
     };
 
     void syncAccess();
     window.addEventListener("focus", syncAccess);
-    intervalId = window.setInterval(() => {
-      void syncAccess();
-    }, 1200);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void syncAccess();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pageshow", syncAccess);
 
     return () => {
       canceled = true;
       window.removeEventListener("focus", syncAccess);
-      if (intervalId !== null) {
-        window.clearInterval(intervalId);
-      }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pageshow", syncAccess);
+      stopPolling();
       removePermissionListeners.forEach((removeListener) => removeListener());
     };
-  }, [isAgentTutorial]);
+  }, [isAgentTutorial, stepIndex]);
 
   useEffect(() => {
     if (!isDappTutorial) {
@@ -1291,6 +1355,11 @@ export function QuickStartTutorial() {
       setIsRunnerInstallGuideModalOpen(false);
       return;
     }
+    if (!isOnStepPath) {
+      return;
+    }
+
+    let rafId: number | null = null;
 
     const detectAgentState = () => {
       setHasAgentRunButton(Boolean(document.querySelector('[data-tour="agent-run-button"]')));
@@ -1381,10 +1450,20 @@ export function QuickStartTutorial() {
       );
     };
 
+    const scheduleDetectAgentState = () => {
+      if (rafId !== null) {
+        return;
+      }
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        detectAgentState();
+      });
+    };
+
     detectAgentState();
 
     const handleInput = () => {
-      detectAgentState();
+      scheduleDetectAgentState();
     };
 
     const handleClick = (event: MouseEvent) => {
@@ -1403,16 +1482,19 @@ export function QuickStartTutorial() {
           setHasOpenedRunnerInstallGuide(true);
         }
       }
-      detectAgentState();
+      scheduleDetectAgentState();
     };
 
     document.addEventListener("input", handleInput, true);
     document.addEventListener("click", handleClick, true);
 
     const observer = new MutationObserver(() => {
-      detectAgentState();
+      scheduleDetectAgentState();
     });
-    observer.observe(document.body, {
+    const modalObservationRoot = document.querySelector('[data-tour="agent-run-modal"]');
+    const observationRoot =
+      modalObservationRoot instanceof HTMLElement ? modalObservationRoot : document.body;
+    observer.observe(observationRoot, {
       childList: true,
       subtree: true,
       attributes: true,
@@ -1423,8 +1505,11 @@ export function QuickStartTutorial() {
       document.removeEventListener("input", handleInput, true);
       document.removeEventListener("click", handleClick, true);
       observer.disconnect();
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
     };
-  }, [isAgentTutorial]);
+  }, [isAgentTutorial, isOnStepPath, stepIndex]);
 
   useEffect(() => {
     if (!isAgentTutorial) {
@@ -1461,7 +1546,7 @@ export function QuickStartTutorial() {
 
     const probePort = async (port: number) => {
       const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 900);
+      const timeoutId = window.setTimeout(() => controller.abort(), 700);
       try {
         const response = await fetch(
           `http://127.0.0.1:${port}/health`,
@@ -1499,7 +1584,7 @@ export function QuickStartTutorial() {
     window.addEventListener("focus", handleFocus);
     timerId = window.setInterval(() => {
       void scanRunnerPorts();
-    }, 1400);
+    }, 900);
 
     return () => {
       canceled = true;
