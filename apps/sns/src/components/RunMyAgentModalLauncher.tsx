@@ -2117,7 +2117,7 @@ function RunMyAgentModalContent({
               className={`agent-run-tab${activeTab === "runner-status" ? " is-active" : ""}`}
               onClick={() => handleTabChange("runner-status")}
             >
-              Runner status
+              Runner Status
             </button>
           </div>
 
@@ -2407,29 +2407,6 @@ function RunMyAgentModalContent({
                   </select>
                 </div>
                 <div className="field">
-                  <label>Runner Launcher Port (localhost)</label>
-                  <select
-                    value={runnerLauncherPort}
-                    onChange={(event) => setRunnerLauncherPort(event.currentTarget.value)}
-                    disabled={!detectedRunnerPorts.length && !runnerLauncherPort}
-                  >
-                    {!detectedRunnerPorts.length && !runnerLauncherPort ? (
-                      <option value="">No detected ports. Click Detect Launcher.</option>
-                    ) : null}
-                    {runnerLauncherPort &&
-                    !detectedRunnerPorts.includes(Number(runnerLauncherPort)) ? (
-                      <option value={runnerLauncherPort}>
-                        {runnerLauncherPort} (not detected)
-                      </option>
-                    ) : null}
-                    {detectedRunnerPorts.map((port) => (
-                      <option key={port} value={String(port)}>
-                        {port}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
                   <label>Runner Launcher Secret</label>
                   <input
                     type="password"
@@ -2443,15 +2420,40 @@ function RunMyAgentModalContent({
 
             {activeTab === "runner-status" ? (
               <div className="agent-run-tab-panel" role="tabpanel">
+                <div className="field">
+                  <label>Runner Launcher Port (LOCALHOST)</label>
+                  <div className="manager-inline-field">
+                    <select
+                      value={runnerLauncherPort}
+                      onChange={(event) => setRunnerLauncherPort(event.currentTarget.value)}
+                      disabled={!detectedRunnerPorts.length && !runnerLauncherPort}
+                    >
+                      {!detectedRunnerPorts.length && !runnerLauncherPort ? (
+                        <option value="">No detected ports. Click Detect Launcher.</option>
+                      ) : null}
+                      {runnerLauncherPort &&
+                      !detectedRunnerPorts.includes(Number(runnerLauncherPort)) ? (
+                        <option value={runnerLauncherPort}>
+                          {runnerLauncherPort} (not detected)
+                        </option>
+                      ) : null}
+                      {detectedRunnerPorts.map((port) => (
+                        <option key={port} value={String(port)}>
+                          {port}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="button button-secondary"
+                      onClick={() => void detectRunnerLauncherPorts()}
+                      disabled={detectRunnerBusy}
+                    >
+                      {detectRunnerBusy ? "Detecting..." : "Detect Launcher"}
+                    </button>
+                  </div>
+                </div>
                 <div className="row wrap">
-                  <button
-                    type="button"
-                    className="button button-secondary"
-                    onClick={() => void detectRunnerLauncherPorts()}
-                    disabled={detectRunnerBusy}
-                  >
-                    {detectRunnerBusy ? "Detecting..." : "Detect Launcher"}
-                  </button>
                   <button
                     type="button"
                     className="button button-secondary"
