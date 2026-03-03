@@ -20,7 +20,7 @@ import { fetchMutationWithAutoReload } from "src/lib/clientMutationReload";
 
 type ModalPhase = "closed" | "opening" | "open" | "closing";
 type SetupMode = "import" | "fresh";
-type ConfigTab = "public" | "confidential" | "runner";
+type ConfigTab = "confidential" | "runner";
 type BubbleKind = "success" | "error" | "info";
 
 type PairItem = {
@@ -470,7 +470,7 @@ function RunMyAgentModalContent({
 
   const [screen, setScreen] = useState<"choice" | "config">("choice");
   const [setupMode, setSetupMode] = useState<SetupMode>("import");
-  const [activeTab, setActiveTab] = useState<ConfigTab>("public");
+  const [activeTab, setActiveTab] = useState<ConfigTab>("confidential");
 
   const [pairs, setPairs] = useState<PairItem[]>([]);
   const [pairsBusy, setPairsBusy] = useState(false);
@@ -1027,6 +1027,31 @@ function RunMyAgentModalContent({
     }
   }, [agentId, authHeaders, readError, token]);
 
+  const promptSecurityPassword = useCallback(
+    (purpose: "decrypt" | "encrypt") => {
+      const promptMessage =
+        purpose === "decrypt"
+          ? "Enter security password to decrypt confidential keys."
+          : "Enter security password to encrypt and save confidential keys.";
+      const prompted = window.prompt(promptMessage, securityPassword);
+      if (prompted == null) return null;
+      const normalized = prompted.trim();
+      if (!normalized) {
+        setSecurityStatus({
+          kind: "error",
+          text:
+            purpose === "decrypt"
+              ? "Password is required to decrypt."
+              : "Password is required to encrypt.",
+        });
+        return null;
+      }
+      setSecurityPassword(normalized);
+      return normalized;
+    },
+    [securityPassword]
+  );
+
   const decryptEncryptedSecurity = useCallback(
     async (
       encrypted: EncryptedSecurity,
@@ -1113,14 +1138,9 @@ function RunMyAgentModalContent({
     ]
   );
 
-  const loadAndDecryptSecurityFromDb = useCallback(async () => {
+  const loadAndDecryptSecurityFromDb = useCallback(async (password: string) => {
     if (!token || !agentId || !authHeaders) {
       setSecurityStatus({ kind: "error", text: "Sign in first." });
-      return false;
-    }
-
-    if (!securityPassword.trim()) {
-      setSecurityStatus({ kind: "error", text: "Password is required to decrypt." });
       return false;
     }
 
@@ -1135,7 +1155,7 @@ function RunMyAgentModalContent({
       setSecurityStatus({ kind: "info", text: "Decrypting ciphertext..." });
       return await decryptEncryptedSecurity(
         encrypted,
-        securityPassword,
+        password,
         {
           successMessage: "Loaded from DB and decrypted successfully.",
         }
@@ -1148,16 +1168,16 @@ function RunMyAgentModalContent({
     authHeaders,
     decryptEncryptedSecurity,
     loadEncryptedSecurity,
-    securityPassword,
     token,
   ]);
 
-  const encryptAndSaveSecurity = useCallback(async () => {
+  const encryptAndSaveSecurity = useCallback(async (password: string) => {
     if (!token || !agentId || !authHeaders) {
       setSecurityStatus({ kind: "error", text: "Sign in first." });
       return false;
     }
-    if (!securityPassword.trim()) {
+    const normalizedPassword = password.trim();
+    if (!normalizedPassword) {
       setSecurityStatus({ kind: "error", text: "Password is required to encrypt." });
       return false;
     }
@@ -1168,7 +1188,11 @@ function RunMyAgentModalContent({
     setSecurityBusy(true);
     setSecurityStatus({ kind: "info", text: "Encrypting and saving ciphertext..." });
     try {
-      const encrypted = await encryptAgentSecrets(signature, securityPassword, securityDraft);
+      const encrypted = await encryptAgentSecrets(
+        signature,
+        normalizedPassword,
+        securityDraft
+      );
       const response = await fetchMutationWithAutoReload(
         `/api/agents/${encodeURIComponent(agentId)}/secrets`,
         {
@@ -1199,9 +1223,20 @@ function RunMyAgentModalContent({
     authHeaders,
     readError,
     securityDraft,
-    securityPassword,
     token,
   ]);
+
+  const handleLoadAndDecryptSecurityFromDb = useCallback(async () => {
+    const password = promptSecurityPassword("decrypt");
+    if (!password) return;
+    await loadAndDecryptSecurityFromDb(password);
+  }, [loadAndDecryptSecurityFromDb, promptSecurityPassword]);
+
+  const handleEncryptAndSaveSecurity = useCallback(async () => {
+    const password = promptSecurityPassword("encrypt");
+    if (!password) return;
+    await encryptAndSaveSecurity(password);
+  }, [encryptAndSaveSecurity, promptSecurityPassword]);
 
   const testExecutionWalletKey = useCallback(async () => {
     const privateKey = securityDraft.executionWalletPrivateKey.trim();
@@ -1829,7 +1864,7 @@ function RunMyAgentModalContent({
     } else {
       prepareFresh();
     }
-    setActiveTab("public");
+    setActiveTab("confidential");
     setScreen("config");
   }, [prepareFresh, prepareFromSource, securityPassword, setupMode]);
 
@@ -2030,15 +2065,6 @@ function RunMyAgentModalContent({
             <button
               type="button"
               role="tab"
-              aria-selected={activeTab === "public"}
-              className={`agent-run-tab${activeTab === "public" ? " is-active" : ""}`}
-              onClick={() => setActiveTab("public")}
-            >
-              Public Configuration
-            </button>
-            <button
-              type="button"
-              role="tab"
               aria-selected={activeTab === "confidential"}
               className={`agent-run-tab${activeTab === "confidential" ? " is-active" : ""}`}
               onClick={() => setActiveTab("confidential")}
@@ -2057,45 +2083,9 @@ function RunMyAgentModalContent({
           </div>
 
           <div className="agent-run-modal-panel">
-            {activeTab === "public" ? (
+            {activeTab === "confidential" ? (
               <div className="agent-run-tab-panel" role="tabpanel">
-                {llmProvider === "LITELLM" ? (
-                  <div className="manager-provider-row">
-                    <div className="field">
-                      <label>LLM Provider</label>
-                      <select
-                        value={llmProvider}
-                        onChange={(event) => {
-                          const nextProvider = event.currentTarget.value;
-                          setLlmProvider(nextProvider);
-                          setLlmModel(defaultModelByProvider(nextProvider));
-                          setAvailableModels([]);
-                          setTested((prev) => ({ ...prev, llmApiKey: false }));
-                          if (nextProvider !== "LITELLM") {
-                            setLiteLlmBaseUrl("");
-                          }
-                        }}
-                      >
-                        {PROVIDER_OPTIONS.map((provider) => (
-                          <option key={provider || "none"} value={provider}>
-                            {provider || "Select provider"}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="field">
-                      <label>Base URL</label>
-                      <input
-                        value={liteLlmBaseUrl}
-                        onChange={(event) => {
-                          setLiteLlmBaseUrl(event.currentTarget.value);
-                          setTested((prev) => ({ ...prev, llmApiKey: false }));
-                        }}
-                        placeholder="https://your-litellm-endpoint/v1"
-                      />
-                    </div>
-                  </div>
-                ) : (
+                <div className="manager-provider-row">
                   <div className="field">
                     <label>LLM Provider</label>
                     <select
@@ -2106,6 +2096,9 @@ function RunMyAgentModalContent({
                         setLlmModel(defaultModelByProvider(nextProvider));
                         setAvailableModels([]);
                         setTested((prev) => ({ ...prev, llmApiKey: false }));
+                        if (nextProvider !== "LITELLM") {
+                          setLiteLlmBaseUrl("");
+                        }
                       }}
                     >
                       {PROVIDER_OPTIONS.map((provider) => (
@@ -2115,35 +2108,50 @@ function RunMyAgentModalContent({
                       ))}
                     </select>
                   </div>
-                )}
-                <div className="field">
-                  <label>LLM Model</label>
-                  <div className="manager-inline-field">
-                    <select
-                      value={llmModel}
-                      onChange={(event) => setLlmModel(event.currentTarget.value)}
-                      disabled={!modelOptions.length}
-                    >
-                      {modelOptions.length ? (
-                        modelOptions.map((modelName) => (
-                          <option key={modelName} value={modelName}>
-                            {modelName}
-                          </option>
-                        ))
-                      ) : (
-                        <option value="">Load model list first</option>
-                      )}
-                    </select>
-                    <button
-                      type="button"
-                      className="button button-secondary"
-                      onClick={() => void fetchModelsByApiKey(true)}
-                      disabled={modelsBusy}
-                    >
-                      {modelsBusy ? "Loading..." : "Load Model List"}
-                    </button>
+                  <div className="field">
+                    <label>LLM Model</label>
+                    <div className="manager-inline-field">
+                      <select
+                        value={llmModel}
+                        onChange={(event) => setLlmModel(event.currentTarget.value)}
+                        disabled={!modelOptions.length}
+                      >
+                        {modelOptions.length ? (
+                          modelOptions.map((modelName) => (
+                            <option key={modelName} value={modelName}>
+                              {modelName}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="">Load model list first</option>
+                        )}
+                      </select>
+                      <button
+                        type="button"
+                        className="button button-secondary"
+                        onClick={() => void fetchModelsByApiKey(true)}
+                        disabled={modelsBusy}
+                      >
+                        {modelsBusy ? "Loading..." : "Load Model List"}
+                      </button>
+                    </div>
                   </div>
                 </div>
+
+                {llmProvider === "LITELLM" ? (
+                  <div className="field">
+                    <label>Base URL</label>
+                    <input
+                      value={liteLlmBaseUrl}
+                      onChange={(event) => {
+                        setLiteLlmBaseUrl(event.currentTarget.value);
+                        setTested((prev) => ({ ...prev, llmApiKey: false }));
+                      }}
+                      placeholder="https://your-litellm-endpoint/v1"
+                    />
+                  </div>
+                ) : null}
+
                 <div className="row wrap">
                   <button
                     type="button"
@@ -2163,20 +2171,6 @@ function RunMyAgentModalContent({
                   </button>
                 </div>
                 <StatusText status={generalStatus} />
-              </div>
-            ) : null}
-
-            {activeTab === "confidential" ? (
-              <div className="agent-run-tab-panel" role="tabpanel">
-                <div className="field">
-                  <label>Security Password</label>
-                  <input
-                    type="password"
-                    value={securityPassword}
-                    onChange={(event) => setSecurityPassword(event.currentTarget.value)}
-                    placeholder="Password"
-                  />
-                </div>
 
                 <div className="field">
                   <label>LLM API Key</label>
@@ -2306,7 +2300,7 @@ function RunMyAgentModalContent({
                   <button
                     type="button"
                     className="button button-secondary"
-                    onClick={() => void loadAndDecryptSecurityFromDb()}
+                    onClick={() => void handleLoadAndDecryptSecurityFromDb()}
                     disabled={securityBusy}
                   >
                     Load from DB & Decrypt
@@ -2314,7 +2308,7 @@ function RunMyAgentModalContent({
                   <button
                     type="button"
                     className="button"
-                    onClick={() => void encryptAndSaveSecurity()}
+                    onClick={() => void handleEncryptAndSaveSecurity()}
                     disabled={securityBusy}
                   >
                     Encrypt & Save to DB
