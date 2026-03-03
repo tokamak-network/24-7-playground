@@ -16,6 +16,12 @@ type TutorialStep = {
   body: string;
 };
 
+type TutorialPanelPlacement =
+  | "bottom-right"
+  | "top-right"
+  | "bottom-left"
+  | "top-left";
+
 const TUTORIAL_COMMUNITY_CREATED_EVENT = "sns-tutorial-community-created";
 const AGENT_SECURITY_NOTES_URL = "/about#security-notes";
 const AGENT_LLM_HELP_URL =
@@ -329,6 +335,8 @@ export function QuickStartTutorial() {
   const previousNextDisabledRef = useRef<boolean | null>(null);
   const autoAdvancedOnCurrentStepRef = useRef(false);
   const panelRef = useRef<HTMLElement | null>(null);
+  const [panelPlacement, setPanelPlacement] =
+    useState<TutorialPanelPlacement>("bottom-right");
 
   const createdCommunityPath = useMemo(() => {
     const slug = createdCommunitySlug.trim();
@@ -613,6 +621,94 @@ export function QuickStartTutorial() {
       domObserver.disconnect();
     };
   }, [targetElement]);
+
+  useEffect(() => {
+    if (!isTutorialActive || !targetRect) {
+      setPanelPlacement("bottom-right");
+      return;
+    }
+
+    const computePlacement = () => {
+      const panelElement = panelRef.current;
+      if (!panelElement) {
+        setPanelPlacement("bottom-right");
+        return;
+      }
+
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const sideMargin = viewportWidth <= 920 ? 12 : 18;
+      const topMargin = 18;
+      const bottomMargin = 24;
+
+      const measuredPanelRect = panelElement.getBoundingClientRect();
+      const panelWidth =
+        measuredPanelRect.width || Math.min(360, Math.max(viewportWidth - sideMargin * 2, 220));
+      const panelHeight = measuredPanelRect.height || 320;
+
+      const targetArea = {
+        left: targetRect.left - 8,
+        top: targetRect.top - 8,
+        right: targetRect.right + 8,
+        bottom: targetRect.bottom + 8,
+      };
+
+      const candidates: Array<{ key: TutorialPanelPlacement; left: number; top: number }> = [
+        {
+          key: "bottom-right",
+          left: viewportWidth - sideMargin - panelWidth,
+          top: viewportHeight - bottomMargin - panelHeight,
+        },
+        {
+          key: "top-right",
+          left: viewportWidth - sideMargin - panelWidth,
+          top: topMargin,
+        },
+        {
+          key: "bottom-left",
+          left: sideMargin,
+          top: viewportHeight - bottomMargin - panelHeight,
+        },
+        {
+          key: "top-left",
+          left: sideMargin,
+          top: topMargin,
+        },
+      ];
+
+      const normalizeCandidate = (candidate: { left: number; top: number }) => ({
+        left: Math.min(Math.max(candidate.left, 0), Math.max(viewportWidth - panelWidth, 0)),
+        top: Math.min(Math.max(candidate.top, 0), Math.max(viewportHeight - panelHeight, 0)),
+      });
+
+      const intersects = (
+        a: { left: number; top: number; right: number; bottom: number },
+        b: { left: number; top: number; right: number; bottom: number }
+      ) => !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+
+      for (const candidate of candidates) {
+        const normalized = normalizeCandidate(candidate);
+        const panelArea = {
+          left: normalized.left,
+          top: normalized.top,
+          right: normalized.left + panelWidth,
+          bottom: normalized.top + panelHeight,
+        };
+        if (!intersects(panelArea, targetArea)) {
+          setPanelPlacement(candidate.key);
+          return;
+        }
+      }
+
+      setPanelPlacement("bottom-right");
+    };
+
+    computePlacement();
+    window.addEventListener("resize", computePlacement);
+    return () => {
+      window.removeEventListener("resize", computePlacement);
+    };
+  }, [isTutorialActive, targetRect]);
 
   useEffect(() => {
     if (!isTutorialActive) {
@@ -1042,6 +1138,19 @@ export function QuickStartTutorial() {
           height: `${targetRect.height + 12}px`,
         };
 
+  const panelStyle = useMemo(() => {
+    switch (panelPlacement) {
+      case "top-right":
+        return { top: "18px", bottom: "auto" } as const;
+      case "bottom-left":
+        return { left: "18px", right: "auto" } as const;
+      case "top-left":
+        return { top: "18px", bottom: "auto", left: "18px", right: "auto" } as const;
+      default:
+        return undefined;
+    }
+  }, [panelPlacement]);
+
   useEffect(() => {
     if (!isTutorialActive) {
       return;
@@ -1276,6 +1385,7 @@ export function QuickStartTutorial() {
       <aside
         ref={panelRef}
         className="quickstart-tour-panel"
+        style={panelStyle}
         aria-live="polite"
         aria-label="Quick start tutorial"
       >
