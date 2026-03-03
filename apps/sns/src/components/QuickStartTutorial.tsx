@@ -1342,7 +1342,7 @@ export function QuickStartTutorial() {
     const autoAdvanceAllowedStep = isDappTutorial
       ? [0, 1, 2, 3, 4, 5].includes(stepIndex)
       : isAgentTutorial
-        ? [0, 1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 14].includes(stepIndex)
+        ? [0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 14].includes(stepIndex)
         : false;
     const autoAdvancePathReady =
       isOnStepPath ||
@@ -1362,7 +1362,7 @@ export function QuickStartTutorial() {
         !nextDisabled &&
         !autoAdvancedOnCurrentStepRef.current &&
         isAgentTutorial &&
-        stepIndex === 2;
+        (stepIndex === 2 || stepIndex === 6);
       if (canAutoAdvanceImmediately) {
         autoAdvancedOnCurrentStepRef.current = true;
         goToStep(stepIndex + 1, stepIndex);
