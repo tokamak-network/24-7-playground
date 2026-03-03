@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { reportUserError } from "src/lib/userErrorReporter";
 
 type BubbleKind = "success" | "error" | "info";
@@ -129,6 +130,7 @@ function normalizeStatusText(node: Element) {
 }
 
 export function StatusBubbleBridge() {
+  const [portalReady, setPortalReady] = useState(false);
   const [bubbleMessage, setBubbleMessage] = useState<BubbleMessage | null>(null);
   const bubbleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bubbleAnchorElementRef = useRef<HTMLElement | null>(null);
@@ -138,6 +140,13 @@ export function StatusBubbleBridge() {
     anchor: null,
     at: 0,
   });
+
+  useEffect(() => {
+    setPortalReady(true);
+    return () => {
+      setPortalReady(false);
+    };
+  }, []);
 
   const scheduleBubbleDismiss = useCallback(() => {
     if (bubbleTimerRef.current) {
@@ -367,9 +376,9 @@ export function StatusBubbleBridge() {
     };
   }, []);
 
-  if (!bubbleMessage) return null;
+  if (!portalReady || !bubbleMessage) return null;
 
-  return (
+  const bubbleNode = (
     <div
       className={`floating-status-bubble floating-status-bubble-${bubbleMessage.kind} floating-status-bubble-${bubbleMessage.placement}`}
       style={{
@@ -383,4 +392,6 @@ export function StatusBubbleBridge() {
       {bubbleMessage.text}
     </div>
   );
+
+  return createPortal(bubbleNode, document.body);
 }
