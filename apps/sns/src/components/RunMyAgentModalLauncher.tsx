@@ -1880,12 +1880,37 @@ function RunMyAgentModalContent({
             method: "GET",
             signal: controller.signal,
           });
-          if (!response.ok) return null;
+          if (!response.ok) {
+            const bodyText = await response.text().catch(() => "");
+            return {
+              port,
+              ok: false as const,
+              status: response.status,
+              message: readStatusError(bodyText),
+            };
+          }
           const data = await response.json().catch(() => ({}));
-          if (data?.ok) return port;
-          return null;
+          if (data?.ok) {
+            return {
+              port,
+              ok: true as const,
+              status: response.status,
+              message: "",
+            };
+          }
+          return {
+            port,
+            ok: false as const,
+            status: response.status,
+            message: "Unexpected /health response.",
+          };
         } catch {
-          return null;
+          return {
+            port,
+            ok: false as const,
+            status: 0,
+            message: "Network error",
+          };
         } finally {
           clearTimeout(timeout);
         }
@@ -1893,8 +1918,12 @@ function RunMyAgentModalContent({
 
       const results = await Promise.all(ports.map((port) => probe(port)));
       const matched = results
-        .filter((port): port is number => typeof port === "number")
+        .filter((entry) => entry.ok)
+        .map((entry) => entry.port)
         .sort((a, b) => a - b);
+      const blockedByOrigin = results
+        .filter((entry) => !entry.ok && entry.status === 403)
+        .map((entry) => entry.port);
 
       setDetectedRunnerPorts((prev) => (areNumberArraysEqual(prev, matched) ? prev : matched));
 
@@ -1914,6 +1943,17 @@ function RunMyAgentModalContent({
 
       setTested((prev) => ({ ...prev, runnerLauncher: false }));
       setRunnerRunning(false);
+      if (blockedByOrigin.length) {
+        const currentOrigin =
+          typeof window !== "undefined" ? window.location.origin : "current browser origin";
+        setRunnerStatus({
+          kind: "error",
+          text: `Launcher is reachable on localhost:${blockedByOrigin.join(
+            ", "
+          )} but blocked by CORS origin policy. Restart runner with --sns ${currentOrigin}.`,
+        });
+        return;
+      }
       setRunnerStatus({ kind: "error", text: "No running runner launcher detected." });
     } finally {
       setDetectRunnerBusy(false);
