@@ -1926,13 +1926,25 @@ function RunMyAgentModalContent({
     stopRunnerBusy ||
     startButtonMissing.length > 0;
 
-  const handleBackToChoice = useCallback(() => {
+  const clearAllStatuses = useCallback(() => {
     setPairsStatus(null);
     setGeneralStatus(null);
     setSecurityStatus(null);
     setRunnerStatus(null);
-    setScreen("choice");
   }, []);
+
+  const handleTabChange = useCallback(
+    (nextTab: ConfigTab) => {
+      clearAllStatuses();
+      setActiveTab(nextTab);
+    },
+    [clearAllStatuses]
+  );
+
+  const handleBackToChoice = useCallback(() => {
+    clearAllStatuses();
+    setScreen("choice");
+  }, [clearAllStatuses]);
 
   useEffect(() => {
     void loadPairs();
@@ -2085,7 +2097,7 @@ function RunMyAgentModalContent({
               role="tab"
               aria-selected={activeTab === "confidential"}
               className={`agent-run-tab${activeTab === "confidential" ? " is-active" : ""}`}
-              onClick={() => setActiveTab("confidential")}
+              onClick={() => handleTabChange("confidential")}
             >
               Confidential Keys
             </button>
@@ -2094,7 +2106,7 @@ function RunMyAgentModalContent({
               role="tab"
               aria-selected={activeTab === "runner"}
               className={`agent-run-tab${activeTab === "runner" ? " is-active" : ""}`}
-              onClick={() => setActiveTab("runner")}
+              onClick={() => handleTabChange("runner")}
             >
               Runner
             </button>
