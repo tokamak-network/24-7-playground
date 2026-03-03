@@ -9,6 +9,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { createPortal } from "react-dom";
 import { useOwnerSession } from "src/components/ownerSession";
 import {
   SECURITY_SIGNING_MESSAGE,
@@ -325,6 +326,7 @@ export function RunMyAgentModalLauncher({
   buttonLabel = "Run My Agent",
 }: RunMyAgentModalLauncherProps) {
   const [modalPhase, setModalPhase] = useState<ModalPhase>("closed");
+  const [portalReady, setPortalReady] = useState(false);
   const modalTimerRef = useRef<number | null>(null);
   const isModalVisible = modalPhase !== "closed";
 
@@ -351,6 +353,13 @@ export function RunMyAgentModalLauncher({
         setModalPhase("open");
       });
     });
+  }, []);
+
+  useEffect(() => {
+    setPortalReady(true);
+    return () => {
+      setPortalReady(false);
+    };
   }, []);
 
   useEffect(() => {
@@ -383,6 +392,48 @@ export function RunMyAgentModalLauncher({
     };
   }, [closeModal, isModalVisible]);
 
+  const modalNode = isModalVisible ? (
+    <div
+      className={`community-create-modal community-action-modal agent-run-modal${
+        modalPhase === "open" ? " is-open" : ""
+      }`}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Run agent for ${communityName}`}
+    >
+      <button
+        type="button"
+        className="community-create-modal-backdrop"
+        aria-label="Close run my agent modal"
+        onClick={closeModal}
+      />
+      <section
+        className="community-create-modal-shell community-action-modal-shell agent-run-modal-shell"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className="community-create-modal-head community-action-modal-head">
+          <h3>Run My Agent</h3>
+          <button
+            type="button"
+            className="community-create-modal-close"
+            onClick={closeModal}
+          >
+            Close
+          </button>
+        </header>
+        <div className="community-create-modal-body community-action-modal-body agent-run-modal-body">
+          <RunMyAgentModalContent
+            communityId={communityId}
+            communitySlug={communitySlug}
+            communityName={communityName}
+            agentId={agentId}
+            agentHandle={agentHandle}
+          />
+        </div>
+      </section>
+    </div>
+  ) : null;
+
   return (
     <>
       <button
@@ -393,48 +444,7 @@ export function RunMyAgentModalLauncher({
       >
         {buttonLabel}
       </button>
-
-      {isModalVisible ? (
-        <div
-          className={`community-create-modal community-action-modal agent-run-modal${
-            modalPhase === "open" ? " is-open" : ""
-          }`}
-          role="dialog"
-          aria-modal="true"
-          aria-label={`Run agent for ${communityName}`}
-        >
-          <button
-            type="button"
-            className="community-create-modal-backdrop"
-            aria-label="Close run my agent modal"
-            onClick={closeModal}
-          />
-          <section
-            className="community-create-modal-shell community-action-modal-shell agent-run-modal-shell"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <header className="community-create-modal-head community-action-modal-head">
-              <h3>Run My Agent</h3>
-              <button
-                type="button"
-                className="community-create-modal-close"
-                onClick={closeModal}
-              >
-                Close
-              </button>
-            </header>
-            <div className="community-create-modal-body community-action-modal-body agent-run-modal-body">
-              <RunMyAgentModalContent
-                communityId={communityId}
-                communitySlug={communitySlug}
-                communityName={communityName}
-                agentId={agentId}
-                agentHandle={agentHandle}
-              />
-            </div>
-          </section>
-        </div>
-      ) : null}
+      {portalReady && modalNode ? createPortal(modalNode, document.body) : null}
     </>
   );
 }
