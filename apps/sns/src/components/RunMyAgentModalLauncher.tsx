@@ -1030,12 +1030,14 @@ function RunMyAgentModalContent({
   const decryptEncryptedSecurity = useCallback(
     async (
       encrypted: EncryptedSecurity,
+      password: string,
       options?: {
         fallbackLegacySlug?: string;
         successMessage?: string;
       }
     ) => {
-      if (!securityPassword.trim()) {
+      const normalizedPassword = password.trim();
+      if (!normalizedPassword) {
         setSecurityStatus({ kind: "error", text: "Password is required to decrypt." });
         return false;
       }
@@ -1055,7 +1057,7 @@ function RunMyAgentModalContent({
       };
 
       try {
-        const decrypted = await decryptAgentSecrets(signature, securityPassword, encrypted);
+        const decrypted = await decryptAgentSecrets(signature, normalizedPassword, encrypted);
         applyDraft(decrypted);
         setSecurityStatus({
           kind: "success",
@@ -1085,7 +1087,7 @@ function RunMyAgentModalContent({
           try {
             const decrypted = await decryptAgentSecrets(
               legacySignature,
-              securityPassword,
+              normalizedPassword,
               encrypted
             );
             applyDraft(decrypted);
@@ -1108,7 +1110,6 @@ function RunMyAgentModalContent({
       acquireSecuritySignature,
       currentCommunitySlug,
       legacyCommunitySignatures,
-      securityPassword,
     ]
   );
 
@@ -1132,9 +1133,13 @@ function RunMyAgentModalContent({
       }
 
       setSecurityStatus({ kind: "info", text: "Decrypting ciphertext..." });
-      return await decryptEncryptedSecurity(encrypted, {
-        successMessage: "Loaded from DB and decrypted successfully.",
-      });
+      return await decryptEncryptedSecurity(
+        encrypted,
+        securityPassword,
+        {
+          successMessage: "Loaded from DB and decrypted successfully.",
+        }
+      );
     } finally {
       setSecurityBusy(false);
     }
@@ -1645,7 +1650,7 @@ function RunMyAgentModalContent({
     token,
   ]);
 
-  const prepareFromSource = useCallback(async () => {
+  const prepareFromSource = useCallback(async (password: string) => {
     if (!token || !authHeaders) {
       setPairsStatus({ kind: "error", text: "Sign in first." });
       return false;
@@ -1719,7 +1724,8 @@ function RunMyAgentModalContent({
         });
         return false;
       }
-      if (!securityPassword.trim()) {
+      const normalizedPassword = password.trim();
+      if (!normalizedPassword) {
         setPairsStatus({
           kind: "error",
           text: "Security password is required for import and decrypt.",
@@ -1730,10 +1736,14 @@ function RunMyAgentModalContent({
         });
         return false;
       }
-      const decrypted = await decryptEncryptedSecurity(sourceEncrypted, {
-        fallbackLegacySlug: sourcePair?.community?.slug || "",
-        successMessage: `Imported and decrypted confidential keys from ${sourceName}.`,
-      });
+      const decrypted = await decryptEncryptedSecurity(
+        sourceEncrypted,
+        normalizedPassword,
+        {
+          fallbackLegacySlug: sourcePair?.community?.slug || "",
+          successMessage: `Imported and decrypted confidential keys from ${sourceName}.`,
+        }
+      );
       if (!decrypted) {
         setPairsStatus({
           kind: "error",
@@ -1759,6 +1769,7 @@ function RunMyAgentModalContent({
     agentHandle,
     authHeaders,
     currentPair?.handle,
+    decryptEncryptedSecurity,
     general?.agent?.handle,
     importSourceAgentId,
     readError,
@@ -1792,14 +1803,35 @@ function RunMyAgentModalContent({
 
   const handleContinue = useCallback(async () => {
     if (setupMode === "import") {
-      const ok = await prepareFromSource();
+      const prompted = window.prompt(
+        "Enter security password to import and decrypt confidential keys.",
+        securityPassword
+      );
+      if (prompted == null) {
+        setPairsStatus({ kind: "info", text: "Import cancelled." });
+        return;
+      }
+      const normalizedPassword = prompted.trim();
+      if (!normalizedPassword) {
+        setPairsStatus({
+          kind: "error",
+          text: "Security password is required for import and decrypt.",
+        });
+        setSecurityStatus({
+          kind: "error",
+          text: "Password is required to decrypt.",
+        });
+        return;
+      }
+      setSecurityPassword(normalizedPassword);
+      const ok = await prepareFromSource(normalizedPassword);
       if (!ok) return;
     } else {
       prepareFresh();
     }
     setActiveTab("public");
     setScreen("config");
-  }, [prepareFresh, prepareFromSource, setupMode]);
+  }, [prepareFresh, prepareFromSource, securityPassword, setupMode]);
 
   const startButtonMissing = useMemo(() => {
     const missing: string[] = [];
@@ -1957,22 +1989,12 @@ function RunMyAgentModalContent({
                           prepareBusy ||
                           pairsBusy ||
                           !sourcePairs.length ||
-                          !importSourceAgentId.trim() ||
-                          !securityPassword.trim()
+                          !importSourceAgentId.trim()
                         }
                       >
                         {prepareBusy ? "Preparing..." : "Continue"}
                       </button>
                     </div>
-                  </div>
-                  <div className="field">
-                    <label>Security Password (required for import decrypt)</label>
-                    <input
-                      type="password"
-                      value={securityPassword}
-                      onChange={(event) => setSecurityPassword(event.currentTarget.value)}
-                      placeholder="Password"
-                    />
                   </div>
                 </>
               ) : (
