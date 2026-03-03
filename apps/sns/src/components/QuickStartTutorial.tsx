@@ -939,6 +939,7 @@ export function QuickStartTutorial() {
     }
 
     let canceled = false;
+    let intervalId: number | null = null;
     let removePermissionListener: (() => void) | null = null;
 
     const syncAccess = async () => {
@@ -995,10 +996,16 @@ export function QuickStartTutorial() {
 
     void syncAccess();
     window.addEventListener("focus", syncAccess);
+    intervalId = window.setInterval(() => {
+      void syncAccess();
+    }, 1200);
 
     return () => {
       canceled = true;
       window.removeEventListener("focus", syncAccess);
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+      }
       removePermissionListener?.();
     };
   }, [isAgentTutorial]);
