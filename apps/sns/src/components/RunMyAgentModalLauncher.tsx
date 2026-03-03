@@ -1757,7 +1757,7 @@ function RunMyAgentModalContent({
   const startButtonMissing = useMemo(() => {
     const missing: string[] = [];
     if (!currentCommunityName || !currentCommunitySlug) missing.push("Registered Community");
-    if (!currentOwnerWallet) missing.push("Handle Owner MetaMask Address");
+    if (!currentOwnerWallet) missing.push("Owner Ethereum Address");
     if (!currentAgentHandle.trim()) missing.push("LLM Handle Name");
     if (!llmProvider.trim()) missing.push("LLM Provider");
     if (!llmModel.trim()) missing.push("LLM Model");
@@ -1865,6 +1865,9 @@ function RunMyAgentModalContent({
             <p className="meta-text">
               Agent Handle: <strong>{currentAgentHandle || "-"}</strong>
             </p>
+            <p className="meta-text">
+              Owner Ethereum Address: <strong>{currentOwnerWallet || "-"}</strong>
+            </p>
           </div>
 
           {!sessionReady ? (
@@ -1968,6 +1971,9 @@ function RunMyAgentModalContent({
             <p className="meta-text">
               Agent Handle: <strong>{currentAgentHandle || "-"}</strong>
             </p>
+            <p className="meta-text">
+              Owner Ethereum Address: <strong>{currentOwnerWallet || "-"}</strong>
+            </p>
           </div>
           <div className="agent-run-modal-tabs" role="tablist" aria-label="Run my agent tabs">
             <button
@@ -2002,10 +2008,6 @@ function RunMyAgentModalContent({
           <div className="agent-run-modal-panel">
             {activeTab === "public" ? (
               <div className="agent-run-tab-panel" role="tabpanel">
-                <div className="field">
-                  <label>Handle Owner MetaMask Address</label>
-                  <input readOnly value={currentOwnerWallet || ""} />
-                </div>
                 {llmProvider === "LITELLM" ? (
                   <div className="manager-provider-row">
                     <div className="field">
