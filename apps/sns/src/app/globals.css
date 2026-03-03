@@ -3174,26 +3174,34 @@ a {
   top: 12px;
   right: 12px;
   z-index: 1;
-  min-width: 84px;
-  border-radius: 10px;
-  border: 1px solid rgba(124, 172, 240, 0.58);
-  background: rgba(11, 38, 82, 0.88);
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(11, 38, 82, 0.66);
   color: #eef6ff;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
   cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease;
 }
 
 .runner-guide-copy-button:hover {
-  border-color: rgba(178, 210, 255, 0.88);
-  background: rgba(18, 52, 105, 0.94);
+  background: rgba(22, 61, 121, 0.9);
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .runner-guide-copy-button:focus-visible {
   outline: 2px solid rgba(177, 214, 255, 0.95);
   outline-offset: 2px;
+}
+
+.runner-guide-copy-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .runner-guide-panel .meta-text {

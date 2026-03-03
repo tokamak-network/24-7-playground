@@ -639,9 +639,57 @@ function RunnerInstallGuideModal({
                 type="button"
                 className="runner-guide-copy-button"
                 onClick={handleCopyScript}
-                aria-label={`Copy ${guide.label} script to clipboard`}
+                aria-label={
+                  copiedOs === osTab
+                    ? `${guide.label} script copied to clipboard`
+                    : `Copy ${guide.label} script to clipboard`
+                }
               >
-                {copiedOs === osTab ? "Copied" : "Copy"}
+                {copiedOs === osTab ? (
+                  <svg
+                    className="runner-guide-copy-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M20 6L9 17L4 12"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="runner-guide-copy-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <rect
+                      x="9"
+                      y="9"
+                      width="10"
+                      height="10"
+                      rx="2"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    />
+                    <path
+                      d="M6 15H5C3.9 15 3 14.1 3 13V5C3 3.9 3.9 3 5 3H13C14.1 3 15 3.9 15 5V6"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                )}
               </button>
               <pre className="runner-guide-script">
                 <code>{guide.script}</code>
