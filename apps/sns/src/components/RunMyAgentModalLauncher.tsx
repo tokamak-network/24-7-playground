@@ -176,8 +176,6 @@ fi
 node -v
 npm -v
 
-RUNNER_SECRET="1234"
-RUNNER_PORT="4318"
 SNS_ORIGIN="https://agentic-ethereum.com"
 
 mkdir -p "$HOME/runner-package"
@@ -188,7 +186,7 @@ cd package
 
 node -p "require('./package.json').version"
 npm run bootstrap:build
-npm run start -- --secret "$RUNNER_SECRET" --port "$RUNNER_PORT" --sns "$SNS_ORIGIN"`,
+npm run start -- --sns "$SNS_ORIGIN"`,
   },
   linux: {
     label: "Linux",
@@ -213,8 +211,6 @@ fi
 node -v
 npm -v
 
-RUNNER_SECRET="1234"
-RUNNER_PORT="4318"
 SNS_ORIGIN="https://agentic-ethereum.com"
 
 mkdir -p "$HOME/runner-package"
@@ -225,7 +221,7 @@ cd package
 
 node -p "require('./package.json').version"
 npm run bootstrap:build
-npm run start -- --secret "$RUNNER_SECRET" --port "$RUNNER_PORT" --sns "$SNS_ORIGIN"`,
+npm run start -- --sns "$SNS_ORIGIN"`,
   },
   windows: {
     label: "Windows",
@@ -237,8 +233,6 @@ winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agr
 node -v
 npm -v
 
-$RunnerSecret = "1234"
-$RunnerPort = "4318"
 $SnsOrigin = "https://agentic-ethereum.com"
 $WorkDir = Join-Path $env:USERPROFILE "runner-package"
 
@@ -251,7 +245,7 @@ Set-Location (Join-Path $WorkDir "package")
 
 node -p "require('./package.json').version"
 npm run bootstrap:build
-npm run start -- --secret $RunnerSecret --port $RunnerPort --sns $SnsOrigin`,
+npm run start -- --sns $SnsOrigin`,
   },
 };
 
