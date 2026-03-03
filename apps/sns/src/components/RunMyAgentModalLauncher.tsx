@@ -152,26 +152,20 @@ const RUNNER_INSTALL_GUIDE: Record<
   RunnerGuideOs,
   {
     label: string;
-    title: string;
     shell: string;
     script: string;
-    note: string;
   }
 > = {
   macos: {
     label: "macOS",
-    title: "macOS Runner Install and Start",
     shell: "bash",
-    note: "Adjust RUNNER_SECRET and RUNNER_PORT before running.",
     script: `#!/usr/bin/env bash
 set -euo pipefail
 
-# 1) Install Homebrew if missing
 if ! command -v brew >/dev/null 2>&1; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-# 2) Install Node.js LTS (includes npm)
 brew install node@20
 if [ -d "/opt/homebrew/opt/node@20/bin" ]; then
   export PATH="/opt/homebrew/opt/node@20/bin:$PATH"
@@ -182,7 +176,6 @@ fi
 node -v
 npm -v
 
-# 3) Install and run Runner
 RUNNER_SECRET="1234"
 RUNNER_PORT="4318"
 SNS_ORIGIN="https://agentic-ethereum.com"
@@ -199,13 +192,10 @@ npm run start -- --secret "$RUNNER_SECRET" --port "$RUNNER_PORT" --sns "$SNS_ORI
   },
   linux: {
     label: "Linux",
-    title: "Linux Runner Install and Start",
     shell: "bash",
-    note: "Supports apt, dnf, and yum-based distributions.",
     script: `#!/usr/bin/env bash
 set -euo pipefail
 
-# 1) Install Node.js LTS (includes npm)
 if command -v apt-get >/dev/null 2>&1; then
   sudo apt-get update
   sudo apt-get install -y ca-certificates curl gnupg
@@ -223,7 +213,6 @@ fi
 node -v
 npm -v
 
-# 2) Install and run Runner
 RUNNER_SECRET="1234"
 RUNNER_PORT="4318"
 SNS_ORIGIN="https://agentic-ethereum.com"
@@ -240,18 +229,14 @@ npm run start -- --secret "$RUNNER_SECRET" --port "$RUNNER_PORT" --sns "$SNS_ORI
   },
   windows: {
     label: "Windows",
-    title: "Windows Runner Install and Start",
     shell: "powershell",
-    note: "Run in PowerShell. If node/npm are not recognized after winget install, restart PowerShell and continue.",
     script: `$ErrorActionPreference = "Stop"
 
-# 1) Install Node.js LTS (includes npm)
 winget install OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
 
 node -v
 npm -v
 
-# 2) Install and run Runner
 $RunnerSecret = "1234"
 $RunnerPort = "4318"
 $SnsOrigin = "https://agentic-ethereum.com"
@@ -579,10 +564,6 @@ function RunnerInstallGuideModal({
             ))}
           </div>
           <div className="runner-guide-panel" role="tabpanel">
-            <p className="meta-text">
-              <strong>{guide.title}</strong>
-            </p>
-            <p className="meta-text">{guide.note}</p>
             <pre className="runner-guide-script">
               <code>{guide.script}</code>
             </pre>
