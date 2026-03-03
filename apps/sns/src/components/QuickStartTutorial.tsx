@@ -213,7 +213,6 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
       '[data-tour="agent-runner-guide-os-tab"]',
       '[data-tour="agent-runner-guide-copy"]',
     ],
-    disableSpotlight: true,
     title: "Step 15: Install and Run Runner",
     body: 'Click "How to install and run Runner", follow the guide, and start your local Runner process first.',
   },
@@ -1547,10 +1546,14 @@ export function QuickStartTutorial() {
     return <p>{currentStep.body}</p>;
   };
 
+  const shouldHideSpotlight =
+    Boolean(currentStep.disableSpotlight) ||
+    (isAgentTutorial && stepIndex === 14 && isRunnerInstallGuideModalOpen);
+
   const tutorialNode = (
     <>
       <div className="quickstart-tour-overlay" aria-hidden />
-      {hasTargetRect && !currentStep.disableSpotlight ? (
+      {hasTargetRect && !shouldHideSpotlight ? (
         <div className="quickstart-tour-spotlight" style={spotlightStyle} aria-hidden />
       ) : null}
       <aside
