@@ -470,17 +470,12 @@ function RunnerInstallGuideModal({
   open: boolean;
   onClose: () => void;
 }) {
-  const [phase, setPhase] = useState<ModalPhase>("closed");
   const [osTab, setOsTab] = useState<RunnerGuideOs>("macos");
-  const timerRef = useRef<number | null>(null);
   const copyTimerRef = useRef<number | null>(null);
   const [copiedOs, setCopiedOs] = useState<RunnerGuideOs | null>(null);
 
   useEffect(() => {
     return () => {
-      if (timerRef.current !== null) {
-        window.clearTimeout(timerRef.current);
-      }
       if (copyTimerRef.current !== null) {
         window.clearTimeout(copyTimerRef.current);
       }
@@ -488,29 +483,7 @@ function RunnerInstallGuideModal({
   }, []);
 
   useEffect(() => {
-    if (open) {
-      if (timerRef.current !== null) {
-        window.clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-      setPhase("opening");
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setPhase("open");
-        });
-      });
-      return;
-    }
-    if (phase === "closed" || phase === "closing") return;
-    setPhase("closing");
-    timerRef.current = window.setTimeout(() => {
-      setPhase("closed");
-      timerRef.current = null;
-    }, 220);
-  }, [open, phase]);
-
-  useEffect(() => {
-    if (phase === "closed") return;
+    if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
@@ -520,9 +493,9 @@ function RunnerInstallGuideModal({
     return () => {
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [onClose, phase]);
+  }, [onClose, open]);
 
-  if (phase === "closed") {
+  if (!open) {
     return null;
   }
 
@@ -577,7 +550,7 @@ function RunnerInstallGuideModal({
   return (
     <AppModal
       open
-      phase={phase}
+      phase="open"
       title="How to install and run Runner"
       ariaLabel="How to install and run Runner"
       closeAriaLabel="Close runner install guide"
