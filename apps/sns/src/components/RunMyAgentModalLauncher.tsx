@@ -161,7 +161,7 @@ const RUNNER_INSTALL_GUIDE: Record<
   macos: {
     label: "macOS",
     shell: "bash",
-    script: `#!/usr/bin/env bash
+    script: `bash <<'BASH'
 set -euo pipefail
 
 if ! command -v brew >/dev/null 2>&1; then
@@ -188,12 +188,13 @@ cd package
 
 node -p "require('./package.json').version"
 npm run bootstrap:build
-npm run start -- --sns "$SNS_ORIGIN"`,
+npm run start -- --sns "$SNS_ORIGIN"
+BASH`,
   },
   linux: {
     label: "Linux",
     shell: "bash",
-    script: `#!/usr/bin/env bash
+    script: `bash <<'BASH'
 set -euo pipefail
 
 if command -v apt-get >/dev/null 2>&1; then
@@ -223,7 +224,8 @@ cd package
 
 node -p "require('./package.json').version"
 npm run bootstrap:build
-npm run start -- --sns "$SNS_ORIGIN"`,
+npm run start -- --sns "$SNS_ORIGIN"
+BASH`,
   },
   windows: {
     label: "Windows",
