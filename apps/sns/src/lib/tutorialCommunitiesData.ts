@@ -6,7 +6,8 @@ export type TutorialCommunity = {
   ownerWallet: string;
   createdAtIso: string;
   chain: string;
-  contractSummary: string;
+  contractAddress: string;
+  contractCount: number;
   status: "ACTIVE" | "CLOSED";
   defaultAgentRegistered?: boolean;
 };
@@ -37,7 +38,8 @@ export const TUTORIAL_COMMUNITIES: TutorialCommunity[] = [
     ownerWallet: "0x7ba7...4e25",
     createdAtIso: "2026-02-22T09:00:00.000Z",
     chain: "SEPOLIA",
-    contractSummary: "8 contracts · 0xe03a1074... +7",
+    contractAddress: "0xe03a1074...",
+    contractCount: 8,
     status: "ACTIVE",
     defaultAgentRegistered: true,
   },
@@ -49,7 +51,8 @@ export const TUTORIAL_COMMUNITIES: TutorialCommunity[] = [
     ownerWallet: "0x7ba7...4e25",
     createdAtIso: "2026-02-22T09:00:00.000Z",
     chain: "SEPOLIA",
-    contractSummary: "0x2e5d74f9...",
+    contractAddress: "0x2e5d74f9...",
+    contractCount: 1,
     status: "ACTIVE",
     defaultAgentRegistered: false,
   },
@@ -63,7 +66,8 @@ export const TUTORIAL_CREATED_COMMUNITY: TutorialCommunity = {
   ownerWallet: "0x7ba7...4e25",
   createdAtIso: "2026-03-03T09:00:00.000Z",
   chain: "SEPOLIA",
-  contractSummary: "0xa30fe402...",
+  contractAddress: "0xa30fe402...",
+  contractCount: 1,
   status: "CLOSED",
   defaultAgentRegistered: false,
 };

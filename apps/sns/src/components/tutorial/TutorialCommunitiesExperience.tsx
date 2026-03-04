@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppModal } from "src/components/AppModal";
 import { CommentFeedCard } from "src/components/CommentFeedCard";
@@ -700,8 +701,20 @@ function shortenWallet(wallet: string | null) {
   return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
 }
 
-function summarizeContracts(summary: string) {
-  return summary || "No registered contracts";
+function summarizeContractsForList(community: TutorialCommunity) {
+  if (!community.contractCount) return "No registered contracts";
+  if (community.contractCount === 1) {
+    return community.contractAddress;
+  }
+  return `${community.contractCount} contracts · ${community.contractAddress} +${community.contractCount - 1}`;
+}
+
+function summarizeContractsForDetail(community: TutorialCommunity) {
+  if (!community.contractCount) return "No registered contracts";
+  if (community.contractCount === 1) {
+    return community.contractAddress;
+  }
+  return `${community.contractAddress} (+${community.contractCount - 1} more)`;
 }
 
 function TutorialCommunityThreadFeed({
@@ -1125,7 +1138,7 @@ function TutorialCommunityListPage() {
                     {community.status === "CLOSED" ? (
                       <span className="badge badge-closed">closed</span>
                     ) : null}
-                    <span className="meta-text">{summarizeContracts(community.contractSummary)}</span>
+                    <span className="meta-text">{summarizeContractsForList(community)}</span>
                   </div>
                   <div className="community-tile-actions">
                     {isRegistered ? (
@@ -1218,7 +1231,6 @@ function TutorialCommunityListPage() {
 }
 
 function TutorialCommunityDetailPage({ slug }: { slug: string }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
   const community = getTutorialCommunityBySlug(slug) || getTutorialCommunityBySlug("uniswap-v4");
@@ -1227,6 +1239,7 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
   const [registered, setRegistered] = useState(Boolean(community?.defaultAgentRegistered));
   const [agentHandle, setAgentHandle] = useState("Alpha");
   const [runModalOpen, setRunModalOpen] = useState(false);
+  const [agentActionStatus, setAgentActionStatus] = useState("");
 
   if (!community) {
     return (
@@ -1244,9 +1257,18 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
 
   const registerAgent = () => {
     const prompted = window.prompt("Enter your agent handle:", agentHandle)?.trim() || "";
-    if (!prompted) return;
+    if (!prompted) {
+      setAgentActionStatus("Handle is required.");
+      return;
+    }
     setAgentHandle(prompted);
     setRegistered(true);
+    setAgentActionStatus(`Handle ${prompted} is assigned to ${community.name}.`);
+  };
+
+  const unregisterAgent = () => {
+    setRegistered(false);
+    setAgentActionStatus("The handle has been unregistered from this community.");
   };
 
   return (
@@ -1287,15 +1309,17 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
         />
         <div className="meta">
           <span className="meta-text">
-            created by {community.ownerWallet} · created at{" "}
+            created by {shortenWallet(community.ownerWallet)} · created at{" "}
             <LocalDateText value={community.createdAtIso} mode="date" />
           </span>
         </div>
         <div className="meta">
           <span className="badge">{community.chain}</span>
-          <span className="badge">1 contract</span>
+          <span className="badge">
+            {community.contractCount} contract{community.contractCount === 1 ? "" : "s"}
+          </span>
           {community.status === "CLOSED" ? <span className="badge">closed</span> : null}
-          <span className="meta-text">{community.contractSummary}</span>
+          <span className="meta-text">{summarizeContractsForDetail(community)}</span>
         </div>
         <div className="community-stats">
           <div className="community-stat-item">
@@ -1318,6 +1342,7 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
       </section>
 
       <div className="community-agent-actions">
+        {agentActionStatus ? <p className="status">{agentActionStatus}</p> : null}
         {registered ? (
           <div className="community-agent-actions-row">
             <button
@@ -1328,6 +1353,13 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
             >
               Run My Agent
             </button>
+            <button
+              type="button"
+              className="button button-secondary button-danger button-block"
+              onClick={unregisterAgent}
+            >
+              Unregister My Agent
+            </button>
           </div>
         ) : (
           <button
@@ -1335,6 +1367,7 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
             className="button button-secondary button-block"
             data-tour="agent-register-button"
             onClick={registerAgent}
+            disabled={community.status === "CLOSED"}
           >
             Register My Agent
           </button>
@@ -1350,13 +1383,12 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
         />
       </Section>
 
-      <button
-        type="button"
+      <Link
         className="button"
-        onClick={() => router.push(withTutorialQuery(TUTORIAL_COMMUNITIES_BASE_PATH, queryString))}
+        href={withTutorialQuery(TUTORIAL_COMMUNITIES_BASE_PATH, queryString)}
       >
         Back to Communities
-      </button>
+      </Link>
 
       <TutorialRunMyAgentModal
         open={runModalOpen}
@@ -1369,7 +1401,6 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
 }
 
 function TutorialThreadDetailPage({ slug, threadId }: { slug: string; threadId: string }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
   const community = getTutorialCommunityBySlug(slug) || getTutorialCommunityBySlug("uniswap-v4");
@@ -1443,17 +1474,12 @@ function TutorialThreadDetailPage({ slug, threadId }: { slug: string; threadId: 
           )}
         </div>
       </Section>
-      <button
-        type="button"
+      <Link
         className="button"
-        onClick={() =>
-          router.push(
-            withTutorialQuery(`${TUTORIAL_COMMUNITIES_BASE_PATH}/${community.slug}`, queryString)
-          )
-        }
+        href={withTutorialQuery(`${TUTORIAL_COMMUNITIES_BASE_PATH}/${community.slug}`, queryString)}
       >
         Back to Community
-      </button>
+      </Link>
     </div>
   );
 }
