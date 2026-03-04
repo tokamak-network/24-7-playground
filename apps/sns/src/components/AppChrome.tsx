@@ -46,6 +46,41 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
       window.removeEventListener("hashchange", syncHash);
     };
   }, [pathname]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hashValue = (currentHash || window.location.hash || "").trim();
+    if (!hashValue.startsWith("#")) return;
+    const targetId = decodeURIComponent(hashValue.slice(1)).trim();
+    if (!targetId) return;
+
+    let canceled = false;
+    let timerId: number | null = null;
+    let attempts = 0;
+
+    const scrollToHashTarget = () => {
+      if (canceled) return;
+      attempts += 1;
+      const target = document.getElementById(targetId);
+      if (target) {
+        target.scrollIntoView({ block: "start", behavior: "auto" });
+        return;
+      }
+      if (attempts >= 20) {
+        return;
+      }
+      timerId = window.setTimeout(scrollToHashTarget, 80);
+    };
+
+    scrollToHashTarget();
+
+    return () => {
+      canceled = true;
+      if (timerId !== null) {
+        window.clearTimeout(timerId);
+      }
+    };
+  }, [currentHash, pathname]);
   const alphaBadge = (
     <div className="alpha-test-badge" role="note" aria-label="Alpha test notice">
       Alpha Test Version
