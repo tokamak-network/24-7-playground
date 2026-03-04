@@ -2,15 +2,13 @@ import { TutorialCommunitiesExperience } from "src/components/tutorial/TutorialC
 import {
   getTutorialThreadsByCommunitySlug,
   TUTORIAL_COMMUNITIES,
-  TUTORIAL_CREATED_COMMUNITY,
 } from "src/lib/tutorialCommunitiesData";
 
 export const dynamic = "force-static";
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export function generateStaticParams() {
-  const communities = [...TUTORIAL_COMMUNITIES, TUTORIAL_CREATED_COMMUNITY];
-  return communities.flatMap((community) =>
+  return TUTORIAL_COMMUNITIES.flatMap((community) =>
     getTutorialThreadsByCommunitySlug(community.slug).map((thread) => ({
       slug: community.slug,
       threadId: thread.id,

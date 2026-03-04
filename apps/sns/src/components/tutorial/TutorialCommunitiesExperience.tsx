@@ -19,12 +19,16 @@ import {
 import { ThreadFeedCard } from "src/components/ThreadFeedCard";
 import { Card, Section } from "src/components/ui";
 import {
+  buildTutorialCommunitySlug,
+  getAllTutorialCommunities,
   getTutorialCommunityBySlug,
   getTutorialThreadsByCommunitySlug,
+  readTutorialCreatedCommunity,
+  saveTutorialCreatedCommunity,
   TUTORIAL_COMMUNITIES,
   TUTORIAL_COMMUNITIES_BASE_PATH,
   TUTORIAL_COMMUNITY_CREATED_EVENT,
-  TUTORIAL_CREATED_COMMUNITY,
+  TUTORIAL_CREATED_COMMUNITY_UPDATED_EVENT,
   type TutorialCommunity,
   type TutorialThread,
 } from "src/lib/tutorialCommunitiesData";
@@ -125,9 +129,10 @@ function tutorialAgentId(communityId: string) {
 }
 
 function buildTutorialRunModalSandbox(
-  currentCommunityId: string
+  currentCommunityId: string,
+  allCommunities: TutorialCommunity[]
 ): RunMyAgentModalSandboxConfig {
-  const sourcePairs = [...TUTORIAL_COMMUNITIES, TUTORIAL_CREATED_COMMUNITY]
+  const sourcePairs = allCommunities
     .filter((community) => community.id !== currentCommunityId)
     .map((community) => ({
       id: tutorialAgentId(community.id),
@@ -902,7 +907,7 @@ const TUTORIAL_THREAD_COMMENTS: Record<string, TutorialThreadComment[]> = {
       createdAtIso: "2026-03-03T13:20:00.000Z",
     },
   ],
-  "thr-tutorial-aaa-001": [
+  "thr-tutorial-created-001": [
     {
       id: "cmt-tut-004",
       body: "Initial onboarding checks completed.",
@@ -1095,10 +1100,12 @@ function TutorialCommunityListPage() {
   const [isCommunityFilterMenuOpen, setIsCommunityFilterMenuOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [hasCreatedCommunity, setHasCreatedCommunity] = useState(false);
+  const [createdCommunity, setCreatedCommunity] = useState<TutorialCommunity | null>(() =>
+    readTutorialCreatedCommunity()
+  );
   const [registeredByCommunityId, setRegisteredByCommunityId] = useState<Record<string, boolean>>(
     () => {
-      const entries = [...TUTORIAL_COMMUNITIES, TUTORIAL_CREATED_COMMUNITY].map((community) => [
+      const entries = getAllTutorialCommunities().map((community) => [
         community.id,
         Boolean(community.defaultAgentRegistered),
       ]);
@@ -1107,7 +1114,7 @@ function TutorialCommunityListPage() {
   );
   const [agentHandleByCommunityId, setAgentHandleByCommunityId] = useState<Record<string, string>>(
     () => {
-      const entries = [...TUTORIAL_COMMUNITIES, TUTORIAL_CREATED_COMMUNITY]
+      const entries = getAllTutorialCommunities()
         .filter((community) => community.defaultAgentRegistered)
         .map((community) => [community.id, "Alpha"]);
       return Object.fromEntries(entries);
@@ -1115,22 +1122,35 @@ function TutorialCommunityListPage() {
   );
 
   const createdFromQuery = String(searchParams.get("createdCommunitySlug") || "").trim();
-  const latestCreatedTarget = hasCreatedCommunity
-    ? TUTORIAL_CREATED_COMMUNITY.slug
-    : createdFromQuery === TUTORIAL_CREATED_COMMUNITY.slug
-      ? TUTORIAL_CREATED_COMMUNITY.slug
-      : "";
   const queryString = searchParams.toString();
 
   const normalizedQuery = communityQuery.trim().toLowerCase();
 
   const visibleCommunities = useMemo<TutorialCommunity[]>(() => {
-    const current = [...TUTORIAL_COMMUNITIES];
-    if (latestCreatedTarget === TUTORIAL_CREATED_COMMUNITY.slug) {
-      current.unshift(TUTORIAL_CREATED_COMMUNITY);
+    const base = [...TUTORIAL_COMMUNITIES];
+    if (!createdCommunity) {
+      return base;
     }
-    return current;
-  }, [latestCreatedTarget]);
+    return [
+      createdCommunity,
+      ...base.filter(
+        (community) =>
+          community.id !== createdCommunity.id && community.slug !== createdCommunity.slug
+      ),
+    ];
+  }, [createdCommunity]);
+
+  const latestCreatedTarget = useMemo(() => {
+    if (createdCommunity?.slug) {
+      return createdCommunity.slug;
+    }
+    if (!createdFromQuery) {
+      return "";
+    }
+    return visibleCommunities.some((community) => community.slug === createdFromQuery)
+      ? createdFromQuery
+      : "";
+  }, [createdCommunity?.slug, createdFromQuery, visibleCommunities]);
 
   const communityOptions = useMemo(() => {
     return Array.from(new Set(visibleCommunities.map((item) => item.name))).sort((a, b) =>
@@ -1149,6 +1169,45 @@ function TutorialCommunityListPage() {
       return Boolean(registeredByCommunityId[community.id]);
     });
   }, [communityFilterMode, normalizedQuery, registeredByCommunityId, visibleCommunities]);
+
+  useEffect(() => {
+    const syncCreatedCommunity = () => {
+      setCreatedCommunity(readTutorialCreatedCommunity());
+    };
+    syncCreatedCommunity();
+    window.addEventListener(
+      TUTORIAL_CREATED_COMMUNITY_UPDATED_EVENT,
+      syncCreatedCommunity as EventListener
+    );
+    return () => {
+      window.removeEventListener(
+        TUTORIAL_CREATED_COMMUNITY_UPDATED_EVENT,
+        syncCreatedCommunity as EventListener
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    setRegisteredByCommunityId((prev) => {
+      const next: Record<string, boolean> = {};
+      visibleCommunities.forEach((community) => {
+        next[community.id] = prev[community.id] ?? Boolean(community.defaultAgentRegistered);
+      });
+      return next;
+    });
+    setAgentHandleByCommunityId((prev) => {
+      const next: Record<string, string> = {};
+      visibleCommunities.forEach((community) => {
+        const existing = String(prev[community.id] || "").trim();
+        if (existing) {
+          next[community.id] = existing;
+        } else if (community.defaultAgentRegistered) {
+          next[community.id] = "Alpha";
+        }
+      });
+      return next;
+    });
+  }, [visibleCommunities]);
 
   useEffect(() => {
     if (!isCommunityFilterMenuOpen) return;
@@ -1174,8 +1233,9 @@ function TutorialCommunityListPage() {
       }
     }
 
-    if (tutorialMode === "dapp" && !nextParams.get("createdCommunitySlug")) {
-      nextParams.set("createdCommunitySlug", slug);
+    if (tutorialMode === "dapp" && createdCommunity?.slug === slug) {
+      nextParams.set("createdCommunitySlug", createdCommunity.slug);
+      nextParams.set("createdCommunityId", createdCommunity.id);
     }
 
     const nextQuery = nextParams.toString();
@@ -1184,36 +1244,68 @@ function TutorialCommunityListPage() {
   };
 
   const registerCommunityInTutorial = async (
-    _payload: {
+    payload: {
       serviceName: string;
       description: string;
       contracts: Array<{ name: string; address: string }>;
       githubRepositoryUrl: string;
     }
   ): Promise<ContractRegistrationOverrideResult> => {
-    setHasCreatedCommunity(true);
-    setRegisteredByCommunityId((prev) => ({
-      ...prev,
-      [TUTORIAL_CREATED_COMMUNITY.id]: false,
-    }));
-    setAgentHandleByCommunityId((prev) => {
+    const serviceName = String(payload.serviceName || "").trim();
+    const description = String(payload.description || "").trim();
+    const contractAddresses = payload.contracts
+      .map((contract) => String(contract.address || "").trim())
+      .filter(Boolean);
+    const nextSlug = buildTutorialCommunitySlug(
+      serviceName || "new-community",
+      TUTORIAL_COMMUNITIES.map((community) => community.slug)
+    );
+    const nextCreatedCommunity: TutorialCommunity = {
+      id: `tutorial-comm-${nextSlug}`,
+      slug: nextSlug,
+      name: serviceName || "New Community",
+      description:
+        description || `Agent community for ${serviceName || "new community"} on Sepolia.`,
+      ownerWallet: "0x7ba7...4e25",
+      createdAtIso: new Date().toISOString(),
+      chain: "SEPOLIA",
+      contractAddress: contractAddresses[0] || "0x...",
+      contractCount: Math.max(contractAddresses.length, 1),
+      status: "ACTIVE",
+      defaultAgentRegistered: false,
+    };
+    saveTutorialCreatedCommunity(nextCreatedCommunity);
+    setCreatedCommunity(nextCreatedCommunity);
+
+    const previousCreatedId = createdCommunity?.id;
+    setRegisteredByCommunityId((prev) => {
       const next = { ...prev };
-      delete next[TUTORIAL_CREATED_COMMUNITY.id];
+      if (previousCreatedId) {
+        delete next[previousCreatedId];
+      }
+      next[nextCreatedCommunity.id] = false;
       return next;
     });
-    setStatusMessage("Community created in tutorial sandbox.");
+    setAgentHandleByCommunityId((prev) => {
+      const next = { ...prev };
+      if (previousCreatedId) {
+        delete next[previousCreatedId];
+      }
+      delete next[nextCreatedCommunity.id];
+      return next;
+    });
+    setStatusMessage(`Community created in tutorial sandbox: ${nextCreatedCommunity.name}.`);
     setCreateOpen(false);
     window.dispatchEvent(
       new CustomEvent(TUTORIAL_COMMUNITY_CREATED_EVENT, {
         detail: {
-          communityId: TUTORIAL_CREATED_COMMUNITY.id,
-          communitySlug: TUTORIAL_CREATED_COMMUNITY.slug,
+          communityId: nextCreatedCommunity.id,
+          communitySlug: nextCreatedCommunity.slug,
         },
       })
     );
     return {
-      status:
-        "Community updated: aaa (aaa) · 1 contract",
+      status: `Community updated: ${nextCreatedCommunity.name} (${nextCreatedCommunity.slug}) · ${nextCreatedCommunity.contractCount} contract${nextCreatedCommunity.contractCount === 1 ? "" : "s"}`,
     };
   };
 
@@ -1386,7 +1478,10 @@ function TutorialCommunityListPage() {
                           agentHandle={String(agentHandleByCommunityId[community.id] || "Alpha")}
                           buttonClassName="button button-secondary button-block"
                           buttonStyle={communityActionButtonStyle}
-                          sandbox={buildTutorialRunModalSandbox(community.id)}
+                          sandbox={buildTutorialRunModalSandbox(
+                            community.id,
+                            visibleCommunities
+                          )}
                         />
                         <button
                           type="button"
@@ -1532,7 +1627,10 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
               agentHandle={agentHandle}
               buttonClassName="button button-secondary button-block"
               buttonDataTour="agent-run-button"
-              sandbox={buildTutorialRunModalSandbox(community.id)}
+              sandbox={buildTutorialRunModalSandbox(
+                community.id,
+                getAllTutorialCommunities()
+              )}
             />
             <button
               type="button"

@@ -28,6 +28,10 @@ export type TutorialThread = {
 
 export const TUTORIAL_COMMUNITIES_BASE_PATH = "/tutorial/communities";
 export const TUTORIAL_COMMUNITY_CREATED_EVENT = "sns-tutorial-community-created";
+export const TUTORIAL_CREATED_COMMUNITY_STORAGE_KEY =
+  "sns.tutorial.dapp.created-community";
+export const TUTORIAL_CREATED_COMMUNITY_UPDATED_EVENT =
+  "sns-tutorial-created-community-updated";
 
 export const TUTORIAL_COMMUNITIES: TutorialCommunity[] = [
   {
@@ -58,22 +62,6 @@ export const TUTORIAL_COMMUNITIES: TutorialCommunity[] = [
   },
 ];
 
-export const TUTORIAL_CREATED_COMMUNITY: TutorialCommunity = {
-  id: "tutorial-comm-aaa",
-  slug: "aaa",
-  name: "aaa",
-  description: "Agent community for aaa on Sepolia.",
-  ownerWallet: "0x7ba7...4e25",
-  createdAtIso: "2026-03-03T09:00:00.000Z",
-  chain: "SEPOLIA",
-  contractAddress: "0xa30fe402...",
-  contractCount: 1,
-  status: "CLOSED",
-  defaultAgentRegistered: false,
-};
-
-const ALL_TUTORIAL_COMMUNITIES = [...TUTORIAL_COMMUNITIES, TUTORIAL_CREATED_COMMUNITY];
-
 const BASE_THREADS: TutorialThread[] = [
   {
     id: "thr-tutorial-001",
@@ -100,22 +88,145 @@ const BASE_THREADS: TutorialThread[] = [
   },
 ];
 
+function dispatchCreatedCommunityUpdated() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.dispatchEvent(new CustomEvent(TUTORIAL_CREATED_COMMUNITY_UPDATED_EVENT));
+}
+
+function normalizeCreatedCommunity(value: unknown): TutorialCommunity | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+  const raw = value as Record<string, unknown>;
+  const id = String(raw.id || "").trim();
+  const slug = String(raw.slug || "").trim().toLowerCase();
+  const name = String(raw.name || "").trim();
+  const description = String(raw.description || "").trim();
+  const ownerWallet = String(raw.ownerWallet || "").trim();
+  const createdAtIso = String(raw.createdAtIso || "").trim();
+  const chain = String(raw.chain || "").trim().toUpperCase() || "SEPOLIA";
+  const contractAddress = String(raw.contractAddress || "").trim();
+  const contractCountRaw = Number(raw.contractCount);
+  const contractCount = Number.isFinite(contractCountRaw)
+    ? Math.max(1, Math.trunc(contractCountRaw))
+    : 1;
+  const status =
+    String(raw.status || "").trim().toUpperCase() === "CLOSED" ? "CLOSED" : "ACTIVE";
+
+  if (!id || !slug || !name) {
+    return null;
+  }
+  if (status !== "ACTIVE") {
+    return null;
+  }
+
+  return {
+    id,
+    slug,
+    name,
+    description,
+    ownerWallet: ownerWallet || "0x7ba7...4e25",
+    createdAtIso: createdAtIso || new Date().toISOString(),
+    chain,
+    contractAddress: contractAddress || "0x...",
+    contractCount,
+    status,
+    defaultAgentRegistered: false,
+  };
+}
+
+export function buildTutorialCommunitySlug(name: string, existingSlugs: string[]) {
+  const normalized = String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  const base = normalized || "new-community";
+  const used = new Set(existingSlugs.map((value) => value.trim().toLowerCase()).filter(Boolean));
+  if (!used.has(base)) {
+    return base;
+  }
+  let index = 2;
+  let candidate = `${base}-${index}`;
+  while (used.has(candidate)) {
+    index += 1;
+    candidate = `${base}-${index}`;
+  }
+  return candidate;
+}
+
+export function readTutorialCreatedCommunity(): TutorialCommunity | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(TUTORIAL_CREATED_COMMUNITY_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    return normalizeCreatedCommunity(JSON.parse(raw));
+  } catch {
+    return null;
+  }
+}
+
+export function saveTutorialCreatedCommunity(community: TutorialCommunity) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(
+      TUTORIAL_CREATED_COMMUNITY_STORAGE_KEY,
+      JSON.stringify(community)
+    );
+  } catch {
+    return;
+  }
+  dispatchCreatedCommunityUpdated();
+}
+
+export function clearTutorialCreatedCommunity() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.removeItem(TUTORIAL_CREATED_COMMUNITY_STORAGE_KEY);
+  } catch {
+    return;
+  }
+  dispatchCreatedCommunityUpdated();
+}
+
+export function getAllTutorialCommunities(): TutorialCommunity[] {
+  const created = readTutorialCreatedCommunity();
+  if (!created) {
+    return [...TUTORIAL_COMMUNITIES];
+  }
+  return [created, ...TUTORIAL_COMMUNITIES];
+}
+
 export function getTutorialCommunityBySlug(slug: string): TutorialCommunity | null {
   const normalizedSlug = String(slug || "").trim().toLowerCase();
   if (!normalizedSlug) return null;
-  return ALL_TUTORIAL_COMMUNITIES.find((community) => community.slug === normalizedSlug) || null;
+  return (
+    getAllTutorialCommunities().find((community) => community.slug === normalizedSlug) || null
+  );
 }
 
 export function getTutorialThreadsByCommunitySlug(slug: string): TutorialThread[] {
   const community = getTutorialCommunityBySlug(slug);
   if (!community) return [];
-  if (community.slug === TUTORIAL_CREATED_COMMUNITY.slug) {
+
+  const created = readTutorialCreatedCommunity();
+  if (created && community.id === created.id) {
     return [
       {
-        id: "thr-tutorial-aaa-001",
-        title: "aaa onboarding check",
+        id: "thr-tutorial-created-001",
+        title: `${community.name} onboarding check`,
         body:
-          "Bootstrapping checklist for the aaa community. Validate moderation rules, runner profile, and baseline contract allowlist.",
+          "Bootstrapping checklist for the new community. Validate moderation rules, runner profile, and baseline contract allowlist.",
         type: "DISCUSSION",
         createdAtIso: "2026-03-03T15:30:00.000Z",
         author: "system",
@@ -125,5 +236,6 @@ export function getTutorialThreadsByCommunitySlug(slug: string): TutorialThread[
       ...BASE_THREADS,
     ];
   }
+
   return BASE_THREADS;
 }

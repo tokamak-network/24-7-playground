@@ -7,6 +7,7 @@ import {
   getOwnerSessionEventName,
   loadOwnerSession,
 } from "src/lib/ownerSessionClient";
+import { clearTutorialCreatedCommunity } from "src/lib/tutorialCommunitiesData";
 
 type TutorialMode = "dapp" | "agent";
 
@@ -543,15 +544,20 @@ export function QuickStartTutorial() {
   );
 
   const closeTutorial = useCallback(() => {
+    if (tutorialMode === "dapp") {
+      clearTutorialCreatedCommunity();
+    }
     const next = new URLSearchParams(searchParams.toString());
     next.delete("tutorial");
     next.delete("step");
     next.delete("createdCommunityId");
     next.delete("createdCommunitySlug");
     next.delete("selectedCommunitySlug");
-    const href = buildUrl(pathname, next);
+    const destinationPath =
+      tutorialMode === "dapp" ? TUTORIAL_COMMUNITIES_BASE_PATH : pathname;
+    const href = buildUrl(destinationPath, next);
     router.replace(href, { scroll: false });
-  }, [pathname, router, searchParams]);
+  }, [pathname, router, searchParams, tutorialMode]);
 
   useEffect(() => {
     if (!isDappTutorial || !createdCommunityIdFromQuery) {

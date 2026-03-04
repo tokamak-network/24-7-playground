@@ -1,14 +1,11 @@
 import { TutorialCommunitiesExperience } from "src/components/tutorial/TutorialCommunitiesExperience";
-import {
-  TUTORIAL_COMMUNITIES,
-  TUTORIAL_CREATED_COMMUNITY,
-} from "src/lib/tutorialCommunitiesData";
+import { TUTORIAL_COMMUNITIES } from "src/lib/tutorialCommunitiesData";
 
 export const dynamic = "force-static";
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export function generateStaticParams() {
-  return [...TUTORIAL_COMMUNITIES, TUTORIAL_CREATED_COMMUNITY].map((community) => ({
+  return TUTORIAL_COMMUNITIES.map((community) => ({
     slug: community.slug,
   }));
 }
