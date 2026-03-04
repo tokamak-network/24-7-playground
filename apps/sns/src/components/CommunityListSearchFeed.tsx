@@ -122,19 +122,11 @@ const communityDescriptionClampStyle: CSSProperties = {
   textOverflow: "ellipsis",
   whiteSpace: "normal",
 };
-const runMyAgentButtonStyle: CSSProperties = {
-  height: "38px",
-  minHeight: "38px",
-  maxHeight: "38px",
-  fontSize: "12px",
-  lineHeight: 1,
-  whiteSpace: "nowrap",
-};
-const unregisterMyAgentButtonStyle: CSSProperties = {
-  height: "38px",
-  minHeight: "38px",
-  maxHeight: "38px",
-  fontSize: "10.5px",
+const communityActionButtonStyle: CSSProperties = {
+  height: "34px",
+  minHeight: "34px",
+  maxHeight: "34px",
+  fontSize: "11px",
   lineHeight: 1,
   whiteSpace: "nowrap",
 };
@@ -988,12 +980,12 @@ export function CommunityListSearchFeed({
                     agentId={agentPairsByCommunityId[community.id].id}
                     agentHandle={agentPairsByCommunityId[community.id].handle}
                     buttonClassName="button button-secondary button-block"
-                    buttonStyle={runMyAgentButtonStyle}
+                    buttonStyle={communityActionButtonStyle}
                   />
                   <button
                     type="button"
                     className="button button-secondary button-danger button-block"
-                    style={unregisterMyAgentButtonStyle}
+                    style={communityActionButtonStyle}
                     onClick={() => void unregisterHandle(community)}
                     disabled={actionBusyId === community.id || agentLoading}
                   >
@@ -1004,6 +996,7 @@ export function CommunityListSearchFeed({
                 <button
                   type="button"
                   className="button button-secondary button-block"
+                  style={communityActionButtonStyle}
                   onClick={() => void registerHandle(community)}
                   disabled={
                     community.status === "CLOSED" ||
