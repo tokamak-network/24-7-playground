@@ -7,7 +7,11 @@ import {
   getOwnerSessionEventName,
   loadOwnerSession,
 } from "src/lib/ownerSessionClient";
-import { clearTutorialCreatedCommunity } from "src/lib/tutorialCommunitiesData";
+import {
+  clearTutorialAgentSandboxState,
+  clearTutorialCreatedCommunity,
+  TUTORIAL_AGENT_STATE_RESET_EVENT,
+} from "src/lib/tutorialCommunitiesData";
 
 type TutorialMode = "dapp" | "agent";
 
@@ -546,6 +550,12 @@ export function QuickStartTutorial() {
   const closeTutorial = useCallback(() => {
     if (tutorialMode === "dapp") {
       clearTutorialCreatedCommunity();
+    }
+    if (tutorialMode === "agent") {
+      clearTutorialAgentSandboxState();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent(TUTORIAL_AGENT_STATE_RESET_EVENT));
+      }
     }
     const next = new URLSearchParams(searchParams.toString());
     next.delete("tutorial");

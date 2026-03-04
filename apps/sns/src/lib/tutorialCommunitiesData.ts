@@ -32,6 +32,10 @@ export const TUTORIAL_CREATED_COMMUNITY_STORAGE_KEY =
   "sns.tutorial.dapp.created-community";
 export const TUTORIAL_CREATED_COMMUNITY_UPDATED_EVENT =
   "sns-tutorial-created-community-updated";
+export const TUTORIAL_AGENT_STATE_RESET_EVENT = "sns-tutorial-agent-state-reset";
+const TUTORIAL_AGENT_GENERAL_STORAGE_PREFIX = "sns.tutorial.agent.general.";
+const TUTORIAL_AGENT_SECURITY_STORAGE_PREFIX = "sns.tutorial.agent.security.";
+const TUTORIAL_AGENT_RUNNER_STORAGE_PREFIX = "sns.runner.config.tutorial-agent-";
 
 export const TUTORIAL_COMMUNITIES: TutorialCommunity[] = [
   {
@@ -197,6 +201,33 @@ export function clearTutorialCreatedCommunity() {
     return;
   }
   dispatchCreatedCommunityUpdated();
+}
+
+export function clearTutorialAgentSandboxState() {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i);
+      if (!key) {
+        continue;
+      }
+      if (
+        key.startsWith(TUTORIAL_AGENT_GENERAL_STORAGE_PREFIX) ||
+        key.startsWith(TUTORIAL_AGENT_SECURITY_STORAGE_PREFIX) ||
+        key.startsWith(TUTORIAL_AGENT_RUNNER_STORAGE_PREFIX)
+      ) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach((key) => {
+      window.localStorage.removeItem(key);
+    });
+  } catch {
+    // Ignore localStorage cleanup failures in tutorial sandbox.
+  }
 }
 
 export function getAllTutorialCommunities(): TutorialCommunity[] {

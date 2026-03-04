@@ -25,6 +25,7 @@ import {
   getTutorialThreadsByCommunitySlug,
   readTutorialCreatedCommunity,
   saveTutorialCreatedCommunity,
+  TUTORIAL_AGENT_STATE_RESET_EVENT,
   TUTORIAL_COMMUNITIES,
   TUTORIAL_COMMUNITIES_BASE_PATH,
   TUTORIAL_COMMUNITY_CREATED_EVENT,
@@ -939,6 +940,20 @@ function summarizeContractsForDetail(community: TutorialCommunity) {
   return `${community.contractAddress} (+${community.contractCount - 1} more)`;
 }
 
+function buildInitialRegisteredByCommunityId(communities: TutorialCommunity[]) {
+  return Object.fromEntries(
+    communities.map((community) => [community.id, Boolean(community.defaultAgentRegistered)])
+  ) as Record<string, boolean>;
+}
+
+function buildInitialAgentHandleByCommunityId(communities: TutorialCommunity[]) {
+  return Object.fromEntries(
+    communities
+      .filter((community) => community.defaultAgentRegistered)
+      .map((community) => [community.id, "Alpha"])
+  ) as Record<string, string>;
+}
+
 function TutorialCommunityThreadFeed({
   slug,
   communityName,
@@ -1104,21 +1119,10 @@ function TutorialCommunityListPage() {
     readTutorialCreatedCommunity()
   );
   const [registeredByCommunityId, setRegisteredByCommunityId] = useState<Record<string, boolean>>(
-    () => {
-      const entries = getAllTutorialCommunities().map((community) => [
-        community.id,
-        Boolean(community.defaultAgentRegistered),
-      ]);
-      return Object.fromEntries(entries);
-    }
+    () => buildInitialRegisteredByCommunityId(getAllTutorialCommunities())
   );
   const [agentHandleByCommunityId, setAgentHandleByCommunityId] = useState<Record<string, string>>(
-    () => {
-      const entries = getAllTutorialCommunities()
-        .filter((community) => community.defaultAgentRegistered)
-        .map((community) => [community.id, "Alpha"]);
-      return Object.fromEntries(entries);
-    }
+    () => buildInitialAgentHandleByCommunityId(getAllTutorialCommunities())
   );
 
   const createdFromQuery = String(searchParams.get("createdCommunitySlug") || "").trim();
@@ -1207,6 +1211,27 @@ function TutorialCommunityListPage() {
       });
       return next;
     });
+  }, [visibleCommunities]);
+
+  useEffect(() => {
+    const resetAgentTutorialState = () => {
+      setRegisteredByCommunityId(buildInitialRegisteredByCommunityId(visibleCommunities));
+      setAgentHandleByCommunityId(buildInitialAgentHandleByCommunityId(visibleCommunities));
+      setStatusMessage("");
+      setCreateOpen(false);
+      setCommunityFilterMode("all");
+      setIsCommunityFilterMenuOpen(false);
+    };
+    window.addEventListener(
+      TUTORIAL_AGENT_STATE_RESET_EVENT,
+      resetAgentTutorialState as EventListener
+    );
+    return () => {
+      window.removeEventListener(
+        TUTORIAL_AGENT_STATE_RESET_EVENT,
+        resetAgentTutorialState as EventListener
+      );
+    };
   }, [visibleCommunities]);
 
   useEffect(() => {
@@ -1571,6 +1596,24 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
     setRegistered(false);
     setAgentActionStatus("The handle has been unregistered from this community.");
   };
+
+  useEffect(() => {
+    const resetAgentTutorialState = () => {
+      setRegistered(Boolean(community.defaultAgentRegistered));
+      setAgentHandle("Alpha");
+      setAgentActionStatus("");
+    };
+    window.addEventListener(
+      TUTORIAL_AGENT_STATE_RESET_EVENT,
+      resetAgentTutorialState as EventListener
+    );
+    return () => {
+      window.removeEventListener(
+        TUTORIAL_AGENT_STATE_RESET_EVENT,
+        resetAgentTutorialState as EventListener
+      );
+    };
+  }, [community.defaultAgentRegistered]);
 
   return (
     <div className="grid community-page">
