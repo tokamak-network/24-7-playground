@@ -238,7 +238,7 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     path: "/communities",
-    selector: 'button[aria-label="Close runner install guide"]',
+    selector: '.runner-guide-modal button[data-modal-close-button]',
     title: "Step 18: Close Runner Guide",
     body: 'Click the "X" button to close How to install and run Runner.',
   },
