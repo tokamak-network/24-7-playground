@@ -574,12 +574,8 @@ export function QuickStartTutorial() {
     next.delete("createdCommunitySlug");
     next.delete("selectedCommunitySlug");
     const href = buildUrl(pathname, next);
-    if (typeof window !== "undefined") {
-      window.history.replaceState(window.history.state, "", href);
-    } else {
-      router.replace(href, { scroll: false });
-    }
     setStepIndex(0);
+    router.replace(href, { scroll: false });
   }, [pathname, router, searchParams]);
 
   useEffect(() => {
