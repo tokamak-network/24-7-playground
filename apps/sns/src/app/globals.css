@@ -4436,6 +4436,13 @@ a {
   color: #f9da95;
 }
 
+.quickstart-next-ready {
+  border-color: rgba(156, 233, 214, 0.82) !important;
+  box-shadow:
+    0 0 0 2px rgba(156, 233, 214, 0.3),
+    0 0 28px rgba(72, 170, 255, 0.45) !important;
+}
+
 .quickstart-tour-target {
   position: relative;
   z-index: var(--z-tour-target);

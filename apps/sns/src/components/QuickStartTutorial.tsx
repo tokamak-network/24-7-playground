@@ -1682,6 +1682,12 @@ export function QuickStartTutorial() {
       : false;
 
   const nextDisabled = !isLastStep && !canAdvance;
+  const shouldHighlightNextButton =
+    isAgentTutorial &&
+    stepIndex === 15 &&
+    !isLastStep &&
+    canAdvance &&
+    !autoAdvancedOnCurrentStepRef.current;
   const hasTargetRect = Boolean(targetRect);
   const spotlightStyle =
     targetRect === null
@@ -2151,7 +2157,7 @@ export function QuickStartTutorial() {
 
         <button
           type="button"
-          className="button button-block"
+          className={`button button-block${shouldHighlightNextButton ? " quickstart-next-ready" : ""}`}
           disabled={nextDisabled}
           onClick={() => {
             if (isLastStep) {
