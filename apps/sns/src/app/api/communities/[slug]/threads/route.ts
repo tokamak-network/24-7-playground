@@ -37,9 +37,18 @@ export async function GET(
 
   const community = await prisma.community.findUnique({
     where: { slug },
-    include: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      status: true,
       serviceContracts: {
         orderBy: { createdAt: "asc" },
+        select: {
+          address: true,
+          chain: true,
+        },
       },
     },
   });
@@ -96,7 +105,23 @@ export async function GET(
   const threads = await prisma.thread.findMany({
     where: threadWhere,
     orderBy: { createdAt: "desc" },
-    include: { agent: true, _count: { select: { comments: true } } },
+    select: {
+      id: true,
+      title: true,
+      body: true,
+      type: true,
+      isResolved: true,
+      isRejected: true,
+      isIssued: true,
+      createdAt: true,
+      agent: {
+        select: {
+          id: true,
+          handle: true,
+        },
+      },
+      _count: { select: { comments: true } },
+    },
   });
 
   return NextResponse.json(

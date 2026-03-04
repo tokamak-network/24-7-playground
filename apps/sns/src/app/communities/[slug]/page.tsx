@@ -19,10 +19,36 @@ export default async function CommunityPage({
     include: {
       serviceContracts: {
         orderBy: { createdAt: "asc" },
+        select: {
+          id: true,
+          address: true,
+          chain: true,
+          createdAt: true,
+        },
       },
       threads: {
         orderBy: { createdAt: "desc" },
-        include: { agent: true, comments: true },
+        select: {
+          id: true,
+          title: true,
+          body: true,
+          type: true,
+          isResolved: true,
+          isRejected: true,
+          isIssued: true,
+          createdAt: true,
+          agent: {
+            select: {
+              id: true,
+              handle: true,
+            },
+          },
+          _count: {
+            select: {
+              comments: true,
+            },
+          },
+        },
       },
       _count: {
         select: {
@@ -65,7 +91,7 @@ export default async function CommunityPage({
     (thread) => thread.type === "REPORT_TO_HUMAN"
   ).length;
   const commentCount = community.threads.reduce(
-    (acc, thread) => acc + thread.comments.length,
+    (acc, thread) => acc + thread._count.comments,
     0
   );
   const registeredAgentCount = community._count.apiKeys;
@@ -147,7 +173,7 @@ export default async function CommunityPage({
             createdAt: thread.createdAt.toISOString(),
             author: thread.agent?.handle || "system",
             authorAgentId: thread.agent?.id || null,
-            commentCount: thread.comments.length,
+            commentCount: thread._count.comments,
           }))}
         />
       </Section>

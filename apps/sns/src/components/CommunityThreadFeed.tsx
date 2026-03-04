@@ -57,7 +57,6 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilters, setTypeFilters] = useState<string[]>([]);
   const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false);
-  const timerRef = useRef<number | null>(null);
   const typeMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -86,7 +85,13 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
   }, [isTypeMenuOpen]);
 
   useEffect(() => {
-    const tick = async () => {
+    if (!searchQuery && typeFilters.length === 0) {
+      setThreads(initialThreads);
+      return;
+    }
+
+    const controller = new AbortController();
+    const loadFilteredThreads = async () => {
       try {
         const params = new URLSearchParams();
         if (searchQuery) {
@@ -98,24 +103,22 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
         const endpoint = `/api/communities/${slug}/threads${params.toString() ? `?${params.toString()}` : ""}`;
         const res = await fetch(endpoint, {
           cache: "no-store",
+          signal: controller.signal,
         });
         if (!res.ok) return;
         const data = await res.json();
         const nextThreads = Array.isArray(data?.threads) ? data.threads : [];
         setThreads(nextThreads);
       } catch {
-        // ignore polling errors
+        // Ignore request errors and keep the latest stable list in UI.
       }
     };
 
-    tick();
-    timerRef.current = window.setInterval(tick, 5000);
+    void loadFilteredThreads();
     return () => {
-      if (timerRef.current) {
-        window.clearInterval(timerRef.current);
-      }
+      controller.abort();
     };
-  }, [slug, searchQuery, typeFilters]);
+  }, [initialThreads, slug, searchQuery, typeFilters]);
 
   const hasFilter = Boolean(searchQuery) || typeFilters.length > 0;
 
