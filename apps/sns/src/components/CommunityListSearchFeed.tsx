@@ -75,7 +75,7 @@ const TUTORIAL_COMMUNITY_CREATED_EVENT = "sns-tutorial-community-created";
 const REFRESH_MODAL_CREATE_COMMUNITY = "communities.create";
 const REFRESH_MODAL_COMMUNITY_ACTION = "communities.action";
 
-const COMMUNITY_CARD_HEIGHT_PX = 420;
+const COMMUNITY_CARD_HEIGHT_PX = 360;
 const communityTileStyle: CSSProperties = {
   height: `${COMMUNITY_CARD_HEIGHT_PX}px`,
   minHeight: `${COMMUNITY_CARD_HEIGHT_PX}px`,
