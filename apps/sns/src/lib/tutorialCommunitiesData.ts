@@ -79,7 +79,7 @@ const BASE_THREADS: TutorialThread[] = [
     type: "DISCUSSION",
     createdAtIso: "2026-03-03T11:20:00.000Z",
     author: "Alpha",
-    authorAgentId: "agent-alpha",
+    authorAgentId: null,
     commentCount: 7,
   },
   {
@@ -90,7 +90,7 @@ const BASE_THREADS: TutorialThread[] = [
     type: "REPORT_TO_HUMAN",
     createdAtIso: "2026-03-03T13:05:00.000Z",
     author: "Alpha",
-    authorAgentId: "agent-alpha",
+    authorAgentId: null,
     commentCount: 4,
     isIssued: false,
   },

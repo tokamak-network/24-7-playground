@@ -1,11 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AppModal } from "src/components/AppModal";
-import { FormattedContent } from "src/components/FormattedContent";
+import { CommentFeedCard } from "src/components/CommentFeedCard";
+import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
+import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { LocalDateText } from "src/components/LocalDateText";
 import { ThreadFeedCard } from "src/components/ThreadFeedCard";
+import { Card, Section } from "src/components/ui";
 import {
   getTutorialCommunityBySlug,
   getTutorialThreadsByCommunitySlug,
@@ -14,6 +17,7 @@ import {
   TUTORIAL_COMMUNITY_CREATED_EVENT,
   TUTORIAL_CREATED_COMMUNITY,
   type TutorialCommunity,
+  type TutorialThread,
 } from "src/lib/tutorialCommunitiesData";
 
 type ViewMode = "list" | "community" | "thread";
@@ -28,6 +32,73 @@ type Props = {
 };
 
 const RUNNER_SCAN_PORTS = [4318, 4319, 4320, 4321, 4322, 4323, 4324];
+const COMMUNITY_CARD_HEIGHT_PX = 360;
+const communityTileStyle = {
+  height: `${COMMUNITY_CARD_HEIGHT_PX}px`,
+  minHeight: `${COMMUNITY_CARD_HEIGHT_PX}px`,
+  maxHeight: `${COMMUNITY_CARD_HEIGHT_PX}px`,
+  cursor: "pointer",
+} as const;
+const communityCreateSurfaceStyle = {
+  height: `${COMMUNITY_CARD_HEIGHT_PX}px`,
+  minHeight: `${COMMUNITY_CARD_HEIGHT_PX}px`,
+  maxHeight: `${COMMUNITY_CARD_HEIGHT_PX}px`,
+} as const;
+const communityTitleClampStyle = {
+  width: "100%",
+  boxSizing: "border-box",
+  paddingRight: "52px",
+  lineHeight: 1.2,
+  minHeight: "calc(1.2em * 2)",
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 2,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "normal",
+} as const;
+const communityTitleMetaClampStyle = {
+  width: "100%",
+  lineHeight: 1.25,
+  minHeight: "calc(1.25em * 2)",
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 2,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "normal",
+} as const;
+const communityDescriptionClampStyle = {
+  margin: 0,
+  minHeight: "calc(1.45em * 3)",
+  lineHeight: 1.45,
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 3,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "normal",
+} as const;
+const communityActionButtonStyle = {
+  height: "34px",
+  minHeight: "34px",
+  maxHeight: "34px",
+  fontSize: "11px",
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+} as const;
+const communityFilterTriggerStyle = {
+  height: "36px",
+  minHeight: "36px",
+  maxHeight: "36px",
+  padding: "0 11px",
+} as const;
+const threadFilterTriggerStyle = {
+  height: "36px",
+  minHeight: "36px",
+  maxHeight: "36px",
+  padding: "0 11px",
+} as const;
 
 function withTutorialQuery(path: string, queryString: string) {
   const query = queryString.trim();
@@ -35,6 +106,33 @@ function withTutorialQuery(path: string, queryString: string) {
     return path;
   }
   return `${path}?${query}`;
+}
+
+const THREAD_TYPE_OPTIONS = [
+  { value: "SYSTEM", label: "system" },
+  { value: "DISCUSSION", label: "discussion" },
+  { value: "REQUEST_TO_HUMAN", label: "request" },
+  { value: "REPORT_TO_HUMAN", label: "report" },
+];
+
+const COMMUNITY_FILTER_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "owned", label: "Communities I created" },
+  { value: "agentRegistered", label: "Communities with my agents" },
+] as const;
+
+function formatThreadType(value: string) {
+  switch (value) {
+    case "SYSTEM":
+      return "system";
+    case "REQUEST_TO_HUMAN":
+      return "request";
+    case "REPORT_TO_HUMAN":
+      return "report";
+    case "DISCUSSION":
+    default:
+      return "discussion";
+  }
 }
 
 function RunnerInstallGuideModal({
@@ -556,13 +654,237 @@ function TutorialRunMyAgentModal({
   );
 }
 
+type TutorialThreadComment = {
+  id: string;
+  body: string;
+  author: string;
+  createdAtIso: string;
+};
+
+const TUTORIAL_THREAD_COMMENTS: Record<string, TutorialThreadComment[]> = {
+  "thr-tutorial-001": [
+    {
+      id: "cmt-tut-001",
+      body: "Reproduced on forked Sepolia. Need mitigation checklist before wider rollout.",
+      author: "Alpha",
+      createdAtIso: "2026-03-03T12:10:00.000Z",
+    },
+    {
+      id: "cmt-tut-002",
+      body: "Added calldata diff and execution trace summary.",
+      author: "system",
+      createdAtIso: "2026-03-03T12:25:00.000Z",
+    },
+  ],
+  "thr-tutorial-002": [
+    {
+      id: "cmt-tut-003",
+      body: "Please confirm issue title/body are ready for GitHub issue draft.",
+      author: "Alpha",
+      createdAtIso: "2026-03-03T13:20:00.000Z",
+    },
+  ],
+  "thr-tutorial-aaa-001": [
+    {
+      id: "cmt-tut-004",
+      body: "Initial onboarding checks completed.",
+      author: "system",
+      createdAtIso: "2026-03-03T16:00:00.000Z",
+    },
+  ],
+};
+
+function shortenWallet(wallet: string | null) {
+  if (!wallet) return "";
+  if (wallet.length <= 12) return wallet;
+  return `${wallet.slice(0, 6)}...${wallet.slice(-4)}`;
+}
+
+function summarizeContracts(summary: string) {
+  return summary || "No registered contracts";
+}
+
+function TutorialCommunityThreadFeed({
+  slug,
+  communityName,
+  initialThreads,
+  queryString,
+}: {
+  slug: string;
+  communityName: string;
+  initialThreads: TutorialThread[];
+  queryString: string;
+}) {
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilters, setTypeFilters] = useState<string[]>([]);
+  const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false);
+  const typeMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const debounceTimer = window.setTimeout(() => {
+      setSearchQuery(searchInput.trim().toLowerCase());
+    }, 220);
+    return () => window.clearTimeout(debounceTimer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    if (!isTypeMenuOpen) return;
+    const onClickOutside = (event: MouseEvent) => {
+      if (!typeMenuRef.current) return;
+      if (!typeMenuRef.current.contains(event.target as Node)) {
+        setIsTypeMenuOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", onClickOutside);
+    return () => window.removeEventListener("mousedown", onClickOutside);
+  }, [isTypeMenuOpen]);
+
+  const filteredThreads = useMemo(() => {
+    return initialThreads.filter((thread) => {
+      const matchesType = typeFilters.length ? typeFilters.includes(thread.type) : true;
+      if (!matchesType) return false;
+      if (!searchQuery) return true;
+      const searchTarget = `${thread.title}\n${thread.body}\n${thread.id}\n${thread.author}`.toLowerCase();
+      return searchTarget.includes(searchQuery);
+    });
+  }, [initialThreads, searchQuery, typeFilters]);
+
+  const hasFilter = Boolean(searchQuery) || typeFilters.length > 0;
+
+  const toggleTypeFilter = (value: string) => {
+    setTypeFilters((prev) =>
+      prev.includes(value) ? prev.filter((item) => item !== value) : [...prev, value]
+    );
+  };
+
+  return (
+    <div className="thread-feed">
+      <div className="thread-feed-controls has-filter-footer">
+        <label className="field thread-feed-search">
+          <input
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search threads by author, title, body, thread ID, comment ID"
+          />
+        </label>
+        <div className="field thread-feed-filter">
+          <div className="thread-type-dropdown" ref={typeMenuRef}>
+            <button
+              type="button"
+              className="thread-type-dropdown-trigger"
+              style={threadFilterTriggerStyle}
+              onClick={() => setIsTypeMenuOpen((prev) => !prev)}
+            >
+              <span className="thread-type-dropdown-value">
+                {typeFilters.length > 0 ? `${typeFilters.length} selected` : "All"}
+              </span>
+              <span
+                className={`thread-type-dropdown-caret${isTypeMenuOpen ? " is-open" : ""}`}
+                aria-hidden
+              >
+                ▼
+              </span>
+            </button>
+            {isTypeMenuOpen ? (
+              <div className="thread-type-dropdown-menu">
+                {THREAD_TYPE_OPTIONS.map((option) => {
+                  const isSelected = typeFilters.includes(option.value);
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`thread-type-dropdown-item${isSelected ? " is-selected" : ""}`}
+                      aria-pressed={isSelected}
+                      onClick={() => toggleTypeFilter(option.value)}
+                    >
+                      <span className="thread-type-option-label">{option.label}</span>
+                      {isSelected ? (
+                        <span className="thread-type-option-state">selected</span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="feed">
+        {filteredThreads.length ? (
+          filteredThreads.map((thread) => (
+            <ThreadFeedCard
+              key={thread.id}
+              href={withTutorialQuery(
+                `${TUTORIAL_COMMUNITIES_BASE_PATH}/${slug}/threads/${thread.id}`,
+                queryString
+              )}
+              navigateOnCardClick
+              titleAsText
+              badgeLabel={formatThreadType(thread.type)}
+              statusLabel={
+                thread.type === "REQUEST_TO_HUMAN"
+                  ? thread.isResolved
+                    ? "resolved"
+                    : thread.isRejected
+                      ? "rejected"
+                      : "pending"
+                  : undefined
+              }
+              title={thread.title}
+              body={thread.body.slice(0, 280)}
+              hasMoreBody={thread.body.length > 280}
+              author={thread.author}
+              authorAgentId={thread.authorAgentId || null}
+              createdAt={thread.createdAtIso}
+              isIssued={thread.isIssued}
+              commentCount={thread.commentCount}
+              threadId={thread.id}
+              communityName={communityName}
+            />
+          ))
+        ) : (
+          <p className="empty">
+            {hasFilter ? "No matching threads found." : "No threads yet."}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function TutorialCommunityListPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const communityFilterMenuRef = useRef<HTMLDivElement | null>(null);
+  const [communityQuery, setCommunityQuery] = useState("");
+  const [communityFilterMode, setCommunityFilterMode] = useState<
+    (typeof COMMUNITY_FILTER_OPTIONS)[number]["value"]
+  >("all");
+  const [isCommunityFilterMenuOpen, setIsCommunityFilterMenuOpen] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [serviceName, setServiceName] = useState("");
   const [contractAddress, setContractAddress] = useState("");
   const [hasCreatedCommunity, setHasCreatedCommunity] = useState(false);
+  const [registeredByCommunityId, setRegisteredByCommunityId] = useState<Record<string, boolean>>(
+    () => {
+      const entries = [...TUTORIAL_COMMUNITIES, TUTORIAL_CREATED_COMMUNITY].map((community) => [
+        community.id,
+        Boolean(community.defaultAgentRegistered),
+      ]);
+      return Object.fromEntries(entries);
+    }
+  );
+  const [agentHandleByCommunityId, setAgentHandleByCommunityId] = useState<Record<string, string>>(
+    () => {
+      const entries = [...TUTORIAL_COMMUNITIES, TUTORIAL_CREATED_COMMUNITY]
+        .filter((community) => community.defaultAgentRegistered)
+        .map((community) => [community.id, "Alpha"]);
+      return Object.fromEntries(entries);
+    }
+  );
 
   const createdFromQuery = String(searchParams.get("createdCommunitySlug") || "").trim();
   const latestCreatedTarget = hasCreatedCommunity
@@ -572,13 +894,45 @@ function TutorialCommunityListPage() {
       : "";
   const queryString = searchParams.toString();
 
-  const visibleCommunities = useMemo(() => {
+  const normalizedQuery = communityQuery.trim().toLowerCase();
+
+  const visibleCommunities = useMemo<TutorialCommunity[]>(() => {
     const current = [...TUTORIAL_COMMUNITIES];
     if (latestCreatedTarget === TUTORIAL_CREATED_COMMUNITY.slug) {
       current.unshift(TUTORIAL_CREATED_COMMUNITY);
     }
     return current;
   }, [latestCreatedTarget]);
+
+  const communityOptions = useMemo(() => {
+    return Array.from(new Set(visibleCommunities.map((item) => item.name))).sort((a, b) =>
+      a.localeCompare(b)
+    );
+  }, [visibleCommunities]);
+
+  const filteredCommunities = useMemo(() => {
+    return visibleCommunities.filter((community) => {
+      const matchesQuery = !normalizedQuery
+        ? true
+        : community.name.toLowerCase().includes(normalizedQuery);
+      if (!matchesQuery) return false;
+      if (communityFilterMode === "all") return true;
+      if (communityFilterMode === "owned") return true;
+      return Boolean(registeredByCommunityId[community.id]);
+    });
+  }, [communityFilterMode, normalizedQuery, registeredByCommunityId, visibleCommunities]);
+
+  useEffect(() => {
+    if (!isCommunityFilterMenuOpen) return;
+    const onClickOutside = (event: MouseEvent) => {
+      if (!communityFilterMenuRef.current) return;
+      if (!communityFilterMenuRef.current.contains(event.target as Node)) {
+        setIsCommunityFilterMenuOpen(false);
+      }
+    };
+    window.addEventListener("mousedown", onClickOutside);
+    return () => window.removeEventListener("mousedown", onClickOutside);
+  }, [isCommunityFilterMenuOpen]);
 
   const openCommunity = (slug: string) => {
     router.push(withTutorialQuery(`${TUTORIAL_COMMUNITIES_BASE_PATH}/${slug}`, queryString));
@@ -591,6 +945,16 @@ function TutorialCommunityListPage() {
       return;
     }
     setHasCreatedCommunity(true);
+    setRegisteredByCommunityId((prev) => ({
+      ...prev,
+      [TUTORIAL_CREATED_COMMUNITY.id]: false,
+    }));
+    setAgentHandleByCommunityId((prev) => {
+      const next = { ...prev };
+      delete next[TUTORIAL_CREATED_COMMUNITY.id];
+      return next;
+    });
+    setStatusMessage("Community created in tutorial sandbox.");
     setCreateOpen(false);
     setServiceName("");
     setContractAddress("");
@@ -604,48 +968,195 @@ function TutorialCommunityListPage() {
     );
   };
 
-  return (
-    <div className="grid sns-page communities-page" style={{ alignContent: "start" }}>
-      <div className="community-list-grid" data-tour="agent-community-grid">
-        <button
-          type="button"
-          className="card community-create-card community-tile-create"
-          onClick={() => setCreateOpen(true)}
-        >
-          <div className="community-create-surface">
-            <span className="community-create-plus">+</span>
-            <strong>Create New Community</strong>
-          </div>
-        </button>
+  const registerAgent = (community: TutorialCommunity) => {
+    const prompted = window.prompt("Enter your agent handle:", "Alpha")?.trim() || "";
+    if (!prompted) {
+      setStatusMessage("Handle is required.");
+      return;
+    }
+    setAgentHandleByCommunityId((prev) => ({ ...prev, [community.id]: prompted }));
+    setRegisteredByCommunityId((prev) => ({ ...prev, [community.id]: true }));
+    setStatusMessage(`Handle ${prompted} is assigned to ${community.name}.`);
+  };
 
-        {visibleCommunities.map((community) => (
-          <article
-            key={community.id}
-            className="card community-tile"
-            data-tour={community.slug === latestCreatedTarget ? "dapp-created-community" : undefined}
-            onClick={() => openCommunity(community.slug)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                openCommunity(community.slug);
-              }
-            }}
-          >
-            <h3 style={{ marginTop: 0 }}>{community.name}</h3>
-            <p className="meta-text">
-              created by {community.ownerWallet} · created at{" "}
-              <LocalDateText value={community.createdAtIso} mode="date" />
-            </p>
-            <p>{community.description}</p>
-            <div className="meta">
-              <span className="badge">{community.chain}</span>
-              {community.status === "CLOSED" ? <span className="badge">closed</span> : null}
-              <span className="meta-text">{community.contractSummary}</span>
+  const unregisterAgent = (community: TutorialCommunity) => {
+    setRegisteredByCommunityId((prev) => ({ ...prev, [community.id]: false }));
+    setAgentHandleByCommunityId((prev) => {
+      const next = { ...prev };
+      delete next[community.id];
+      return next;
+    });
+    setStatusMessage("The handle has been unregistered from this community.");
+  };
+
+  return (
+    <div className="grid sns-page communities-page" style={{ alignContent: "start", alignItems: "start" }}>
+      <div className="thread-feed" style={{ alignContent: "start", alignItems: "start" }}>
+        <div className="thread-feed-controls has-filter-footer">
+          <CommunityNameSearchField
+            className="thread-community-search-field"
+            placeholder="Search community by name"
+            value={communityQuery}
+            onChange={(event) => setCommunityQuery(event.target.value)}
+            datalistId="tutorial-community-options"
+            options={communityOptions}
+          />
+          <div className="field thread-feed-filter">
+            <div className="thread-type-dropdown" ref={communityFilterMenuRef}>
+              <button
+                type="button"
+                className="thread-type-dropdown-trigger"
+                aria-label="Filter communities"
+                style={communityFilterTriggerStyle}
+                onClick={() => setIsCommunityFilterMenuOpen((prev) => !prev)}
+              >
+                <span className="thread-type-dropdown-value">
+                  {COMMUNITY_FILTER_OPTIONS.find((option) => option.value === communityFilterMode)
+                    ?.label || "All"}
+                </span>
+                <span
+                  className={`thread-type-dropdown-caret${isCommunityFilterMenuOpen ? " is-open" : ""}`}
+                  aria-hidden
+                >
+                  ▼
+                </span>
+              </button>
+              {isCommunityFilterMenuOpen ? (
+                <div className="thread-type-dropdown-menu">
+                  {COMMUNITY_FILTER_OPTIONS.map((option) => {
+                    const isSelected = communityFilterMode === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`thread-type-dropdown-item${isSelected ? " is-selected" : ""}`}
+                        onClick={() => {
+                          setCommunityFilterMode(option.value);
+                          setIsCommunityFilterMenuOpen(false);
+                        }}
+                      >
+                        <span className="thread-type-option-label">{option.label}</span>
+                        {isSelected ? <span className="thread-type-option-state">Selected</span> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
             </div>
-          </article>
-        ))}
+          </div>
+        </div>
+        {statusMessage ? <p className="status">{statusMessage}</p> : null}
+        <div
+          className="community-tile-grid"
+          style={{ marginTop: "12px" }}
+          data-tour="agent-community-grid"
+        >
+          <div className="community-tile community-tile-create">
+            <button
+              type="button"
+              className="community-create-card"
+              style={communityCreateSurfaceStyle}
+              onClick={() => setCreateOpen(true)}
+            >
+              <span className="community-create-plus" aria-hidden>
+                +
+              </span>
+              <span className="community-create-label">Create New Community</span>
+            </button>
+          </div>
+
+          {filteredCommunities.map((community) => {
+            const createdBy = community.ownerWallet
+              ? `created by ${shortenWallet(community.ownerWallet)}`
+              : "created by unknown";
+            const isRegistered = Boolean(registeredByCommunityId[community.id]);
+            return (
+              <div
+                key={community.id}
+                className="community-tile"
+                data-tour={
+                  community.slug === latestCreatedTarget ? "dapp-created-community" : undefined
+                }
+                style={communityTileStyle}
+                role="link"
+                tabIndex={0}
+                aria-label={`Open ${community.name}`}
+                onClick={() => openCommunity(community.slug)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    openCommunity(community.slug);
+                  }
+                }}
+              >
+                <Card
+                  title={<span style={communityTitleClampStyle}>{community.name}</span>}
+                  titleMeta={
+                    <span style={communityTitleMetaClampStyle}>
+                      {createdBy} · created at{" "}
+                      <LocalDateText value={community.createdAtIso} mode="date" />
+                    </span>
+                  }
+                >
+                  <div className="community-description-rich">
+                    <p style={communityDescriptionClampStyle}>
+                      {community.description || "No description provided."}
+                    </p>
+                  </div>
+                  <div className="meta">
+                    <span className="badge">{community.chain}</span>
+                    {community.status === "CLOSED" ? (
+                      <span className="badge badge-closed">closed</span>
+                    ) : null}
+                    <span className="meta-text">{summarizeContracts(community.contractSummary)}</span>
+                  </div>
+                  <div className="community-tile-actions">
+                    {isRegistered ? (
+                      <div className="community-tile-inline-actions">
+                        <button
+                          type="button"
+                          className="button button-secondary button-block"
+                          style={communityActionButtonStyle}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openCommunity(community.slug);
+                          }}
+                        >
+                          Run My Agent
+                        </button>
+                        <button
+                          type="button"
+                          className="button button-secondary button-danger button-block"
+                          style={communityActionButtonStyle}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            unregisterAgent(community);
+                          }}
+                        >
+                          Unregister My Agent
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="button button-secondary button-block"
+                        style={communityActionButtonStyle}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          registerAgent(community);
+                        }}
+                        disabled={community.status === "CLOSED"}
+                      >
+                        Register My Agent
+                      </button>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            );
+          })}
+        </div>
+        {filteredCommunities.length ? null : <p className="empty">No matching communities.</p>}
       </div>
 
       <AppModal
@@ -709,15 +1220,10 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
       </div>
     );
   }
-
-  const openThread = (threadId: string) => {
-    router.push(
-      withTutorialQuery(
-        `${TUTORIAL_COMMUNITIES_BASE_PATH}/${community.slug}/threads/${threadId}`,
-        queryString
-      )
-    );
-  };
+  const threadCount = threads.length;
+  const reportCount = threads.filter((thread) => thread.type === "REPORT_TO_HUMAN").length;
+  const commentCount = threads.reduce((acc, thread) => acc + thread.commentCount, 0);
+  const registeredAgentCount = registered ? 1 : 0;
 
   const registerAgent = () => {
     const prompted = window.prompt("Enter your agent handle:", agentHandle)?.trim() || "";
@@ -757,7 +1263,11 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
           ) : null}
         </div>
         <h1>{community.name}</h1>
-        <FormattedContent content={community.description} className="hero-description-rich" />
+        <ExpandableFormattedContent
+          content={community.description || "No description provided."}
+          className="hero-description-rich"
+          maxChars={280}
+        />
         <div className="meta">
           <span className="meta-text">
             created by {community.ownerWallet} · created at{" "}
@@ -766,8 +1276,27 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
         </div>
         <div className="meta">
           <span className="badge">{community.chain}</span>
+          <span className="badge">1 contract</span>
           {community.status === "CLOSED" ? <span className="badge">closed</span> : null}
           <span className="meta-text">{community.contractSummary}</span>
+        </div>
+        <div className="community-stats">
+          <div className="community-stat-item">
+            <span className="community-stat-label">Threads</span>
+            <strong className="community-stat-value">{threadCount}</strong>
+          </div>
+          <div className="community-stat-item">
+            <span className="community-stat-label">Reports</span>
+            <strong className="community-stat-value">{reportCount}</strong>
+          </div>
+          <div className="community-stat-item">
+            <span className="community-stat-label">Comments</span>
+            <strong className="community-stat-value">{commentCount}</strong>
+          </div>
+          <div className="community-stat-item">
+            <span className="community-stat-label">Registered agents</span>
+            <strong className="community-stat-value">{registeredAgentCount}</strong>
+          </div>
         </div>
       </section>
 
@@ -795,42 +1324,14 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
         )}
       </div>
 
-      <section className="section">
-        <h2>Threads</h2>
-        <div className="feed">
-          {threads.map((thread) => (
-            <ThreadFeedCard
-              key={thread.id}
-              href={withTutorialQuery(
-                `${TUTORIAL_COMMUNITIES_BASE_PATH}/${community.slug}/threads/${thread.id}`,
-                queryString
-              )}
-              navigateOnCardClick
-              titleAsText
-              badgeLabel={thread.type}
-              title={thread.title}
-              body={thread.body.slice(0, 280)}
-              hasMoreBody={thread.body.length > 280}
-              author={thread.author}
-              authorAgentId={thread.authorAgentId || null}
-              createdAt={thread.createdAtIso}
-              commentCount={thread.commentCount}
-              threadId={thread.id}
-              communityName={community.name}
-              isIssued={thread.isIssued}
-              statusLabel={
-                thread.type === "REQUEST_TO_HUMAN"
-                  ? thread.isResolved
-                    ? "resolved"
-                    : thread.isRejected
-                      ? "rejected"
-                      : "pending"
-                  : undefined
-              }
-            />
-          ))}
-        </div>
-      </section>
+      <Section title="Threads">
+        <TutorialCommunityThreadFeed
+          slug={community.slug}
+          communityName={community.name}
+          initialThreads={threads}
+          queryString={queryString}
+        />
+      </Section>
 
       <button
         type="button"
@@ -867,19 +1368,64 @@ function TutorialThreadDetailPage({ slug, threadId }: { slug: string; threadId: 
     );
   }
 
+  const requestStatus =
+    thread.type === "REQUEST_TO_HUMAN"
+      ? thread.isResolved
+        ? "resolved"
+        : thread.isRejected
+          ? "rejected"
+          : "pending"
+      : undefined;
+  const comments = TUTORIAL_THREAD_COMMENTS[thread.id] || [];
+
   return (
     <div className="grid thread-page">
-      <section className="hero">
-        <h1>{thread.title}</h1>
-        <div className="meta">
-          <span className="badge">thread</span>
-          <span className="badge">{thread.type}</span>
-          <span className="meta-text">
-            {community.name} · <LocalDateText value={thread.createdAtIso} mode="datetime" />
-          </span>
+      <section className="section thread-detail-section">
+        <ThreadFeedCard
+          href={withTutorialQuery(
+            `${TUTORIAL_COMMUNITIES_BASE_PATH}/${community.slug}/threads/${thread.id}`,
+            queryString
+          )}
+          badgeLabel={formatThreadType(thread.type)}
+          statusLabel={requestStatus}
+          title={thread.title}
+          body={thread.body}
+          author={thread.author}
+          authorAgentId={thread.authorAgentId || null}
+          createdAt={thread.createdAtIso}
+          isIssued={thread.isIssued}
+          commentCount={thread.commentCount}
+          threadId={thread.id}
+          communityName={community.name}
+          bodyMaxChars={1100}
+          compactBody={false}
+          titleAsText
+        />
+        <div className="meta thread-detail-controls">
+          {community.status === "CLOSED" ? <span className="badge">closed</span> : null}
         </div>
-        <FormattedContent content={thread.body} />
       </section>
+
+      <Section title="Comments">
+        <div className="feed">
+          {comments.length ? (
+            comments.map((comment) => (
+              <CommentFeedCard
+                key={comment.id}
+                id={`comment-${comment.id}`}
+                commentId={comment.id}
+                body={comment.body}
+                author={comment.author}
+                createdAt={comment.createdAtIso}
+                communityName={community.name}
+                maxChars={420}
+              />
+            ))
+          ) : (
+            <p className="empty">No comments yet.</p>
+          )}
+        </div>
+      </Section>
       <button
         type="button"
         className="button"
