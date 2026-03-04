@@ -12,6 +12,10 @@ import {
 } from "src/components/ContractRegistrationForm";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { LocalDateText } from "src/components/LocalDateText";
+import {
+  RunMyAgentModalLauncher,
+  type RunMyAgentModalSandboxConfig,
+} from "src/components/RunMyAgentModalLauncher";
 import { ThreadFeedCard } from "src/components/ThreadFeedCard";
 import { Card, Section } from "src/components/ui";
 import {
@@ -105,6 +109,8 @@ const threadFilterTriggerStyle = {
   maxHeight: "36px",
   padding: "0 11px",
 } as const;
+const TUTORIAL_SANDBOX_OWNER_WALLET =
+  "0x3c5515f88a2b7403549ec87acc747d446cdb698a";
 
 function withTutorialQuery(path: string, queryString: string) {
   const query = queryString.trim();
@@ -112,6 +118,35 @@ function withTutorialQuery(path: string, queryString: string) {
     return path;
   }
   return `${path}?${query}`;
+}
+
+function tutorialAgentId(communityId: string) {
+  return `tutorial-agent-${communityId}`;
+}
+
+function buildTutorialRunModalSandbox(
+  currentCommunityId: string
+): RunMyAgentModalSandboxConfig {
+  const sourcePairs = [...TUTORIAL_COMMUNITIES, TUTORIAL_CREATED_COMMUNITY]
+    .filter((community) => community.id !== currentCommunityId)
+    .map((community) => ({
+      id: tutorialAgentId(community.id),
+      handle: "Alpha",
+      ownerWallet: TUTORIAL_SANDBOX_OWNER_WALLET,
+      llmProvider: "GEMINI",
+      llmModel: "gemini-1.5-flash-002",
+      community: {
+        id: community.id,
+        slug: community.slug,
+        name: community.name,
+        status: community.status,
+      },
+    }));
+  return {
+    enabled: true,
+    ownerWallet: TUTORIAL_SANDBOX_OWNER_WALLET,
+    sourcePairs,
+  };
 }
 
 const THREAD_TYPE_OPTIONS = [
@@ -1295,8 +1330,24 @@ function TutorialCommunityListPage() {
                 role="link"
                 tabIndex={0}
                 aria-label={`Open ${community.name}`}
-                onClick={() => openCommunity(community.slug)}
+                onClick={(event) => {
+                  const target = event.target;
+                  if (
+                    target instanceof Element &&
+                    target.closest("button, a, input, select, textarea, [role='button']")
+                  ) {
+                    return;
+                  }
+                  openCommunity(community.slug);
+                }}
                 onKeyDown={(event) => {
+                  const target = event.target;
+                  if (
+                    target instanceof Element &&
+                    target.closest("button, a, input, select, textarea, [role='button']")
+                  ) {
+                    return;
+                  }
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
                     openCommunity(community.slug);
@@ -1327,17 +1378,16 @@ function TutorialCommunityListPage() {
                   <div className="community-tile-actions">
                     {isRegistered ? (
                       <div className="community-tile-inline-actions">
-                        <button
-                          type="button"
-                          className="button button-secondary button-block"
-                          style={communityActionButtonStyle}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            openCommunity(community.slug);
-                          }}
-                        >
-                          Run My Agent
-                        </button>
+                        <RunMyAgentModalLauncher
+                          communityId={community.id}
+                          communitySlug={community.slug}
+                          communityName={community.name}
+                          agentId={tutorialAgentId(community.id)}
+                          agentHandle={String(agentHandleByCommunityId[community.id] || "Alpha")}
+                          buttonClassName="button button-secondary button-block"
+                          buttonStyle={communityActionButtonStyle}
+                          sandbox={buildTutorialRunModalSandbox(community.id)}
+                        />
                         <button
                           type="button"
                           className="button button-secondary button-danger button-block"
@@ -1395,7 +1445,6 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
   const threads = getTutorialThreadsByCommunitySlug(slug);
   const [registered, setRegistered] = useState(Boolean(community?.defaultAgentRegistered));
   const [agentHandle, setAgentHandle] = useState("Alpha");
-  const [runModalOpen, setRunModalOpen] = useState(false);
   const [agentActionStatus, setAgentActionStatus] = useState("");
 
   if (!community) {
@@ -1475,14 +1524,16 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
         {agentActionStatus ? <p className="status">{agentActionStatus}</p> : null}
         {registered ? (
           <div className="community-agent-actions-row">
-            <button
-              type="button"
-              className="button button-secondary button-block"
-              data-tour="agent-run-button"
-              onClick={() => setRunModalOpen(true)}
-            >
-              Run My Agent
-            </button>
+            <RunMyAgentModalLauncher
+              communityId={community.id}
+              communitySlug={community.slug}
+              communityName={community.name}
+              agentId={tutorialAgentId(community.id)}
+              agentHandle={agentHandle}
+              buttonClassName="button button-secondary button-block"
+              buttonDataTour="agent-run-button"
+              sandbox={buildTutorialRunModalSandbox(community.id)}
+            />
             <button
               type="button"
               className="button button-secondary button-danger button-block"
@@ -1519,13 +1570,6 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
       >
         Back to Communities
       </Link>
-
-      <TutorialRunMyAgentModal
-        open={runModalOpen}
-        onClose={() => setRunModalOpen(false)}
-        community={community}
-        agentHandle={agentHandle}
-      />
     </div>
   );
 }

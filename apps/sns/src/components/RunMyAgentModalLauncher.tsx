@@ -125,6 +125,28 @@ type RunMyAgentModalLauncherProps = {
   buttonStyle?: CSSProperties;
   buttonLabel?: string;
   buttonDataTour?: string;
+  sandbox?: RunMyAgentModalSandboxConfig;
+};
+
+export type RunMyAgentModalSandboxSource = {
+  id: string;
+  handle: string;
+  ownerWallet?: string | null;
+  llmProvider?: string;
+  llmModel?: string;
+  llmBaseUrl?: string | null;
+  community: {
+    id: string;
+    slug: string;
+    name: string;
+    status?: string;
+  };
+};
+
+export type RunMyAgentModalSandboxConfig = {
+  enabled: boolean;
+  ownerWallet?: string | null;
+  sourcePairs?: RunMyAgentModalSandboxSource[];
 };
 
 const PROVIDER_OPTIONS = ["", "GEMINI", "OPENAI", "LITELLM", "ANTHROPIC"] as const;
@@ -355,6 +377,14 @@ function defaultModelByProvider(provider: string) {
 
 function runnerStorageKey(agentId: string) {
   return `sns.runner.config.${agentId}`;
+}
+
+function sandboxGeneralStorageKey(agentId: string) {
+  return `sns.tutorial.agent.general.${agentId}`;
+}
+
+function sandboxSecurityStorageKey(agentId: string) {
+  return `sns.tutorial.agent.security.${agentId}`;
 }
 
 function normalizePositiveInteger(value: string, fallback: string) {
@@ -677,6 +707,7 @@ export function RunMyAgentModalLauncher({
   buttonStyle,
   buttonLabel = "Run My Agent",
   buttonDataTour,
+  sandbox,
 }: RunMyAgentModalLauncherProps) {
   const [modalPhase, setModalPhase] = useState<ModalPhase>("closed");
   const modalTimerRef = useRef<number | null>(null);
@@ -790,6 +821,7 @@ export function RunMyAgentModalLauncher({
             communityName={communityName}
             agentId={agentId}
             agentHandle={agentHandle}
+            sandbox={sandbox}
           />
         </AppModal>
       ) : null}
@@ -803,6 +835,7 @@ type RunMyAgentModalContentProps = {
   communityName: string;
   agentId: string;
   agentHandle: string;
+  sandbox?: RunMyAgentModalSandboxConfig;
 };
 
 function RunMyAgentModalContent({
@@ -811,6 +844,7 @@ function RunMyAgentModalContent({
   communityName,
   agentId,
   agentHandle,
+  sandbox,
 }: RunMyAgentModalContentProps) {
   const {
     connectedWallet,
@@ -898,6 +932,71 @@ function RunMyAgentModalContent({
         : undefined,
     [token]
   );
+  const isSandbox = Boolean(sandbox?.enabled);
+  const isSessionReadyForModal = sessionReady;
+  const hasTokenForModal = Boolean(token);
+  const sandboxCurrentPair = useMemo<PairItem>(
+    () => ({
+      id: agentId,
+      handle: agentHandle,
+      ownerWallet:
+        String(sandbox?.ownerWallet || connectedWallet || "").trim() || null,
+      llmProvider: "GEMINI",
+      llmModel: "gemini-1.5-flash-002",
+      hasSecuritySensitive: false,
+      community: {
+        id: communityId,
+        slug: communitySlug,
+        name: communityName,
+        status: "ACTIVE",
+      },
+    }),
+    [
+      agentHandle,
+      agentId,
+      communityId,
+      communityName,
+      communitySlug,
+      connectedWallet,
+      sandbox?.ownerWallet,
+    ]
+  );
+  const sandboxSourcePairs = useMemo<PairItem[]>(() => {
+    if (!sandbox?.enabled || !Array.isArray(sandbox.sourcePairs)) {
+      return [];
+    }
+    return sandbox.sourcePairs
+      .filter((item) => String(item.id || "").trim() && item.id !== agentId)
+      .map((item) => ({
+        id: item.id,
+        handle: item.handle || "Alpha",
+        ownerWallet:
+          typeof item.ownerWallet === "string" && item.ownerWallet.trim()
+            ? item.ownerWallet.trim()
+            : null,
+        llmProvider: String(item.llmProvider || "GEMINI").trim().toUpperCase(),
+        llmModel: String(item.llmModel || "gemini-1.5-flash-002").trim(),
+        hasSecuritySensitive: true,
+        community: {
+          id: item.community.id,
+          slug: item.community.slug,
+          name: item.community.name,
+          status: String(item.community.status || "ACTIVE").trim() || "ACTIVE",
+        },
+      }));
+  }, [agentId, sandbox]);
+  const sandboxSourceById = useMemo(() => {
+    const next = new Map<string, RunMyAgentModalSandboxSource>();
+    if (!sandbox?.enabled || !Array.isArray(sandbox.sourcePairs)) {
+      return next;
+    }
+    for (const item of sandbox.sourcePairs) {
+      const key = String(item.id || "").trim();
+      if (!key || key === agentId) continue;
+      next.set(key, item);
+    }
+    return next;
+  }, [agentId, sandbox]);
 
   const currentPair = useMemo(() => {
     return (
@@ -1024,7 +1123,12 @@ function RunMyAgentModalContent({
   );
 
   const loadPairs = useCallback(async () => {
-    if (!sessionReady) {
+    if (!isSessionReadyForModal) {
+      return;
+    }
+    if (isSandbox) {
+      setPairs([sandboxCurrentPair, ...sandboxSourcePairs]);
+      setPairsStatus(null);
       return;
     }
     if (!token || !authHeaders) {
@@ -1063,9 +1167,61 @@ function RunMyAgentModalContent({
     } finally {
       setPairsBusy(false);
     }
-  }, [authHeaders, handleSessionAuthFailure, readError, sessionReady, token]);
+  }, [
+    authHeaders,
+    handleSessionAuthFailure,
+    isSandbox,
+    isSessionReadyForModal,
+    readError,
+    sandboxCurrentPair,
+    sandboxSourcePairs,
+    token,
+  ]);
 
   const loadCurrentGeneral = useCallback(async () => {
+    if (isSandbox) {
+      let restored: Partial<GeneralPayload["agent"]> | null = null;
+      if (typeof window !== "undefined") {
+        try {
+          const raw = window.localStorage.getItem(sandboxGeneralStorageKey(agentId));
+          if (raw) {
+            restored = JSON.parse(raw) as Partial<GeneralPayload["agent"]>;
+          }
+        } catch {
+          restored = null;
+        }
+      }
+      const provider = String(restored?.llmProvider || "GEMINI").trim().toUpperCase();
+      const model = String(
+        restored?.llmModel || defaultModelByProvider(provider || "GEMINI")
+      ).trim();
+      const baseUrl =
+        typeof restored?.llmBaseUrl === "string" ? restored.llmBaseUrl : null;
+      const payload: GeneralPayload = {
+        agent: {
+          id: agentId,
+          handle: String(restored?.handle || agentHandle || "").trim() || agentHandle,
+          ownerWallet:
+            String(restored?.ownerWallet || sandbox?.ownerWallet || connectedWallet || "").trim() ||
+            null,
+          llmProvider: provider,
+          llmModel: model,
+          llmBaseUrl: baseUrl,
+        },
+        community: {
+          id: communityId,
+          slug: communitySlug,
+          name: communityName,
+          status: "ACTIVE",
+        },
+      };
+      setGeneral(payload);
+      setLlmHandleName(payload.agent.handle);
+      setLlmProvider(payload.agent.llmProvider);
+      setLlmModel(payload.agent.llmModel);
+      setLiteLlmBaseUrl(payload.agent.llmBaseUrl || "");
+      return;
+    }
     if (!token || !agentId || !authHeaders) return;
     try {
       const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}/general`, {
@@ -1077,7 +1233,18 @@ function RunMyAgentModalContent({
     } catch {
       // noop
     }
-  }, [agentId, authHeaders, token]);
+  }, [
+    agentHandle,
+    agentId,
+    authHeaders,
+    communityId,
+    communityName,
+    communitySlug,
+    connectedWallet,
+    isSandbox,
+    sandbox?.ownerWallet,
+    token,
+  ]);
 
   const loadRunnerConfig = useCallback(() => {
     if (!agentId || typeof window === "undefined") {
@@ -1196,6 +1363,33 @@ function RunMyAgentModalContent({
         return false;
       }
 
+      if (isSandbox) {
+        if (llmApiKey.length < 8) {
+          setSecurityStatus({ kind: "error", text: "LLM API key is required." });
+          setTested((prev) => ({ ...prev, llmApiKey: false }));
+          return false;
+        }
+        const sandboxModelsByProvider: Record<string, string[]> = {
+          GEMINI: ["gemini-1.5-flash-002", "gemini-2.0-flash"],
+          OPENAI: ["gpt-4o-mini", "gpt-4.1-mini"],
+          ANTHROPIC: ["claude-3-5-sonnet-20241022", "claude-3-7-sonnet-latest"],
+          LITELLM: ["gpt-4o-mini"],
+        };
+        const models =
+          sandboxModelsByProvider[provider.toUpperCase()] || ["gpt-4o-mini"];
+        setAvailableModels(models);
+        setLlmModel((prev) => {
+          const current = String(prev || "").trim();
+          if (current && models.includes(current)) return current;
+          return models[0];
+        });
+        setTested((prev) => ({ ...prev, llmApiKey: true }));
+        if (showSuccess) {
+          setSecurityStatus({ kind: "success", text: `Loaded ${models.length} models.` });
+        }
+        return true;
+      }
+
       setModelsBusy(true);
       try {
         let models: string[] = [];
@@ -1296,11 +1490,11 @@ function RunMyAgentModalContent({
         setModelsBusy(false);
       }
     },
-    [llmProvider, liteLlmBaseUrl, securityDraft.llmApiKey]
+    [isSandbox, llmProvider, liteLlmBaseUrl, securityDraft.llmApiKey]
   );
 
   const saveGeneral = useCallback(async () => {
-    if (!token || !agentId || !authHeaders) {
+    if (!isSandbox && (!token || !agentId || !authHeaders)) {
       setGeneralStatus({ kind: "error", text: "Sign in first." });
       return false;
     }
@@ -1317,6 +1511,38 @@ function RunMyAgentModalContent({
     if (provider === "LITELLM" && !baseUrl) {
       setGeneralStatus({ kind: "error", text: "Base URL is required for LiteLLM." });
       return false;
+    }
+
+    if (isSandbox) {
+      const data: GeneralPayload = {
+        agent: {
+          id: agentId,
+          handle,
+          ownerWallet: currentOwnerWallet || null,
+          llmProvider: provider,
+          llmModel: model,
+          llmBaseUrl: provider === "LITELLM" ? baseUrl : null,
+        },
+        community: {
+          id: communityId,
+          slug: communitySlug,
+          name: communityName,
+          status: "ACTIVE",
+        },
+      };
+      setGeneral(data);
+      if (typeof window !== "undefined") {
+        try {
+          window.localStorage.setItem(
+            sandboxGeneralStorageKey(agentId),
+            JSON.stringify(data.agent)
+          );
+        } catch {
+          // noop
+        }
+      }
+      setGeneralStatus({ kind: "success", text: "Public configuration saved." });
+      return true;
     }
 
     setGeneralBusy(true);
@@ -1357,15 +1583,27 @@ function RunMyAgentModalContent({
     agentId,
     authHeaders,
     currentAgentHandle,
+    currentOwnerWallet,
     llmModel,
     llmProvider,
     liteLlmBaseUrl,
     handleSessionAuthFailure,
+    isSandbox,
     readError,
+    communityId,
+    communityName,
+    communitySlug,
     token,
   ]);
 
   const loadGeneralFromDb = useCallback(async () => {
+    if (isSandbox) {
+      setGeneralStatus({
+        kind: "error",
+        text: "Load from DB is not available in tutorial sandbox.",
+      });
+      return false;
+    }
     if (!token || !agentId || !authHeaders) {
       setGeneralStatus({ kind: "error", text: "Sign in first." });
       return false;
@@ -1399,9 +1637,31 @@ function RunMyAgentModalContent({
     } finally {
       setGeneralBusy(false);
     }
-  }, [agentId, authHeaders, handleSessionAuthFailure, readError, token]);
+  }, [agentId, authHeaders, handleSessionAuthFailure, isSandbox, readError, token]);
 
   const loadEncryptedSecurity = useCallback(async () => {
+    if (isSandbox) {
+      if (typeof window === "undefined") {
+        return null;
+      }
+      try {
+        const raw = window.localStorage.getItem(sandboxSecurityStorageKey(agentId));
+        const parsed = raw ? JSON.parse(raw) : null;
+        const encrypted = normalizeEncryptedSecurity(parsed);
+        setEncryptedSecurity(encrypted);
+        if (!encrypted) {
+          setSecurityStatus({
+            kind: "error",
+            text: "No encrypted ciphertext found in tutorial sandbox.",
+          });
+        }
+        return encrypted;
+      } catch {
+        setEncryptedSecurity(null);
+        setSecurityStatus({ kind: "error", text: "Failed to load encrypted ciphertext." });
+        return null;
+      }
+    }
     if (!token || !agentId || !authHeaders) {
       setSecurityStatus({ kind: "error", text: "Sign in first." });
       return null;
@@ -1437,7 +1697,7 @@ function RunMyAgentModalContent({
       setSecurityStatus({ kind: "error", text: "Failed to load encrypted ciphertext." });
       return null;
     }
-  }, [agentId, authHeaders, handleSessionAuthFailure, readError, token]);
+  }, [agentId, authHeaders, handleSessionAuthFailure, isSandbox, readError, token]);
 
   const promptSecurityPassword = useCallback(
     (purpose: "decrypt" | "encrypt") => {
@@ -1552,7 +1812,7 @@ function RunMyAgentModalContent({
   );
 
   const loadAndDecryptSecurityFromDb = useCallback(async (password: string) => {
-    if (!token || !agentId || !authHeaders) {
+    if (!isSandbox && (!token || !agentId || !authHeaders)) {
       setSecurityStatus({ kind: "error", text: "Sign in first." });
       return false;
     }
@@ -1582,13 +1842,14 @@ function RunMyAgentModalContent({
     agentId,
     authHeaders,
     decryptEncryptedSecurity,
+    isSandbox,
     loadGeneralFromDb,
     loadEncryptedSecurity,
     token,
   ]);
 
   const encryptAndSaveSecurity = useCallback(async (password: string) => {
-    if (!token || !agentId || !authHeaders) {
+    if (!isSandbox && (!token || !agentId || !authHeaders)) {
       setSecurityStatus({ kind: "error", text: "Sign in first." });
       return false;
     }
@@ -1612,6 +1873,22 @@ function RunMyAgentModalContent({
         normalizedPassword,
         securityDraft
       );
+      if (isSandbox) {
+        if (typeof window !== "undefined") {
+          try {
+            window.localStorage.setItem(
+              sandboxSecurityStorageKey(agentId),
+              JSON.stringify(encrypted)
+            );
+          } catch {
+            // noop
+          }
+        }
+        setEncryptedSecurity(encrypted);
+        setHasSavedSecurityToDb(true);
+        setSecurityStatus({ kind: "success", text: "Encrypted ciphertext saved." });
+        return true;
+      }
       const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}/secrets`, {
         method: "POST",
         headers: {
@@ -1644,6 +1921,7 @@ function RunMyAgentModalContent({
     agentId,
     authHeaders,
     handleSessionAuthFailure,
+    isSandbox,
     readError,
     saveGeneral,
     securityDraft,
@@ -1693,6 +1971,20 @@ function RunMyAgentModalContent({
       return;
     }
 
+    if (isSandbox) {
+      if (alchemyApiKey.length < 8) {
+        setTested((prev) => ({ ...prev, alchemyApiKey: false }));
+        setSecurityStatus({ kind: "error", text: "Alchemy API key test failed." });
+        return;
+      }
+      setTested((prev) => ({ ...prev, alchemyApiKey: true }));
+      setSecurityStatus({
+        kind: "success",
+        text: "Alchemy key test passed (chainId: 11155111).",
+      });
+      return;
+    }
+
     try {
       const provider = new JsonRpcProvider(
         `https://eth-sepolia.g.alchemy.com/v2/${alchemyApiKey}`
@@ -1707,12 +1999,21 @@ function RunMyAgentModalContent({
       setTested((prev) => ({ ...prev, alchemyApiKey: false }));
       setSecurityStatus({ kind: "error", text: "Alchemy API key test failed." });
     }
-  }, [securityDraft.alchemyApiKey]);
+  }, [isSandbox, securityDraft.alchemyApiKey]);
 
   const testGithubIssueToken = useCallback(async () => {
     const githubIssueToken = securityDraft.githubIssueToken.trim();
     if (!githubIssueToken) {
       setSecurityStatus({ kind: "error", text: "GitHub personal access token is missing." });
+      return;
+    }
+
+    if (isSandbox) {
+      if (githubIssueToken.length < 10) {
+        setSecurityStatus({ kind: "error", text: "GitHub token test failed." });
+        return;
+      }
+      setSecurityStatus({ kind: "success", text: "GitHub token test passed." });
       return;
     }
 
@@ -1743,7 +2044,7 @@ function RunMyAgentModalContent({
     } catch {
       setSecurityStatus({ kind: "error", text: "GitHub token test failed." });
     }
-  }, [securityDraft.githubIssueToken]);
+  }, [isSandbox, securityDraft.githubIssueToken]);
 
   const fetchRunnerStatus = useCallback(
     async (options?: {
@@ -2017,6 +2318,14 @@ function RunMyAgentModalContent({
 
   const stopRunnerLauncher = useCallback(async () => {
     const launcherPort = String(runnerLauncherPort || "").trim();
+    if (isSandbox) {
+      setRunnerRunning(false);
+      setRunnerStatus({
+        kind: "success",
+        text: `Runner stopped on localhost:${launcherPort || DEFAULT_RUNNER_LAUNCHER_PORT}.`,
+      });
+      return;
+    }
     const launcherSecret = runnerLauncherSecret.trim();
     if (!launcherPort) {
       setRunnerStatus({ kind: "error", text: "Runner launcher port is required." });
@@ -2058,7 +2367,14 @@ function RunMyAgentModalContent({
     } finally {
       setStopRunnerBusy(false);
     }
-  }, [agentId, fetchLocalLauncher, readError, runnerLauncherPort, runnerLauncherSecret]);
+  }, [
+    agentId,
+    fetchLocalLauncher,
+    isSandbox,
+    readError,
+    runnerLauncherPort,
+    runnerLauncherSecret,
+  ]);
 
   const handleCheckRunnerStatus = useCallback(async () => {
     await fetchRunnerStatus({ includeAgentReport: true });
@@ -2082,7 +2398,7 @@ function RunMyAgentModalContent({
   }, [runnerLauncherSecret]);
 
   const startRunnerLauncher = useCallback(async (secretInput?: string) => {
-    if (!token || !authHeaders) {
+    if (!isSandbox && (!token || !authHeaders)) {
       setRunnerStatus({ kind: "error", text: "Sign in first." });
       return;
     }
@@ -2093,7 +2409,7 @@ function RunMyAgentModalContent({
       return;
     }
     const launcherSecret = String(secretInput ?? runnerLauncherSecret).trim();
-    if (!launcherSecret) {
+    if (!isSandbox && !launcherSecret) {
       setRunnerStatus({ kind: "error", text: "Runner launcher secret is required." });
       return;
     }
@@ -2132,6 +2448,21 @@ function RunMyAgentModalContent({
 
     if (!encodedInput) {
       setRunnerStatus({ kind: "error", text: "Failed to encode launcher input payload." });
+      return;
+    }
+
+    if (isSandbox) {
+      setStartRunnerBusy(true);
+      try {
+        saveRunnerConfig(launcherSecret || "tutorial-runner-secret");
+        setRunnerRunning(true);
+        setRunnerStatus({
+          kind: "success",
+          text: `Runner started on localhost:${launcherPort} (tutorial sandbox).`,
+        });
+      } finally {
+        setStartRunnerBusy(false);
+      }
       return;
     }
 
@@ -2243,6 +2574,7 @@ function RunMyAgentModalContent({
     runnerDraft.supplementaryPromptProfile,
     runnerLauncherPort,
     runnerLauncherSecret,
+    isSandbox,
     saveRunnerConfig,
     securityDraft.alchemyApiKey,
     securityDraft.executionWalletPrivateKey,
@@ -2252,7 +2584,7 @@ function RunMyAgentModalContent({
   ]);
 
   const prepareFromSource = useCallback(async (password: string) => {
-    if (!token || !authHeaders) {
+    if (!isSandbox && (!token || !authHeaders)) {
       setPairsStatus({ kind: "error", text: "Sign in first." });
       return false;
     }
@@ -2275,6 +2607,131 @@ function RunMyAgentModalContent({
     });
 
     try {
+      if (isSandbox) {
+        const sourceConfig = sandboxSourceById.get(sourceId) || null;
+        let sourceGeneral: GeneralPayload = {
+          agent: {
+            id: sourceId,
+            handle: sourcePair?.handle || "Alpha",
+            ownerWallet: sourcePair?.ownerWallet || null,
+            llmProvider: sourcePair?.llmProvider || "GEMINI",
+            llmModel: sourcePair?.llmModel || defaultModelByProvider("GEMINI"),
+            llmBaseUrl: null,
+          },
+          community: sourcePair
+            ? {
+                id: sourcePair.community.id,
+                slug: sourcePair.community.slug,
+                name: sourcePair.community.name,
+                status: sourcePair.community.status,
+              }
+            : null,
+        };
+        if (typeof window !== "undefined") {
+          try {
+            const rawGeneral = window.localStorage.getItem(
+              sandboxGeneralStorageKey(sourceId)
+            );
+            if (rawGeneral) {
+              const parsed = JSON.parse(rawGeneral) as Partial<GeneralPayload["agent"]>;
+              sourceGeneral = {
+                ...sourceGeneral,
+                agent: {
+                  ...sourceGeneral.agent,
+                  handle: String(parsed.handle || sourceGeneral.agent.handle || "").trim(),
+                  ownerWallet:
+                    String(
+                      parsed.ownerWallet || sourceGeneral.agent.ownerWallet || ""
+                    ).trim() || null,
+                  llmProvider: String(
+                    parsed.llmProvider || sourceGeneral.agent.llmProvider || ""
+                  ).trim(),
+                  llmModel: String(
+                    parsed.llmModel || sourceGeneral.agent.llmModel || ""
+                  ).trim(),
+                  llmBaseUrl:
+                    typeof parsed.llmBaseUrl === "string" ? parsed.llmBaseUrl : null,
+                },
+              };
+            }
+          } catch {
+            // noop
+          }
+        }
+        if (sourceConfig?.llmBaseUrl && !sourceGeneral.agent.llmBaseUrl) {
+          sourceGeneral.agent.llmBaseUrl = sourceConfig.llmBaseUrl;
+        }
+        let sourceEncrypted: EncryptedSecurity | null = null;
+        if (typeof window !== "undefined") {
+          try {
+            const rawSecurity = window.localStorage.getItem(
+              sandboxSecurityStorageKey(sourceId)
+            );
+            const parsedSecurity = rawSecurity ? JSON.parse(rawSecurity) : null;
+            sourceEncrypted = normalizeEncryptedSecurity(parsedSecurity);
+          } catch {
+            sourceEncrypted = null;
+          }
+        }
+
+        const currentHandle = String(
+          agentHandle || general?.agent?.handle || currentPair?.handle || ""
+        ).trim();
+        setLlmHandleName(currentHandle);
+        setLlmProvider(sourceGeneral.agent.llmProvider || "");
+        setLlmModel(sourceGeneral.agent.llmModel || defaultModelByProvider("GEMINI"));
+        setLiteLlmBaseUrl(sourceGeneral.agent.llmBaseUrl || "");
+        setEncryptedSecurity(sourceEncrypted);
+        setSecurityDraft({
+          llmApiKey: "",
+          executionWalletPrivateKey: "",
+          alchemyApiKey: "",
+          githubIssueToken: "",
+        });
+        setHasSavedSecurityToDb(false);
+        setTested({
+          llmApiKey: false,
+          executionWalletPrivateKey: false,
+          alchemyApiKey: false,
+          runnerLauncher: false,
+        });
+        if (!sourceEncrypted) {
+          setPairsStatus({
+            kind: "error",
+            text: `No encrypted confidential keys were found in ${sourceName}.`,
+          });
+          return false;
+        }
+        const normalizedPassword = password.trim();
+        if (!normalizedPassword) {
+          setPairsStatus({
+            kind: "error",
+            text: "Security password is required for import and decrypt.",
+          });
+          setSecurityStatus({
+            kind: "error",
+            text: "Security password is required to decrypt.",
+          });
+          return false;
+        }
+        const decrypted = await decryptEncryptedSecurity(sourceEncrypted, normalizedPassword, {
+          fallbackLegacySlug: sourcePair?.community?.slug || "",
+          successMessage: `Imported and decrypted confidential keys from ${sourceName}.`,
+        });
+        if (!decrypted) {
+          setPairsStatus({
+            kind: "error",
+            text: `Failed to decrypt confidential keys from ${sourceName}.`,
+          });
+          return false;
+        }
+        setPairsStatus({
+          kind: "success",
+          text: `Configuration imported from ${sourceName}, including confidential key decryption.`,
+        });
+        return true;
+      }
+
       const [sourceGeneralResponse, sourceSecurityResponse] = await Promise.all([
         fetch(`/api/agents/${encodeURIComponent(sourceId)}/general`, {
           headers: authHeaders,
@@ -2374,7 +2831,9 @@ function RunMyAgentModalContent({
     decryptEncryptedSecurity,
     general?.agent?.handle,
     importSourceAgentId,
+    isSandbox,
     readError,
+    sandboxSourceById,
     sourcePairs,
     token,
   ]);
@@ -2477,7 +2936,7 @@ function RunMyAgentModalContent({
 
   const startButtonDisabled =
     screen !== "config" ||
-    !token ||
+    !hasTokenForModal ||
     startRunnerBusy ||
     stopRunnerBusy ||
     startButtonMissing.length > 0;
@@ -2574,12 +3033,15 @@ function RunMyAgentModalContent({
   }, [sourcePairs]);
 
   useEffect(() => {
+    if (isSandbox) {
+      return;
+    }
     if (!runnerLauncherPort.trim() || !runnerLauncherSecret.trim()) {
       setRunnerRunning(false);
       return;
     }
     void fetchRunnerStatus({ preferredPort: runnerLauncherPort, silent: true });
-  }, [fetchRunnerStatus, runnerLauncherPort, runnerLauncherSecret]);
+  }, [fetchRunnerStatus, isSandbox, runnerLauncherPort, runnerLauncherSecret]);
 
   useEffect(() => {
     if (runnerGuideRestoreCheckedRef.current) return;
@@ -2611,11 +3073,11 @@ function RunMyAgentModalContent({
             </p>
           </div>
 
-          {!sessionReady ? (
+          {!isSessionReadyForModal ? (
             <div className="agent-run-auth-callout">
               <p className="meta-text">Checking owner session...</p>
             </div>
-          ) : !token ? (
+          ) : !hasTokenForModal ? (
             <div className="agent-run-auth-callout">
               <p className="meta-text">
                 {connectedWallet
@@ -2988,7 +3450,7 @@ function RunMyAgentModalContent({
                     type="button"
                     className="button button-secondary"
                     onClick={() => void handleLoadAndDecryptSecurityFromDb()}
-                    disabled={securityBusy || generalBusy}
+                    disabled={securityBusy || generalBusy || isSandbox}
                   >
                     Load from DB & Decrypt
                   </button>
@@ -3207,6 +3669,10 @@ function RunMyAgentModalContent({
               onClick={() => {
                 if (runnerRunning) {
                   void stopRunnerLauncher();
+                  return;
+                }
+                if (isSandbox) {
+                  void startRunnerLauncher();
                   return;
                 }
                 const runnerSecret = promptRunnerLauncherSecret();
