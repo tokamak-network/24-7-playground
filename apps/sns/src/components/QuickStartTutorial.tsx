@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
@@ -652,6 +652,12 @@ export function QuickStartTutorial() {
       setSearchingTarget(false);
       return;
     }
+    if (currentStep.disableSpotlight) {
+      setTargetElement(null);
+      setTargetRect(null);
+      setSearchingTarget(false);
+      return;
+    }
     if (!isOnStepPath) {
       setTargetElement(null);
       setTargetRect(null);
@@ -741,8 +747,6 @@ export function QuickStartTutorial() {
       observer.observe(observationRoot, {
         childList: true,
         subtree: true,
-        attributes: true,
-        attributeFilter: ["class", "style", "data-tour", "data-tour-active"],
       });
     }
 
@@ -756,7 +760,13 @@ export function QuickStartTutorial() {
         window.cancelAnimationFrame(locateRafId);
       }
     };
-  }, [currentStep.selector, isOnStepPath, isTutorialActive, targetElement]);
+  }, [
+    currentStep.disableSpotlight,
+    currentStep.selector,
+    isOnStepPath,
+    isTutorialActive,
+    targetElement,
+  ]);
 
   useEffect(() => {
     if (!targetElement) {
@@ -1398,6 +1408,22 @@ export function QuickStartTutorial() {
       setIsRunnerInstallGuideModalOpen(false);
       return;
     }
+    if (stepIndex < 3) {
+      setHasAgentRunButton(false);
+      setIsAgentRunModalOpen(false);
+      setIsAgentFreshSetupSelected(false);
+      setIsAgentConfigReady(false);
+      setIsAgentConfidentialTabActive(false);
+      setIsAgentLlmKeyReady(false);
+      setIsAgentExecutionKeyReady(false);
+      setIsAgentAlchemyKeyReady(false);
+      setIsAgentEncryptedSaved(false);
+      setIsAgentRunnerConfigTabActive(false);
+      setIsAgentRunnerConfigFieldsReady(false);
+      setIsAgentLauncherDetectedByButton(false);
+      setIsRunnerInstallGuideModalOpen(false);
+      return;
+    }
     if (!isOnStepPath) {
       return;
     }
@@ -1505,7 +1531,15 @@ export function QuickStartTutorial() {
 
     detectAgentState();
 
-    const handleInput = () => {
+    const handleInput = (event: Event) => {
+      const target = event.target;
+      if (
+        target instanceof Element &&
+        !target.closest('[data-tour="agent-run-modal"]') &&
+        !target.closest('[data-tour="agent-runner-install-guide-modal"]')
+      ) {
+        return;
+      }
       scheduleDetectAgentState();
     };
 
@@ -1525,7 +1559,13 @@ export function QuickStartTutorial() {
           setHasOpenedRunnerInstallGuide(true);
         }
       }
-      scheduleDetectAgentState();
+      if (
+        target instanceof Element &&
+        (target.closest('[data-tour^="agent-"]') ||
+          target.closest(".runner-guide-modal"))
+      ) {
+        scheduleDetectAgentState();
+      }
     };
 
     document.addEventListener("input", handleInput, true);
@@ -1535,13 +1575,18 @@ export function QuickStartTutorial() {
       scheduleDetectAgentState();
     });
     const modalObservationRoot = document.querySelector('[data-tour="agent-run-modal"]');
+    const screenContentRoot = document.querySelector(".screen-content");
     const observationRoot =
-      modalObservationRoot instanceof HTMLElement ? modalObservationRoot : document.body;
+      modalObservationRoot instanceof HTMLElement
+        ? modalObservationRoot
+        : screenContentRoot instanceof HTMLElement
+          ? screenContentRoot
+          : document.body;
     observer.observe(observationRoot, {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["class", "data-tour-active", "data-tour-passed"],
+      attributeFilter: ["data-tour-active", "data-tour-passed"],
     });
 
     return () => {
@@ -1874,7 +1919,7 @@ export function QuickStartTutorial() {
     targetElement,
   ]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const autoAdvanceAllowedStep = isDappTutorial
       ? [0, 1, 2, 3, 4, 5].includes(stepIndex)
       : isAgentTutorial
