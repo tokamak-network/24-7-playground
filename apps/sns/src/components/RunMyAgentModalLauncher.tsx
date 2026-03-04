@@ -812,7 +812,14 @@ function RunMyAgentModalContent({
   agentId,
   agentHandle,
 }: RunMyAgentModalContentProps) {
-  const { connectedWallet, signIn, status: ownerSessionStatus, token, sessionReady } =
+  const {
+    connectedWallet,
+    signIn,
+    signOut,
+    status: ownerSessionStatus,
+    token,
+    sessionReady,
+  } =
     useOwnerSession();
 
   const [screen, setScreen] = useState<"choice" | "config">("choice");
@@ -931,6 +938,26 @@ function RunMyAgentModalContent({
     return readStatusError(text);
   }, []);
 
+  const handleSessionAuthFailure = useCallback(
+    (response: Response, message: string) => {
+      if (response.status !== 401) {
+        return false;
+      }
+      const normalized = String(message || "").toLowerCase();
+      if (!normalized.includes("session")) {
+        return false;
+      }
+      signOut();
+      setScreen("choice");
+      setPairsStatus(null);
+      setGeneralStatus(null);
+      setSecurityStatus(null);
+      setRunnerStatus(null);
+      return true;
+    },
+    [signOut]
+  );
+
   const fetchLocalLauncher = useCallback(
     (input: RequestInfo | URL, init?: RequestInit) => {
       return fetch(input, withLocalLauncherRequestOptions(init) as RequestInit);
@@ -1012,8 +1039,13 @@ function RunMyAgentModalContent({
         headers: authHeaders,
       });
       if (!response.ok) {
+        const message = await readError(response);
+        if (handleSessionAuthFailure(response, message)) {
+          setPairs([]);
+          return;
+        }
         setPairs([]);
-        setPairsStatus({ kind: "error", text: await readError(response) });
+        setPairsStatus({ kind: "error", text: message });
         return;
       }
 
@@ -1031,7 +1063,7 @@ function RunMyAgentModalContent({
     } finally {
       setPairsBusy(false);
     }
-  }, [authHeaders, readError, sessionReady, token]);
+  }, [authHeaders, handleSessionAuthFailure, readError, sessionReady, token]);
 
   const loadCurrentGeneral = useCallback(async () => {
     if (!token || !agentId || !authHeaders) return;
@@ -1304,7 +1336,11 @@ function RunMyAgentModalContent({
         }),
       });
       if (!response.ok) {
-        setGeneralStatus({ kind: "error", text: await readError(response) });
+        const message = await readError(response);
+        if (handleSessionAuthFailure(response, message)) {
+          return false;
+        }
+        setGeneralStatus({ kind: "error", text: message });
         return false;
       }
       const data = (await response.json()) as GeneralPayload;
@@ -1324,6 +1360,7 @@ function RunMyAgentModalContent({
     llmModel,
     llmProvider,
     liteLlmBaseUrl,
+    handleSessionAuthFailure,
     readError,
     token,
   ]);
@@ -1341,7 +1378,11 @@ function RunMyAgentModalContent({
         headers: authHeaders,
       });
       if (!response.ok) {
-        setGeneralStatus({ kind: "error", text: await readError(response) });
+        const message = await readError(response);
+        if (handleSessionAuthFailure(response, message)) {
+          return false;
+        }
+        setGeneralStatus({ kind: "error", text: message });
         return false;
       }
       const data = (await response.json()) as GeneralPayload;
@@ -1358,7 +1399,7 @@ function RunMyAgentModalContent({
     } finally {
       setGeneralBusy(false);
     }
-  }, [agentId, authHeaders, readError, token]);
+  }, [agentId, authHeaders, handleSessionAuthFailure, readError, token]);
 
   const loadEncryptedSecurity = useCallback(async () => {
     if (!token || !agentId || !authHeaders) {
@@ -1371,7 +1412,12 @@ function RunMyAgentModalContent({
         headers: authHeaders,
       });
       if (!response.ok) {
-        setSecurityStatus({ kind: "error", text: await readError(response) });
+        const message = await readError(response);
+        if (handleSessionAuthFailure(response, message)) {
+          setEncryptedSecurity(null);
+          return null;
+        }
+        setSecurityStatus({ kind: "error", text: message });
         setEncryptedSecurity(null);
         return null;
       }
@@ -1391,7 +1437,7 @@ function RunMyAgentModalContent({
       setSecurityStatus({ kind: "error", text: "Failed to load encrypted ciphertext." });
       return null;
     }
-  }, [agentId, authHeaders, readError, token]);
+  }, [agentId, authHeaders, handleSessionAuthFailure, readError, token]);
 
   const promptSecurityPassword = useCallback(
     (purpose: "decrypt" | "encrypt") => {
@@ -1575,7 +1621,11 @@ function RunMyAgentModalContent({
         body: JSON.stringify({ securitySensitive: encrypted }),
       });
       if (!response.ok) {
-        setSecurityStatus({ kind: "error", text: await readError(response) });
+        const message = await readError(response);
+        if (handleSessionAuthFailure(response, message)) {
+          return false;
+        }
+        setSecurityStatus({ kind: "error", text: message });
         return false;
       }
       setEncryptedSecurity(encrypted);
@@ -1593,6 +1643,7 @@ function RunMyAgentModalContent({
     acquireSecuritySignature,
     agentId,
     authHeaders,
+    handleSessionAuthFailure,
     readError,
     saveGeneral,
     securityDraft,
@@ -2122,7 +2173,11 @@ function RunMyAgentModalContent({
         }
       );
       if (!credentialResponse.ok) {
-        setRunnerStatus({ kind: "error", text: await readError(credentialResponse) });
+        const message = await readError(credentialResponse);
+        if (handleSessionAuthFailure(credentialResponse, message)) {
+          return;
+        }
+        setRunnerStatus({ kind: "error", text: message });
         return;
       }
       const credentialData = await credentialResponse.json().catch(() => ({}));
@@ -2178,6 +2233,7 @@ function RunMyAgentModalContent({
     authHeaders,
     fetchLocalLauncher,
     fetchRunnerStatus,
+    handleSessionAuthFailure,
     liteLlmBaseUrl,
     llmProvider,
     readError,
