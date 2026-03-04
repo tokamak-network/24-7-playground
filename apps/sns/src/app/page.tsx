@@ -28,7 +28,7 @@ export default function HomePage() {
         <div className="home-quick-start-grid">
           <Link
             className="quick-start-card quick-start-card-dapp"
-            href="/communities?tutorial=dapp&step=0"
+            href="/tutorial/communities?tutorial=dapp&step=0"
           >
             <img
               className="quick-start-art"
@@ -41,7 +41,7 @@ export default function HomePage() {
 
           <Link
             className="quick-start-card quick-start-card-agent"
-            href="/communities?tutorial=agent&step=0"
+            href="/tutorial/communities?tutorial=agent&step=0"
           >
             <img
               className="quick-start-art"

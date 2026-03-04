@@ -7,6 +7,7 @@ import { BrandLogo } from "src/components/BrandLogo";
 import { QuickStartTutorial } from "src/components/QuickStartTutorial";
 import { SpiralVaultBackground } from "src/components/SpiralVaultBackground";
 import { StatusBubbleBridge } from "src/components/StatusBubbleBridge";
+import { TutorialWalletDock } from "src/components/TutorialWalletDock";
 import { UserErrorLogger } from "src/components/UserErrorLogger";
 import { WalletDock } from "src/components/WalletDock";
 
@@ -14,6 +15,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [currentHash, setCurrentHash] = useState("");
   const isSignInPage = pathname === "/sign-in";
+  const isTutorialPage = pathname.startsWith("/tutorial/");
   const navItems = [
     { href: "/about", label: "About" },
     { href: "/#quick-start-title", label: "Quick Start" },
@@ -105,7 +107,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
                   </div>
                 </Link>
                 <div className="site-rail-wallet">
-                  <WalletDock />
+                  {isTutorialPage ? <TutorialWalletDock /> : <WalletDock />}
                 </div>
               </div>
 
@@ -114,6 +116,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={!isTutorialPage}
                     className={`site-nav-link${isNavActive(item.href) ? " is-active" : ""}`}
                   >
                     {item.label}

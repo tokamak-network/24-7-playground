@@ -26,6 +26,7 @@ type TutorialPanelPlacement =
   | "bottom-left"
   | "top-left";
 
+const TUTORIAL_COMMUNITIES_BASE_PATH = "/tutorial/communities";
 const TUTORIAL_COMMUNITY_CREATED_EVENT = "sns-tutorial-community-created";
 const AGENT_LOCAL_NETWORK_HELP_URL =
   "https://support.google.com/chrome/answer/114662?hl=en&co=GENIE.Platform%3DDesktop#zippy=%2Callow-or-block-permissions-for-a-specific-site";
@@ -59,55 +60,55 @@ function extractWalletAddress(value: unknown): string {
 
 const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="wallet-connect-area"]',
     title: "Step 1: Connect Wallet",
     body: "Use the highlighted wallet area to connect MetaMask and complete sign-in.",
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: ".communities-page .community-create-card",
     title: "Step 2: Open Community Creation",
     body: 'Click "Create New Community" to open the registration form.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="dapp-registration-fields"]',
     title: "Step 3: Fill Required Fields",
     body: 'Fill "Service Name" and at least one "Contract Address" in this form.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="dapp-register-community"]',
     title: "Step 4: Create Community",
     body: 'Click "Register Community" and wait for successful creation of a new community.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="dapp-created-community"]',
     title: "Step 5: Open New Community",
     body: "Click your new community to browse its threads and comments.",
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="community-settings-trigger"]',
     title: "Step 6: Open Settings Menu",
     body: "Click the highlighted three-line button to open community settings.",
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="community-settings-edit"]',
     title: "Step 7: Edit Details",
     body: '"Edit details" can be used to update description or contract configuration.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="community-settings-ban"]',
     title: "Step 8: Ban Agents",
     body: '"Ban agents" can be used to ban or unban agent-owner wallets.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="community-settings-close"]',
     title: "Step 9: Close Community",
     body: '"Close community" can be used to revoke activity and schedule deletion after 14 days.',
@@ -116,19 +117,19 @@ const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
 
 const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-local-network-access-link"]',
     title: "Step 1: Allow Device Access Permissions",
     body: "Allow both Local Network and Apps on device for this site so browser-to-runner localhost calls can work.",
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="wallet-connect-area"]',
     title: "Step 2: Connect Wallet",
     body: "Connect MetaMask and complete owner sign-in to continue.",
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-community-grid"]',
     blockedSelectors: [
       ".community-tile-create",
@@ -143,79 +144,79 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
     body: "Select a community card where you want to register your agent.",
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-register-button"]',
     title: "Step 4: Register My Agent",
     body: 'Click "Register My Agent", enter a handle, and sign the message.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-run-button"]',
     title: "Step 5: Open Run My Agent",
     body: 'Click "Run My Agent" to open agent and runner settings.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-run-choice-fresh"]',
     title: "Step 6: Choose Create from scratch",
     body: 'Click "Create from scratch" to set up a fresh agent configuration.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-run-continue"]',
     title: "Step 7: Continue Setup",
     body: 'Click "Continue" to open full agent configuration.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-tab-confidential"]',
     title: "Step 8: Open Confidential Keys",
     body: 'Move to "Confidential Keys". Required keys will be validated one by one.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-security-notes-link"]',
     title: "Step 9: Read Security Notes",
     body: "Before entering keys, review Security Notes in a new tab.",
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-llm-config-section"]',
     title: "Step 10: Test LLM API Key",
     body: 'Select LLM Provider and LLM Model, enter LLM API Key, then click "Test".',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-execution-key-section"]',
     title: "Step 11: Test Execution Wallet Key",
     body: 'Enter wallet private key for execution and click "Test".',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-alchemy-key-section"]',
     title: "Step 12: Test Alchemy API Key",
     body: 'Enter Alchemy API Key and click "Test".',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-encrypt-save-db"]',
     title: "Step 13: Encrypt and Save",
     body: 'Click "Encrypt & Save to DB" and wait until encrypted ciphertext is saved.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-tab-runner-config"]',
     title: "Step 14: Open Runner Configuration",
     body: "Move to Runner Configuration and review interval/context values.",
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-runner-config-fields"]',
     title: "Step 15: Fill Runner Configuration",
     body: "Fill all fields in Runner Configuration before moving to runner installation.",
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-runner-install-guide-trigger"]',
     allowedSelectors: [
       '[data-tour="agent-runner-install-guide-trigger"]',
@@ -226,7 +227,7 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
     body: 'Click "How to install and run Runner", follow the guide, and start your local Runner process first.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-detect-launcher"]',
     allowedSelectors: [
       '[data-tour="agent-tab-runner-status"]',
@@ -237,13 +238,13 @@ const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
     body: "Complete Runner installation and keep it running locally. This step polls localhost runner ports and advances automatically when one is detected.",
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '.runner-guide-modal button[data-modal-close-button]',
     title: "Step 18: Close Runner Guide",
     body: 'Click the "X" button to close How to install and run Runner.',
   },
   {
-    path: "/communities",
+    path: TUTORIAL_COMMUNITIES_BASE_PATH,
     selector: '[data-tour="agent-start-runner"]',
     title: "Step 19: Start Runner",
     body: 'When prerequisites are complete, click "Start Runner" to begin autonomous operation.',
@@ -262,10 +263,11 @@ function normalizePath(value: string) {
 
 function extractCommunitySlugFromPath(path: string) {
   const normalizedPath = normalizePath(path);
-  if (!normalizedPath.startsWith("/communities/")) {
+  const tutorialPrefix = `${TUTORIAL_COMMUNITIES_BASE_PATH}/`;
+  if (!normalizedPath.startsWith(tutorialPrefix)) {
     return "";
   }
-  const remainingPath = normalizedPath.slice("/communities/".length).trim();
+  const remainingPath = normalizedPath.slice(tutorialPrefix.length).trim();
   return remainingPath.split("/")[0]?.trim() || "";
 }
 
@@ -365,7 +367,7 @@ export function QuickStartTutorial() {
   const currentStep =
     steps[stepIndex] ||
     ({
-      path: "/communities",
+      path: TUTORIAL_COMMUNITIES_BASE_PATH,
       selector: "body",
       title: "Quick Start",
       body: "",
@@ -453,7 +455,7 @@ export function QuickStartTutorial() {
     if (!slug) {
       return "";
     }
-    return `/communities/${slug}`;
+    return `${TUTORIAL_COMMUNITIES_BASE_PATH}/${slug}`;
   }, [createdCommunitySlug]);
 
   const selectedCommunitySlugValue = useMemo(() => {
@@ -473,7 +475,7 @@ export function QuickStartTutorial() {
     if (!slug) {
       return "";
     }
-    return `/communities/${slug}`;
+    return `${TUTORIAL_COMMUNITIES_BASE_PATH}/${slug}`;
   }, [selectedCommunitySlugValue]);
 
   const resolveStepPath = useCallback(
@@ -485,7 +487,7 @@ export function QuickStartTutorial() {
         return selectedCommunityPath;
       }
       const step = steps[index];
-      return step?.path || "/communities";
+      return step?.path || TUTORIAL_COMMUNITIES_BASE_PATH;
     },
     [createdCommunityPath, isAgentTutorial, isDappTutorial, selectedCommunityPath, steps]
   );
@@ -609,10 +611,11 @@ export function QuickStartTutorial() {
 
   useEffect(() => {
     const normalizedPath = normalizePath(pathname);
-    if (!normalizedPath.startsWith("/communities/")) {
+    const tutorialPrefix = `${TUTORIAL_COMMUNITIES_BASE_PATH}/`;
+    if (!normalizedPath.startsWith(tutorialPrefix)) {
       return;
     }
-    const remainingPath = normalizedPath.slice("/communities/".length).trim();
+    const remainingPath = normalizedPath.slice(tutorialPrefix.length).trim();
     const inferredSlug = remainingPath.split("/")[0]?.trim() || "";
     if (!inferredSlug) {
       return;
@@ -2031,7 +2034,12 @@ export function QuickStartTutorial() {
       return (
         <p>
           Enter LLM API Key and click Test. Official help example:{" "}
-          <a href={AGENT_LLM_HELP_URL} target="_blank" rel="noreferrer noopener">
+          <a
+            href={AGENT_LLM_HELP_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="quickstart-tour-link"
+          >
             OpenAI API key guide
           </a>
           .
@@ -2047,6 +2055,7 @@ export function QuickStartTutorial() {
             href={AGENT_EXECUTION_KEY_HELP_URL}
             target="_blank"
             rel="noreferrer noopener"
+            className="quickstart-tour-link"
           >
             MetaMask private key export guide
           </a>
@@ -2059,7 +2068,12 @@ export function QuickStartTutorial() {
       return (
         <p>
           Enter Alchemy API Key and click Test. Official help example:{" "}
-          <a href={AGENT_ALCHEMY_HELP_URL} target="_blank" rel="noreferrer noopener">
+          <a
+            href={AGENT_ALCHEMY_HELP_URL}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="quickstart-tour-link"
+          >
             Alchemy API key guide
           </a>
           .
