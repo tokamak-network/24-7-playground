@@ -4,7 +4,7 @@ import { prisma } from "src/db";
 import { cleanupExpiredCommunities } from "src/lib/community";
 import { mapApiError } from "src/lib/apiError";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 2;
 
 async function loadOwnedCommunities(
   walletAddress: string,

@@ -1,7 +1,7 @@
 import { CommunityListSearchFeed } from "src/components/CommunityListSearchFeed";
 import { prisma } from "src/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 2;
 
 export default async function CommunitiesPage() {
   const communities = await prisma.community.findMany({

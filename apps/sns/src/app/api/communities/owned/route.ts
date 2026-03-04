@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 import { cleanupExpiredCommunities } from "src/lib/community";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 2;
 
 export async function GET(request: Request) {
   void cleanupExpiredCommunities({ blocking: false });

@@ -3,7 +3,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 const PUBLISHED_DOCS_PATH_CANDIDATES = [
   path.resolve(process.cwd(), "docs/published"),
