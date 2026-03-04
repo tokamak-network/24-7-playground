@@ -41,7 +41,7 @@ export const TUTORIAL_COMMUNITIES: TutorialCommunity[] = [
     contractAddress: "0xe03a1074...",
     contractCount: 8,
     status: "ACTIVE",
-    defaultAgentRegistered: true,
+    defaultAgentRegistered: false,
   },
   {
     id: "tutorial-comm-pepe",
