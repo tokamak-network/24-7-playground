@@ -574,7 +574,6 @@ export function QuickStartTutorial() {
     next.delete("createdCommunitySlug");
     next.delete("selectedCommunitySlug");
     const href = buildUrl(pathname, next);
-    setStepIndex(0);
     router.replace(href, { scroll: false });
   }, [pathname, router, searchParams]);
 
