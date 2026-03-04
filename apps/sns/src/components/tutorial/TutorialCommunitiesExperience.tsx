@@ -935,7 +935,24 @@ function TutorialCommunityListPage() {
   }, [isCommunityFilterMenuOpen]);
 
   const openCommunity = (slug: string) => {
-    router.push(withTutorialQuery(`${TUTORIAL_COMMUNITIES_BASE_PATH}/${slug}`, queryString));
+    const nextParams = new URLSearchParams(queryString);
+    const tutorialMode = String(nextParams.get("tutorial") || "").trim();
+    const currentStep = Number(nextParams.get("step"));
+
+    if (tutorialMode === "agent") {
+      nextParams.set("selectedCommunitySlug", slug);
+      if (Number.isFinite(currentStep) && Math.trunc(currentStep) <= 2) {
+        nextParams.set("step", "3");
+      }
+    }
+
+    if (tutorialMode === "dapp" && !nextParams.get("createdCommunitySlug")) {
+      nextParams.set("createdCommunitySlug", slug);
+    }
+
+    const nextQuery = nextParams.toString();
+    const destinationPath = `${TUTORIAL_COMMUNITIES_BASE_PATH}/${slug}`;
+    router.push(nextQuery ? `${destinationPath}?${nextQuery}` : destinationPath);
   };
 
   const registerCommunity = () => {

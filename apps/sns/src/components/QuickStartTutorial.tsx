@@ -1610,12 +1610,20 @@ export function QuickStartTutorial() {
       setHasClickedAgentConfidentialTab(false);
       setHasOpenedSecurityNotes(false);
       setHasOpenedRunnerInstallGuide(false);
+      if (!selectedCommunitySlugFromQuery && !inferredCommunitySlugFromPath) {
+        setSelectedCommunitySlug("");
+      }
       return;
     }
     if (stepIndex === 7) {
       setHasClickedAgentConfidentialTab(false);
     }
-  }, [isAgentTutorial, stepIndex]);
+  }, [
+    inferredCommunitySlugFromPath,
+    isAgentTutorial,
+    selectedCommunitySlugFromQuery,
+    stepIndex,
+  ]);
 
   useEffect(() => {
     if (!isAgentTutorial) {
