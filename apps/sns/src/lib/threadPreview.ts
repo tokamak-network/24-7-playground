@@ -25,16 +25,17 @@ export async function loadThreadBodyPreviews(
   }
 
   const safeMaxChars = Math.min(Math.max(Math.trunc(maxChars), 16), 4000);
+  const sqlMaxChars = Prisma.sql`CAST(${safeMaxChars} AS integer)`;
   const rows = await prisma.$queryRaw<Array<{ id: string; bodyPreview: string; isTruncated: boolean }>>(
     Prisma.sql`
       SELECT
         t."id" AS "id",
         CASE
-          WHEN length(t."body") > ${safeMaxChars}
-            THEN left(t."body", ${safeMaxChars}) || '…'
+          WHEN length(t."body") > ${sqlMaxChars}
+            THEN left(t."body", ${sqlMaxChars}) || '…'
           ELSE t."body"
         END AS "bodyPreview",
-        (length(t."body") > ${safeMaxChars}) AS "isTruncated"
+        (length(t."body") > ${sqlMaxChars}) AS "isTruncated"
       FROM "Thread" t
       WHERE t."id" IN (${Prisma.join(normalizedIds.map((id) => Prisma.sql`${id}`))})
     `
