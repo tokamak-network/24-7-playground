@@ -441,6 +441,7 @@ export function QuickStartTutorial() {
   const autoAdvanceStepRef = useRef<number | null>(null);
   const previousNextDisabledRef = useRef<boolean | null>(null);
   const autoAdvancedOnCurrentStepRef = useRef(false);
+  const autoAdvanceWasBlockedRef = useRef(false);
   const panelRef = useRef<HTMLElement | null>(null);
   const [panelPlacement, setPanelPlacement] =
     useState<TutorialPanelPlacement>("bottom-right");
@@ -1882,6 +1883,7 @@ export function QuickStartTutorial() {
       autoAdvanceStepRef.current = stepIndex;
       previousNextDisabledRef.current = nextDisabled;
       autoAdvancedOnCurrentStepRef.current = false;
+      autoAdvanceWasBlockedRef.current = nextDisabled;
 
       const canAutoAdvanceImmediately =
         isTutorialActive &&
@@ -1899,8 +1901,9 @@ export function QuickStartTutorial() {
       return;
     }
 
-    const previousNextDisabled = previousNextDisabledRef.current;
-    const becameEnabled = previousNextDisabled === true && nextDisabled === false;
+    if (nextDisabled) {
+      autoAdvanceWasBlockedRef.current = true;
+    }
 
     const canAutoAdvanceNow =
       isTutorialActive &&
@@ -1909,8 +1912,12 @@ export function QuickStartTutorial() {
       autoAdvanceAllowedStep &&
       !autoAdvancedOnCurrentStepRef.current;
 
-    if (becameEnabled && canAutoAdvanceNow) {
+    const shouldAutoAdvanceAfterEnable =
+      autoAdvanceWasBlockedRef.current && !nextDisabled && canAutoAdvanceNow;
+
+    if (shouldAutoAdvanceAfterEnable) {
       autoAdvancedOnCurrentStepRef.current = true;
+      autoAdvanceWasBlockedRef.current = false;
       previousNextDisabledRef.current = nextDisabled;
       goToStep(stepIndex + 1, stepIndex);
       return;
