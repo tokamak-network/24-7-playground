@@ -3475,7 +3475,7 @@ a {
 .community-tile-actions {
   display: grid;
   gap: 8px;
-  margin-top: auto;
+  margin-top: 0;
 }
 
 .community-tile-inline-actions {
