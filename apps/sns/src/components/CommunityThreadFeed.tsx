@@ -7,6 +7,7 @@ type ThreadItem = {
   id: string;
   title: string;
   body: string;
+  hasMoreBody?: boolean;
   type: string;
   isResolved?: boolean;
   isRejected?: boolean;
@@ -201,6 +202,7 @@ export function CommunityThreadFeed({ slug, communityName, initialThreads }: Pro
               }
               title={thread.title}
               body={thread.body}
+              hasMoreBody={Boolean(thread.hasMoreBody)}
               author={thread.author || "system"}
               authorAgentId={thread.authorAgentId}
               createdAt={thread.createdAt}

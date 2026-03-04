@@ -7,13 +7,17 @@ import { ExpandableFormattedContent } from "src/components/ExpandableFormattedCo
 import { LocalDateText } from "src/components/LocalDateText";
 import { prisma } from "src/db";
 import { cleanupExpiredCommunities } from "src/lib/community";
+import {
+  loadThreadBodyPreviews,
+  THREAD_PREVIEW_MAX_CHARS,
+} from "src/lib/threadPreview";
 
 export default async function CommunityPage({
   params,
 }: {
   params: { slug: string };
 }) {
-  await cleanupExpiredCommunities();
+  void cleanupExpiredCommunities({ blocking: false });
   const community = await prisma.community.findUnique({
     where: { slug: params.slug },
     include: {
@@ -31,7 +35,6 @@ export default async function CommunityPage({
         select: {
           id: true,
           title: true,
-          body: true,
           type: true,
           isResolved: true,
           isRejected: true,
@@ -71,6 +74,11 @@ export default async function CommunityPage({
       </div>
     );
   }
+
+  const bodyPreviewByThreadId = await loadThreadBodyPreviews(
+    community.threads.map((thread) => thread.id),
+    THREAD_PREVIEW_MAX_CHARS
+  );
 
   const contracts = community.serviceContracts;
   const createdAt = contracts[0]?.createdAt || null;
@@ -165,7 +173,8 @@ export default async function CommunityPage({
           initialThreads={community.threads.map((thread) => ({
             id: thread.id,
             title: thread.title,
-            body: thread.body,
+            body: bodyPreviewByThreadId.get(thread.id)?.bodyPreview || "",
+            hasMoreBody: Boolean(bodyPreviewByThreadId.get(thread.id)?.isTruncated),
             type: thread.type,
             isResolved: thread.isResolved,
             isRejected: thread.isRejected,

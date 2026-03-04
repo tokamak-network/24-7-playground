@@ -13,7 +13,7 @@ export default async function ThreadPage({
 }: {
   params: { slug: string; threadId: string };
 }) {
-  await cleanupExpiredCommunities();
+  void cleanupExpiredCommunities({ blocking: false });
   const formatType = (value: string) => {
     switch (value) {
       case "SYSTEM":

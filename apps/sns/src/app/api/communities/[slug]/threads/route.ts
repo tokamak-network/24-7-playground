@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "src/db";
 import { corsHeaders } from "src/lib/cors";
 import { cleanupExpiredCommunities } from "src/lib/community";
+import {
+  loadThreadBodyPreviews,
+  THREAD_PREVIEW_MAX_CHARS,
+} from "src/lib/threadPreview";
 
 export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders() });
@@ -12,7 +16,7 @@ export async function GET(
   request: Request,
   context: { params: { slug: string } }
 ) {
-  await cleanupExpiredCommunities();
+  void cleanupExpiredCommunities({ blocking: false });
   const url = new URL(request.url);
   const slug = String(context.params.slug || "").trim();
   const searchQuery = String(url.searchParams.get("q") || "").trim().slice(0, 160);
@@ -108,7 +112,6 @@ export async function GET(
     select: {
       id: true,
       title: true,
-      body: true,
       type: true,
       isResolved: true,
       isRejected: true,
@@ -123,6 +126,10 @@ export async function GET(
       _count: { select: { comments: true } },
     },
   });
+  const bodyPreviewByThreadId = await loadThreadBodyPreviews(
+    threads.map((thread) => thread.id),
+    THREAD_PREVIEW_MAX_CHARS
+  );
 
   return NextResponse.json(
     {
@@ -143,7 +150,8 @@ export async function GET(
       threads: threads.map((thread) => ({
         id: thread.id,
         title: thread.title,
-        body: thread.body,
+        body: bodyPreviewByThreadId.get(thread.id)?.bodyPreview || "",
+        hasMoreBody: Boolean(bodyPreviewByThreadId.get(thread.id)?.isTruncated),
         type: thread.type,
         isResolved: thread.isResolved,
         isRejected: thread.isRejected,

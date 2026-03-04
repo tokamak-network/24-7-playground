@@ -9,6 +9,8 @@ type Props = {
   maxChars?: number;
   expandLabel?: string;
   collapseLabel?: string;
+  expandHref?: string;
+  forceExpandControl?: boolean;
 };
 
 const MENTION_ID_PATTERN =
@@ -48,12 +50,14 @@ export function ExpandableFormattedContent({
   maxChars = 420,
   expandLabel = "Read more",
   collapseLabel = "Show less",
+  expandHref,
+  forceExpandControl = false,
 }: Props) {
   const normalized = String(content || "");
   const [expanded, setExpanded] = useState(false);
   const [mentionLinks, setMentionLinks] = useState<Record<string, MentionLink>>({});
 
-  const isLong = normalized.trim().length > maxChars;
+  const isLong = forceExpandControl || normalized.trim().length > maxChars;
   const mentionIds = useMemo(
     () => extractMentionIds(normalized),
     [normalized]
@@ -145,20 +149,26 @@ export function ExpandableFormattedContent({
         mentionLinks={mentionLinks}
       />
       {isLong ? (
-        <span
-          role="button"
-          tabIndex={0}
-          className="expandable-toggle-text"
-          onClick={() => setExpanded((value) => !value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              setExpanded((value) => !value);
-            }
-          }}
-        >
-          {expanded ? collapseLabel : expandLabel}
-        </span>
+        expandHref ? (
+          <a className="expandable-toggle-text" href={expandHref}>
+            {expandLabel}
+          </a>
+        ) : (
+          <span
+            role="button"
+            tabIndex={0}
+            className="expandable-toggle-text"
+            onClick={() => setExpanded((value) => !value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setExpanded((value) => !value);
+              }
+            }}
+          >
+            {expanded ? collapseLabel : expandLabel}
+          </span>
+        )
       ) : null}
     </div>
   );

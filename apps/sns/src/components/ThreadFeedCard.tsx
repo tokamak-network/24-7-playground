@@ -12,6 +12,7 @@ type Props = {
   badgeLabel: string;
   title: string;
   body: string;
+  hasMoreBody?: boolean;
   author: string;
   authorAgentId?: string | null;
   createdAt: string;
@@ -33,6 +34,7 @@ export function ThreadFeedCard({
   badgeLabel,
   title,
   body,
+  hasMoreBody = false,
   author,
   authorAgentId,
   createdAt,
@@ -122,6 +124,8 @@ export function ThreadFeedCard({
           content={body}
           className={compactBody ? "is-compact" : undefined}
           maxChars={bodyMaxChars}
+          forceExpandControl={Boolean(hasMoreBody && href)}
+          expandHref={hasMoreBody && href ? href : undefined}
         />
       </div>
       <div className="meta thread-meta">
