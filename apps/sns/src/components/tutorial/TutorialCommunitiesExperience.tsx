@@ -6,6 +6,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AppModal } from "src/components/AppModal";
 import { CommentFeedCard } from "src/components/CommentFeedCard";
 import { CommunityNameSearchField } from "src/components/CommunityNameSearchField";
+import {
+  ContractRegistrationForm,
+  type ContractRegistrationOverrideResult,
+} from "src/components/ContractRegistrationForm";
 import { ExpandableFormattedContent } from "src/components/ExpandableFormattedContent";
 import { LocalDateText } from "src/components/LocalDateText";
 import { ThreadFeedCard } from "src/components/ThreadFeedCard";
@@ -244,6 +248,9 @@ function TutorialRunMyAgentModal({
   const [screen, setScreen] = useState<"choice" | "config">("choice");
   const [setupMode, setSetupMode] = useState<SetupMode>("import");
   const [activeTab, setActiveTab] = useState<ConfigTab>("confidential");
+  const [importSourceAgentId, setImportSourceAgentId] = useState(
+    "tutorial-source-pepe-alpha"
+  );
   const [llmProvider, setLlmProvider] = useState("");
   const [llmModel, setLlmModel] = useState("");
   const [llmApiKey, setLlmApiKey] = useState("");
@@ -269,6 +276,19 @@ function TutorialRunMyAgentModal({
   const [encryptStatusMessage, setEncryptStatusMessage] = useState("");
   const [runnerDetected, setRunnerDetected] = useState(false);
   const [detecting, setDetecting] = useState(false);
+  const sourcePairs = useMemo(
+    () => [
+      {
+        id: "tutorial-source-pepe-alpha",
+        label: "Pepe (pepe-0x2e5d) · Alpha",
+      },
+      {
+        id: "tutorial-source-uni-alpha",
+        label: "Uniswap v4 (uniswap-v4-0xe03a) · Alpha",
+      },
+    ],
+    []
+  );
 
   const closeAll = () => {
     setGuideOpen(false);
@@ -417,7 +437,10 @@ function TutorialRunMyAgentModal({
                   onClick={() => setSetupMode("import")}
                 >
                   <strong>Import from another community</strong>
-                  <span>Load saved setup from another community.</span>
+                  <span>
+                    Load Public Configuration and Encrypted Ciphertext from another registered
+                    community.
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -431,16 +454,43 @@ function TutorialRunMyAgentModal({
                 </button>
               </div>
 
-              <div className="row wrap">
-                <button
-                  type="button"
-                  className="button"
-                  data-tour="agent-run-continue"
-                  onClick={() => setScreen("config")}
-                >
-                  Continue
-                </button>
-              </div>
+              {setupMode === "import" ? (
+                <div className="field">
+                  <label>Source community configuration</label>
+                  <div className="manager-inline-field">
+                    <select
+                      value={importSourceAgentId}
+                      onChange={(event) => setImportSourceAgentId(event.currentTarget.value)}
+                    >
+                      {sourcePairs.map((pair) => (
+                        <option key={pair.id} value={pair.id}>
+                          {pair.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="button"
+                      data-tour="agent-run-continue"
+                      onClick={() => setScreen("config")}
+                      disabled={!importSourceAgentId}
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="row wrap">
+                  <button
+                    type="button"
+                    className="button"
+                    data-tour="agent-run-continue"
+                    onClick={() => setScreen("config")}
+                  >
+                    Continue
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <>
@@ -451,6 +501,9 @@ function TutorialRunMyAgentModal({
                   </p>
                   <p className="meta-text">
                     Agent Handle: <strong>{agentHandle || "-"}</strong>
+                  </p>
+                  <p className="meta-text">
+                    Owner Ethereum Address: <strong>0x3c5515f88a2b7403549ec87acc747d446cdb698a</strong>
                   </p>
                 </div>
                 <button
@@ -635,6 +688,25 @@ function TutorialRunMyAgentModal({
                     <div className="manager-inline-field">
                       <button
                         type="button"
+                        className="button button-secondary"
+                        onClick={() => {
+                          setLlmPassed(false);
+                          setExecutionPassed(false);
+                          setAlchemyPassed(false);
+                          setLlmTestPhase("idle");
+                          setExecutionTestPhase("idle");
+                          setAlchemyTestPhase("idle");
+                          setLlmTestMessage("Loaded encrypted tutorial payload from DB.");
+                          setExecutionTestMessage("");
+                          setAlchemyTestMessage("");
+                          setEncryptStatusMessage("");
+                          setEncryptedSaved(false);
+                        }}
+                      >
+                        Load from DB & Decrypt
+                      </button>
+                      <button
+                        type="button"
                         className="button"
                         data-tour="agent-encrypt-save-db"
                         data-tour-passed={encryptedSaved ? "true" : "false"}
@@ -644,6 +716,19 @@ function TutorialRunMyAgentModal({
                       </button>
                     </div>
                     {encryptStatusMessage ? <p className="status">{encryptStatusMessage}</p> : null}
+                    <p className="agent-run-security-note meta-text">
+                      Plaintext keys entered here are encrypted in your browser before save and
+                      are not stored in plaintext on the server. Review{" "}
+                      <a
+                        href="/about#security-notes"
+                        target="_blank"
+                        rel="noreferrer"
+                        data-tour="agent-security-notes-anchor"
+                        className="agent-run-security-note-link"
+                      >
+                        Security Notes
+                      </a>
+                    </p>
                   </div>
                 ) : null}
 
@@ -975,8 +1060,6 @@ function TutorialCommunityListPage() {
   const [isCommunityFilterMenuOpen, setIsCommunityFilterMenuOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [serviceName, setServiceName] = useState("");
-  const [contractAddress, setContractAddress] = useState("");
   const [hasCreatedCommunity, setHasCreatedCommunity] = useState(false);
   const [registeredByCommunityId, setRegisteredByCommunityId] = useState<Record<string, boolean>>(
     () => {
@@ -1065,12 +1148,14 @@ function TutorialCommunityListPage() {
     router.push(nextQuery ? `${destinationPath}?${nextQuery}` : destinationPath);
   };
 
-  const registerCommunity = () => {
-    const nextName = serviceName.trim();
-    const nextContractAddress = contractAddress.trim();
-    if (!nextName || !nextContractAddress) {
-      return;
+  const registerCommunityInTutorial = async (
+    _payload: {
+      serviceName: string;
+      description: string;
+      contracts: Array<{ name: string; address: string }>;
+      githubRepositoryUrl: string;
     }
+  ): Promise<ContractRegistrationOverrideResult> => {
     setHasCreatedCommunity(true);
     setRegisteredByCommunityId((prev) => ({
       ...prev,
@@ -1083,8 +1168,6 @@ function TutorialCommunityListPage() {
     });
     setStatusMessage("Community created in tutorial sandbox.");
     setCreateOpen(false);
-    setServiceName("");
-    setContractAddress("");
     window.dispatchEvent(
       new CustomEvent(TUTORIAL_COMMUNITY_CREATED_EVENT, {
         detail: {
@@ -1093,6 +1176,10 @@ function TutorialCommunityListPage() {
         },
       })
     );
+    return {
+      status:
+        "Community updated: aaa (aaa) · 1 contract",
+    };
   };
 
   const registerAgent = (community: TutorialCommunity) => {
@@ -1289,39 +1376,13 @@ function TutorialCommunityListPage() {
       <AppModal
         open={createOpen}
         phase="open"
-        title="Create Community"
-        ariaLabel="Create community"
-        closeAriaLabel="Close create community form"
+        title="Create New Community"
+        ariaLabel="Create New Community"
+        closeAriaLabel="Close create community modal"
         onClose={() => setCreateOpen(false)}
         dataTour="dapp-registration-modal"
       >
-        <div data-tour="dapp-registration-form">
-          <div data-tour="dapp-registration-fields">
-            <div className="field" data-tour="dapp-service-name">
-              <label>Service Name</label>
-              <input value={serviceName} onChange={(event) => setServiceName(event.currentTarget.value)} />
-            </div>
-            <div className="field">
-              <label>Contract Address</label>
-              <input
-                data-tour="dapp-contract-address-required"
-                value={contractAddress}
-                onChange={(event) => setContractAddress(event.currentTarget.value)}
-                placeholder="0x..."
-              />
-            </div>
-          </div>
-          <div className="row wrap">
-            <button
-              type="button"
-              className="button"
-              data-tour="dapp-register-community"
-              onClick={registerCommunity}
-            >
-              Register Community
-            </button>
-          </div>
-        </div>
+        <ContractRegistrationForm onSubmitOverride={registerCommunityInTutorial} />
       </AppModal>
     </div>
   );

@@ -28,8 +28,28 @@ export type ContractRegistrationSuccessPayload = {
   }>;
 };
 
+export type ContractRegistrationDraftPayload = {
+  serviceName: string;
+  description: string;
+  contracts: Array<{
+    name: string;
+    address: string;
+  }>;
+  githubRepositoryUrl: string;
+};
+
+export type ContractRegistrationOverrideResult = {
+  status: string;
+  payload?: ContractRegistrationSuccessPayload;
+};
+
 type ContractRegistrationFormProps = {
   onSuccess?: (payload: ContractRegistrationSuccessPayload) => void;
+  onSubmitOverride?: (
+    payload: ContractRegistrationDraftPayload
+  ) =>
+    | Promise<ContractRegistrationOverrideResult>
+    | ContractRegistrationOverrideResult;
 };
 
 function emptyContractDraft(): ContractDraft {
@@ -52,7 +72,10 @@ async function readError(response: Response) {
   return text;
 }
 
-export function ContractRegistrationForm({ onSuccess }: ContractRegistrationFormProps) {
+export function ContractRegistrationForm({
+  onSuccess,
+  onSubmitOverride,
+}: ContractRegistrationFormProps) {
   const [serviceName, setServiceName] = useState("");
   const [description, setDescription] = useState("");
   const [contracts, setContracts] = useState<ContractDraft[]>([emptyContractDraft()]);
@@ -108,6 +131,28 @@ export function ContractRegistrationForm({ onSuccess }: ContractRegistrationForm
 
     if (!preparedContracts.length) {
       setStatus("At least one contract address is required.");
+      return;
+    }
+
+    if (onSubmitOverride) {
+      setBusy(true);
+      setStatus("Working...");
+      try {
+        const overrideResult = await onSubmitOverride({
+          serviceName: serviceName.trim(),
+          description: description.trim(),
+          contracts: preparedContracts,
+          githubRepositoryUrl: githubRepositoryUrl.trim(),
+        });
+        setStatus(overrideResult.status || "Community updated.");
+        if (overrideResult.payload) {
+          onSuccess?.(overrideResult.payload);
+        }
+      } catch (error) {
+        setStatus(error instanceof Error ? error.message : "Registration failed.");
+      } finally {
+        setBusy(false);
+      }
       return;
     }
 
