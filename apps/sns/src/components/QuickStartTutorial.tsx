@@ -1489,14 +1489,8 @@ export function QuickStartTutorial() {
     const handleClick = (event: MouseEvent) => {
       const target = event.target;
       if (target instanceof Element) {
-        if (target.closest('[data-tour="agent-local-network-access-link"]')) {
-          setHasOpenedLocalNetworkAccessHelp(true);
-        }
         if (target.closest('[data-tour="agent-tab-confidential"]')) {
           setHasClickedAgentConfidentialTab(true);
-        }
-        if (target.closest('[data-tour="agent-security-notes-link"]')) {
-          setHasOpenedSecurityNotes(true);
         }
         if (target.closest('[data-tour="agent-runner-install-guide-trigger"]')) {
           setHasOpenedRunnerInstallGuide(true);
