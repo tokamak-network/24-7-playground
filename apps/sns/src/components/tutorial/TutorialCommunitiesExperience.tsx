@@ -25,6 +25,7 @@ type ViewMode = "list" | "community" | "thread";
 type SetupMode = "import" | "fresh";
 type ConfigTab = "confidential" | "runner-config" | "runner-status";
 type RunnerGuideOs = "macos" | "linux" | "windows";
+type KeyTestPhase = "idle" | "testing" | "passed" | "failed";
 
 type Props = {
   view: ViewMode;
@@ -134,6 +135,12 @@ function formatThreadType(value: string) {
     default:
       return "discussion";
   }
+}
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
 }
 
 function RunnerInstallGuideModal({
@@ -253,6 +260,13 @@ function TutorialRunMyAgentModal({
   const [executionPassed, setExecutionPassed] = useState(false);
   const [alchemyPassed, setAlchemyPassed] = useState(false);
   const [encryptedSaved, setEncryptedSaved] = useState(false);
+  const [llmTestPhase, setLlmTestPhase] = useState<KeyTestPhase>("idle");
+  const [executionTestPhase, setExecutionTestPhase] = useState<KeyTestPhase>("idle");
+  const [alchemyTestPhase, setAlchemyTestPhase] = useState<KeyTestPhase>("idle");
+  const [llmTestMessage, setLlmTestMessage] = useState("");
+  const [executionTestMessage, setExecutionTestMessage] = useState("");
+  const [alchemyTestMessage, setAlchemyTestMessage] = useState("");
+  const [encryptStatusMessage, setEncryptStatusMessage] = useState("");
   const [runnerDetected, setRunnerDetected] = useState(false);
   const [detecting, setDetecting] = useState(false);
 
@@ -261,17 +275,73 @@ function TutorialRunMyAgentModal({
     onClose();
   };
 
-  const testLlm = () => {
-    setLlmPassed(Boolean(llmProvider.trim() && llmModel.trim() && llmApiKey.trim()));
+  const testLlm = async () => {
+    setLlmTestPhase("testing");
+    setLlmTestMessage("");
+    await sleep(220);
+
+    const providerReady = Boolean(llmProvider.trim());
+    const modelReady = Boolean(llmModel.trim());
+    const key = llmApiKey.trim();
+    const keyReady = key.length >= 8;
+
+    const passed = providerReady && modelReady && keyReady;
+    setLlmPassed(passed);
+    setEncryptedSaved(false);
+    if (passed) {
+      setLlmTestPhase("passed");
+      setLlmTestMessage("LLM API key test passed.");
+      return;
+    }
+    setLlmTestPhase("failed");
+    if (!providerReady || !modelReady) {
+      setLlmTestMessage("Select both LLM Provider and LLM Model first.");
+      return;
+    }
+    setLlmTestMessage("Enter a valid LLM API key (at least 8 characters).");
   };
-  const testExecution = () => {
-    setExecutionPassed(Boolean(executionKey.trim()));
+  const testExecution = async () => {
+    setExecutionTestPhase("testing");
+    setExecutionTestMessage("");
+    await sleep(220);
+
+    const key = executionKey.trim();
+    const passed = /^0x[a-fA-F0-9]{64}$/.test(key);
+    setExecutionPassed(passed);
+    setEncryptedSaved(false);
+    if (passed) {
+      setExecutionTestPhase("passed");
+      setExecutionTestMessage("Execution wallet key test passed.");
+      return;
+    }
+    setExecutionTestPhase("failed");
+    setExecutionTestMessage("Execution key must be a 0x-prefixed 64-byte hex private key.");
   };
-  const testAlchemy = () => {
-    setAlchemyPassed(Boolean(alchemyKey.trim()));
+  const testAlchemy = async () => {
+    setAlchemyTestPhase("testing");
+    setAlchemyTestMessage("");
+    await sleep(220);
+
+    const key = alchemyKey.trim();
+    const passed = key.length >= 8;
+    setAlchemyPassed(passed);
+    setEncryptedSaved(false);
+    if (passed) {
+      setAlchemyTestPhase("passed");
+      setAlchemyTestMessage("Alchemy API key test passed.");
+      return;
+    }
+    setAlchemyTestPhase("failed");
+    setAlchemyTestMessage("Enter a valid Alchemy API key (at least 8 characters).");
   };
   const encryptAndSave = () => {
-    setEncryptedSaved(Boolean(llmPassed && executionPassed && alchemyPassed));
+    const canSave = Boolean(llmPassed && executionPassed && alchemyPassed);
+    setEncryptedSaved(canSave);
+    if (!canSave) {
+      setEncryptStatusMessage("Complete and pass all three key tests before saving.");
+      return;
+    }
+    setEncryptStatusMessage("Encrypted ciphertext saved to tutorial storage.");
   };
 
   const detectRunner = async () => {
@@ -442,6 +512,10 @@ function TutorialRunMyAgentModal({
                             onChange={(event) => {
                               setLlmProvider(event.currentTarget.value);
                               setLlmPassed(false);
+                              setLlmTestPhase("idle");
+                              setLlmTestMessage("");
+                              setEncryptStatusMessage("");
+                              setEncryptedSaved(false);
                             }}
                           >
                             <option value="">Select provider</option>
@@ -458,6 +532,10 @@ function TutorialRunMyAgentModal({
                             onChange={(event) => {
                               setLlmModel(event.currentTarget.value);
                               setLlmPassed(false);
+                              setLlmTestPhase("idle");
+                              setLlmTestMessage("");
+                              setEncryptStatusMessage("");
+                              setEncryptedSaved(false);
                             }}
                           >
                             <option value="">Select model</option>
@@ -477,6 +555,10 @@ function TutorialRunMyAgentModal({
                             onChange={(event) => {
                               setLlmApiKey(event.currentTarget.value);
                               setLlmPassed(false);
+                              setLlmTestPhase("idle");
+                              setLlmTestMessage("");
+                              setEncryptStatusMessage("");
+                              setEncryptedSaved(false);
                             }}
                           />
                           <button
@@ -484,11 +566,13 @@ function TutorialRunMyAgentModal({
                             className="button button-secondary"
                             data-tour="agent-llm-api-key-test"
                             data-tour-passed={llmPassed ? "true" : "false"}
-                            onClick={testLlm}
+                            onClick={() => void testLlm()}
+                            disabled={llmTestPhase === "testing"}
                           >
-                            Test
+                            {llmTestPhase === "testing" ? "Testing..." : "Test"}
                           </button>
                         </div>
+                        {llmTestMessage ? <p className="status">{llmTestMessage}</p> : null}
                       </div>
                     </div>
 
@@ -500,6 +584,10 @@ function TutorialRunMyAgentModal({
                           onChange={(event) => {
                             setExecutionKey(event.currentTarget.value);
                             setExecutionPassed(false);
+                            setExecutionTestPhase("idle");
+                            setExecutionTestMessage("");
+                            setEncryptStatusMessage("");
+                            setEncryptedSaved(false);
                           }}
                         />
                         <button
@@ -507,11 +595,13 @@ function TutorialRunMyAgentModal({
                           className="button button-secondary"
                           data-tour="agent-execution-key-test"
                           data-tour-passed={executionPassed ? "true" : "false"}
-                          onClick={testExecution}
+                          onClick={() => void testExecution()}
+                          disabled={executionTestPhase === "testing"}
                         >
-                          Test
+                          {executionTestPhase === "testing" ? "Testing..." : "Test"}
                         </button>
                       </div>
+                      {executionTestMessage ? <p className="status">{executionTestMessage}</p> : null}
                     </div>
 
                     <div className="field" data-tour="agent-alchemy-key-section">
@@ -522,6 +612,10 @@ function TutorialRunMyAgentModal({
                           onChange={(event) => {
                             setAlchemyKey(event.currentTarget.value);
                             setAlchemyPassed(false);
+                            setAlchemyTestPhase("idle");
+                            setAlchemyTestMessage("");
+                            setEncryptStatusMessage("");
+                            setEncryptedSaved(false);
                           }}
                         />
                         <button
@@ -529,11 +623,13 @@ function TutorialRunMyAgentModal({
                           className="button button-secondary"
                           data-tour="agent-alchemy-key-test"
                           data-tour-passed={alchemyPassed ? "true" : "false"}
-                          onClick={testAlchemy}
+                          onClick={() => void testAlchemy()}
+                          disabled={alchemyTestPhase === "testing"}
                         >
-                          Test
+                          {alchemyTestPhase === "testing" ? "Testing..." : "Test"}
                         </button>
                       </div>
+                      {alchemyTestMessage ? <p className="status">{alchemyTestMessage}</p> : null}
                     </div>
 
                     <div className="manager-inline-field">
@@ -547,6 +643,7 @@ function TutorialRunMyAgentModal({
                         Encrypt & Save to DB
                       </button>
                     </div>
+                    {encryptStatusMessage ? <p className="status">{encryptStatusMessage}</p> : null}
                   </div>
                 ) : null}
 
