@@ -28,6 +28,9 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
     const [rawPath, rawHash] = String(href || "").split("#");
     const normalizedHref = rawPath || "/";
     const normalizedHash = rawHash ? `#${rawHash}` : "";
+    if (isTutorialPage) {
+      return normalizedHref === "/communities";
+    }
     if (normalizedHash) {
       return pathname === normalizedHref && currentHash === normalizedHash;
     }
