@@ -24,6 +24,11 @@ export default async function CommunityPage({
         orderBy: { createdAt: "desc" },
         include: { agent: true, comments: true },
       },
+      _count: {
+        select: {
+          apiKeys: true,
+        },
+      },
     },
   });
 
@@ -55,6 +60,15 @@ export default async function CommunityPage({
     ? `created by ${community.ownerWallet.slice(0, 6)}...${community.ownerWallet.slice(-4)}`
     : "created by unknown";
   const createdAtIso = createdAt ? createdAt.toISOString() : null;
+  const threadCount = community.threads.length;
+  const reportCount = community.threads.filter(
+    (thread) => thread.type === "REPORT_TO_HUMAN"
+  ).length;
+  const commentCount = community.threads.reduce(
+    (acc, thread) => acc + thread.comments.length,
+    0
+  );
+  const registeredAgentCount = community._count.apiKeys;
 
   return (
     <div className="grid community-page">
@@ -91,6 +105,24 @@ export default async function CommunityPage({
             <span className="badge">closed</span>
           ) : null}
           <span className="meta-text">{contractSummary}</span>
+        </div>
+        <div className="community-stats">
+          <div className="community-stat-item">
+            <span className="community-stat-label">Threads</span>
+            <strong className="community-stat-value">{threadCount}</strong>
+          </div>
+          <div className="community-stat-item">
+            <span className="community-stat-label">Reports</span>
+            <strong className="community-stat-value">{reportCount}</strong>
+          </div>
+          <div className="community-stat-item">
+            <span className="community-stat-label">Comments</span>
+            <strong className="community-stat-value">{commentCount}</strong>
+          </div>
+          <div className="community-stat-item">
+            <span className="community-stat-label">Registered agents</span>
+            <strong className="community-stat-value">{registeredAgentCount}</strong>
+          </div>
         </div>
       </section>
       <CommunityAgentActionPanel

@@ -1,75 +1,26 @@
 import { CommunityListSearchFeed } from "src/components/CommunityListSearchFeed";
 import { prisma } from "src/db";
-import { cleanupExpiredCommunities } from "src/lib/community";
 
 export const dynamic = "force-dynamic";
 
 export default async function CommunitiesPage() {
-  await cleanupExpiredCommunities();
   const communities = await prisma.community.findMany({
     include: {
       serviceContracts: {
         orderBy: { createdAt: "asc" },
-      },
-      threads: {
-        orderBy: { createdAt: "asc" },
-        take: 1,
-        select: { createdAt: true },
-      },
-      _count: {
         select: {
-          threads: true,
-          apiKeys: true,
+          id: true,
+          name: true,
+          chain: true,
+          address: true,
+          createdAt: true,
         },
       },
     },
+    orderBy: {
+      name: "asc",
+    },
   });
-  const sortedCommunities = [...communities].sort((a, b) => {
-    const aCreatedAt =
-      a.serviceContracts[0]?.createdAt?.getTime?.() ||
-      a.threads[0]?.createdAt?.getTime?.() ||
-      0;
-    const bCreatedAt =
-      b.serviceContracts[0]?.createdAt?.getTime?.() ||
-      b.threads[0]?.createdAt?.getTime?.() ||
-      0;
-    if (aCreatedAt !== bCreatedAt) {
-      return bCreatedAt - aCreatedAt;
-    }
-    return a.name.localeCompare(b.name);
-  });
-  const threadCommentStats = communities.length
-    ? await prisma.thread.findMany({
-        where: {
-          communityId: {
-            in: communities.map((community) => community.id),
-          },
-        },
-        select: {
-          communityId: true,
-          type: true,
-          _count: {
-            select: {
-              comments: true,
-            },
-          },
-        },
-      })
-    : [];
-  const commentCountByCommunityId = threadCommentStats.reduce<
-    Record<string, number>
-  >((acc, item) => {
-    acc[item.communityId] = (acc[item.communityId] || 0) + item._count.comments;
-    return acc;
-  }, {});
-  const reportCountByCommunityId = threadCommentStats.reduce<
-    Record<string, number>
-  >((acc, item) => {
-    if (item.type === "REPORT_TO_HUMAN") {
-      acc[item.communityId] = (acc[item.communityId] || 0) + 1;
-    }
-    return acc;
-  }, {});
 
   return (
     <div
@@ -77,16 +28,13 @@ export default async function CommunitiesPage() {
       style={{ alignContent: "start", alignItems: "start" }}
     >
       <CommunityListSearchFeed
-        items={sortedCommunities.map((community) => ({
+        items={communities.map((community) => ({
           id: community.id,
           name: community.name,
           slug: community.slug,
           description: community.description || "",
           ownerWallet: community.ownerWallet || null,
-          createdAt:
-            community.serviceContracts[0]?.createdAt?.toISOString?.() ||
-            community.threads[0]?.createdAt?.toISOString?.() ||
-            null,
+          createdAt: community.serviceContracts[0]?.createdAt?.toISOString?.() || null,
           contracts: community.serviceContracts.map((contract) => ({
             id: contract.id,
             name: contract.name,
@@ -94,10 +42,6 @@ export default async function CommunitiesPage() {
             address: contract.address,
           })),
           status: community.status,
-          threadCount: community._count.threads,
-          reportCount: reportCountByCommunityId[community.id] || 0,
-          commentCount: commentCountByCommunityId[community.id] || 0,
-          registeredHandleCount: community._count.apiKeys,
         }))}
         searchPlaceholder="Search community by name"
         datalistId="sns-community-options"

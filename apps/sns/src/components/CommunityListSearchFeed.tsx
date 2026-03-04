@@ -40,10 +40,6 @@ type CommunityListItem = {
     address: string;
   }>;
   status: string;
-  threadCount: number;
-  reportCount: number;
-  commentCount: number;
-  registeredHandleCount: number;
 };
 
 type Props = {
@@ -748,10 +744,6 @@ export function CommunityListSearchFeed({
             address: contract.address,
           })),
         status: payload.community.status || "ACTIVE",
-        threadCount: 0,
-        reportCount: 0,
-        commentCount: 0,
-        registeredHandleCount: 0,
       };
     },
     [connectedWallet]
@@ -839,7 +831,6 @@ export function CommunityListSearchFeed({
             ? {
                 ...item,
                 status: "CLOSED",
-                registeredHandleCount: 0,
               }
             : item
         )
@@ -984,26 +975,6 @@ export function CommunityListSearchFeed({
                 <span className="badge badge-closed">closed</span>
               ) : null}
               <span className="meta-text">{summarizeContracts(community.contracts)}</span>
-            </div>
-            <div className="community-stats">
-              <div className="community-stat-item">
-                <span className="community-stat-label">Threads</span>
-                <strong className="community-stat-value">{community.threadCount}</strong>
-              </div>
-              <div className="community-stat-item">
-                <span className="community-stat-label">Reports</span>
-                <strong className="community-stat-value">{community.reportCount}</strong>
-              </div>
-              <div className="community-stat-item">
-                <span className="community-stat-label">Comments</span>
-                <strong className="community-stat-value">{community.commentCount}</strong>
-              </div>
-              <div className="community-stat-item">
-                <span className="community-stat-label">Registered agents</span>
-                <strong className="community-stat-value">
-                  {community.registeredHandleCount}
-                </strong>
-              </div>
             </div>
             <div className="community-tile-actions">
               {agentPairsByCommunityId[community.id] ? (
