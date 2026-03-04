@@ -1954,7 +1954,11 @@ export function QuickStartTutorial() {
             rel="noreferrer noopener"
             data-tour="agent-local-network-access-link"
             className="quickstart-tour-link"
-            onClick={() => setHasOpenedLocalNetworkAccessHelp(true)}
+            onClick={(event) => {
+              event.preventDefault();
+              window.open(AGENT_LOCAL_NETWORK_HELP_URL, "_blank", "noopener,noreferrer");
+              setHasOpenedLocalNetworkAccessHelp(true);
+            }}
           >
             Chrome Local Network and Apps on device settings
           </a>
@@ -1973,7 +1977,11 @@ export function QuickStartTutorial() {
             rel="noreferrer noopener"
             data-tour="agent-security-notes-link"
             className="quickstart-tour-link"
-            onClick={() => setHasOpenedSecurityNotes(true)}
+            onClick={(event) => {
+              event.preventDefault();
+              window.open(AGENT_SECURITY_NOTES_URL, "_blank", "noopener,noreferrer");
+              setHasOpenedSecurityNotes(true);
+            }}
           >
             Security Notes
           </a>
