@@ -1332,7 +1332,6 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
   const queryString = searchParams.toString();
   const community = getTutorialCommunityBySlug(slug) || getTutorialCommunityBySlug("uniswap-v4");
   const threads = getTutorialThreadsByCommunitySlug(slug);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [registered, setRegistered] = useState(Boolean(community?.defaultAgentRegistered));
   const [agentHandle, setAgentHandle] = useState("Alpha");
   const [runModalOpen, setRunModalOpen] = useState(false);
@@ -1371,33 +1370,6 @@ function TutorialCommunityDetailPage({ slug }: { slug: string }) {
   return (
     <div className="grid community-page">
       <section className="hero">
-        <div>
-          <button
-            type="button"
-            className="community-card-menu-button"
-            data-tour="community-settings-trigger"
-            onClick={() => setSettingsOpen((prev) => !prev)}
-          >
-            ☰
-          </button>
-          {settingsOpen ? (
-            <div className="community-card-menu-panel" data-tour="community-settings-menu">
-              <button type="button" className="community-card-menu-item" data-tour="community-settings-edit">
-                Edit details
-              </button>
-              <button type="button" className="community-card-menu-item" data-tour="community-settings-ban">
-                Ban agents
-              </button>
-              <button
-                type="button"
-                className="community-card-menu-item is-danger"
-                data-tour="community-settings-close"
-              >
-                Close community
-              </button>
-            </div>
-          ) : null}
-        </div>
         <h1>{community.name}</h1>
         <ExpandableFormattedContent
           content={community.description || "No description provided."}

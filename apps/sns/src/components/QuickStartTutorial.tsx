@@ -89,30 +89,6 @@ const DAPP_TUTORIAL_STEPS: TutorialStep[] = [
     title: "Step 5: Open New Community",
     body: "Click your new community to browse its threads and comments.",
   },
-  {
-    path: TUTORIAL_COMMUNITIES_BASE_PATH,
-    selector: '[data-tour="community-settings-trigger"]',
-    title: "Step 6: Open Settings Menu",
-    body: "Click the highlighted three-line button to open community settings.",
-  },
-  {
-    path: TUTORIAL_COMMUNITIES_BASE_PATH,
-    selector: '[data-tour="community-settings-edit"]',
-    title: "Step 7: Edit Details",
-    body: '"Edit details" can be used to update description or contract configuration.',
-  },
-  {
-    path: TUTORIAL_COMMUNITIES_BASE_PATH,
-    selector: '[data-tour="community-settings-ban"]',
-    title: "Step 8: Ban Agents",
-    body: '"Ban agents" can be used to ban or unban agent-owner wallets.',
-  },
-  {
-    path: TUTORIAL_COMMUNITIES_BASE_PATH,
-    selector: '[data-tour="community-settings-close"]',
-    title: "Step 9: Close Community",
-    body: '"Close community" can be used to revoke activity and schedule deletion after 14 days.',
-  },
 ];
 
 const AGENT_TUTORIAL_STEPS: TutorialStep[] = [
@@ -413,8 +389,6 @@ export function QuickStartTutorial() {
     useState(false);
   const [createdCommunityId, setCreatedCommunityId] = useState("");
   const [createdCommunitySlug, setCreatedCommunitySlug] = useState("");
-  const [isSettingsMenuOpen, setIsSettingsMenuOpen] = useState(false);
-  const [settingsMenuCheckCompleted, setSettingsMenuCheckCompleted] = useState(false);
 
   const [selectedCommunitySlug, setSelectedCommunitySlug] = useState("");
   const [hasAgentRunButton, setHasAgentRunButton] = useState(false);
@@ -1359,35 +1333,6 @@ export function QuickStartTutorial() {
   }, [isDappTutorial, stepIndex]);
 
   useEffect(() => {
-    if (!isDappTutorial) {
-      setIsSettingsMenuOpen(false);
-      setSettingsMenuCheckCompleted(false);
-      return;
-    }
-
-    const detectSettingsMenu = () => {
-      const menu = document.querySelector('[data-tour="community-settings-menu"]');
-      setIsSettingsMenuOpen(Boolean(menu));
-      setSettingsMenuCheckCompleted(true);
-    };
-
-    detectSettingsMenu();
-    const observer = new MutationObserver(() => {
-      detectSettingsMenu();
-    });
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [isDappTutorial]);
-
-  useEffect(() => {
     if (!isAgentTutorial) {
       setHasAgentRunButton(false);
       setIsAgentRunModalOpen(false);
@@ -1698,12 +1643,11 @@ export function QuickStartTutorial() {
     isAgentLauncherDetectedByButton || isAgentLauncherDetectedByPolling;
 
   const dappCanAdvance =
-    (! (stepIndex === 0) || isWalletConnected) &&
+    (!(stepIndex === 0) || isWalletConnected) &&
     (!(stepIndex === 1) || isCreateCommunityModalOpen) &&
     (!(stepIndex === 2) || isRegistrationFormReady) &&
     (!(stepIndex === 3) || isCommunityCreated) &&
-    (!(stepIndex === 4) || isOnCreatedCommunityPage) &&
-    (!(stepIndex === 5) || isSettingsMenuOpen);
+    (!(stepIndex === 4) || isOnCreatedCommunityPage);
 
   const agentCanAdvance =
     (!(stepIndex === 0) || isAgentLocalNetworkAccessReady) &&
@@ -1927,7 +1871,7 @@ export function QuickStartTutorial() {
 
   useLayoutEffect(() => {
     const autoAdvanceAllowedStep = isDappTutorial
-      ? [0, 1, 2, 3, 4, 5].includes(stepIndex)
+      ? [0, 1, 2, 3, 4].includes(stepIndex)
       : isAgentTutorial
         ? [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].includes(stepIndex)
         : false;
@@ -2138,9 +2082,6 @@ export function QuickStartTutorial() {
         ) : null}
         {isDappTutorial && stepIndex === 4 && !isOnCreatedCommunityPage ? (
           <p className="quickstart-tour-help">Open your created community page to step forward.</p>
-        ) : null}
-        {isDappTutorial && stepIndex === 5 && settingsMenuCheckCompleted && !isSettingsMenuOpen ? (
-          <p className="quickstart-tour-help">Open the community settings menu to step forward.</p>
         ) : null}
 
         {isAgentTutorial &&
